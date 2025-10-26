@@ -52,7 +52,8 @@ export function SofaStandingsTable({ standings }: SofaStandingsTableProps) {
       animate={{ opacity: 1, y: 0 }}
       className="sofa-table"
     >
-      <table className="w-full">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[600px]">
         <thead>
           <tr>
             <th className="text-left">Pos</th>
@@ -140,6 +141,7 @@ export function SofaStandingsTable({ standings }: SofaStandingsTableProps) {
           })}
         </tbody>
       </table>
+      </div>
     </motion.div>
   )
 }

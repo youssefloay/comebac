@@ -242,20 +242,20 @@ export default function PublicHome() {
   return (
     <div className="space-y-8 pb-8">
       {/* Hero Section */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden hero-section">
         <div className="absolute inset-0 bg-gradient-to-br from-sofa-bg-secondary via-sofa-bg-tertiary to-sofa-bg-card"></div>
-        <div className="relative max-w-7xl mx-auto px-6 py-20">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center"
           >
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 text-sofa-text-primary">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 text-sofa-text-primary">
               Championnat de Football
               <span className="block text-sofa-text-accent">Scolaire</span>
             </h1>
-            <p className="text-xl text-sofa-text-secondary mb-12 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-sofa-text-secondary mb-8 sm:mb-12 max-w-2xl mx-auto px-4">
               Suivez tous les matchs, équipes et statistiques en temps réel dans notre championnat scolaire
             </p>
             <div className="flex flex-wrap justify-center gap-4">
@@ -279,9 +279,9 @@ export default function PublicHome() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 space-y-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8 sm:space-y-12">
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
           <SofaStatCard
             title="Équipes"
             value={stats.teams}
@@ -325,7 +325,7 @@ export default function PublicHome() {
               </Link>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {todayMatches.map((match, index) => (
                 <SofaMatchCard 
                   key={match.id} 
@@ -350,7 +350,7 @@ export default function PublicHome() {
               </Link>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {recentMatches.map((match, index) => (
                 <SofaMatchCard 
                   key={match.id} 
@@ -375,7 +375,7 @@ export default function PublicHome() {
               </Link>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {upcomingMatches.map((match, index) => (
                 <SofaMatchCard 
                   key={match.id} 

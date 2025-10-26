@@ -75,7 +75,7 @@ export default function TeamsPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-sofa-text-primary mb-2">Équipes</h1>
         <p className="text-sofa-text-secondary">
@@ -94,7 +94,7 @@ export default function TeamsPage() {
           <p className="text-sofa-text-secondary">Aucune équipe disponible</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {teams.map((team, index) => (
             <motion.div
               key={team.id}

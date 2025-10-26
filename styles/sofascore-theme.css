@@ -36,6 +36,9 @@
   background: var(--sofa-bg-primary);
   color: var(--sofa-text-primary);
   min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+  position: relative;
 }
 
 /* Card components */
@@ -293,24 +296,107 @@
   border: 1px solid var(--sofa-border);
 }
 
-/* Responsive */
+/* Mobile-first responsive design */
 @media (max-width: 768px) {
+  .sofa-theme {
+    overflow-x: hidden !important;
+  }
+  
   .sofa-card {
     margin: 8px;
     border-radius: var(--sofa-radius-sm);
+    max-width: 100%;
+    box-sizing: border-box;
   }
   
   .sofa-match-card {
     padding: 16px;
+    max-width: 100%;
+    box-sizing: border-box;
   }
   
   .sofa-stat-number {
     font-size: 2rem;
   }
   
+  .sofa-table {
+    overflow-x: auto;
+    max-width: 100vw;
+  }
+  
   .sofa-table th,
   .sofa-table td {
-    padding: 12px 16px;
+    padding: 8px 12px;
+    white-space: nowrap;
+    min-width: fit-content;
+  }
+  
+  .sofa-nav {
+    padding: 12px 0;
+  }
+  
+  .sofa-nav .max-w-7xl {
+    padding: 0 16px;
+  }
+  
+  /* Fix horizontal scroll issues */
+  * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Prevent text overflow */
+  .sofa-team-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 120px;
+  }
+}
+
+/* iPhone specific fixes */
+@media (max-width: 480px) {
+  .sofa-theme {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .sofa-nav-item {
+    padding: 8px 12px;
+    font-size: 0.875rem;
+  }
+  
+  .sofa-stat-card {
+    padding: 16px;
+  }
+  
+  .sofa-stat-number {
+    font-size: 1.75rem;
+  }
+  
+  .sofa-match-card {
+    padding: 12px;
+  }
+  
+  .sofa-team {
+    gap: 8px;
+  }
+  
+  .sofa-team-name {
+    font-size: 0.875rem;
+    max-width: 100px;
+  }
+  
+  /* Mobile menu specific */
+  .sofa-mobile-menu {
+    width: 100vw;
+    max-width: 320px;
+  }
+  
+  /* Prevent body scroll when menu is open */
+  body.mobile-menu-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
   }
 }
 
@@ -321,6 +407,46 @@
   border-radius: var(--sofa-radius);
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(10px);
+}
+
+/* Mobile Menu Styles */
+.sofa-mobile-menu {
+  background: var(--sofa-bg-card);
+  border-right: 1px solid var(--sofa-border);
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.sofa-mobile-menu-overlay {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+/* Mobile menu animations */
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutLeft {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.mobile-menu-enter {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+.mobile-menu-exit {
+  animation: slideOutLeft 0.3s ease-out;
 }
 
 .sofa-fab {
@@ -351,4 +477,59 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--sofa-border-light);
+}
+
+/* Hide scrollbar for navigation */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Prevent horizontal scroll on body */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+}
+
+/* Mobile container fixes */
+@media (max-width: 640px) {
+  .container, .max-w-7xl, .max-w-6xl, .max-w-5xl, .max-w-4xl {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    max-width: 100vw !important;
+    overflow-x: hidden;
+  }
+  
+  /* Fix for tables on mobile */
+  .sofa-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .sofa-table table {
+    width: 100%;
+    min-width: 600px;
+  }
+  
+  /* Fix for hero section */
+  .hero-section {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  /* Fix for cards */
+  .sofa-card, .sofa-match-card, .sofa-stat-card {
+    margin-left: 0;
+    margin-right: 0;
+    max-width: 100%;
+  }
 }

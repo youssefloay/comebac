@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { AlertCircle, Mail, Lock, Chrome } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { DomainError } from '@/components/auth/domain-error'
 
 export default function LoginPage() {
   const { signInWithEmail, signUpWithEmail, signInWithGoogle, loading } = useAuth()
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
+  const [isDomainError, setIsDomainError] = useState(false)
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,7 +32,13 @@ export default function LoginPage() {
         await signInWithEmail(email, password)
       }
     } catch (error: any) {
-      setError(error.message || (isSignUp ? 'Erreur de création de compte' : 'Erreur de connexion'))
+      if (error.code === 'auth/unauthorized-domain') {
+        setIsDomainError(true)
+        setError('')
+      } else {
+        setError(error.message || (isSignUp ? 'Erreur de création de compte' : 'Erreur de connexion'))
+        setIsDomainError(false)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -43,7 +51,13 @@ export default function LoginPage() {
     try {
       await signInWithGoogle()
     } catch (error: any) {
-      setError(error.message || 'Erreur de connexion avec Google')
+      if (error.code === 'auth/unauthorized-domain') {
+        setIsDomainError(true)
+        setError('')
+      } else {
+        setError(error.message || 'Erreur de connexion avec Google')
+        setIsDomainError(false)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -53,6 +67,15 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
         <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  // Show domain error if detected
+  if (isDomainError) {
+    return (
+      <div className="sofa-theme min-h-screen flex items-center justify-center p-4">
+        <DomainError currentDomain={typeof window !== 'undefined' ? window.location.hostname : undefined} />
       </div>
     )
   }

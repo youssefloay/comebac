@@ -15,6 +15,7 @@ import {
 export function UserMenuFAB() {
   const { user, logout, isAdmin } = useAuth()
   const [showMenu, setShowMenu] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   // Close menu when clicking outside
@@ -31,10 +32,23 @@ export function UserMenuFAB() {
     }
   }, [])
 
-  if (!user) return null
+  // Check if mobile menu is open
+  useEffect(() => {
+    const checkMobileMenu = () => {
+      setIsMobileMenuOpen(document.body.classList.contains('mobile-menu-open'))
+    }
+
+    checkMobileMenu()
+    const observer = new MutationObserver(checkMobileMenu)
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] })
+
+    return () => observer.disconnect()
+  }, [])
+
+  if (!user || isMobileMenuOpen) return null
 
   return (
-    <div className="fixed bottom-6 right-6 z-50" ref={menuRef}>
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50" ref={menuRef}>
       <AnimatePresence>
         {showMenu && (
           <motion.div
@@ -93,7 +107,7 @@ export function UserMenuFAB() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setShowMenu(!showMenu)}
-        className="w-14 h-14 sofa-fab rounded-full flex items-center justify-center"
+        className="w-12 h-12 sm:w-14 sm:h-14 sofa-fab rounded-full flex items-center justify-center"
       >
         <motion.div
           animate={{ rotate: showMenu ? 180 : 0 }}
