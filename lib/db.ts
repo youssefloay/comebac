@@ -267,7 +267,7 @@ export async function updateMatch(matchId: string, matchData: Partial<Omit<Match
 
 export async function createMatchResult(resultData: Omit<MatchResult, "id" | "createdAt" | "updatedAt">) {
   try {
-    const docRef = await addDoc(collection(db, "results"), {
+    const docRef = await addDoc(collection(db, "matchResults"), {
       ...resultData,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
@@ -281,7 +281,7 @@ export async function createMatchResult(resultData: Omit<MatchResult, "id" | "cr
 
 export async function getMatchResult(matchId: string): Promise<MatchResult | null> {
   try {
-    const q = query(collection(db, "results"), where("matchId", "==", matchId))
+    const q = query(collection(db, "matchResults"), where("matchId", "==", matchId))
     const querySnapshot = await getDocs(q)
     if (querySnapshot.docs.length > 0) {
       const doc = querySnapshot.docs[0]
@@ -301,7 +301,7 @@ export async function getMatchResult(matchId: string): Promise<MatchResult | nul
 
 export async function updateMatchResult(resultId: string, resultData: Partial<Omit<MatchResult, "id" | "createdAt">>) {
   try {
-    await updateDoc(doc(db, "results", resultId), {
+    await updateDoc(doc(db, "matchResults", resultId), {
       ...resultData,
       updatedAt: Timestamp.now(),
     })
@@ -311,11 +311,26 @@ export async function updateMatchResult(resultId: string, resultData: Partial<Om
   }
 }
 
+export async function getAllMatchResults(): Promise<MatchResult[]> {
+  try {
+    const querySnapshot = await getDocs(collection(db, "matchResults"))
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate() || new Date(),
+      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+    })) as MatchResult[]
+  } catch (error) {
+    console.error("Error getting all match results:", error)
+    throw error
+  }
+}
+
 // ============ TEAM STATISTICS ============
 
 export async function getTeamStatistics(teamId: string): Promise<TeamStatistics | null> {
   try {
-    const q = query(collection(db, "statistics"), where("teamId", "==", teamId))
+    const q = query(collection(db, "teamStatistics"), where("teamId", "==", teamId))
     const querySnapshot = await getDocs(q)
     if (querySnapshot.docs.length > 0) {
       const doc = querySnapshot.docs[0]
@@ -334,7 +349,7 @@ export async function getTeamStatistics(teamId: string): Promise<TeamStatistics 
 
 export async function getAllTeamStatistics(): Promise<TeamStatistics[]> {
   try {
-    const q = query(collection(db, "statistics"), orderBy("points", "desc"))
+    const q = query(collection(db, "teamStatistics"), orderBy("points", "desc"))
     const querySnapshot = await getDocs(q)
     return querySnapshot.docs.map((doc) => ({
       id: doc.id,
@@ -349,17 +364,17 @@ export async function getAllTeamStatistics(): Promise<TeamStatistics[]> {
 
 export async function updateTeamStatistics(teamId: string, stats: Partial<Omit<TeamStatistics, "id" | "teamId">>) {
   try {
-    const q = query(collection(db, "statistics"), where("teamId", "==", teamId))
+    const q = query(collection(db, "teamStatistics"), where("teamId", "==", teamId))
     const querySnapshot = await getDocs(q)
     if (querySnapshot.docs.length > 0) {
       const docId = querySnapshot.docs[0].id
-      await updateDoc(doc(db, "statistics", docId), {
+      await updateDoc(doc(db, "teamStatistics", docId), {
         ...stats,
         updatedAt: Timestamp.now(),
       })
     } else {
       // Create new statistics document if it doesn't exist
-      await addDoc(collection(db, "statistics"), {
+      await addDoc(collection(db, "teamStatistics"), {
         teamId,
         ...stats,
         updatedAt: Timestamp.now(),

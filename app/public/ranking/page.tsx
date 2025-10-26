@@ -3,25 +3,40 @@
 import { useEffect, useState } from "react"
 import { db } from "@/lib/firebase"
 import { collection, getDocs } from "firebase/firestore"
-import type { TeamStatistics } from "@/lib/types"
+import type { TeamStatistics, Team } from "@/lib/types"
 
 export default function RankingPage() {
-  const [ranking, setRanking] = useState<TeamStatistics[]>([])
+  const [ranking, setRanking] = useState<(TeamStatistics & { teamName: string })[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchRanking = async () => {
       try {
-        const statsSnap = await getDocs(collection(db, "teamStatistics"))
+        const [statsSnap, teamsSnap] = await Promise.all([
+          getDocs(collection(db, "teamStatistics")),
+          getDocs(collection(db, "teams"))
+        ])
+        
+        const teamsMap = new Map()
+        teamsSnap.docs.forEach((doc) => {
+          teamsMap.set(doc.id, { id: doc.id, ...doc.data() })
+        })
+
         const statsData = statsSnap.docs
-          .map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }))
+          .map((doc) => {
+            const data = doc.data() as TeamStatistics
+            const team = teamsMap.get(data.teamId)
+            return {
+              id: doc.id,
+              ...data,
+              teamName: team?.name || "Équipe inconnue",
+              goalDifference: data.goalsFor - data.goalsAgainst
+            }
+          })
           .sort((a, b) => {
             if (b.points !== a.points) return b.points - a.points
             return b.goalDifference - a.goalDifference
-          }) as TeamStatistics[]
+          })
 
         setRanking(statsData)
       } catch (error) {
@@ -69,7 +84,7 @@ export default function RankingPage() {
                   <td className="px-6 py-4 text-sm font-semibold text-gray-900">{idx + 1}</td>
                   <td className="px-6 py-4 text-sm font-semibold text-gray-900">{team.teamName}</td>
                   <td className="px-6 py-4 text-sm text-center text-gray-700">
-                    {team.wins + team.draws + team.losses}
+                    {team.matchesPlayed}
                   </td>
                   <td className="px-6 py-4 text-sm text-center text-gray-700">{team.wins}</td>
                   <td className="px-6 py-4 text-sm text-center text-gray-700">{team.draws}</td>

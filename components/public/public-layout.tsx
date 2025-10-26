@@ -38,7 +38,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               <Link href="/public/ranking" className="text-gray-700 hover:text-primary transition">
                 Classement
               </Link>
-              <Link href="/public/stats" className="text-gray-700 hover:text-primary transition">
+              <Link href="/public/statistics" className="text-gray-700 hover:text-primary transition">
                 Statistiques
               </Link>
             </div>

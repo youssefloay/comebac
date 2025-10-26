@@ -5,6 +5,23 @@ import type { Match, Team, MatchResult } from "@/lib/types"
 import type { Player } from "@/lib/types"
 import { getPlayersByTeam } from "@/lib/db"
 import { Button } from "@/components/ui/button"
+import { 
+  Trophy, 
+  Target, 
+  Users, 
+  Plus, 
+  Trash2, 
+  Home, 
+  Plane, 
+  AlertCircle,
+  CheckCircle,
+  User,
+  UserPlus,
+  Edit3,
+  Save,
+  Calendar,
+  Clock
+} from "lucide-react"
 
 interface MatchResultFormProps {
   match: Match & { homeTeam?: Team; awayTeam?: Team; result?: MatchResult }
@@ -128,225 +145,512 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
     await onSubmit(match, result)
   }
 
+  const formatMatchDate = (date: Date) => {
+    return new Intl.DateTimeFormat("fr-FR", {
+      weekday: "long",
+      year: "numeric", 
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(date)
+  }
+
+  const getScoreValidation = () => {
+    const homeScorersCount = homeScorers.filter(s => s.playerName.trim()).length
+    const awayScorersCount = awayScorers.filter(s => s.playerName.trim()).length
+    
+    return {
+      homeValid: homeScorersCount === homeScore,
+      awayValid: awayScorersCount === awayScore,
+      homeScorersCount,
+      awayScorersCount
+    }
+  }
+
+  const validation = getScoreValidation()
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-2 gap-8">
-        <div>
-          <h3 className="font-semibold mb-4">{match.homeTeam?.name}</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Score</label>
-              <input
-                type="number"
-                min="0"
-                value={homeScore}
-                onChange={(e) => setHomeScore(Number(e.target.value))}
-                className="w-20 px-2 py-1 border rounded"
-                required
-              />
+    <div className="max-w-4xl mx-auto">
+      {/* Match Header */}
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-t-xl border-b">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-100 p-2 rounded-lg">
+              <Trophy className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Buteurs</label>
-              {homeScorers.map((scorer, index) => (
-                <div key={index} className="flex gap-2 mb-2">
-                  <select
-                    value={scorer.playerId || (scorer.playerName ? '__manual__' : '')}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      if (val === '__manual__') {
-                        updateScorerFields('home', index, { playerId: '', playerName: '' })
-                      } else {
-                        const p = homePlayers.find((pl) => pl.id === val)
-                        if (p) {
-                          updateScorerFields('home', index, { playerId: p.id, playerName: p.name })
-                        }
-                      }
-                    }}
-                    className="px-2 py-1 border rounded text-sm"
-                  >
-                    <option value="">Sélectionner le joueur</option>
-                    {homePlayers.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.number ? `${p.number} - ` : ''}{p.name}
-                      </option>
-                    ))}
-                    <option value="__manual__">Autre (saisir manuellement)</option>
-                  </select>
-
-                  <input
-                    type="text"
-                    placeholder="Nom du buteur"
-                    value={scorer.playerName}
-                    onChange={(e) => handleScorerChange('home', index, 'playerName', e.target.value)}
-                    className="flex-1 px-2 py-1 border rounded text-sm"
-                    required
-                    disabled={!!scorer.playerId}
-                  />
-
-                  <select
-                    value={scorer.assists || ''}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      if (val === '__none__') {
-                        updateScorerFields('home', index, { assists: '' })
-                      } else if (val === '__manual_assist__') {
-                        updateScorerFields('home', index, { assists: '' })
-                      } else {
-                        const p = homePlayers.find((pl) => pl.id === val)
-                        updateScorerFields('home', index, { assists: p ? p.name : '' })
-                      }
-                    }}
-                    className="flex-1 px-2 py-1 border rounded text-sm"
-                  >
-                    <option value="__none__">Pas de passeur</option>
-                    {homePlayers.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.number ? `${p.number} - ` : ''}{p.name}
-                      </option>
-                    ))}
-                    <option value="__manual_assist__">Autre (saisir manuellement)</option>
-                  </select>
-
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => {
-                      const newScorers = [...homeScorers]
-                      newScorers.splice(index, 1)
-                      setHomeScorers(newScorers)
-                    }}
-                  >
-                    ×
-                  </Button>
-                </div>
-              ))}
-              {homeScore > homeScorers.length && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleAddScorer('home')}
-                >
-                  + Ajouter un buteur
-                </Button>
-              )}
+              <h2 className="text-xl font-bold text-gray-900">Résultat du Match</h2>
+              <p className="text-sm text-gray-600 flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                {formatMatchDate(match.date)}
+              </p>
             </div>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-gray-600">Journée {match.round}</p>
+            <p className="text-xs text-gray-500">ID: {match.id.slice(-6)}</p>
           </div>
         </div>
 
-        <div>
-          <h3 className="font-semibold mb-4">{match.awayTeam?.name}</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Score</label>
-              <input
-                type="number"
-                min="0"
-                value={awayScore}
-                onChange={(e) => setAwayScore(Number(e.target.value))}
-                className="w-20 px-2 py-1 border rounded"
-                required
-              />
+        {/* Teams Header */}
+        <div className="grid grid-cols-3 gap-4 items-center">
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Home className="w-5 h-5 text-green-600" />
+              <span className="text-sm font-medium text-green-700 bg-green-100 px-2 py-1 rounded">
+                DOMICILE
+              </span>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Buteurs</label>
-              {awayScorers.map((scorer, index) => (
-                <div key={index} className="flex gap-2 mb-2">
-                  <select
-                    value={scorer.playerId || (scorer.playerName ? '__manual__' : '')}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      if (val === '__manual__') {
-                        handleScorerChange('away', index, 'playerId', '')
-                        handleScorerChange('away', index, 'playerName', '')
-                      } else {
-                        const p = awayPlayers.find((pl) => pl.id === val)
-                        if (p) {
-                          handleScorerChange('away', index, 'playerId', p.id)
-                          handleScorerChange('away', index, 'playerName', p.name)
-                        }
-                      }
-                    }}
-                    className="px-2 py-1 border rounded text-sm"
-                  >
-                    <option value="">Sélectionner le joueur</option>
-                    {awayPlayers.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.number ? `${p.number} - ` : ''}{p.name}
-                      </option>
-                    ))}
-                    <option value="__manual__">Autre (saisir manuellement)</option>
-                  </select>
-
-                  <input
-                    type="text"
-                    placeholder="Nom du buteur"
-                    value={scorer.playerName}
-                    onChange={(e) => handleScorerChange('away', index, 'playerName', e.target.value)}
-                    className="flex-1 px-2 py-1 border rounded text-sm"
-                    required
-                    disabled={!!scorer.playerId}
-                  />
-
-                  <select
-                    value={scorer.assists || ''}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      if (val === '__none__') {
-                        updateScorerFields('away', index, { assists: '' })
-                      } else if (val === '__manual_assist__') {
-                        updateScorerFields('away', index, { assists: '' })
-                      } else {
-                        const p = awayPlayers.find((pl) => pl.id === val)
-                        updateScorerFields('away', index, { assists: p ? p.name : '' })
-                      }
-                    }}
-                    className="flex-1 px-2 py-1 border rounded text-sm"
-                  >
-                    <option value="__none__">Pas de passeur</option>
-                    {awayPlayers.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.number ? `${p.number} - ` : ''}{p.name}
-                      </option>
-                    ))}
-                    <option value="__manual_assist__">Autre (saisir manuellement)</option>
-                  </select>
-
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => {
-                      const newScorers = [...awayScorers]
-                      newScorers.splice(index, 1)
-                      setAwayScorers(newScorers)
-                    }}
-                  >
-                    ×
-                  </Button>
-                </div>
-              ))}
-              {awayScore > awayScorers.length && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleAddScorer('away')}
-                >
-                  + Ajouter un buteur
-                </Button>
-              )}
+            <h3 className="text-lg font-bold text-gray-900">{match.homeTeam?.name}</h3>
+          </div>
+          
+          <div className="text-center">
+            <div className="bg-white p-3 rounded-lg shadow-sm border">
+              <p className="text-sm text-gray-600 mb-1">Score Final</p>
+              <div className="text-2xl font-bold text-gray-900">
+                {homeScore} - {awayScore}
+              </div>
             </div>
+          </div>
+          
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <span className="text-sm font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded">
+                EXTÉRIEUR
+              </span>
+              <Plane className="w-5 h-5 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">{match.awayTeam?.name}</h3>
           </div>
         </div>
       </div>
 
-      <div className="flex justify-end mt-6">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Enregistrement...' : 'Enregistrer le résultat'}
-        </Button>
-      </div>
-    </form>
+      <form onSubmit={handleSubmit} className="bg-white rounded-b-xl">
+        <div className="p-6 space-y-8">
+          {/* Score Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Home Team Score */}
+            <div className="bg-green-50 p-6 rounded-xl border border-green-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-green-100 p-2 rounded-lg">
+                  <Home className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900">{match.homeTeam?.name}</h4>
+                  <p className="text-sm text-gray-600">Équipe à domicile</p>
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Score de l'équipe
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="20"
+                    value={homeScore}
+                    onChange={(e) => setHomeScore(Number(e.target.value))}
+                    className="w-full px-4 py-3 text-2xl font-bold text-center border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none bg-white"
+                    required
+                  />
+                  <Target className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-green-500" />
+                </div>
+              </div>
+
+              {/* Validation Indicator */}
+              <div className={`flex items-center gap-2 text-sm p-2 rounded ${
+                validation.homeValid 
+                  ? 'bg-green-100 text-green-700' 
+                  : 'bg-yellow-100 text-yellow-700'
+              }`}>
+                {validation.homeValid ? (
+                  <CheckCircle className="w-4 h-4" />
+                ) : (
+                  <AlertCircle className="w-4 h-4" />
+                )}
+                <span>
+                  {validation.homeValid 
+                    ? 'Score et buteurs correspondent' 
+                    : `${validation.homeScorersCount}/${homeScore} buteurs renseignés`
+                  }
+                </span>
+              </div>
+            </div>
+
+            {/* Away Team Score */}
+            <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-blue-100 p-2 rounded-lg">
+                  <Plane className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900">{match.awayTeam?.name}</h4>
+                  <p className="text-sm text-gray-600">Équipe à l'extérieur</p>
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Score de l'équipe
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="20"
+                    value={awayScore}
+                    onChange={(e) => setAwayScore(Number(e.target.value))}
+                    className="w-full px-4 py-3 text-2xl font-bold text-center border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                    required
+                  />
+                  <Target className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-500" />
+                </div>
+              </div>
+
+              {/* Validation Indicator */}
+              <div className={`flex items-center gap-2 text-sm p-2 rounded ${
+                validation.awayValid 
+                  ? 'bg-green-100 text-green-700' 
+                  : 'bg-yellow-100 text-yellow-700'
+              }`}>
+                {validation.awayValid ? (
+                  <CheckCircle className="w-4 h-4" />
+                ) : (
+                  <AlertCircle className="w-4 h-4" />
+                )}
+                <span>
+                  {validation.awayValid 
+                    ? 'Score et buteurs correspondent' 
+                    : `${validation.awayScorersCount}/${awayScore} buteurs renseignés`
+                  }
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Goal Scorers Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Home Team Scorers */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-green-600" />
+                  Buteurs - {match.homeTeam?.name}
+                </h4>
+                {homeScore > homeScorers.length && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleAddScorer('home')}
+                    className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Ajouter
+                  </Button>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                {homeScorers.map((scorer, index) => (
+                  <div key={`home-scorer-form-${index}`} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="bg-green-100 p-1 rounded">
+                        <Target className="w-4 h-4 text-green-600" />
+                      </div>
+                      <span className="text-sm font-medium text-gray-700">But #{index + 1}</span>
+                      <div className="ml-auto">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const newScorers = [...homeScorers]
+                            newScorers.splice(index, 1)
+                            setHomeScorers(newScorers)
+                          }}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Sélectionner le buteur
+                        </label>
+                        <select
+                          value={scorer.playerId || (scorer.playerName ? '__manual__' : '')}
+                          onChange={(e) => {
+                            const val = e.target.value
+                            if (val === '__manual__') {
+                              updateScorerFields('home', index, { playerId: '', playerName: '' })
+                            } else {
+                              const p = homePlayers.find((pl) => pl.id === val)
+                              if (p) {
+                                updateScorerFields('home', index, { playerId: p.id, playerName: p.name })
+                              }
+                            }
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm"
+                        >
+                          <option value="">Choisir un joueur...</option>
+                          {homePlayers.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.number ? `#${p.number} - ` : ''}{p.name}
+                            </option>
+                          ))}
+                          <option value="__manual__">✏️ Saisir manuellement</option>
+                        </select>
+                      </div>
+
+                      {(!scorer.playerId || scorer.playerName) && (
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Nom du buteur
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Nom du joueur"
+                            value={scorer.playerName}
+                            onChange={(e) => handleScorerChange('home', index, 'playerName', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm"
+                            required
+                            disabled={!!scorer.playerId}
+                          />
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Passeur décisif (optionnel)
+                        </label>
+                        <select
+                          value={scorer.assists || ''}
+                          onChange={(e) => {
+                            const val = e.target.value
+                            if (val === '__none__') {
+                              updateScorerFields('home', index, { assists: '' })
+                            } else if (val === '__manual_assist__') {
+                              updateScorerFields('home', index, { assists: '' })
+                            } else {
+                              const p = homePlayers.find((pl) => pl.id === val)
+                              updateScorerFields('home', index, { assists: p ? p.name : '' })
+                            }
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm"
+                        >
+                          <option value="">Aucun passeur</option>
+                          {homePlayers.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.number ? `#${p.number} - ` : ''}{p.name}
+                            </option>
+                          ))}
+                          <option value="__manual_assist__">✏️ Autre joueur</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {homeScorers.length === 0 && homeScore > 0 && (
+                  <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
+                    <Target className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                    <p className="text-sm">Aucun buteur ajouté</p>
+                    <p className="text-xs">Cliquez sur "Ajouter" pour commencer</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Away Team Scorers */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-blue-600" />
+                  Buteurs - {match.awayTeam?.name}
+                </h4>
+                {awayScore > awayScorers.length && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleAddScorer('away')}
+                    className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Ajouter
+                  </Button>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                {awayScorers.map((scorer, index) => (
+                  <div key={`away-scorer-form-${index}`} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="bg-blue-100 p-1 rounded">
+                        <Target className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <span className="text-sm font-medium text-gray-700">But #{index + 1}</span>
+                      <div className="ml-auto">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const newScorers = [...awayScorers]
+                            newScorers.splice(index, 1)
+                            setAwayScorers(newScorers)
+                          }}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Sélectionner le buteur
+                        </label>
+                        <select
+                          value={scorer.playerId || (scorer.playerName ? '__manual__' : '')}
+                          onChange={(e) => {
+                            const val = e.target.value
+                            if (val === '__manual__') {
+                              handleScorerChange('away', index, 'playerId', '')
+                              handleScorerChange('away', index, 'playerName', '')
+                            } else {
+                              const p = awayPlayers.find((pl) => pl.id === val)
+                              if (p) {
+                                handleScorerChange('away', index, 'playerId', p.id)
+                                handleScorerChange('away', index, 'playerName', p.name)
+                              }
+                            }
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        >
+                          <option value="">Choisir un joueur...</option>
+                          {awayPlayers.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.number ? `#${p.number} - ` : ''}{p.name}
+                            </option>
+                          ))}
+                          <option value="__manual__">✏️ Saisir manuellement</option>
+                        </select>
+                      </div>
+
+                      {(!scorer.playerId || scorer.playerName) && (
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Nom du buteur
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Nom du joueur"
+                            value={scorer.playerName}
+                            onChange={(e) => handleScorerChange('away', index, 'playerName', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            required
+                            disabled={!!scorer.playerId}
+                          />
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Passeur décisif (optionnel)
+                        </label>
+                        <select
+                          value={scorer.assists || ''}
+                          onChange={(e) => {
+                            const val = e.target.value
+                            if (val === '__none__') {
+                              updateScorerFields('away', index, { assists: '' })
+                            } else if (val === '__manual_assist__') {
+                              updateScorerFields('away', index, { assists: '' })
+                            } else {
+                              const p = awayPlayers.find((pl) => pl.id === val)
+                              updateScorerFields('away', index, { assists: p ? p.name : '' })
+                            }
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                        >
+                          <option value="">Aucun passeur</option>
+                          {awayPlayers.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.number ? `#${p.number} - ` : ''}{p.name}
+                            </option>
+                          ))}
+                          <option value="__manual_assist__">✏️ Autre joueur</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {awayScorers.length === 0 && awayScore > 0 && (
+                  <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
+                    <Target className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                    <p className="text-sm">Aucun buteur ajouté</p>
+                    <p className="text-xs">Cliquez sur "Ajouter" pour commencer</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Form Actions */}
+        <div className="bg-gray-50 px-6 py-4 rounded-b-xl border-t">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4 text-sm text-gray-600">
+              {!validation.homeValid && (
+                <div className="flex items-center gap-1 text-yellow-600">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>Vérifiez les buteurs de {match.homeTeam?.name}</span>
+                </div>
+              )}
+              {!validation.awayValid && (
+                <div className="flex items-center gap-1 text-yellow-600">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>Vérifiez les buteurs de {match.awayTeam?.name}</span>
+                </div>
+              )}
+              {validation.homeValid && validation.awayValid && (
+                <div className="flex items-center gap-1 text-green-600">
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Toutes les informations sont correctes</span>
+                </div>
+              )}
+            </div>
+            
+            <Button 
+              type="submit" 
+              disabled={isSubmitting || !validation.homeValid || !validation.awayValid}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Enregistrement...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  Enregistrer le résultat
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </form>
+    </div>
   )
 }

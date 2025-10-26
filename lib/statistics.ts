@@ -1,4 +1,4 @@
-import { getMatches, getMatchResult, updateTeamStatistics, getAllTeamStatistics } from "./db"
+import { getMatches, getAllMatchResults, updateTeamStatistics, getAllTeamStatistics, getTeams } from "./db"
 import { calculateTeamStats } from "./match-generation"
 import type { TeamStatistics } from "./types"
 
@@ -10,15 +10,10 @@ export async function recalculateAllStatistics(): Promise<void> {
   try {
     const [matches, allResults] = await Promise.all([
       getMatches(),
-      Promise.all(
-        (await getMatches()).map(async (m) => {
-          const result = await getMatchResult(m.id)
-          return result
-        }),
-      ),
+      getAllMatchResults(),
     ])
 
-    const completedResults = allResults.filter((r) => r !== null) as any[]
+    const completedResults = allResults
 
     // Calculate stats
     const stats = calculateTeamStats(
@@ -93,16 +88,11 @@ export async function getTeamDetailedStats(teamId: string) {
   try {
     const [matches, allResults] = await Promise.all([
       getMatches(),
-      Promise.all(
-        (await getMatches()).map(async (m) => {
-          const result = await getMatchResult(m.id)
-          return result
-        }),
-      ),
+      getAllMatchResults(),
     ])
 
     const teamMatches = matches.filter((m) => m.homeTeamId === teamId || m.awayTeamId === teamId)
-    const completedResults = allResults.filter((r) => r !== null) as any[]
+    const completedResults = allResults
 
     const teamResults = completedResults.filter((r) => {
       const match = matches.find((m) => m.id === r.matchId)
@@ -150,38 +140,285 @@ export async function getTeamDetailedStats(teamId: string) {
 }
 
 /**
- * Gets top scorers (requires match results with goal scorers)
+ * Gets top scorers with detailed statistics
  */
 export async function getTopScorers() {
   try {
-    const matches = await getMatches()
-    const allResults = await Promise.all(matches.map((m) => getMatchResult(m.id)))
+    const allResults = await getAllMatchResults()
 
-    const scorerStats: Record<string, { name: string; goals: number }> = {}
+    const scorerStats: Record<string, { 
+      name: string; 
+      goals: number; 
+      assists: number;
+      matches: number;
+      goalsPerMatch: number;
+    }> = {}
 
     allResults.forEach((result) => {
-      if (!result) return
+      // Track matches for each player
+      const matchPlayers = new Set<string>()
 
       result.homeTeamGoalScorers.forEach((scorer) => {
-        if (!scorerStats[scorer]) {
-          scorerStats[scorer] = { name: scorer, goals: 0 }
+        const playerName = scorer.playerName
+        if (!scorerStats[playerName]) {
+          scorerStats[playerName] = { name: playerName, goals: 0, assists: 0, matches: 0, goalsPerMatch: 0 }
         }
-        scorerStats[scorer].goals++
+        scorerStats[playerName].goals++
+        matchPlayers.add(playerName)
       })
 
       result.awayTeamGoalScorers.forEach((scorer) => {
-        if (!scorerStats[scorer]) {
-          scorerStats[scorer] = { name: scorer, goals: 0 }
+        const playerName = scorer.playerName
+        if (!scorerStats[playerName]) {
+          scorerStats[playerName] = { name: playerName, goals: 0, assists: 0, matches: 0, goalsPerMatch: 0 }
         }
-        scorerStats[scorer].goals++
+        scorerStats[playerName].goals++
+        matchPlayers.add(playerName)
+      })
+
+      // Count assists
+      result.homeTeamGoalScorers.forEach((scorer) => {
+        if (scorer.assists) {
+          if (!scorerStats[scorer.assists]) {
+            scorerStats[scorer.assists] = { name: scorer.assists, goals: 0, assists: 0, matches: 0, goalsPerMatch: 0 }
+          }
+          scorerStats[scorer.assists].assists++
+          matchPlayers.add(scorer.assists)
+        }
+      })
+
+      result.awayTeamGoalScorers.forEach((scorer) => {
+        if (scorer.assists) {
+          if (!scorerStats[scorer.assists]) {
+            scorerStats[scorer.assists] = { name: scorer.assists, goals: 0, assists: 0, matches: 0, goalsPerMatch: 0 }
+          }
+          scorerStats[scorer.assists].assists++
+          matchPlayers.add(scorer.assists)
+        }
+      })
+
+      // Update match count for players who participated
+      matchPlayers.forEach(playerName => {
+        scorerStats[playerName].matches++
       })
     })
 
+    // Calculate goals per match
+    Object.values(scorerStats).forEach(player => {
+      player.goalsPerMatch = player.matches > 0 ? Number((player.goals / player.matches).toFixed(2)) : 0
+    })
+
     return Object.values(scorerStats)
-      .sort((a, b) => b.goals - a.goals)
-      .slice(0, 10)
+      .filter(player => player.goals > 0 || player.assists > 0)
+      .sort((a, b) => {
+        if (b.goals !== a.goals) return b.goals - a.goals
+        return b.assists - a.assists
+      })
+      .slice(0, 20)
   } catch (error) {
     console.error("[v0] Error getting top scorers:", error)
+    throw error
+  }
+}
+
+/**
+ * Gets detailed match history with all goals and assists
+ */
+export async function getDetailedMatchHistory() {
+  try {
+    const [matches, results] = await Promise.all([
+      getMatches(),
+      getAllMatchResults()
+    ])
+
+    const detailedMatches = matches
+      .filter(match => match.status === "completed")
+      .map(match => {
+        const result = results.find(r => r.matchId === match.id)
+        return {
+          ...match,
+          result: result || null
+        }
+      })
+      .filter(match => match.result)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+    return detailedMatches
+  } catch (error) {
+    console.error("[v0] Error getting detailed match history:", error)
+    throw error
+  }
+}
+
+/**
+ * Gets comprehensive team statistics including match details
+ */
+export async function getComprehensiveTeamStats(teamId: string) {
+  try {
+    const [matches, results] = await Promise.all([
+      getMatches(),
+      getAllMatchResults()
+    ])
+
+    const teamMatches = matches.filter(m => m.homeTeamId === teamId || m.awayTeamId === teamId)
+    const completedMatches = teamMatches.filter(m => m.status === "completed")
+    
+    const teamResults = results.filter(r => {
+      const match = matches.find(m => m.id === r.matchId)
+      return match && (match.homeTeamId === teamId || match.awayTeamId === teamId)
+    })
+
+    // Detailed match results with goals and assists
+    const detailedResults = teamResults.map(result => {
+      const match = matches.find(m => m.id === result.matchId)
+      const isHome = match?.homeTeamId === teamId
+      
+      return {
+        match,
+        result,
+        isHome,
+        teamScore: isHome ? result.homeTeamScore : result.awayTeamScore,
+        opponentScore: isHome ? result.awayTeamScore : result.homeTeamScore,
+        teamGoals: isHome ? result.homeTeamGoalScorers : result.awayTeamGoalScorers,
+        opponentGoals: isHome ? result.awayTeamGoalScorers : result.homeTeamGoalScorers,
+        outcome: isHome 
+          ? (result.homeTeamScore > result.awayTeamScore ? 'W' : result.homeTeamScore === result.awayTeamScore ? 'D' : 'L')
+          : (result.awayTeamScore > result.homeTeamScore ? 'W' : result.awayTeamScore === result.homeTeamScore ? 'D' : 'L')
+      }
+    }).sort((a, b) => new Date(b.match?.date || 0).getTime() - new Date(a.match?.date || 0).getTime())
+
+    // Calculate streaks
+    let currentStreak = 0
+    let streakType = ''
+    for (let i = 0; i < detailedResults.length; i++) {
+      const outcome = detailedResults[i].outcome
+      if (i === 0) {
+        currentStreak = 1
+        streakType = outcome
+      } else if (detailedResults[i-1].outcome === outcome) {
+        currentStreak++
+      } else {
+        break
+      }
+    }
+
+    // Player statistics for this team
+    const playerStats: Record<string, {
+      name: string
+      goals: number
+      assists: number
+      matches: number
+    }> = {}
+
+    detailedResults.forEach(({ teamGoals }) => {
+      const matchPlayers = new Set<string>()
+      
+      teamGoals.forEach(goal => {
+        if (!playerStats[goal.playerName]) {
+          playerStats[goal.playerName] = { name: goal.playerName, goals: 0, assists: 0, matches: 0 }
+        }
+        playerStats[goal.playerName].goals++
+        matchPlayers.add(goal.playerName)
+
+        if (goal.assists) {
+          if (!playerStats[goal.assists]) {
+            playerStats[goal.assists] = { name: goal.assists, goals: 0, assists: 0, matches: 0 }
+          }
+          playerStats[goal.assists].assists++
+          matchPlayers.add(goal.assists)
+        }
+      })
+
+      matchPlayers.forEach(playerName => {
+        playerStats[playerName].matches++
+      })
+    })
+
+    const topPlayers = Object.values(playerStats)
+      .filter(p => p.goals > 0 || p.assists > 0)
+      .sort((a, b) => {
+        if (b.goals !== a.goals) return b.goals - a.goals
+        return b.assists - a.assists
+      })
+
+    // Form guide (last 5 matches)
+    const formGuide = detailedResults.slice(0, 5).map(r => r.outcome)
+
+    return {
+      totalMatches: teamMatches.length,
+      completedMatches: completedMatches.length,
+      scheduledMatches: teamMatches.length - completedMatches.length,
+      detailedResults,
+      topPlayers,
+      currentStreak: `${currentStreak}${streakType}`,
+      formGuide,
+      // Additional stats
+      biggestWin: detailedResults
+        .filter(r => r.outcome === 'W')
+        .sort((a, b) => (b.teamScore - b.opponentScore) - (a.teamScore - a.opponentScore))[0] || null,
+      biggestLoss: detailedResults
+        .filter(r => r.outcome === 'L')
+        .sort((a, b) => (b.opponentScore - b.teamScore) - (a.opponentScore - a.teamScore))[0] || null,
+      cleanSheets: detailedResults.filter(r => r.opponentScore === 0).length,
+      failedToScore: detailedResults.filter(r => r.teamScore === 0).length
+    }
+  } catch (error) {
+    console.error("[v0] Error getting comprehensive team stats:", error)
+    throw error
+  }
+}
+
+/**
+ * Gets head-to-head statistics between two teams
+ */
+export async function getHeadToHeadStats(team1Id: string, team2Id: string) {
+  try {
+    const [matches, results] = await Promise.all([
+      getMatches(),
+      getAllMatchResults()
+    ])
+
+    const h2hMatches = matches.filter(m => 
+      (m.homeTeamId === team1Id && m.awayTeamId === team2Id) ||
+      (m.homeTeamId === team2Id && m.awayTeamId === team1Id)
+    )
+
+    const h2hResults = results.filter(r => {
+      const match = matches.find(m => m.id === r.matchId)
+      return match && h2hMatches.some(h2h => h2h.id === match.id)
+    })
+
+    const detailedH2H = h2hResults.map(result => {
+      const match = matches.find(m => m.id === result.matchId)
+      const team1IsHome = match?.homeTeamId === team1Id
+      
+      return {
+        match,
+        result,
+        team1Score: team1IsHome ? result.homeTeamScore : result.awayTeamScore,
+        team2Score: team1IsHome ? result.awayTeamScore : result.homeTeamScore,
+        team1Goals: team1IsHome ? result.homeTeamGoalScorers : result.awayTeamGoalScorers,
+        team2Goals: team1IsHome ? result.awayTeamGoalScorers : result.homeTeamGoalScorers,
+        winner: team1IsHome 
+          ? (result.homeTeamScore > result.awayTeamScore ? team1Id : result.homeTeamScore === result.awayTeamScore ? 'draw' : team2Id)
+          : (result.awayTeamScore > result.homeTeamScore ? team1Id : result.awayTeamScore === result.homeTeamScore ? 'draw' : team2Id)
+      }
+    }).sort((a, b) => new Date(b.match?.date || 0).getTime() - new Date(a.match?.date || 0).getTime())
+
+    const team1Wins = detailedH2H.filter(h => h.winner === team1Id).length
+    const team2Wins = detailedH2H.filter(h => h.winner === team2Id).length
+    const draws = detailedH2H.filter(h => h.winner === 'draw').length
+
+    return {
+      totalMatches: detailedH2H.length,
+      team1Wins,
+      team2Wins,
+      draws,
+      detailedMatches: detailedH2H,
+      lastMeeting: detailedH2H[0] || null
+    }
+  } catch (error) {
+    console.error("[v0] Error getting head-to-head stats:", error)
     throw error
   }
 }

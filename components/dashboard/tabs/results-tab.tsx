@@ -216,7 +216,7 @@ export default function ResultsTab() {
 
   const getTeamName = (teamId: string) => teams.find((t) => t.id === teamId)?.name || "Équipe inconnue"
 
-  const completedMatches = matches.filter((m) => results.some((r) => r.matchId === m.id))
+  const completedMatches = matches.filter((m) => m.status === "completed" || results.some((r) => r.matchId === m.id))
   const totalMatches = matches.length
   const totalGoals = results.reduce((sum, r) => sum + r.homeTeamScore + r.awayTeamScore, 0)
 
