@@ -106,14 +106,18 @@ export async function createPlayer(playerData: Omit<Player, "id" | "createdAt" |
 
 export async function getPlayersByTeam(teamId: string): Promise<Player[]> {
   try {
-    const q = query(collection(db, "players"), where("teamId", "==", teamId), orderBy("number"))
+    // Sorting is now done client-side after fetching
+    const q = query(collection(db, "players"), where("teamId", "==", teamId))
     const querySnapshot = await getDocs(q)
-    return querySnapshot.docs.map((doc) => ({
+    const players = querySnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate() || new Date(),
       updatedAt: doc.data().updatedAt?.toDate() || new Date(),
     })) as Player[]
+
+    // Sort by player number client-side
+    return players.sort((a, b) => (a.number || 0) - (b.number || 0))
   } catch (error) {
     console.error("Error getting players:", error)
     throw error
