@@ -404,3 +404,69 @@ export async function updateTeamStatistics(teamId: string, stats: Partial<Omit<T
     throw error
   }
 }
+
+// ============ USER PROFILES ============
+
+export async function createUserProfile(profileData: Omit<UserProfile, "id" | "createdAt" | "updatedAt">) {
+  try {
+    console.log("[v0] Creating user profile:", profileData)
+    const docRef = await addDoc(collection(db, "userProfiles"), {
+      ...profileData,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    })
+    console.log("[v0] User profile created successfully with ID:", docRef.id)
+    return docRef.id
+  } catch (error) {
+    console.error("[v0] Error creating user profile:", error)
+    throw error
+  }
+}
+
+export async function getUserProfile(uid: string): Promise<UserProfile | null> {
+  try {
+    const q = query(collection(db, "userProfiles"), where("uid", "==", uid))
+    const querySnapshot = await getDocs(q)
+    if (querySnapshot.docs.length > 0) {
+      const doc = querySnapshot.docs[0]
+      return {
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+      } as UserProfile
+    }
+    return null
+  } catch (error) {
+    console.error("Error getting user profile:", error)
+    throw error
+  }
+}
+
+export async function updateUserProfile(uid: string, profileData: Partial<Omit<UserProfile, "id" | "uid" | "createdAt">>) {
+  try {
+    const q = query(collection(db, "userProfiles"), where("uid", "==", uid))
+    const querySnapshot = await getDocs(q)
+    if (querySnapshot.docs.length > 0) {
+      const docId = querySnapshot.docs[0].id
+      await updateDoc(doc(db, "userProfiles", docId), {
+        ...profileData,
+        updatedAt: Timestamp.now(),
+      })
+    }
+  } catch (error) {
+    console.error("Error updating user profile:", error)
+    throw error
+  }
+}
+
+export async function checkUsernameAvailability(username: string): Promise<boolean> {
+  try {
+    const q = query(collection(db, "userProfiles"), where("username", "==", username))
+    const querySnapshot = await getDocs(q)
+    return querySnapshot.docs.length === 0
+  } catch (error) {
+    console.error("Error checking username availability:", error)
+    throw error
+  }
+}

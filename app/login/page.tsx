@@ -10,9 +10,10 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { AlertCircle, Mail, Lock, Chrome } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { DomainError } from '@/components/auth/domain-error'
+import { ProfileCompletion } from '@/components/auth/profile-completion'
 
 export default function LoginPage() {
-  const { signInWithEmail, signUpWithEmail, signInWithGoogle, loading } = useAuth()
+  const { user, needsProfileCompletion, signInWithEmail, signUpWithEmail, signInWithGoogle, refreshProfile, loading } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -77,6 +78,16 @@ export default function LoginPage() {
       <div className="sofa-theme min-h-screen flex items-center justify-center p-4">
         <DomainError currentDomain={typeof window !== 'undefined' ? window.location.hostname : undefined} />
       </div>
+    )
+  }
+
+  // Show profile completion if user is authenticated but needs to complete profile
+  if (user && needsProfileCompletion) {
+    return (
+      <ProfileCompletion 
+        user={user} 
+        onComplete={refreshProfile}
+      />
     )
   }
 

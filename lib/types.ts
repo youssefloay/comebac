@@ -53,6 +53,16 @@ export interface TeamStatistics {
   updatedAt: Date
 }
 
+export interface UserProfile {
+  id: string
+  uid: string
+  email: string
+  username: string
+  fullName: string
+  createdAt: Date
+  updatedAt: Date
+}
+
 export interface User {
   id: string
   email: string

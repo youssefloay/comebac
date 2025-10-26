@@ -11,8 +11,6 @@ import {
   Calendar,
   BarChart3,
   Users,
-  Target,
-  TrendingUp,
   LogOut,
   User,
   Settings,
@@ -31,7 +29,7 @@ const navigationItems = [
 
 export function SofaNavigation() {
   const pathname = usePathname();
-  const { user, logout, isAdmin } = useAuth();
+  const { user, userProfile, logout, isAdmin } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -181,10 +179,11 @@ export function SofaNavigation() {
                   >
                     <div className="p-3 border-b border-sofa-border">
                       <p className="text-sm font-medium text-sofa-text-primary">
-                        {user.email}
+                        {userProfile?.fullName || user.email}
                       </p>
                       <p className="text-xs text-sofa-text-muted">
-                        {isAdmin ? "Administrateur" : "Utilisateur"}
+                        @{userProfile?.username || "utilisateur"} •{" "}
+                        {isAdmin ? "Admin" : "Utilisateur"}
                       </p>
                     </div>
 
@@ -242,7 +241,8 @@ export function SofaNavigation() {
         initial={{ x: "-100%" }}
         animate={{ x: showMobileMenu ? 0 : "-100%" }}
         transition={{ type: "tween", duration: 0.3 }}
-        className="fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-sofa-bg-card border-r border-sofa-border z-50 md:hidden"
+        className="fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-[#1e252f] border-r border-sofa-border z-50 md:hidden"
+        style={{ backgroundColor: "#1e252f" }}
       >
         <div className="flex flex-col h-full">
           {/* Mobile Menu Header */}
@@ -301,10 +301,11 @@ export function SofaNavigation() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sofa-text-primary truncate">
-                    {user.email}
+                    {userProfile?.fullName || user.email}
                   </p>
                   <p className="text-xs text-sofa-text-muted">
-                    {isAdmin ? "Administrateur" : "Utilisateur"}
+                    @{userProfile?.username || "utilisateur"} •{" "}
+                    {isAdmin ? "Admin" : "Utilisateur"}
                   </p>
                 </div>
               </div>

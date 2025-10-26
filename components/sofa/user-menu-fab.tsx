@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 
 export function UserMenuFAB() {
-  const { user, logout, isAdmin } = useAuth()
+  const { user, userProfile, logout, isAdmin } = useAuth()
   const [showMenu, setShowMenu] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -59,10 +59,10 @@ export function UserMenuFAB() {
           >
             <div className="p-3 border-b border-sofa-border">
               <p className="text-sm font-medium text-sofa-text-primary truncate">
-                {user.email}
+                {userProfile?.fullName || user.email}
               </p>
               <p className="text-xs text-sofa-text-muted">
-                {isAdmin ? 'Administrateur' : 'Utilisateur'}
+                @{userProfile?.username || 'utilisateur'} • {isAdmin ? 'Admin' : 'Utilisateur'}
               </p>
             </div>
             
