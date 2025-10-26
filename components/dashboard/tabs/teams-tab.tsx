@@ -42,32 +42,38 @@ export default function TeamsTab() {
     setError(null)
 
     try {
+      console.log("[v0] Submitting team form:", formData)
       if (editingId) {
+        console.log("[v0] Updating team:", editingId)
         await updateTeam(editingId, {
           name: formData.name,
           logo: formData.logo,
           color: formData.color,
         })
+        console.log("[v0] Team updated successfully")
         setSuccess("Équipe mise à jour avec succès")
       } else {
+        console.log("[v0] Creating new team")
         await createTeam({
           name: formData.name,
           logo: formData.logo,
           color: formData.color,
         })
+        console.log("[v0] Team created successfully")
         setSuccess("Équipe créée avec succès")
       }
 
       setFormData({ name: "", logo: "", color: "#10b981" })
       setShowForm(false)
       setEditingId(null)
+      console.log("[v0] Reloading teams list...")
       await loadTeams()
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
-      setError("Une erreur s'est produite lors de l'enregistrement")
-      console.error("Error saving team:", err)
+      console.error("[v0] Error in handleSubmit:", err)
+      setError(`Une erreur s'est produite: ${err instanceof Error ? err.message : "Erreur inconnue"}`)
     } finally {
       setLoading(false)
     }

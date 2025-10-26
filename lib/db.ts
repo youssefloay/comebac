@@ -18,21 +18,25 @@ import type { Team, Player, Match, MatchResult, TeamStatistics } from "./types"
 
 export async function createTeam(teamData: Omit<Team, "id" | "createdAt" | "updatedAt">) {
   try {
+    console.log("[v0] Creating team:", teamData)
     const docRef = await addDoc(collection(db, "teams"), {
       ...teamData,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     })
+    console.log("[v0] Team created successfully with ID:", docRef.id)
     return docRef.id
   } catch (error) {
-    console.error("Error creating team:", error)
+    console.error("[v0] Error creating team:", error)
     throw error
   }
 }
 
 export async function getTeams(): Promise<Team[]> {
   try {
+    console.log("[v0] Fetching teams from Firestore...")
     const querySnapshot = await getDocs(collection(db, "teams"))
+    console.log("[v0] Teams fetched:", querySnapshot.docs.length)
     return querySnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
@@ -40,7 +44,7 @@ export async function getTeams(): Promise<Team[]> {
       updatedAt: doc.data().updatedAt?.toDate() || new Date(),
     })) as Team[]
   } catch (error) {
-    console.error("Error getting teams:", error)
+    console.error("[v0] Error getting teams:", error)
     throw error
   }
 }
