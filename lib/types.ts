@@ -33,8 +33,8 @@ export interface MatchResult {
   matchId: string
   homeTeamScore: number
   awayTeamScore: number
-  homeTeamGoalScorers: string[] // player names
-  awayTeamGoalScorers: string[] // player names
+  homeTeamGoalScorers: Array<{ playerName: string; assists?: string }> // Added assists field
+  awayTeamGoalScorers: Array<{ playerName: string; assists?: string }> // Added assists field
   createdAt: Date
   updatedAt: Date
 }

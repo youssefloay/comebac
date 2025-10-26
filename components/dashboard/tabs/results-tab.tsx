@@ -5,7 +5,7 @@ import { useState, useEffect } from "react"
 import { getMatches, getMatchResult, createMatchResult, updateMatchResult, getTeams, getPlayersByTeam } from "@/lib/db"
 import { generateRoundRobinMatches, calculateTeamStats, generateRanking } from "@/lib/match-generation"
 import type { Match, MatchResult, Team, Player } from "@/lib/types"
-import { Plus, AlertCircle, Trophy } from "lucide-react"
+import { Plus, AlertCircle, Trophy, X } from "lucide-react"
 
 export default function ResultsTab() {
   const [teams, setTeams] = useState<Team[]>([])
@@ -19,8 +19,15 @@ export default function ResultsTab() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [generateData, setGenerateData] = useState({ startDate: "", daysPerRound: "7" })
-  const [resultData, setResultData] = useState({ homeScore: "", awayScore: "" })
+  const [resultData, setResultData] = useState({
+    homeScore: "",
+    awayScore: "",
+    homeGoalScorers: [] as Array<{ playerName: string; assists?: string }>,
+    awayGoalScorers: [] as Array<{ playerName: string; assists?: string }>,
+  })
   const [players, setPlayers] = useState<Player[]>([])
+  const [homeTeamPlayers, setHomeTeamPlayers] = useState<Player[]>([])
+  const [awayTeamPlayers, setAwayTeamPlayers] = useState<Player[]>([])
 
   useEffect(() => {
     loadData()
@@ -91,19 +98,66 @@ export default function ResultsTab() {
 
   const handleAddResult = async (match: Match) => {
     try {
-      const [homeTeamPlayers, awayTeamPlayers] = await Promise.all([
+      const [homeTeamPlayersData, awayTeamPlayersData] = await Promise.all([
         getPlayersByTeam(match.homeTeamId),
         getPlayersByTeam(match.awayTeamId),
       ])
-      setPlayers([...homeTeamPlayers, ...awayTeamPlayers])
+      setHomeTeamPlayers(homeTeamPlayersData)
+      setAwayTeamPlayers(awayTeamPlayersData)
+      setPlayers([...homeTeamPlayersData, ...awayTeamPlayersData])
     } catch (err) {
       console.error("Error loading players:", err)
     }
 
     setSelectedMatch(match)
-    setResultData({ homeScore: "", awayScore: "" })
+    setResultData({
+      homeScore: "",
+      awayScore: "",
+      homeGoalScorers: [],
+      awayGoalScorers: [],
+    })
     setShowResultForm(true)
     setError(null)
+  }
+
+  const addGoalScorer = (team: "home" | "away") => {
+    if (team === "home") {
+      setResultData({
+        ...resultData,
+        homeGoalScorers: [...resultData.homeGoalScorers, { playerName: "", assists: "" }],
+      })
+    } else {
+      setResultData({
+        ...resultData,
+        awayGoalScorers: [...resultData.awayGoalScorers, { playerName: "", assists: "" }],
+      })
+    }
+  }
+
+  const removeGoalScorer = (team: "home" | "away", index: number) => {
+    if (team === "home") {
+      setResultData({
+        ...resultData,
+        homeGoalScorers: resultData.homeGoalScorers.filter((_, i) => i !== index),
+      })
+    } else {
+      setResultData({
+        ...resultData,
+        awayGoalScorers: resultData.awayGoalScorers.filter((_, i) => i !== index),
+      })
+    }
+  }
+
+  const updateGoalScorer = (team: "home" | "away", index: number, field: string, value: string) => {
+    if (team === "home") {
+      const updated = [...resultData.homeGoalScorers]
+      updated[index] = { ...updated[index], [field]: value }
+      setResultData({ ...resultData, homeGoalScorers: updated })
+    } else {
+      const updated = [...resultData.awayGoalScorers]
+      updated[index] = { ...updated[index], [field]: value }
+      setResultData({ ...resultData, awayGoalScorers: updated })
+    }
   }
 
   const handleSubmitResult = async (e: React.FormEvent) => {
@@ -126,6 +180,8 @@ export default function ResultsTab() {
         await updateMatchResult(existingResult.id, {
           homeTeamScore: Number.parseInt(resultData.homeScore),
           awayTeamScore: Number.parseInt(resultData.awayScore),
+          homeTeamGoalScorers: resultData.homeGoalScorers,
+          awayTeamGoalScorers: resultData.awayGoalScorers,
         })
         setSuccess("Résultat mis à jour avec succès")
       } else {
@@ -133,15 +189,20 @@ export default function ResultsTab() {
           matchId: selectedMatch.id,
           homeTeamScore: Number.parseInt(resultData.homeScore),
           awayTeamScore: Number.parseInt(resultData.awayScore),
-          homeTeamGoalScorers: [],
-          awayTeamGoalScorers: [],
+          homeTeamGoalScorers: resultData.homeGoalScorers,
+          awayTeamGoalScorers: resultData.awayGoalScorers,
         })
         setSuccess("Résultat enregistré avec succès")
       }
 
       setShowResultForm(false)
       setSelectedMatch(null)
-      setResultData({ homeScore: "", awayScore: "" })
+      setResultData({
+        homeScore: "",
+        awayScore: "",
+        homeGoalScorers: [],
+        awayGoalScorers: [],
+      })
       await loadData()
 
       setTimeout(() => setSuccess(null), 3000)
@@ -255,7 +316,7 @@ export default function ResultsTab() {
           <h3 className="text-lg font-semibold mb-4">
             {getTeamName(selectedMatch.homeTeamId)} vs {getTeamName(selectedMatch.awayTeamId)}
           </h3>
-          <form onSubmit={handleSubmitResult} className="space-y-4">
+          <form onSubmit={handleSubmitResult} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -284,7 +345,120 @@ export default function ResultsTab() {
                 />
               </div>
             </div>
-            <div className="flex gap-2">
+
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold text-gray-900">Buteurs {getTeamName(selectedMatch.homeTeamId)}</h4>
+                <button
+                  type="button"
+                  onClick={() => addGoalScorer("home")}
+                  className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 transition"
+                >
+                  + Ajouter
+                </button>
+              </div>
+              <div className="space-y-3">
+                {resultData.homeGoalScorers.map((scorer, index) => (
+                  <div key={index} className="flex gap-2 items-end">
+                    <div className="flex-1">
+                      <label className="block text-xs text-gray-600 mb-1">Buteur</label>
+                      <select
+                        value={scorer.playerName}
+                        onChange={(e) => updateGoalScorer("home", index, "playerName", e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary outline-none"
+                      >
+                        <option value="">Sélectionner un joueur</option>
+                        {homeTeamPlayers.map((p) => (
+                          <option key={p.id} value={p.name}>
+                            {p.number} - {p.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-xs text-gray-600 mb-1">Passeur</label>
+                      <select
+                        value={scorer.assists || ""}
+                        onChange={(e) => updateGoalScorer("home", index, "assists", e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary outline-none"
+                      >
+                        <option value="">Aucun</option>
+                        {homeTeamPlayers.map((p) => (
+                          <option key={p.id} value={p.name}>
+                            {p.number} - {p.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeGoalScorer("home", index)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded transition"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold text-gray-900">Buteurs {getTeamName(selectedMatch.awayTeamId)}</h4>
+                <button
+                  type="button"
+                  onClick={() => addGoalScorer("away")}
+                  className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 transition"
+                >
+                  + Ajouter
+                </button>
+              </div>
+              <div className="space-y-3">
+                {resultData.awayGoalScorers.map((scorer, index) => (
+                  <div key={index} className="flex gap-2 items-end">
+                    <div className="flex-1">
+                      <label className="block text-xs text-gray-600 mb-1">Buteur</label>
+                      <select
+                        value={scorer.playerName}
+                        onChange={(e) => updateGoalScorer("away", index, "playerName", e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary outline-none"
+                      >
+                        <option value="">Sélectionner un joueur</option>
+                        {awayTeamPlayers.map((p) => (
+                          <option key={p.id} value={p.name}>
+                            {p.number} - {p.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-xs text-gray-600 mb-1">Passeur</label>
+                      <select
+                        value={scorer.assists || ""}
+                        onChange={(e) => updateGoalScorer("away", index, "assists", e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary outline-none"
+                      >
+                        <option value="">Aucun</option>
+                        {awayTeamPlayers.map((p) => (
+                          <option key={p.id} value={p.name}>
+                            {p.number} - {p.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeGoalScorer("away", index)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded transition"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2 border-t pt-4">
               <button
                 type="submit"
                 disabled={loading}
