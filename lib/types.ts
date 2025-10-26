@@ -33,8 +33,9 @@ export interface MatchResult {
   matchId: string
   homeTeamScore: number
   awayTeamScore: number
-  homeTeamGoalScorers: Array<{ playerName: string; assists?: string }> // Added assists field
-  awayTeamGoalScorers: Array<{ playerName: string; assists?: string }> // Added assists field
+  // Each scorer can reference a player document (playerId) and include a display name and optional assists
+  homeTeamGoalScorers: Array<{ playerId?: string; playerName: string; assists?: string }>
+  awayTeamGoalScorers: Array<{ playerId?: string; playerName: string; assists?: string }>
   createdAt: Date
   updatedAt: Date
 }

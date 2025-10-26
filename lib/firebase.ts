@@ -1,47 +1,57 @@
-import { initializeApp } from "firebase/app"
+import { initializeApp, getApps } from "firebase/app"
 import { getAuth } from "firebase/auth"
-import { getFirestore, initializeFirestore, persistentLocalCache } from "firebase/firestore"
-
-const requiredEnvVars = [
-  "NEXT_PUBLIC_FIREBASE_API_KEY",
-  "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
-  "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
-  "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
-  "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
-  "NEXT_PUBLIC_FIREBASE_APP_ID",
-]
-
-const missingVars = requiredEnvVars.filter((varName) => !process.env[varName])
-
-if (missingVars.length > 0) {
-  console.error("[v0] Missing Firebase environment variables:", missingVars)
-}
+import { getFirestore, initializeFirestore, persistentLocalCache, Firestore } from "firebase/firestore"
+import { getAnalytics, isSupported } from "firebase/analytics"
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyAXpEoCb7xwHYgeprZ6CYpMRxZ1MAookSE",
+  authDomain: "scolar-league.firebaseapp.com",
+  projectId: "scolar-league",
+  storageBucket: "scolar-league.firebasestorage.app",
+  messagingSenderId: "839839749098",
+  appId: "1:839839749098:web:5353561c4f4673cdab9893",
+  measurementId: "G-F0EREB6993"
 }
 
-console.log("[v0] Firebase config loaded:", {
-  projectId: firebaseConfig.projectId,
-  authDomain: firebaseConfig.authDomain,
-})
+let app;
+try {
+  if (!getApps().length) {
+    app = initializeApp(firebaseConfig);
+    console.log('Firebase initialized successfully');
+  } else {
+    app = getApps()[0];
+    console.log('Using existing Firebase app');
+  }
+} catch (error) {
+  console.error('Error initializing Firebase:', error);
+  throw error;
+}
 
-const app = initializeApp(firebaseConfig)
-export const auth = getAuth(app)
+export const auth = getAuth(app);
 
-let db
+let db: Firestore;
 try {
   db = initializeFirestore(app, {
-    cache: persistentLocalCache(),
-  })
+    localCache: persistentLocalCache()
+  });
+  console.log('Firestore initialized successfully with persistent cache');
 } catch (error) {
-  // If initialization fails, fall back to default Firestore
-  db = getFirestore(app)
+  console.error('Error initializing Firestore:', error);
+  throw error;
 }
-
 export { db }
+
+let analytics: ReturnType<typeof getAnalytics> | null = null;
+if (typeof window !== "undefined") {
+  isSupported().then((supported) => {
+    if (supported) {
+      try {
+        analytics = getAnalytics(app);
+        console.log('Analytics initialized successfully');
+      } catch (error) {
+        console.error('Error initializing Analytics:', error);
+      }
+    }
+  });
+}
+export { analytics }

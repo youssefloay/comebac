@@ -3,16 +3,91 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { getTeams, getMatches, createMatch } from "@/lib/db"
-import type { Team, Match } from "@/lib/types"
+import type { Team, Match, MatchResult } from "@/lib/types"
 import { Plus, AlertCircle, Calendar } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { MatchResultForm } from "@/components/matches/match-result-form"
+import { collection, doc, updateDoc, addDoc, getDocs, query, where, Timestamp } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 
 export default function MatchesTab() {
   const [teams, setTeams] = useState<Team[]>([])
-  const [matches, setMatches] = useState<Match[]>([])
+  const [matches, setMatches] = useState<(Match & { result?: MatchResult })[]>([])
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  
+  const handleSubmitResult = async (match: Match & { result?: MatchResult }, result: MatchResult) => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      // Update match status
+      await updateDoc(doc(db, "matches", match.id), {
+        status: "in_progress",
+        updatedAt: Timestamp.now()
+      })
+
+      // Create or update match result
+      await addDoc(collection(db, "matchResults"), {
+        ...result,
+        matchId: match.id,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      })
+
+      // Update team statistics
+      const homeTeamPoints = result.homeTeamScore > result.awayTeamScore ? 3 : result.homeTeamScore === result.awayTeamScore ? 1 : 0
+      const awayTeamPoints = result.awayTeamScore > result.homeTeamScore ? 3 : result.homeTeamScore === result.awayTeamScore ? 1 : 0
+
+      // Fetch current stats or create new ones
+      const homeTeamStatsQuery = query(collection(db, "teamStatistics"), where("teamId", "==", match.homeTeamId))
+      const awayTeamStatsQuery = query(collection(db, "teamStatistics"), where("teamId", "==", match.awayTeamId))
+
+      const [homeStats, awayStats] = await Promise.all([
+        getDocs(homeTeamStatsQuery),
+        getDocs(awayTeamStatsQuery)
+      ])
+
+      const updateTeamStats = async (teamId: string, isHome: boolean, currentStats: any) => {
+        const stats = {
+          teamId,
+          matchesPlayed: (currentStats?.matchesPlayed || 0) + 1,
+          wins: (currentStats?.wins || 0) + (isHome ? (homeTeamPoints === 3 ? 1 : 0) : (awayTeamPoints === 3 ? 1 : 0)),
+          draws: (currentStats?.draws || 0) + (homeTeamPoints === 1 ? 1 : 0),
+          losses: (currentStats?.losses || 0) + (isHome ? (homeTeamPoints === 0 ? 1 : 0) : (awayTeamPoints === 0 ? 1 : 0)),
+          goalsFor: (currentStats?.goalsFor || 0) + (isHome ? result.homeTeamScore : result.awayTeamScore),
+          goalsAgainst: (currentStats?.goalsAgainst || 0) + (isHome ? result.awayTeamScore : result.homeTeamScore),
+          points: (currentStats?.points || 0) + (isHome ? homeTeamPoints : awayTeamPoints),
+          updatedAt: Timestamp.now()
+        }
+
+        if (currentStats?.id) {
+          await updateDoc(doc(db, "teamStatistics", currentStats.id), stats)
+        } else {
+          await addDoc(collection(db, "teamStatistics"), stats)
+        }
+      }
+
+      await Promise.all([
+        updateTeamStats(match.homeTeamId, true, homeStats.docs[0]?.data()),
+        updateTeamStats(match.awayTeamId, false, awayStats.docs[0]?.data())
+      ])
+
+      setSuccess("Résultat enregistré avec succès")
+      setTimeout(() => setSuccess(null), 3000)
+      
+      // Refresh matches
+      await loadMatches()
+    } catch (err) {
+      setError("Une erreur s'est produite lors de l'enregistrement du résultat")
+      console.error("Error submitting match result:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
   const [formData, setFormData] = useState({
     homeTeamId: "",
     awayTeamId: "",
@@ -39,8 +114,30 @@ export default function MatchesTab() {
   const loadMatches = async () => {
     try {
       setError(null)
+      // Use existing helper to fetch matches (it normalizes dates)
       const matchesData = await getMatches()
-      setMatches(matchesData)
+
+      // Fetch match results separately
+      const resultsRef = collection(db, "matchResults")
+      const resultsSnap = await getDocs(resultsRef)
+
+      // Create a map of match results
+      const resultsMap = new Map()
+      resultsSnap.docs.forEach((doc) => {
+        const result = doc.data() as MatchResult
+        resultsMap.set(result.matchId, {
+          ...result,
+          id: doc.id,
+        })
+      })
+
+      // Combine matches with their results
+      const matchesWithResults = matchesData.map((m) => ({
+        ...m,
+        result: resultsMap.get(m.id),
+      }))
+
+      setMatches(matchesWithResults)
     } catch (err) {
       setError("Erreur lors du chargement des matchs")
       console.error("Error loading matches:", err)
@@ -255,15 +352,54 @@ export default function MatchesTab() {
                   <div className="flex items-center gap-4">
                     <div className="flex-1">
                       <p className="font-semibold text-gray-900">{getTeamName(match.homeTeamId)}</p>
+                      {match.result && (
+                        <div className="mt-2 text-sm">
+                          <p className="font-bold">{match.result.homeTeamScore}</p>
+                          {match.result.homeTeamGoalScorers?.map((scorer: any, idx: number) => (
+                            <p key={idx} className="text-xs text-gray-600">
+                              ⚽ {scorer.playerName} {scorer.assists && `(Passe: ${scorer.assists})`}
+                            </p>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div className="text-center">
-                      <p className="text-sm text-gray-500">vs</p>
+                      <p className="text-2xl font-bold text-primary">VS</p>
+                      <p className="text-xs text-gray-500">{formatDate(match.date)}</p>
                     </div>
                     <div className="flex-1 text-right">
                       <p className="font-semibold text-gray-900">{getTeamName(match.awayTeamId)}</p>
+                      {match.result && (
+                        <div className="mt-2 text-sm">
+                          <p className="font-bold">{match.result.awayTeamScore}</p>
+                          {match.result.awayTeamGoalScorers?.map((scorer: any, idx: number) => (
+                            <p key={idx} className="text-xs text-gray-600">
+                              ⚽ {scorer.playerName} {scorer.assists && `(Passe: ${scorer.assists})`}
+                            </p>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500 mt-2">{formatDate(match.date)}</p>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        {match.result ? 'Modifier le résultat' : 'Ajouter le résultat'}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Résultat du match</DialogTitle>
+                      </DialogHeader>
+                      <MatchResultForm 
+                        match={match} 
+                        onSubmit={handleSubmitResult}
+                        isSubmitting={loading}
+                      />
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             </div>

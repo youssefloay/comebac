@@ -14,6 +14,47 @@ import {
 import { db } from "./firebase"
 import type { Team, Player, Match, MatchResult, TeamStatistics } from "./types"
 
+// Robust date parsing: handles Firestore Timestamp (.toDate()),
+// raw { seconds, nanoseconds } objects, numeric seconds or ms, ISO strings, and Date objects.
+function parseDateValue(value: any): Date | null {
+  if (!value) return null
+  // Firestore Timestamp
+  if (typeof value?.toDate === "function") {
+    try {
+      return value.toDate()
+    } catch (e) {
+      console.error("Error calling toDate on timestamp:", e)
+    }
+  }
+
+  // Raw timestamp-like object
+  if (typeof value === "object" && value.seconds != null) {
+    const secs = Number(value.seconds)
+    const nanos = Number(value.nanoseconds || 0)
+    return new Date(secs * 1000 + Math.round(nanos / 1e6))
+  }
+
+  // Number: treat as seconds if small (< 1e12)
+  if (typeof value === "number") {
+    return value < 1e12 ? new Date(value * 1000) : new Date(value)
+  }
+
+  // String
+  if (typeof value === "string") {
+    const d = new Date(value)
+    if (!isNaN(d.getTime())) return d
+  }
+
+  if (value instanceof Date) return value
+
+  try {
+    const d = new Date(value)
+    if (!isNaN(d.getTime())) return d
+  } catch (e) {}
+
+  return null
+}
+
 // ============ TEAMS ============
 
 export async function createTeam(teamData: Omit<Team, "id" | "createdAt" | "updatedAt">) {
@@ -169,9 +210,9 @@ export async function getMatches(): Promise<Match[]> {
     return querySnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-      date: doc.data().date?.toDate() || new Date(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+      date: parseDateValue(doc.data().date) || new Date(),
+      createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : parseDateValue(doc.data().createdAt) || new Date(),
+      updatedAt: doc.data().updatedAt?.toDate ? doc.data().updatedAt.toDate() : parseDateValue(doc.data().updatedAt) || new Date(),
     })) as Match[]
   } catch (error) {
     console.error("Error getting matches:", error)
@@ -186,9 +227,9 @@ export async function getMatchesByTeam(teamId: string): Promise<Match[]> {
     const matches = querySnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-      date: doc.data().date?.toDate() || new Date(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+      date: parseDateValue(doc.data().date) || new Date(),
+      createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : parseDateValue(doc.data().createdAt) || new Date(),
+      updatedAt: doc.data().updatedAt?.toDate ? doc.data().updatedAt.toDate() : parseDateValue(doc.data().updatedAt) || new Date(),
     })) as Match[]
 
     // Also get away matches
@@ -197,9 +238,9 @@ export async function getMatchesByTeam(teamId: string): Promise<Match[]> {
     const awayMatches = querySnapshot2.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-      date: doc.data().date?.toDate() || new Date(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+      date: parseDateValue(doc.data().date) || new Date(),
+      createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : parseDateValue(doc.data().createdAt) || new Date(),
+      updatedAt: doc.data().updatedAt?.toDate ? doc.data().updatedAt.toDate() : parseDateValue(doc.data().updatedAt) || new Date(),
     })) as Match[]
 
     return [...matches, ...awayMatches].sort((a, b) => a.date.getTime() - b.date.getTime())
