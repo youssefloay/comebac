@@ -27,7 +27,7 @@ export default function HomePage() {
             <span className="text-2xl">⚽</span>
           </div>
           <CardTitle className="text-2xl font-bold">Ligue Scolaire</CardTitle>
-          <CardDescription>Gestion de championnat de football scolaire</CardDescription>
+          <CardDescription>Connectez-vous pour accéder au championnat de football scolaire</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Link href="/login" className="block">
@@ -35,9 +35,9 @@ export default function HomePage() {
               Se Connecter (Admin)
             </Button>
           </Link>
-          <Link href="/public" className="block">
+          <Link href="/login" className="block">
             <Button variant="outline" className="w-full">
-              Voir les Résultats Publics
+              Créer un Compte
             </Button>
           </Link>
         </CardContent>

@@ -94,9 +94,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserProfile(null)
         setNeedsProfileCompletion(false)
         
-        // User is not logged in - only redirect to login for admin routes
+        // User is not logged in - redirect to login for all pages except login and root
         const currentPath = window.location.pathname
-        if (currentPath.startsWith('/admin') || currentPath === '/user') {
+        if (currentPath !== '/login' && currentPath !== '/') {
           router.push('/login')
         }
       }

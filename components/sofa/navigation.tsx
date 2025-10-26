@@ -78,7 +78,7 @@ export function SofaNavigation() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/public" className="flex items-center gap-3">
+          <Link href={user ? "/public" : "/"} className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-r from-sofa-green to-emerald-500 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">⚽</span>
             </div>
@@ -92,41 +92,43 @@ export function SofaNavigation() {
             </div>
           </Link>
 
-          {/* Desktop Navigation Items */}
-          <div className="hidden md:flex items-center gap-2">
-            {navigationItems.map((item) => {
-              const isActive = pathname === item.href;
-              const Icon = item.icon;
+          {/* Desktop Navigation Items - Only show when authenticated */}
+          {user && (
+            <div className="hidden md:flex items-center gap-2">
+              {navigationItems.map((item) => {
+                const isActive = pathname === item.href;
+                const Icon = item.icon;
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`sofa-nav-item relative ${
-                    isActive ? "active" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Icon className="w-4 h-4" />
-                    <span className="text-sm">{item.label}</span>
-                  </div>
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`sofa-nav-item relative ${
+                      isActive ? "active" : ""
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon className="w-4 h-4" />
+                      <span className="text-sm">{item.label}</span>
+                    </div>
 
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-sofa-text-accent"
-                      initial={false}
-                      transition={{
-                        type: "spring",
-                        stiffness: 500,
-                        damping: 30,
-                      }}
-                    />
-                  )}
-                </Link>
-              );
-            })}
-          </div>
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeTab"
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-sofa-text-accent"
+                        initial={false}
+                        transition={{
+                          type: "spring",
+                          stiffness: 500,
+                          damping: 30,
+                        }}
+                      />
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
 
           {/* Mobile Burger Menu Button */}
           <div className="md:hidden">
@@ -266,31 +268,39 @@ export function SofaNavigation() {
             </button>
           </div>
 
-          {/* Mobile Navigation Items */}
-          <div className="flex-1 py-6">
-            <nav className="space-y-2 px-4">
-              {navigationItems.map((item) => {
-                const isActive = pathname === item.href;
-                const Icon = item.icon;
+          {/* Mobile Navigation Items - Only show when authenticated */}
+          {user ? (
+            <div className="flex-1 py-6">
+              <nav className="space-y-2 px-4">
+                {navigationItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  const Icon = item.icon;
 
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setShowMobileMenu(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                      isActive
-                        ? "bg-sofa-text-accent/10 text-sofa-text-accent border-l-4 border-sofa-text-accent"
-                        : "text-sofa-text-primary hover:bg-sofa-bg-hover"
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <span className="font-medium">{item.label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setShowMobileMenu(false)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                        isActive
+                          ? "bg-sofa-text-accent/10 text-sofa-text-accent border-l-4 border-sofa-text-accent"
+                          : "text-sofa-text-primary hover:bg-sofa-bg-hover"
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="font-medium">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
+          ) : (
+            <div className="flex-1 py-6 px-4">
+              <div className="text-center text-sofa-text-secondary">
+                <p className="mb-4">Connectez-vous pour accéder au contenu</p>
+              </div>
+            </div>
+          )}
 
           {/* Mobile User Section */}
           {user && (
