@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -10,7 +7,7 @@ const nextConfig = {
     unoptimized: true,
   },
   env: {
-    MATCH_SCHEDULE_ENABLED: true, // Activer ou désactiver la planification des matchs
+    MATCH_SCHEDULE_ENABLED: "true", // Activer ou désactiver la planification des matchs
   },
   async headers() {
     return [

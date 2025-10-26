@@ -1,36 +1,47 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { auth } from "@/lib/firebase"
-import { onAuthStateChanged } from "firebase/auth"
-import LoginPage from "@/components/auth/login-page"
-import Dashboard from "@/components/dashboard/dashboard"
+import { useAuth } from '@/lib/auth-context'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-export default function Home() {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser)
-      setLoading(false)
-    })
-
-    return () => unsubscribe()
-  }, [])
+export default function HomePage() {
+  const { user, loading } = useAuth()
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-gray-200 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted">Chargement...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
+        <LoadingSpinner size="lg" />
       </div>
     )
   }
 
-  return user ? <Dashboard user={user} /> : <LoginPage />
+  // If user is logged in, they will be redirected by AuthProvider
+  // This page only shows for non-authenticated users
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-4 w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+            <span className="text-2xl">⚽</span>
+          </div>
+          <CardTitle className="text-2xl font-bold">Ligue Scolaire</CardTitle>
+          <CardDescription>Gestion de championnat de football scolaire</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Link href="/login" className="block">
+            <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              Se Connecter (Admin)
+            </Button>
+          </Link>
+          <Link href="/public" className="block">
+            <Button variant="outline" className="w-full">
+              Voir les Résultats Publics
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+    </div>
+  )
 }

@@ -46,7 +46,7 @@ export async function recalculateAllStatistics(): Promise<void> {
 }
 
 /**
- * Gets the current ranking with all statistics
+ * Gets the current ranking with all statistics (removes duplicates)
  */
 export async function getCurrentRanking(): Promise<
   Array<
@@ -58,8 +58,41 @@ export async function getCurrentRanking(): Promise<
 > {
   try {
     const allStats = await getAllTeamStatistics()
+    
+    console.log(`[v0] Raw statistics count: ${allStats.length}`)
+    
+    // Remove duplicates by keeping only the best entry per team
+    const teamStatsMap = new Map<string, TeamStatistics>()
+    
+    allStats.forEach(stat => {
+      const existing = teamStatsMap.get(stat.teamId)
+      
+      if (!existing) {
+        teamStatsMap.set(stat.teamId, stat)
+      } else {
+        // Keep the one with higher points, or more recent updatedAt
+        const shouldReplace = 
+          (stat.points || 0) > (existing.points || 0) ||
+          ((stat.points || 0) === (existing.points || 0) && 
+           (stat.updatedAt || new Date(0)) > (existing.updatedAt || new Date(0)))
+        
+        if (shouldReplace) {
+          console.log(`[v0] Replacing duplicate stats for team ${stat.teamId}: ${existing.points || 0} -> ${stat.points || 0} points`)
+          teamStatsMap.set(stat.teamId, stat)
+        } else {
+          console.log(`[v0] Ignoring duplicate stats for team ${stat.teamId}: keeping ${existing.points || 0} points over ${stat.points || 0}`)
+        }
+      }
+    })
+    
+    const uniqueStats = Array.from(teamStatsMap.values())
+    console.log(`[v0] Unique statistics count: ${uniqueStats.length}`)
+    
+    if (allStats.length !== uniqueStats.length) {
+      console.warn(`[v0] ⚠️ Found ${allStats.length - uniqueStats.length} duplicate team statistics entries!`)
+    }
 
-    return allStats
+    return uniqueStats
       .sort((a, b) => {
         // Sort by points (descending)
         if (b.points !== a.points) return b.points - a.points

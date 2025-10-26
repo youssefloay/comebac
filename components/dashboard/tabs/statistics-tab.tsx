@@ -39,6 +39,8 @@ export default function StatisticsTab() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [recalculating, setRecalculating] = useState(false)
+  const [cleaning, setCleaning] = useState(false)
+  const [resetting, setResetting] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -126,6 +128,55 @@ export default function StatisticsTab() {
     }
   }
 
+  const handleCleanupDuplicates = async () => {
+    try {
+      setCleaning(true)
+      setError(null)
+      
+      // Import the direct cleanup function
+      const { directCleanupDuplicates, showCurrentStats } = await import('@/scripts/direct-cleanup')
+      
+      console.log('🔍 Showing current stats before cleanup:')
+      await showCurrentStats()
+      
+      const result = await directCleanupDuplicates()
+      
+      console.log(`🎉 Cleanup completed: ${result.deletedCount} duplicates removed`)
+      console.log(`📊 Teams: ${result.totalTeams}, Original docs: ${result.originalCount}`)
+      
+      await loadData() // Reload all data
+    } catch (err) {
+      setError("Erreur lors du nettoyage des doublons")
+      console.error("Error cleaning duplicates:", err)
+    } finally {
+      setCleaning(false)
+    }
+  }
+
+  const handleResetStatistics = async () => {
+    if (!confirm('⚠️ ATTENTION: Ceci va supprimer TOUTES les statistiques existantes et les recalculer depuis zéro. Continuer?')) {
+      return
+    }
+    
+    try {
+      setResetting(true)
+      setError(null)
+      
+      // Import the reset function
+      const { resetAndRecalculateStatistics } = await import('@/scripts/reset-statistics')
+      const result = await resetAndRecalculateStatistics()
+      
+      console.log(`🎉 Reset completed: ${result.deletedCount} deleted, ${result.createdCount} created`)
+      
+      await loadData() // Reload all data
+    } catch (err) {
+      setError("Erreur lors du reset des statistiques")
+      console.error("Error resetting statistics:", err)
+    } finally {
+      setResetting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -174,16 +225,32 @@ export default function StatisticsTab() {
         </div>
       )}
 
-      {/* Header with Recalculate Button */}
+      {/* Header with Action Buttons */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">Statistiques Détaillées</h2>
-        <button
-          onClick={handleRecalculateStats}
-          disabled={recalculating}
-          className="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition disabled:opacity-50"
-        >
-          {recalculating ? "Recalcul..." : "Recalculer les statistiques"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleResetStatistics}
+            disabled={resetting || cleaning || recalculating}
+            className="px-4 py-2 text-sm bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition disabled:opacity-50"
+          >
+            {resetting ? "Reset..." : "Reset Complet"}
+          </button>
+          <button
+            onClick={handleCleanupDuplicates}
+            disabled={cleaning || recalculating || resetting}
+            className="px-4 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition disabled:opacity-50"
+          >
+            {cleaning ? "Nettoyage..." : "Nettoyer Doublons"}
+          </button>
+          <button
+            onClick={handleRecalculateStats}
+            disabled={recalculating || cleaning || resetting}
+            className="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition disabled:opacity-50"
+          >
+            {recalculating ? "Recalcul..." : "Recalculer Stats"}
+          </button>
+        </div>
       </div>
 
       {/* Navigation Tabs */}

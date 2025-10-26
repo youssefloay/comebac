@@ -366,7 +366,26 @@ export async function updateTeamStatistics(teamId: string, stats: Partial<Omit<T
   try {
     const q = query(collection(db, "teamStatistics"), where("teamId", "==", teamId))
     const querySnapshot = await getDocs(q)
-    if (querySnapshot.docs.length > 0) {
+    
+    if (querySnapshot.docs.length > 1) {
+      // Handle duplicates: keep the first one, delete the rest
+      console.warn(`Found ${querySnapshot.docs.length} statistics documents for team ${teamId}. Cleaning up duplicates.`)
+      const toKeep = querySnapshot.docs[0]
+      const toDelete = querySnapshot.docs.slice(1)
+      
+      // Delete duplicates
+      for (const duplicate of toDelete) {
+        await deleteDoc(duplicate.ref)
+        console.log(`Deleted duplicate statistics document for team ${teamId}`)
+      }
+      
+      // Update the remaining document
+      await updateDoc(toKeep.ref, {
+        ...stats,
+        updatedAt: Timestamp.now(),
+      })
+    } else if (querySnapshot.docs.length === 1) {
+      // Normal case: update existing document
       const docId = querySnapshot.docs[0].id
       await updateDoc(doc(db, "teamStatistics", docId), {
         ...stats,

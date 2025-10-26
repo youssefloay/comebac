@@ -31,6 +31,7 @@ export default function PublicStatisticsPage() {
   const [teamStats, setTeamStats] = useState<any>(null)
   const [activeTab, setActiveTab] = useState<'ranking' | 'scorers' | 'matches' | 'team-details'>('ranking')
   const [loading, setLoading] = useState(true)
+  const [cleaning, setCleaning] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -50,6 +51,23 @@ export default function PublicStatisticsPage() {
         getTopScorers(),
         getDetailedMatchHistory(),
       ])
+
+      // Debug: Check for duplicates
+      console.log('Teams loaded:', teamsData.length)
+      console.log('Ranking entries:', rankingData.length)
+      
+      // Check for duplicate team IDs in ranking
+      const teamIds = rankingData.map(r => r.teamId)
+      const uniqueTeamIds = [...new Set(teamIds)]
+      if (teamIds.length !== uniqueTeamIds.length) {
+        console.warn('DUPLICATE TEAMS DETECTED in ranking!')
+        console.log('Total ranking entries:', teamIds.length)
+        console.log('Unique teams:', uniqueTeamIds.length)
+        
+        // Find duplicates
+        const duplicates = teamIds.filter((id, index) => teamIds.indexOf(id) !== index)
+        console.log('Duplicate team IDs:', [...new Set(duplicates)])
+      }
 
       setTeams(teamsData)
       setRanking(rankingData)
@@ -74,6 +92,40 @@ export default function PublicStatisticsPage() {
       setTeamStats(stats)
     } catch (error) {
       console.error("Error loading team stats:", error)
+    }
+  }
+
+  const handleCleanupDuplicates = async () => {
+    if (!confirm('Nettoyer les doublons dans la base de données? Cette action va supprimer les entrées dupliquées.')) {
+      return
+    }
+    
+    setCleaning(true)
+    try {
+      const response = await fetch('/api/cleanup-duplicates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      const result = await response.json()
+      
+      if (result.success) {
+        console.log('🎉 Cleanup successful:', result)
+        alert(`Nettoyage réussi! ${result.stats.deletedCount} doublons supprimés.`)
+        
+        // Reload the data
+        await loadData()
+      } else {
+        console.error('Cleanup failed:', result)
+        alert(`Erreur: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('Error calling cleanup API:', error)
+      alert('Erreur lors du nettoyage')
+    } finally {
+      setCleaning(false)
     }
   }
 
@@ -109,7 +161,60 @@ export default function PublicStatisticsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Statistiques Complètes</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Statistiques Complètes</h1>
+        {ranking.length > 4 && (
+          <div className="flex gap-2">
+            <button
+              onClick={handleCleanupDuplicates}
+              disabled={cleaning}
+              className="px-4 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition disabled:opacity-50"
+            >
+              {cleaning ? 'Nettoyage...' : '🧹 Nettoyer Doublons'}
+            </button>
+            <button
+              onClick={async () => {
+                if (!confirm('⚠️ ATTENTION: Ceci va supprimer TOUTES les statistiques et les recalculer depuis zéro. Continuer?')) return
+                setCleaning(true)
+                try {
+                  const response = await fetch('/api/force-cleanup', { method: 'POST' })
+                  const result = await response.json()
+                  if (result.success) {
+                    alert(`Reset complet réussi! ${result.stats.createdCount} équipes recalculées.`)
+                    await loadData()
+                  } else {
+                    alert(`Erreur: ${result.error}`)
+                  }
+                } catch (error) {
+                  alert('Erreur lors du reset')
+                } finally {
+                  setCleaning(false)
+                }
+              }}
+              disabled={cleaning}
+              className="px-4 py-2 text-sm bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition disabled:opacity-50"
+            >
+              {cleaning ? 'Reset...' : '🔥 Reset Complet'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Duplicate Warning */}
+      {ranking.length > teams.length && teams.length > 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center gap-2">
+            <span className="text-yellow-600">⚠️</span>
+            <div>
+              <h3 className="font-semibold text-yellow-800">Doublons détectés</h3>
+              <p className="text-sm text-yellow-700">
+                {ranking.length} entrées trouvées pour {teams.length} équipes. 
+                Cliquez sur "Nettoyer Doublons" pour corriger cela.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Navigation Tabs */}
       <div className="bg-white rounded-lg shadow mb-8">

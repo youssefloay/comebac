@@ -1,82 +1,440 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { db } from "@/lib/firebase"
-import { collection, getDocs } from "firebase/firestore"
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { collection, query, where, onSnapshot, orderBy, getDocs } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { SofaMatchCard } from '@/components/sofa/match-card'
+import { SofaStandingsTable } from '@/components/sofa/standings-table'
+import { SofaStatCard } from '@/components/sofa/stat-card'
+import { SofaTeamCard } from '@/components/sofa/team-card'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import Link from 'next/link'
+import { 
+  Calendar, 
+  Clock, 
+  Trophy, 
+  Users, 
+  TrendingUp,
+  ChevronRight,
+  Zap,
+  Target,
+  BarChart3
+} from 'lucide-react'
 
-interface Stats {
-  teams: number
-  matches: number
-  goals: number
+interface Match {
+  id: string
+  homeTeamId: string
+  awayTeamId: string
+  homeTeam?: { name: string }
+  awayTeam?: { name: string }
+  date: Date
+  homeTeamScore?: number
+  awayTeamScore?: number
+  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
+  round: number
+  result?: any
+}
+
+interface Team {
+  id: string
+  name: string
+  logo?: string
+  color?: string
+  playerCount?: number
+}
+
+interface Standing {
+  id: string
+  teamId: string
+  teamName: string
+  points: number
+  wins: number
+  draws: number
+  losses: number
+  goalsFor: number
+  goalsAgainst: number
+  matchesPlayed: number
 }
 
 export default function PublicHome() {
-  const [stats, setStats] = useState<Stats>({ teams: 0, matches: 0, goals: 0 })
+  const [todayMatches, setTodayMatches] = useState<Match[]>([])
+  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([])
+  const [recentMatches, setRecentMatches] = useState<Match[]>([])
+  const [standings, setStandings] = useState<Standing[]>([])
+  const [teams, setTeams] = useState<Team[]>([])
+  const [stats, setStats] = useState({ teams: 0, matches: 0, goals: 0, completed: 0 })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const loadData = async () => {
       try {
-        // Fetch teams count
-        const teamsSnap = await getDocs(collection(db, "teams"))
-        const teamsCount = teamsSnap.size
+        // Load teams with player counts
+        const teamsSnap = await getDocs(collection(db, 'teams'))
+        const teamsData = teamsSnap.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Team[]
 
-        // Fetch matches count
-        const matchesSnap = await getDocs(collection(db, "matches"))
-        const matchesCount = matchesSnap.size
+        // Load all players to count them per team
+        const playersSnap = await getDocs(collection(db, 'players'))
+        const allPlayers = playersSnap.docs.map(doc => doc.data())
+        
+        // Add player counts to teams
+        const teamsWithPlayerCounts = teamsData.map(team => ({
+          ...team,
+          playerCount: allPlayers.filter(player => player.teamId === team.id).length
+        }))
+        
+        setTeams(teamsWithPlayerCounts)
 
-        // Fetch results to count goals
-        const resultsSnap = await getDocs(collection(db, "matchResults"))
-        let totalGoals = 0
-        resultsSnap.forEach((doc) => {
-          const data = doc.data()
-          totalGoals += (data.homeTeamScore || 0) + (data.awayTeamScore || 0)
+        // Create teams map for match display
+        const teamsMap = new Map()
+        teamsData.forEach(team => {
+          teamsMap.set(team.id, team)
         })
 
-        setStats({ teams: teamsCount, matches: matchesCount, goals: totalGoals })
+        // Load all matches
+        const matchesSnap = await getDocs(query(collection(db, 'matches'), orderBy('date', 'desc')))
+        const allMatches = matchesSnap.docs.map(doc => {
+          const data = doc.data()
+          return {
+            id: doc.id,
+            ...data,
+            date: data.date?.toDate() || new Date(),
+            homeTeam: teamsMap.get(data.homeTeamId),
+            awayTeam: teamsMap.get(data.awayTeamId)
+          }
+        }) as Match[]
+
+        // Load match results
+        const resultsSnap = await getDocs(collection(db, 'matchResults'))
+        const resultsMap = new Map()
+        let totalGoals = 0
+        resultsSnap.docs.forEach(doc => {
+          const result = doc.data()
+          resultsMap.set(result.matchId, result)
+          totalGoals += (result.homeTeamScore || 0) + (result.awayTeamScore || 0)
+        })
+
+        // Combine matches with results
+        const matchesWithResults = allMatches.map(match => ({
+          ...match,
+          result: resultsMap.get(match.id),
+          homeTeamScore: resultsMap.get(match.id)?.homeTeamScore,
+          awayTeamScore: resultsMap.get(match.id)?.awayTeamScore
+        }))
+
+        // Filter matches
+        const today = new Date()
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+        const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000)
+
+        const todayMatchesFiltered = matchesWithResults.filter(match => 
+          match.date >= todayStart && match.date < todayEnd
+        )
+        
+        const upcomingMatchesFiltered = matchesWithResults
+          .filter(match => match.date > todayEnd && match.status === 'scheduled')
+          .slice(0, 6)
+
+        const recentMatchesFiltered = matchesWithResults
+          .filter(match => match.status === 'completed')
+          .slice(0, 6)
+
+        setTodayMatches(todayMatchesFiltered)
+        setUpcomingMatches(upcomingMatchesFiltered)
+        setRecentMatches(recentMatchesFiltered)
+
+        // Load standings from teamStatistics (with duplicate filtering)
+        const statsSnap = await getDocs(query(collection(db, 'teamStatistics'), orderBy('points', 'desc')))
+        
+        console.log(`[Public Home] Raw statistics count: ${statsSnap.docs.length}`)
+        
+        // Remove duplicates by keeping only the best entry per team
+        const teamStatsMap = new Map()
+        
+        statsSnap.docs.forEach(doc => {
+          const data = doc.data()
+          const existing = teamStatsMap.get(data.teamId)
+          
+          if (!existing) {
+            teamStatsMap.set(data.teamId, { id: doc.id, ...data })
+          } else {
+            // Keep the one with higher points, or more recent updatedAt
+            const shouldReplace = 
+              (data.points || 0) > (existing.points || 0) ||
+              ((data.points || 0) === (existing.points || 0) && 
+               (data.updatedAt?.toDate?.() || new Date(data.updatedAt || 0)) > 
+               (existing.updatedAt?.toDate?.() || new Date(existing.updatedAt || 0)))
+            
+            if (shouldReplace) {
+              console.log(`[Public Home] Replacing duplicate stats for team ${data.teamId}`)
+              teamStatsMap.set(data.teamId, { id: doc.id, ...data })
+            }
+          }
+        })
+        
+        const uniqueStats = Array.from(teamStatsMap.values())
+        console.log(`[Public Home] Unique statistics count: ${uniqueStats.length}`)
+        
+        const standingsData = uniqueStats
+          .map(data => {
+            const team = teamsMap.get(data.teamId)
+            return {
+              ...data,
+              teamName: team?.name || 'Équipe inconnue'
+            }
+          })
+          .sort((a, b) => {
+            if (b.points !== a.points) return b.points - a.points
+            const aDiff = a.goalsFor - a.goalsAgainst
+            const bDiff = b.goalsFor - b.goalsAgainst
+            return bDiff - aDiff
+          }) as Standing[]
+          
+        setStandings(standingsData.slice(0, 6)) // Top 6 teams
+
+        // Set stats
+        setStats({
+          teams: teamsData.length,
+          matches: allMatches.length,
+          goals: totalGoals,
+          completed: matchesWithResults.filter(m => m.status === 'completed').length
+        })
+
       } catch (error) {
-        console.error("Error fetching stats:", error)
+        console.error('Error loading data:', error)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchStats()
+    loadData()
   }, [])
 
+  const convertMatchFormat = (match: Match) => ({
+    id: match.id,
+    teamA: match.homeTeam?.name || 'Équipe inconnue',
+    teamB: match.awayTeam?.name || 'Équipe inconnue', 
+    date: match.date,
+    scoreA: match.homeTeamScore,
+    scoreB: match.awayTeamScore,
+    status: match.status === 'completed' ? 'completed' as const : 
+            match.status === 'in_progress' ? 'live' as const :
+            'upcoming' as const,
+    venue: `Stade de ${match.homeTeam?.name || 'l\'équipe'}`,
+    round: match.round
+  })
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="flex items-center justify-center py-20">
+          <LoadingSpinner size="lg" />
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div>
-      {/* Hero */}
-      <div className="bg-gradient-to-br from-primary to-primary-dark text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">Championnat de Football Scolaire</h2>
-          <p className="text-lg text-primary-light mb-8">Suivez tous les matchs, équipes et statistiques en direct</p>
-          <Link
-            href="/public/ranking"
-            className="inline-block bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition"
+    <div className="space-y-8 pb-8">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-sofa-bg-secondary via-sofa-bg-tertiary to-sofa-bg-card"></div>
+        <div className="relative max-w-7xl mx-auto px-6 py-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center"
           >
-            Voir le classement
-          </Link>
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 text-sofa-text-primary">
+              Championnat de Football
+              <span className="block text-sofa-text-accent">Scolaire</span>
+            </h1>
+            <p className="text-xl text-sofa-text-secondary mb-12 max-w-2xl mx-auto">
+              Suivez tous les matchs, équipes et statistiques en temps réel dans notre championnat scolaire
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link href="/public/matches">
+                <button className="sofa-btn">
+                  📅 Voir les matchs
+                </button>
+              </Link>
+              <Link href="/public/ranking">
+                <button className="sofa-btn-secondary sofa-btn">
+                  🏆 Classement
+                </button>
+              </Link>
+              <Link href="/public/statistics">
+                <button className="sofa-btn-secondary sofa-btn">
+                  📊 Statistiques
+                </button>
+              </Link>
+            </div>
+          </motion.div>
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="max-w-7xl mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-4xl font-bold text-primary mb-2">{loading ? "-" : stats.teams}</p>
-            <p className="text-gray-600">Équipes</p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-4xl font-bold text-primary mb-2">{loading ? "-" : stats.matches}</p>
-            <p className="text-gray-600">Matchs joués</p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-4xl font-bold text-primary mb-2">{loading ? "-" : stats.goals}</p>
-            <p className="text-gray-600">Buts marqués</p>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 space-y-12">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+          <SofaStatCard
+            title="Équipes"
+            value={stats.teams}
+            icon={Users}
+            color="blue"
+            index={0}
+          />
+          <SofaStatCard
+            title="Matchs"
+            value={stats.matches}
+            icon={Calendar}
+            color="green"
+            index={1}
+          />
+          <SofaStatCard
+            title="Buts"
+            value={stats.goals}
+            icon={Target}
+            color="purple"
+            index={2}
+          />
+          <SofaStatCard
+            title="Terminés"
+            value={stats.completed}
+            icon={Trophy}
+            color="orange"
+            index={3}
+          />
         </div>
+
+        {/* Today's Matches */}
+        {todayMatches.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold text-sofa-text-primary flex items-center gap-3">
+                <Zap className="w-8 h-8 text-sofa-red" />
+                Matchs d'Aujourd'hui
+              </h2>
+              <Link href="/public/matches">
+                <ChevronRight className="w-6 h-6 text-sofa-text-muted hover:text-sofa-text-accent transition-colors" />
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {todayMatches.map((match, index) => (
+                <SofaMatchCard 
+                  key={match.id} 
+                  match={convertMatchFormat(match)} 
+                  index={index} 
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Recent Matches */}
+        {recentMatches.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold text-sofa-text-primary flex items-center gap-3">
+                <Trophy className="w-8 h-8 text-sofa-green" />
+                Derniers Résultats
+              </h2>
+              <Link href="/public/matches">
+                <ChevronRight className="w-6 h-6 text-sofa-text-muted hover:text-sofa-text-accent transition-colors" />
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {recentMatches.map((match, index) => (
+                <SofaMatchCard 
+                  key={match.id} 
+                  match={convertMatchFormat(match)} 
+                  index={index} 
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Upcoming Matches */}
+        {upcomingMatches.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold text-sofa-text-primary flex items-center gap-3">
+                <Clock className="w-8 h-8 text-sofa-blue" />
+                Prochains Matchs
+              </h2>
+              <Link href="/public/matches">
+                <ChevronRight className="w-6 h-6 text-sofa-text-muted hover:text-sofa-text-accent transition-colors" />
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {upcomingMatches.map((match, index) => (
+                <SofaMatchCard 
+                  key={match.id} 
+                  match={convertMatchFormat(match)} 
+                  index={index} 
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* League Standings Preview */}
+        {standings.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold text-sofa-text-primary flex items-center gap-3">
+                <TrendingUp className="w-8 h-8 text-sofa-green" />
+                Classement
+              </h2>
+              <Link href="/public/ranking">
+                <ChevronRight className="w-6 h-6 text-sofa-text-muted hover:text-sofa-text-accent transition-colors" />
+              </Link>
+            </div>
+            
+            <SofaStandingsTable standings={standings} />
+          </section>
+        )}
+
+        {/* Teams Preview */}
+        {teams.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold text-sofa-text-primary flex items-center gap-3">
+                <Users className="w-8 h-8 text-sofa-blue" />
+                Équipes
+              </h2>
+              <Link href="/public/teams">
+                <ChevronRight className="w-6 h-6 text-sofa-text-muted hover:text-sofa-text-accent transition-colors" />
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {teams.slice(0, 4).map((team, index) => (
+                <SofaTeamCard 
+                  key={team.id} 
+                  team={{
+                    id: team.id,
+                    name: team.name,
+                    color: team.color,
+                    playerCount: team.playerCount || 0
+                  }} 
+                  index={index} 
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+
       </div>
     </div>
   )
