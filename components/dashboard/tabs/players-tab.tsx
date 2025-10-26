@@ -26,6 +26,8 @@ export default function PlayersTab() {
   useEffect(() => {
     if (selectedTeam) {
       loadPlayers()
+    } else {
+      setPlayers([])
     }
   }, [selectedTeam])
 
@@ -46,11 +48,13 @@ export default function PlayersTab() {
   const loadPlayers = async () => {
     try {
       setError(null)
+      console.log("[v0] Loading players for team:", selectedTeam)
       const playersData = await getPlayersByTeam(selectedTeam)
+      console.log("[v0] Players loaded:", playersData.length)
       setPlayers(playersData)
     } catch (err) {
+      console.error("[v0] Error loading players:", err)
       setError("Erreur lors du chargement des joueurs")
-      console.error("Error loading players:", err)
     }
   }
 
