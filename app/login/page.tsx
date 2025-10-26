@@ -92,7 +92,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+    <div className="sofa-theme min-h-screen flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -105,15 +105,19 @@ export default function LoginPage() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className="mx-auto mb-4 w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center"
+              className="mx-auto mb-4 w-16 h-16 flex items-center justify-center"
             >
-              <span className="text-2xl">⚽</span>
+              <img 
+                src="/logo-comebac.svg" 
+                alt="ComeBac League" 
+                className="w-16 h-16 object-contain"
+              />
             </motion.div>
-            <CardTitle className="text-2xl font-bold text-gray-900">
-              Ligue Scolaire
+            <CardTitle className="text-2xl font-bold text-sofa-text-primary">
+              ComeBac League
             </CardTitle>
-            <CardDescription className="text-gray-600">
-              {isSignUp ? 'Créez votre compte' : 'Connectez-vous pour accéder au tableau de bord'}
+            <CardDescription className="text-sofa-text-secondary">
+              {isSignUp ? 'Créez votre compte' : 'Connectez-vous au championnat scolaire'}
             </CardDescription>
           </CardHeader>
 
@@ -169,7 +173,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200"
+                className="w-full h-12 sofa-btn"
               >
                 {isLoading ? (
                   <LoadingSpinner size="sm" className="text-white" />
@@ -193,13 +197,13 @@ export default function LoginPage() {
               variant="outline"
               onClick={handleGoogleLogin}
               disabled={isLoading}
-              className="w-full h-12 border-gray-300 hover:bg-gray-50 transition-all duration-200"
+              className="w-full h-12 border-sofa-border hover:bg-sofa-bg-hover"
             >
               {isLoading ? (
                 <LoadingSpinner size="sm" />
               ) : (
                 <>
-                  <Chrome className="w-5 h-5 mr-2 text-blue-600" />
+                  <Chrome className="w-5 h-5 mr-2 text-sofa-blue" />
                   Continuer avec Google
                 </>
               )}
@@ -209,7 +213,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setIsSignUp(!isSignUp)}
-                className="text-sm text-blue-600 hover:text-blue-700 underline"
+                className="text-sm text-sofa-text-accent hover:text-sofa-green underline"
               >
                 {isSignUp ? 'Déjà un compte ? Se connecter' : 'Pas de compte ? Créer un compte'}
               </button>

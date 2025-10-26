@@ -1,5 +1,40 @@
-/* SofaScore-inspired theme */
+/* SofaScore-inspired theme with Light/Dark Mode */
+
+/* Light Mode (Default) */
 :root {
+  --sofa-bg-primary: #ffffff;
+  --sofa-bg-secondary: #f8fafc;
+  --sofa-bg-tertiary: #f1f5f9;
+  --sofa-bg-card: #ffffff;
+  --sofa-bg-hover: #f1f5f9;
+  
+  --sofa-text-primary: #0f172a;
+  --sofa-text-secondary: #475569;
+  --sofa-text-muted: #64748b;
+  --sofa-text-accent: #00d4aa;
+  
+  --sofa-border: #e2e8f0;
+  --sofa-border-light: #f1f5f9;
+  
+  --sofa-green: #00d4aa;
+  --sofa-red: #ff4757;
+  --sofa-orange: #ffa726;
+  --sofa-blue: #3b82f6;
+  --sofa-yellow: #ffd700;
+  
+  --sofa-gradient-primary: linear-gradient(135deg, #00d4aa 0%, #00a085 100%);
+  --sofa-gradient-card: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  
+  --sofa-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  --sofa-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.15);
+  
+  --sofa-radius: 12px;
+  --sofa-radius-sm: 8px;
+  --sofa-radius-lg: 16px;
+}
+
+/* Dark Mode */
+.dark {
   --sofa-bg-primary: #0f1419;
   --sofa-bg-secondary: #1a1f29;
   --sofa-bg-tertiary: #242b38;
@@ -25,13 +60,9 @@
   
   --sofa-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   --sofa-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.4);
-  
-  --sofa-radius: 12px;
-  --sofa-radius-sm: 8px;
-  --sofa-radius-lg: 16px;
 }
 
-/* Global dark theme */
+/* Global theme with transitions */
 .sofa-theme {
   background: var(--sofa-bg-primary);
   color: var(--sofa-text-primary);
@@ -39,6 +70,7 @@
   width: 100%;
   overflow-x: hidden;
   position: relative;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Card components */
@@ -47,7 +79,7 @@
   border: 1px solid var(--sofa-border);
   border-radius: var(--sofa-radius);
   box-shadow: var(--sofa-shadow);
-  transition: all 0.3s ease;
+  transition: all 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .sofa-card:hover {
@@ -206,6 +238,28 @@
   background: var(--sofa-bg-secondary);
   border-bottom: 1px solid var(--sofa-border);
   padding: 16px 0;
+  transition: all 0.3s ease;
+}
+
+/* Theme Toggle */
+.sofa-theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--sofa-radius-sm);
+  background: var(--sofa-bg-hover);
+  border: 1px solid var(--sofa-border);
+  color: var(--sofa-text-secondary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sofa-theme-toggle:hover {
+  background: var(--sofa-bg-tertiary);
+  color: var(--sofa-text-accent);
+  transform: scale(1.05);
 }
 
 .sofa-nav-item {

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { useTheme } from "@/lib/theme-context";
 import {
   Home,
   Trophy,
@@ -17,6 +18,8 @@ import {
   ChevronDown,
   Menu,
   X,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 const navigationItems = [
@@ -30,6 +33,7 @@ const navigationItems = [
 export function SofaNavigation() {
   const pathname = usePathname();
   const { user, userProfile, logout, isAdmin } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -78,16 +82,23 @@ export function SofaNavigation() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href={user ? "/public" : "/"} className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-sofa-green to-emerald-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">⚽</span>
+          <Link
+            href={user ? "/public" : "/"}
+            className="flex items-center gap-3"
+          >
+            <div className="w-10 h-10 flex items-center justify-center">
+              <img
+                src="/logo-comebac.svg"
+                alt="ComeBac League"
+                className="w-10 h-10 object-contain"
+              />
             </div>
             <div>
               <h1 className="text-xl font-bold text-sofa-text-primary">
-                Ligue Scolaire
+                ComeBac League
               </h1>
               <p className="text-xs text-sofa-text-muted">
-                Championnat de Football
+                Championnat Scolaire
               </p>
             </div>
           </Link>
@@ -154,6 +165,19 @@ export function SofaNavigation() {
                 En Direct
               </span>
             </div>
+
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="sofa-theme-toggle"
+              aria-label="Toggle theme"
+            >
+              {theme === "light" ? (
+                <Moon className="w-4 h-4" />
+              ) : (
+                <Sun className="w-4 h-4" />
+              )}
+            </button>
 
             {/* User Menu */}
             {user ? (
@@ -250,12 +274,16 @@ export function SofaNavigation() {
           {/* Mobile Menu Header */}
           <div className="flex items-center justify-between p-6 border-b border-sofa-border">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-sofa-green to-emerald-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold">⚽</span>
+              <div className="w-8 h-8 flex items-center justify-center">
+                <img
+                  src="/logo-comebac.svg"
+                  alt="ComeBac League"
+                  className="w-8 h-8 object-contain"
+                />
               </div>
               <div>
                 <h2 className="font-bold text-sofa-text-primary">
-                  Ligue Scolaire
+                  ComeBac League
                 </h2>
                 <p className="text-xs text-sofa-text-muted">Championnat</p>
               </div>

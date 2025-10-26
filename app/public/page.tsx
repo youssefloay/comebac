@@ -252,11 +252,11 @@ export default function PublicHome() {
             className="text-center"
           >
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 text-sofa-text-primary">
-              Championnat de Football
-              <span className="block text-sofa-text-accent">Scolaire</span>
+              ComeBac
+              <span className="block text-sofa-text-accent">League</span>
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-sofa-text-secondary mb-8 sm:mb-12 max-w-2xl mx-auto px-4">
-              Suivez tous les matchs, équipes et statistiques en temps réel dans notre championnat scolaire
+              Suivez tous les matchs, équipes et statistiques en temps réel de la ComeBac League
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link href="/public/matches">

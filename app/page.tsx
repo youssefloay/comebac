@@ -20,18 +20,22 @@ export default function HomePage() {
   // If user is logged in, they will be redirected by AuthProvider
   // This page only shows for non-authenticated users
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
+    <div className="sofa-theme min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-            <span className="text-2xl">⚽</span>
+          <div className="mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+            <img 
+              src="/logo-comebac.svg" 
+              alt="ComeBac League" 
+              className="w-16 h-16 object-contain"
+            />
           </div>
-          <CardTitle className="text-2xl font-bold">Ligue Scolaire</CardTitle>
-          <CardDescription>Connectez-vous pour accéder au championnat de football scolaire</CardDescription>
+          <CardTitle className="text-2xl font-bold">ComeBac League</CardTitle>
+          <CardDescription>Connectez-vous pour accéder au championnat scolaire</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Link href="/login" className="block">
-            <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+            <Button className="w-full sofa-btn">
               Se Connecter (Admin)
             </Button>
           </Link>

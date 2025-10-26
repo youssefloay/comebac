@@ -1,0 +1,27 @@
+<svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield Background -->
+  <path d="M400 50 L600 150 L600 400 L400 550 L200 400 L200 150 Z" fill="#1e3a8a" stroke="#ffffff" stroke-width="4"/>
+  
+  <!-- Graduation Cap -->
+  <rect x="320" y="80" width="160" height="20" fill="#ffffff" rx="10"/>
+  <path d="M300 100 L500 100 L520 120 L480 120 L480 140 L470 150 L460 140 L460 120 L280 120 Z" fill="#1e3a8a"/>
+  
+  <!-- Letter C with Soccer Ball Pattern -->
+  <path d="M250 200 Q200 200 200 250 Q200 300 250 300 Q280 300 300 280" fill="none" stroke="#ffffff" stroke-width="20"/>
+  <circle cx="230" cy="230" r="8" fill="#ffffff"/>
+  <circle cx="250" cy="210" r="6" fill="#ffffff"/>
+  <circle cx="270" cy="240" r="7" fill="#ffffff"/>
+  <circle cx="240" cy="270" r="6" fill="#ffffff"/>
+  
+  <!-- Red Section -->
+  <path d="M400 150 L600 150 L600 400 L400 550 Z" fill="#dc2626"/>
+  
+  <!-- Letter B with Soccer Ball Pattern -->
+  <path d="M420 200 L420 350 L480 350 Q520 350 520 325 Q520 300 480 300 Q520 300 520 275 Q520 250 480 250 L420 200 Z" fill="#ffffff"/>
+  <path d="M440 220 L470 220 Q490 220 490 235 Q490 250 470 250 L440 250 Z" fill="#dc2626"/>
+  <path d="M440 270 L475 270 Q500 270 500 290 Q500 310 475 310 L440 310 Z" fill="#dc2626"/>
+  
+  <!-- Soccer Ball Hexagons on B -->
+  <polygon points="450,225 455,220 465,220 470,225 465,230 455,230" fill="#dc2626"/>
+  <polygon points="460,280 465,275 475,275 480,280 475,285 465,285" fill="#dc2626"/>
+</svg>

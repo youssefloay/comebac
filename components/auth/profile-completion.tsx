@@ -106,9 +106,13 @@ export function ProfileCompletion({ user, onComplete }: ProfileCompletionProps) 
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className="mx-auto mb-4 w-16 h-16 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full flex items-center justify-center"
+              className="mx-auto mb-4 w-16 h-16 flex items-center justify-center"
             >
-              <User className="w-8 h-8 text-white" />
+              <img 
+                src="/logo-comebac.svg" 
+                alt="ComeBac League" 
+                className="w-16 h-16 object-contain"
+              />
             </motion.div>
             <CardTitle className="text-2xl font-bold text-gray-900">
               Complétez votre profil
