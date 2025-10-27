@@ -3,6 +3,7 @@
 import type React from "react"
 import { SofaNavigation } from '@/components/sofa/navigation'
 import { UserMenuFAB } from '@/components/sofa/user-menu-fab'
+import { FloatingMenu } from '@/components/sofa/floating-menu'
 import { useAuth } from '@/lib/auth-context'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import '@/styles/sofascore-theme.css'
@@ -38,6 +39,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <main className="min-h-screen">
         {children}
       </main>
+      <FloatingMenu />
       <UserMenuFAB />
     </div>
   )
