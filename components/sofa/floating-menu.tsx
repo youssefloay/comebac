@@ -169,7 +169,7 @@ export function FloatingMenu() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute bottom-16 left-16 space-y-3 pointer-events-none"
+            className="absolute bottom-16 left-16 space-y-3 pointer-events-none flex flex-col items-start"
           >
             {/* Theme Label */}
             <motion.div
@@ -177,9 +177,9 @@ export function FloatingMenu() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
               transition={{ delay: 0.1 }}
-              className="bg-sofa-bg-card border border-sofa-border rounded-lg px-3 py-1 shadow-lg"
+              className="bg-sofa-bg-card border border-sofa-border rounded-lg px-4 py-2 shadow-xl whitespace-nowrap backdrop-blur-sm"
             >
-              <span className="text-xs font-medium text-sofa-text-primary">
+              <span className="text-sm font-medium text-sofa-text-primary">
                 {theme === 'light' ? 'Mode Sombre' : 'Mode Clair'}
               </span>
             </motion.div>
@@ -192,9 +192,9 @@ export function FloatingMenu() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ delay: 0.1 * (index + 2) }}
-                className="bg-sofa-bg-card border border-sofa-border rounded-lg px-3 py-1 shadow-lg"
+                className="bg-sofa-bg-card border border-sofa-border rounded-lg px-4 py-2 shadow-xl whitespace-nowrap backdrop-blur-sm"
               >
-                <span className="text-xs font-medium text-sofa-text-primary">
+                <span className="text-sm font-medium text-sofa-text-primary">
                   {item.label}
                 </span>
               </motion.div>
