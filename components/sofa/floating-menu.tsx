@@ -80,20 +80,31 @@ export function FloatingMenu() {
             className="absolute bottom-16 left-0 space-y-3"
           >
             {/* Theme Toggle */}
-            <motion.button
+            <motion.div
               initial={{ scale: 0, x: -20 }}
               animate={{ scale: 1, x: 0 }}
               exit={{ scale: 0, x: -20 }}
               transition={{ delay: 0.1 }}
-              onClick={toggleTheme}
-              className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+              className="relative group"
             >
-              {theme === 'light' ? (
-                <Moon className="w-5 h-5 text-white" />
-              ) : (
-                <Sun className="w-5 h-5 text-white" />
-              )}
-            </motion.button>
+              <button
+                onClick={toggleTheme}
+                className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+              >
+                {theme === 'light' ? (
+                  <Moon className="w-5 h-5 text-white" />
+                ) : (
+                  <Sun className="w-5 h-5 text-white" />
+                )}
+              </button>
+              
+              {/* Tooltip */}
+              <div className="absolute left-14 top-1/2 transform -translate-y-1/2 bg-sofa-bg-card border border-sofa-border rounded-lg px-3 py-1 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                <span className="text-xs font-medium text-sofa-text-primary">
+                  {theme === 'light' ? 'Mode Sombre' : 'Mode Clair'}
+                </span>
+              </div>
+            </motion.div>
 
             {/* Navigation Items */}
             {navigationItems.map((item, index) => {
@@ -107,6 +118,7 @@ export function FloatingMenu() {
                   animate={{ scale: 1, x: 0 }}
                   exit={{ scale: 0, x: -20 }}
                   transition={{ delay: 0.1 * (index + 2) }}
+                  className="relative group"
                 >
                   <Link
                     href={item.href}
@@ -131,6 +143,13 @@ export function FloatingMenu() {
                       style={{ color: isActive ? "white" : item.color }}
                     />
                   </Link>
+                  
+                  {/* Tooltip */}
+                  <div className="absolute left-14 top-1/2 transform -translate-y-1/2 bg-sofa-bg-card border border-sofa-border rounded-lg px-3 py-1 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                    <span className="text-xs font-medium text-sofa-text-primary">
+                      {item.label}
+                    </span>
+                  </div>
                 </motion.div>
               );
             })}
@@ -162,46 +181,7 @@ export function FloatingMenu() {
         </motion.div>
       </motion.button>
 
-      {/* Floating Labels */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute bottom-16 left-16 space-y-3 pointer-events-none flex flex-col items-start"
-          >
-            {/* Theme Label */}
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ delay: 0.1 }}
-              className="bg-sofa-bg-card border border-sofa-border rounded-lg px-4 py-2 shadow-xl whitespace-nowrap backdrop-blur-sm"
-            >
-              <span className="text-sm font-medium text-sofa-text-primary">
-                {theme === 'light' ? 'Mode Sombre' : 'Mode Clair'}
-              </span>
-            </motion.div>
 
-            {/* Navigation Labels */}
-            {navigationItems.map((item, index) => (
-              <motion.div
-                key={`label-${item.href}`}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ delay: 0.1 * (index + 2) }}
-                className="bg-sofa-bg-card border border-sofa-border rounded-lg px-4 py-2 shadow-xl whitespace-nowrap backdrop-blur-sm"
-              >
-                <span className="text-sm font-medium text-sofa-text-primary">
-                  {item.label}
-                </span>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Backdrop */}
       <AnimatePresence>
