@@ -41,6 +41,73 @@ export default function Dashboard({ user }: { user: any }) {
     }
   }
 
+  const handleClearData = async () => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer toutes les données (équipes, joueurs, matchs) ? Cette action est irréversible.")) {
+      return
+    }
+    
+    setIsSeeding(true)
+    setSeedMessage(null)
+    try {
+      const response = await fetch("/api/admin/clear-data", { method: "DELETE" })
+      const data = await response.json()
+      if (response.ok) {
+        setSeedMessage({ type: "success", text: data.message || "Toutes les données ont été supprimées!" })
+        setActiveTab("teams")
+      } else {
+        setSeedMessage({ type: "error", text: data.error || "Erreur lors de la suppression des données" })
+      }
+    } catch (error) {
+      setSeedMessage({ type: "error", text: "Erreur de connexion" })
+    } finally {
+      setIsSeeding(false)
+    }
+  }
+
+
+
+  const handleGenerateMatches = async () => {
+    if (!confirm("Générer automatiquement tous les matchs ? Cela supprimera les matchs existants.")) {
+      return
+    }
+
+    setIsSeeding(true)
+    setSeedMessage(null)
+    try {
+      const response = await fetch("/api/admin/generate-matches", { method: "POST" })
+      const data = await response.json()
+      if (response.ok) {
+        setSeedMessage({ type: "success", text: data.message })
+        setActiveTab("matches")
+      } else {
+        setSeedMessage({ type: "error", text: data.error || "Erreur lors de la génération des matchs" })
+      }
+    } catch (error) {
+      setSeedMessage({ type: "error", text: "Erreur de connexion" })
+    } finally {
+      setIsSeeding(false)
+    }
+  }
+
+  const handleCreateTestMatch = async () => {
+    setIsSeeding(true)
+    setSeedMessage(null)
+    try {
+      const response = await fetch("/api/admin/create-test-match", { method: "POST" })
+      const data = await response.json()
+      if (response.ok) {
+        setSeedMessage({ type: "success", text: data.message })
+        setActiveTab("matches")
+      } else {
+        setSeedMessage({ type: "error", text: data.error || "Erreur lors de la création du match de test" })
+      }
+    } catch (error) {
+      setSeedMessage({ type: "error", text: "Erreur de connexion" })
+    } finally {
+      setIsSeeding(false)
+    }
+  }
+
   const tabs = [
     { id: "teams", label: "Équipes", icon: "⚽" },
     { id: "players", label: "Joueurs", icon: "👥" },
@@ -78,6 +145,40 @@ export default function Dashboard({ user }: { user: any }) {
 
         <div className="p-4 border-t border-gray-200 space-y-2">
           <button
+            onClick={handleCreateTestMatch}
+            disabled={isSeeding}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white hover:bg-purple-700 disabled:bg-gray-400 rounded-lg transition text-sm font-medium"
+          >
+            {isSeeding ? (
+              <>
+                <Loader className="w-4 h-4 animate-spin" />
+                {sidebarOpen && <span>Création...</span>}
+              </>
+            ) : (
+              <>
+                <span>🧪</span>
+                {sidebarOpen && <span>Match test</span>}
+              </>
+            )}
+          </button>
+          <button
+            onClick={handleGenerateMatches}
+            disabled={isSeeding}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 rounded-lg transition text-sm font-medium"
+          >
+            {isSeeding ? (
+              <>
+                <Loader className="w-4 h-4 animate-spin" />
+                {sidebarOpen && <span>Génération...</span>}
+              </>
+            ) : (
+              <>
+                <span>⚽</span>
+                {sidebarOpen && <span>Générer matchs</span>}
+              </>
+            )}
+          </button>
+          <button
             onClick={handleInitializeData}
             disabled={isSeeding}
             className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-400 rounded-lg transition text-sm font-medium"
@@ -93,6 +194,14 @@ export default function Dashboard({ user }: { user: any }) {
                 {sidebarOpen && <span>Données test</span>}
               </>
             )}
+          </button>
+          <button
+            onClick={handleClearData}
+            disabled={isSeeding}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white hover:bg-red-700 disabled:bg-gray-400 rounded-lg transition text-sm font-medium"
+          >
+            <span>🗑️</span>
+            {sidebarOpen && <span>Vider données</span>}
           </button>
           <button
             onClick={handleLogout}

@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { Plus, Trash2, Edit2, AlertCircle } from "lucide-react"
-import { getTeams, createTeam, updateTeam, deleteTeam } from "@/lib/db"
+// Removed old imports - using API endpoints instead
 import type { Team } from "@/lib/types"
 
 export default function TeamsTab() {
@@ -22,8 +22,14 @@ export default function TeamsTab() {
   const loadTeams = async () => {
     try {
       setError(null)
-      const teamsData = await getTeams()
-      setTeams(teamsData)
+      const response = await fetch('/api/admin/teams')
+      if (!response.ok) throw new Error('Failed to fetch teams')
+      const teamsData = await response.json()
+      setTeams(teamsData.map((team: any) => ({
+        ...team,
+        createdAt: team.createdAt ? new Date(team.createdAt.seconds * 1000) : new Date(),
+        updatedAt: team.updatedAt ? new Date(team.updatedAt.seconds * 1000) : new Date()
+      })))
     } catch (err) {
       setError("Erreur lors du chargement des équipes")
       console.error("Error loading teams:", err)
@@ -45,20 +51,31 @@ export default function TeamsTab() {
       console.log("[v0] Submitting team form:", formData)
       if (editingId) {
         console.log("[v0] Updating team:", editingId)
-        await updateTeam(editingId, {
-          name: formData.name,
-          logo: formData.logo,
-          color: formData.color,
+        const response = await fetch('/api/admin/teams', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: editingId,
+            name: formData.name,
+            logo: formData.logo,
+            color: formData.color,
+          })
         })
+        if (!response.ok) throw new Error('Failed to update team')
         console.log("[v0] Team updated successfully")
         setSuccess("Équipe mise à jour avec succès")
       } else {
         console.log("[v0] Creating new team")
-        await createTeam({
-          name: formData.name,
-          logo: formData.logo,
-          color: formData.color,
+        const response = await fetch('/api/admin/teams', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.name,
+            logo: formData.logo,
+            color: formData.color,
+          })
         })
+        if (!response.ok) throw new Error('Failed to create team')
         console.log("[v0] Team created successfully")
         setSuccess("Équipe créée avec succès")
       }
@@ -83,7 +100,10 @@ export default function TeamsTab() {
     if (confirm(`Êtes-vous sûr de vouloir supprimer l'équipe "${teamName}"?`)) {
       try {
         setError(null)
-        await deleteTeam(id)
+        const response = await fetch(`/api/admin/teams?id=${id}`, {
+          method: 'DELETE'
+        })
+        if (!response.ok) throw new Error('Failed to delete team')
         setSuccess("Équipe supprimée avec succès")
         await loadTeams()
         setTimeout(() => setSuccess(null), 3000)
@@ -117,7 +137,7 @@ export default function TeamsTab() {
             handleCancel()
             setShowForm(true)
           }}
-          className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition"
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           <Plus className="w-5 h-5" />
           Nouvelle équipe
@@ -141,36 +161,51 @@ export default function TeamsTab() {
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <input
-                type="text"
-                placeholder="Nom de l'équipe"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none"
-                required
-              />
-              <input
-                type="text"
-                placeholder="URL du logo"
-                value={formData.logo}
-                onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none"
-              />
-              <div className="flex items-center gap-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nom de l'équipe *
+                </label>
                 <input
-                  type="color"
-                  value={formData.color}
-                  onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                  className="px-4 py-2 border border-gray-300 rounded-lg cursor-pointer h-10"
+                  type="text"
+                  placeholder="Ex: Real Madrid, FC Barcelone..."
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  required
                 />
-                <span className="text-sm text-gray-600">{formData.color}</span>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  URL du logo (optionnel)
+                </label>
+                <input
+                  type="text"
+                  placeholder="https://example.com/logo.png"
+                  value={formData.logo}
+                  onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Couleur de l'équipe
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={formData.color}
+                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                    className="px-4 py-2 border border-gray-300 rounded-lg cursor-pointer h-10"
+                  />
+                  <span className="text-sm text-gray-600">{formData.color}</span>
+                </div>
               </div>
             </div>
             <div className="flex gap-2">
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition disabled:opacity-50"
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
               >
                 {loading ? "Enregistrement..." : editingId ? "Mettre à jour" : "Ajouter"}
               </button>
@@ -224,7 +259,7 @@ export default function TeamsTab() {
       {teams.length === 0 && !showForm && (
         <div className="text-center py-12">
           <p className="text-gray-500 mb-4">Aucune équipe créée</p>
-          <button onClick={() => setShowForm(true)} className="text-primary hover:underline font-semibold">
+          <button onClick={() => setShowForm(true)} className="text-blue-600 hover:underline font-semibold">
             Créer la première équipe
           </button>
         </div>

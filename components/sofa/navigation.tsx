@@ -21,6 +21,7 @@ const navigationItems = [
   { href: "/public/ranking", label: "Classement", icon: Trophy },
   { href: "/public/statistics", label: "Statistiques", icon: BarChart3 },
   { href: "/public/teams", label: "Équipes", icon: Users },
+  { href: "/public/players", label: "Cartes FIFA 🎮", icon: Users },
 ];
 
 export function SofaNavigation() {
@@ -92,8 +93,6 @@ export function SofaNavigation() {
             </div>
           )}
 
-
-
           {/* User Menu */}
           <div className="flex items-center gap-4">
             {/* Live indicator */}
@@ -117,6 +116,8 @@ export function SofaNavigation() {
               )}
             </button>
 
+
+
             {/* Login Button for Non-authenticated Users */}
             {!user && (
               <Link href="/login">
@@ -128,8 +129,6 @@ export function SofaNavigation() {
           </div>
         </div>
       </div>
-
-
     </nav>
   );
 }

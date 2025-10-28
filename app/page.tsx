@@ -25,7 +25,7 @@ export default function HomePage() {
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 w-16 h-16 flex items-center justify-center">
             <img 
-              src="/logo-comebac.svg" 
+              src="/ebac.svg" 
               alt="ComeBac League" 
               className="w-16 h-16 object-contain"
             />

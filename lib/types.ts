@@ -13,6 +13,40 @@ export interface Player {
   number: number
   position: "Gardien" | "Défenseur" | "Milieu" | "Attaquant"
   teamId: string
+  photo?: string // URL de la photo du joueur
+  
+  // Informations personnelles
+  birthDate?: string // Date de naissance (YYYY-MM-DD)
+  age?: number // Calculé automatiquement
+  nationality?: string
+  height?: number // en cm
+  weight?: number // en kg
+  birthPlace?: string // Ville de naissance
+  
+  // Informations scolaires/académiques
+  school?: string // École/Institution
+  grade?: string // Classe/Niveau (ex: "Terminale S")
+  favoriteSubject?: string // Matière préférée
+  languages?: string[] // Langues parlées
+  
+  // Informations sportives
+  alternativePositions?: string[] // Positions alternatives
+  strongFoot?: "Droit" | "Gauche" | "Ambidextre"
+  experienceYears?: number // Années d'expérience
+  preferredNumber?: number // Numéro de maillot préféré
+  
+  // Note générale pour le tri/affichage (remplace overall)
+  overall?: number // Note générale (0-99) - optionnel pour compatibilité
+  
+  // Statistiques de saison (gardées séparément)
+  seasonStats?: {
+    goals: number
+    assists: number
+    matches: number
+    yellowCards: number
+    redCards: number
+    minutesPlayed: number
+  }
   createdAt: Date
   updatedAt: Date
 }
@@ -36,6 +70,11 @@ export interface MatchResult {
   // Each scorer can reference a player document (playerId) and include a display name and optional assists
   homeTeamGoalScorers: Array<{ playerId?: string; playerName: string; assists?: string }>
   awayTeamGoalScorers: Array<{ playerId?: string; playerName: string; assists?: string }>
+  // Cards for each team
+  homeTeamYellowCards?: Array<{ playerId?: string; playerName: string }>
+  awayTeamYellowCards?: Array<{ playerId?: string; playerName: string }>
+  homeTeamRedCards?: Array<{ playerId?: string; playerName: string }>
+  awayTeamRedCards?: Array<{ playerId?: string; playerName: string }>
   createdAt: Date
   updatedAt: Date
 }

@@ -9,7 +9,8 @@ import {
   LogOut, 
   Settings, 
   ChevronUp,
-  Home
+  Home,
+  Users
 } from 'lucide-react'
 
 export function UserMenuFAB() {
@@ -74,6 +75,15 @@ export function UserMenuFAB() {
               >
                 <Home className="w-4 h-4" />
                 Accueil
+              </Link>
+
+              <Link
+                href="/public/players"
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors"
+                onClick={() => setShowMenu(false)}
+              >
+                <Users className="w-4 h-4" />
+                Cartes FIFA 🎮
               </Link>
 
               {isAdmin && (

@@ -2,12 +2,10 @@
 
 import { useEffect, useState } from "react"
 import { db } from "@/lib/firebase"
-import { collection, getDocs, query, orderBy, where, doc, updateDoc, addDoc, Timestamp } from "firebase/firestore"
+import { collection, getDocs, query, orderBy } from "firebase/firestore"
 import type { Match, Team, MatchResult } from "@/lib/types"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { MatchResultForm } from "@/components/matches/match-result-form"
-import { recalculateAllStatistics } from "@/lib/statistics"
+
+
 import { 
   Calendar, 
   Clock, 
@@ -28,7 +26,7 @@ export default function MatchesPage() {
   const [matches, setMatches] = useState<(Match & { homeTeam?: Team; awayTeam?: Team; result?: MatchResult })[]>([])
   const [filteredMatches, setFilteredMatches] = useState<(Match & { homeTeam?: Team; awayTeam?: Team; result?: MatchResult })[]>([])
   const [loading, setLoading] = useState(true)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+
   const [filterStatus, setFilterStatus] = useState<'all' | 'scheduled' | 'completed' | 'in_progress'>('all')
   const [selectedRound, setSelectedRound] = useState<number | 'all'>('all')
   const [rounds, setRounds] = useState<number[]>([])
@@ -326,110 +324,7 @@ export default function MatchesPage() {
     return matchDay < today
   }
 
-  const handleSubmitResult = async (match: Match & { homeTeam?: Team; awayTeam?: Team }, result: MatchResult) => {
-    try {
-      setIsSubmitting(true)
 
-      // Check if a result already exists for this match
-      const existingResultQuery = query(collection(db, "matchResults"), where("matchId", "==", match.id))
-      const existingSnap = await getDocs(existingResultQuery)
-      const existingDoc = existingSnap.docs[0]
-
-      // Update match status to completed
-      await updateDoc(doc(db, "matches", match.id), {
-        status: "completed",
-        updatedAt: Timestamp.now()
-      })
-
-      // Save or update the result
-      if (existingDoc) {
-        // Update existing result
-        await updateDoc(doc(db, "matchResults", existingDoc.id), {
-          ...result,
-          matchId: match.id,
-          updatedAt: Timestamp.now(),
-        })
-      } else {
-        // Create new result
-        await addDoc(collection(db, "matchResults"), {
-          ...result,
-          matchId: match.id,
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
-        })
-      }
-
-      // Helper to compute points for a team given a result
-      const computePoints = (res: MatchResult | null, isHome: boolean) => {
-        if (!res) return 0
-        const home = res.homeTeamScore
-        const away = res.awayTeamScore
-        if (isHome) return home > away ? 3 : home === away ? 1 : 0
-        return away > home ? 3 : away === home ? 1 : 0
-      }
-
-      // Fetch current stats documents and update them idempotently
-      const homeTeamStatsQuery = query(collection(db, "teamStatistics"), where("teamId", "==", match.homeTeamId))
-      const awayTeamStatsQuery = query(collection(db, "teamStatistics"), where("teamId", "==", match.awayTeamId))
-
-      const [homeStatsSnap, awayStatsSnap] = await Promise.all([
-        getDocs(homeTeamStatsQuery),
-        getDocs(awayTeamStatsQuery),
-      ])
-
-      const oldResult = existingDoc ? (existingDoc.data() as MatchResult) : null
-
-      const updateTeamStats = async (teamId: string, isHome: boolean, statsDoc: any) => {
-        const existing = statsDoc ? { id: statsDoc.id, ...statsDoc.data() } : null
-
-        const oldGoalsFor = oldResult ? (isHome ? oldResult.homeTeamScore : oldResult.awayTeamScore) : 0
-        const oldGoalsAgainst = oldResult ? (isHome ? oldResult.awayTeamScore : oldResult.homeTeamScore) : 0
-        const oldPoints = computePoints(oldResult, isHome)
-
-        const newGoalsFor = result ? (isHome ? result.homeTeamScore : result.awayTeamScore) : 0
-        const newGoalsAgainst = result ? (isHome ? result.awayTeamScore : result.homeTeamScore) : 0
-        const newPoints = computePoints(result, isHome)
-
-        const deltaMatches = oldResult ? 0 : 1
-        const deltaWins = (newPoints === 3 ? 1 : 0) - (oldPoints === 3 ? 1 : 0)
-        const deltaDraws = (newPoints === 1 ? 1 : 0) - (oldPoints === 1 ? 1 : 0)
-        const deltaLosses = (newPoints === 0 ? 1 : 0) - (oldPoints === 0 ? 1 : 0)
-
-        const stats = {
-          teamId,
-          matchesPlayed: (existing?.matchesPlayed || 0) + deltaMatches,
-          wins: (existing?.wins || 0) + deltaWins,
-          draws: (existing?.draws || 0) + deltaDraws,
-          losses: (existing?.losses || 0) + deltaLosses,
-          goalsFor: (existing?.goalsFor || 0) + (newGoalsFor - oldGoalsFor),
-          goalsAgainst: (existing?.goalsAgainst || 0) + (newGoalsAgainst - oldGoalsAgainst),
-          points: (existing?.points || 0) + (newPoints - oldPoints),
-          updatedAt: Timestamp.now(),
-        }
-
-        if (existing?.id) {
-          await updateDoc(doc(db, "teamStatistics", existing.id), stats)
-        } else {
-          await addDoc(collection(db, "teamStatistics"), stats)
-        }
-      }
-
-      await Promise.all([
-        updateTeamStats(match.homeTeamId, true, homeStatsSnap.docs[0]),
-        updateTeamStats(match.awayTeamId, false, awayStatsSnap.docs[0]),
-      ])
-
-      // Recalculate all statistics to ensure consistency
-      await recalculateAllStatistics()
-
-      // Refresh matches
-      window.location.reload()
-    } catch (error) {
-      console.error("Error submitting match result:", error)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
 
   // Debug log when component renders
   console.log('Rendering matches page with:', {
@@ -653,12 +548,55 @@ export default function MatchesPage() {
                               {match.result.homeTeamScore} - {match.result.awayTeamScore}
                             </div>
                             {matchResult && (
-                              <p className={`text-sm font-medium ${
+                              <p className={`text-sm font-medium mb-3 ${
                                 matchResult.winner === 'home' ? 'text-green-600' : 
                                 matchResult.winner === 'away' ? 'text-blue-600' : 'text-yellow-600'
                               }`}>
                                 {matchResult.result}
                               </p>
+                            )}
+                            
+                            {/* Cards Display */}
+                            {match.result && (
+                              <div className="space-y-2 text-xs">
+                                {/* Home Team Cards */}
+                                {(match.result.homeTeamYellowCards?.length > 0 || match.result.homeTeamRedCards?.length > 0) && (
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-medium text-gray-700">{match.homeTeam?.name}:</span>
+                                    {match.result.homeTeamYellowCards?.map((card, idx) => (
+                                      <div key={`home-yellow-${idx}`} className="flex items-center gap-1 bg-yellow-100 px-2 py-1 rounded">
+                                        <div className="w-3 h-4 bg-yellow-400 border border-yellow-600 rounded-sm shadow-sm"></div>
+                                        <span className="text-yellow-800 text-xs font-medium">{card.playerName}</span>
+                                      </div>
+                                    ))}
+                                    {match.result.homeTeamRedCards?.map((card, idx) => (
+                                      <div key={`home-red-${idx}`} className="flex items-center gap-1 bg-red-100 px-2 py-1 rounded">
+                                        <div className="w-3 h-4 bg-red-500 border border-red-700 rounded-sm shadow-sm"></div>
+                                        <span className="text-red-800 text-xs font-medium">{card.playerName}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                
+                                {/* Away Team Cards */}
+                                {(match.result.awayTeamYellowCards?.length > 0 || match.result.awayTeamRedCards?.length > 0) && (
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-medium text-gray-700">{match.awayTeam?.name}:</span>
+                                    {match.result.awayTeamYellowCards?.map((card, idx) => (
+                                      <div key={`away-yellow-${idx}`} className="flex items-center gap-1 bg-yellow-100 px-2 py-1 rounded">
+                                        <div className="w-3 h-4 bg-yellow-400 border border-yellow-600 rounded-sm shadow-sm"></div>
+                                        <span className="text-yellow-800 text-xs font-medium">{card.playerName}</span>
+                                      </div>
+                                    ))}
+                                    {match.result.awayTeamRedCards?.map((card, idx) => (
+                                      <div key={`away-red-${idx}`} className="flex items-center gap-1 bg-red-100 px-2 py-1 rounded">
+                                        <div className="w-3 h-4 bg-red-500 border border-red-700 rounded-sm shadow-sm"></div>
+                                        <span className="text-red-800 text-xs font-medium">{card.playerName}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </div>
                         ) : (
@@ -733,30 +671,12 @@ export default function MatchesPage() {
                       </span>
                     </div>
                     
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="bg-white hover:bg-gray-50"
-                        >
-                          {match.result ? 'Modifier le résultat' : 'Ajouter le résultat'}
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle className="flex items-center gap-2">
-                            <Trophy className="w-5 h-5" />
-                            Résultat du match
-                          </DialogTitle>
-                        </DialogHeader>
-                        <MatchResultForm 
-                          match={match} 
-                          onSubmit={handleSubmitResult}
-                          isSubmitting={isSubmitting}
-                        />
-                      </DialogContent>
-                    </Dialog>
+                    <div className="bg-gray-100 px-3 py-2 rounded-lg border">
+                      <p className="text-sm text-gray-600 flex items-center gap-2">
+                        <XCircle className="w-4 h-4" />
+                        Seuls les administrateurs peuvent modifier les résultats
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>

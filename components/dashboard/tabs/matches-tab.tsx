@@ -65,6 +65,10 @@ export default function MatchesTab() {
         awayTeamScore: Number(result.awayTeamScore),  // Conversion explicite en nombre
         homeTeamGoalScorers: result.homeTeamGoalScorers,
         awayTeamGoalScorers: result.awayTeamGoalScorers,
+        homeTeamYellowCards: result.homeTeamYellowCards || [],
+        awayTeamYellowCards: result.awayTeamYellowCards || [],
+        homeTeamRedCards: result.homeTeamRedCards || [],
+        awayTeamRedCards: result.awayTeamRedCards || [],
         updatedAt: Timestamp.now(),
       }
 

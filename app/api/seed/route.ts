@@ -13,75 +13,111 @@ const firebaseConfig = {
 
 const teamsData = [
   {
-    name: "FC Étoile",
+    name: "Lycée Français du Caire",
     color: "#1e40af",
-    logo: "⭐",
+    logo: "🇫🇷",
     players: [
-      { name: "Marc Dupont", number: 1, position: "Gardien" },
-      { name: "Pierre Bernard", number: 2, position: "Défenseur" },
-      { name: "Jean Moreau", number: 3, position: "Défenseur" },
-      { name: "Luc Fontaine", number: 4, position: "Défenseur" },
-      { name: "Thomas Leclerc", number: 5, position: "Milieu" },
-      { name: "Antoine Rousseau", number: 6, position: "Milieu" },
-      { name: "Nicolas Petit", number: 7, position: "Attaquant" },
-      { name: "Olivier Girard", number: 8, position: "Attaquant" },
-      { name: "Maxime Lefevre", number: 9, position: "Attaquant" },
-      { name: "David Renard", number: 10, position: "Milieu" },
-      { name: "Christophe Blanc", number: 11, position: "Attaquant" },
+      { name: "Ahmed Hassan", number: 1, position: "Gardien" },
+      { name: "Mohamed Salah", number: 2, position: "Défenseur" },
+      { name: "Omar Farouk", number: 3, position: "Défenseur" },
+      { name: "Youssef Mahmoud", number: 4, position: "Défenseur" },
+      { name: "Karim Mostafa", number: 5, position: "Milieu" },
+      { name: "Amr Tarek", number: 6, position: "Milieu" },
+      { name: "Mahmoud Trezeguet", number: 7, position: "Attaquant" },
+      { name: "Marwan Mohsen", number: 8, position: "Attaquant" },
+      { name: "Ramadan Sobhi", number: 9, position: "Attaquant" },
+      { name: "Abdallah Said", number: 10, position: "Milieu" },
+      { name: "Mostafa Fathi", number: 11, position: "Attaquant" },
     ],
   },
   {
-    name: "AS Dragons",
+    name: "École Oasis Internationale",
     color: "#dc2626",
-    logo: "🐉",
+    logo: "🌴",
     players: [
-      { name: "Fabrice Martin", number: 1, position: "Gardien" },
-      { name: "Sébastien Durand", number: 2, position: "Défenseur" },
-      { name: "Raphaël Gérard", number: 3, position: "Défenseur" },
-      { name: "Grégory Leroy", number: 4, position: "Défenseur" },
-      { name: "Stéphane Mercier", number: 5, position: "Milieu" },
-      { name: "Jérôme Arnould", number: 6, position: "Milieu" },
-      { name: "Adrien Gauthier", number: 7, position: "Attaquant" },
-      { name: "Benoît Lemoine", number: 8, position: "Attaquant" },
-      { name: "Cédric Renault", number: 9, position: "Attaquant" },
-      { name: "Frédéric Lecomte", number: 10, position: "Milieu" },
-      { name: "Hervé Deschamps", number: 11, position: "Attaquant" },
+      { name: "Tarek Hamed", number: 1, position: "Gardien" },
+      { name: "Sherif Ekramy", number: 2, position: "Défenseur" },
+      { name: "Ramy Rabia", number: 3, position: "Défenseur" },
+      { name: "Ali Gabr", number: 4, position: "Défenseur" },
+      { name: "Walid Soliman", number: 5, position: "Milieu" },
+      { name: "Emad Moteab", number: 6, position: "Milieu" },
+      { name: "Salah Mohsen", number: 7, position: "Attaquant" },
+      { name: "Bassem Morsy", number: 8, position: "Attaquant" },
+      { name: "Zizo", number: 9, position: "Attaquant" },
+      { name: "Nasser Maher", number: 10, position: "Milieu" },
+      { name: "Ayman Hefny", number: 11, position: "Attaquant" },
     ],
   },
   {
-    name: "Olympique Bleu",
+    name: "Collège Saint-Marc",
     color: "#0369a1",
-    logo: "🏅",
+    logo: "✝️",
     players: [
-      { name: "Laurent Fournier", number: 1, position: "Gardien" },
-      { name: "Michaël Renard", number: 2, position: "Défenseur" },
-      { name: "Yannick Lefevre", number: 3, position: "Défenseur" },
-      { name: "Valentin Gros", number: 4, position: "Défenseur" },
-      { name: "Quentin Legrand", number: 5, position: "Milieu" },
-      { name: "Romain Petit", number: 6, position: "Milieu" },
-      { name: "Samuel Leroy", number: 7, position: "Attaquant" },
-      { name: "Théo Mercier", number: 8, position: "Attaquant" },
-      { name: "Ulysse Arnould", number: 9, position: "Attaquant" },
-      { name: "Victor Gauthier", number: 10, position: "Milieu" },
-      { name: "Xavier Lemoine", number: 11, position: "Attaquant" },
+      { name: "Essam El Hadary", number: 1, position: "Gardien" },
+      { name: "Wael Gomaa", number: 2, position: "Défenseur" },
+      { name: "Hany Said", number: 3, position: "Défenseur" },
+      { name: "Mahmoud Fathalla", number: 4, position: "Défenseur" },
+      { name: "Hosny Abd Rabo", number: 5, position: "Milieu" },
+      { name: "Shikabala", number: 6, position: "Milieu" },
+      { name: "Geddo", number: 7, position: "Attaquant" },
+      { name: "Aboutrika", number: 8, position: "Attaquant" },
+      { name: "Zidan", number: 9, position: "Attaquant" },
+      { name: "Barakat", number: 10, position: "Milieu" },
+      { name: "Mido", number: 11, position: "Attaquant" },
     ],
   },
   {
-    name: "FC Victoire",
+    name: "Institut Balzac",
     color: "#16a34a",
-    logo: "🏆",
+    logo: "📚",
     players: [
-      { name: "Alain Renault", number: 1, position: "Gardien" },
-      { name: "Bruno Lecomte", number: 2, position: "Défenseur" },
-      { name: "Claude Deschamps", number: 3, position: "Défenseur" },
-      { name: "Daniel Fournier", number: 4, position: "Défenseur" },
-      { name: "Éric Renard", number: 5, position: "Milieu" },
-      { name: "François Lefevre", number: 6, position: "Milieu" },
-      { name: "Gaston Gros", number: 7, position: "Attaquant" },
-      { name: "Henri Legrand", number: 8, position: "Attaquant" },
-      { name: "Ignace Petit", number: 9, position: "Attaquant" },
-      { name: "Jacques Leroy", number: 10, position: "Milieu" },
-      { name: "Kévin Mercier", number: 11, position: "Attaquant" },
+      { name: "Sherif Hazem", number: 1, position: "Gardien" },
+      { name: "Ahmed Fathy", number: 2, position: "Défenseur" },
+      { name: "Karim Hafez", number: 3, position: "Défenseur" },
+      { name: "Ayman Ashraf", number: 4, position: "Défenseur" },
+      { name: "Mahmoud Kahraba", number: 5, position: "Milieu" },
+      { name: "Abdallah El Said", number: 6, position: "Milieu" },
+      { name: "Amr Barakat", number: 7, position: "Attaquant" },
+      { name: "Islam Issa", number: 8, position: "Attaquant" },
+      { name: "Koka", number: 9, position: "Attaquant" },
+      { name: "Junior Ajayi", number: 10, position: "Milieu" },
+      { name: "Walid Azaro", number: 11, position: "Attaquant" },
+    ],
+  },
+  {
+    name: "École Française de Maadi",
+    color: "#7c3aed",
+    logo: "🏫",
+    players: [
+      { name: "Mohamed Abou Gabal", number: 1, position: "Gardien" },
+      { name: "Baher El Mohamady", number: 2, position: "Défenseur" },
+      { name: "Ahmed Hegazi", number: 3, position: "Défenseur" },
+      { name: "Mahmoud Hamdy", number: 4, position: "Défenseur" },
+      { name: "Tarek Hamed", number: 5, position: "Milieu" },
+      { name: "Sam Morsy", number: 6, position: "Milieu" },
+      { name: "Trézéguet", number: 7, position: "Attaquant" },
+      { name: "Mostafa Mohamed", number: 8, position: "Attaquant" },
+      { name: "Omar Marmoush", number: 9, position: "Attaquant" },
+      { name: "Mohamed Elneny", number: 10, position: "Milieu" },
+      { name: "Zizo", number: 11, position: "Attaquant" },
+    ],
+  },
+  {
+    name: "Lycée Concordia",
+    color: "#ea580c",
+    logo: "🤝",
+    players: [
+      { name: "Aly Lotfy", number: 1, position: "Gardien" },
+      { name: "Mohamed Abdel Shafy", number: 2, position: "Défenseur" },
+      { name: "Ragab Omran", number: 3, position: "Défenseur" },
+      { name: "Mahmoud Alaa", number: 4, position: "Défenseur" },
+      { name: "Ibrahim Hassan", number: 5, position: "Milieu" },
+      { name: "Hossam Hassan", number: 6, position: "Milieu" },
+      { name: "Ahmed Hossam Mido", number: 7, position: "Attaquant" },
+      { name: "Emad Meteab", number: 8, position: "Attaquant" },
+      { name: "Flavio Amado", number: 9, position: "Attaquant" },
+      { name: "Hazem Emam", number: 10, position: "Milieu" },
+      { name: "Hady Khashaba", number: 11, position: "Attaquant" },
     ],
   },
 ]
@@ -103,11 +139,64 @@ export async function POST() {
       })
 
       for (const player of teamData.players) {
+        // Générer des statistiques FIFA selon la position
+        const generateStats = (position: string) => {
+          const baseStats = {
+            pace: 60 + Math.floor(Math.random() * 30),
+            shooting: 50 + Math.floor(Math.random() * 40),
+            passing: 55 + Math.floor(Math.random() * 35),
+            dribbling: 55 + Math.floor(Math.random() * 35),
+            defending: 45 + Math.floor(Math.random() * 40),
+            physical: 60 + Math.floor(Math.random() * 30)
+          }
+          
+          // Ajuster selon la position
+          switch (position) {
+            case 'Gardien':
+              baseStats.defending = 75 + Math.floor(Math.random() * 20)
+              baseStats.physical = 70 + Math.floor(Math.random() * 20)
+              baseStats.shooting = 20 + Math.floor(Math.random() * 20)
+              baseStats.pace = 40 + Math.floor(Math.random() * 20)
+              break
+            case 'Défenseur':
+              baseStats.defending = 70 + Math.floor(Math.random() * 20)
+              baseStats.physical = 65 + Math.floor(Math.random() * 25)
+              break
+            case 'Milieu':
+              baseStats.passing = 70 + Math.floor(Math.random() * 20)
+              baseStats.dribbling = 65 + Math.floor(Math.random() * 25)
+              break
+            case 'Attaquant':
+              baseStats.shooting = 70 + Math.floor(Math.random() * 20)
+              baseStats.pace = 70 + Math.floor(Math.random() * 20)
+              break
+          }
+          
+          const overall = Math.round(
+            (baseStats.pace + baseStats.shooting + baseStats.passing + 
+             baseStats.dribbling + baseStats.defending + baseStats.physical) / 6
+          )
+          
+          return { ...baseStats, overall }
+        }
+
+        const stats = generateStats(player.position)
+
         await addDoc(collection(db, "players"), {
           name: player.name,
           number: player.number,
           position: player.position,
           teamId: teamRef.id,
+          nationality: "Égypte",
+          photo: "",
+          stats: stats,
+          seasonStats: {
+            goals: Math.floor(Math.random() * (player.position === 'Attaquant' ? 15 : player.position === 'Milieu' ? 8 : 2)),
+            assists: Math.floor(Math.random() * (player.position === 'Milieu' ? 12 : player.position === 'Attaquant' ? 8 : 3)),
+            matches: 15 + Math.floor(Math.random() * 10),
+            yellowCards: Math.floor(Math.random() * 5),
+            redCards: Math.floor(Math.random() * 2)
+          },
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
         })

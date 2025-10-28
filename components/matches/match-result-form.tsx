@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import type { Match, Team, MatchResult } from "@/lib/types"
 import type { Player } from "@/lib/types"
-import { getPlayersByTeam } from "@/lib/db"
+// Using API endpoints instead of direct DB calls
 import { Button } from "@/components/ui/button"
 import { 
   Trophy, 
@@ -20,7 +20,9 @@ import {
   Edit3,
   Save,
   Calendar,
-  Clock
+  Clock,
+  Square,
+  Minus
 } from "lucide-react"
 
 interface MatchResultFormProps {
@@ -41,6 +43,18 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
 
   const [homePlayers, setHomePlayers] = useState<Player[]>([])
   const [awayPlayers, setAwayPlayers] = useState<Player[]>([])
+  const [homeYellowCards, setHomeYellowCards] = useState<string[]>(
+    (match.result?.homeTeamYellowCards || []).map(c => c.playerName)
+  )
+  const [awayYellowCards, setAwayYellowCards] = useState<string[]>(
+    (match.result?.awayTeamYellowCards || []).map(c => c.playerName)
+  )
+  const [homeRedCards, setHomeRedCards] = useState<string[]>(
+    (match.result?.homeTeamRedCards || []).map(c => c.playerName)
+  )
+  const [awayRedCards, setAwayRedCards] = useState<string[]>(
+    (match.result?.awayTeamRedCards || []).map(c => c.playerName)
+  )
 
   const handleAddScorer = (team: 'home' | 'away') => {
     if (team === 'home') {
@@ -49,6 +63,50 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
       setAwayScorers([...awayScorers, { playerId: '', playerName: '', assists: '' }])
     }
   }
+
+  const handleAddCard = (team: 'home' | 'away', cardType: 'yellow' | 'red', playerName: string) => {
+    if (!playerName) return
+    
+    if (team === 'home') {
+      if (cardType === 'yellow') {
+        if (!homeYellowCards.includes(playerName)) {
+          setHomeYellowCards([...homeYellowCards, playerName])
+        }
+      } else {
+        if (!homeRedCards.includes(playerName)) {
+          setHomeRedCards([...homeRedCards, playerName])
+        }
+      }
+    } else {
+      if (cardType === 'yellow') {
+        if (!awayYellowCards.includes(playerName)) {
+          setAwayYellowCards([...awayYellowCards, playerName])
+        }
+      } else {
+        if (!awayRedCards.includes(playerName)) {
+          setAwayRedCards([...awayRedCards, playerName])
+        }
+      }
+    }
+  }
+
+  const handleRemoveCard = (team: 'home' | 'away', cardType: 'yellow' | 'red', playerName: string) => {
+    if (team === 'home') {
+      if (cardType === 'yellow') {
+        setHomeYellowCards(homeYellowCards.filter(name => name !== playerName))
+      } else {
+        setHomeRedCards(homeRedCards.filter(name => name !== playerName))
+      }
+    } else {
+      if (cardType === 'yellow') {
+        setAwayYellowCards(awayYellowCards.filter(name => name !== playerName))
+      } else {
+        setAwayRedCards(awayRedCards.filter(name => name !== playerName))
+      }
+    }
+  }
+
+
 
   const handleScorerChange = (
     team: 'home' | 'away',
@@ -92,12 +150,26 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
     const loadPlayers = async () => {
       try {
         if (match.homeTeamId) {
-          const h = await getPlayersByTeam(match.homeTeamId)
-          setHomePlayers(h)
+          const homeResponse = await fetch(`/api/admin/players?teamId=${match.homeTeamId}`)
+          if (homeResponse.ok) {
+            const homePlayersData = await homeResponse.json()
+            setHomePlayers(homePlayersData.map((player: any) => ({
+              ...player,
+              createdAt: player.createdAt ? new Date(player.createdAt.seconds * 1000) : new Date(),
+              updatedAt: player.updatedAt ? new Date(player.updatedAt.seconds * 1000) : new Date()
+            })))
+          }
         }
         if (match.awayTeamId) {
-          const a = await getPlayersByTeam(match.awayTeamId)
-          setAwayPlayers(a)
+          const awayResponse = await fetch(`/api/admin/players?teamId=${match.awayTeamId}`)
+          if (awayResponse.ok) {
+            const awayPlayersData = await awayResponse.json()
+            setAwayPlayers(awayPlayersData.map((player: any) => ({
+              ...player,
+              createdAt: player.createdAt ? new Date(player.createdAt.seconds * 1000) : new Date(),
+              updatedAt: player.updatedAt ? new Date(player.updatedAt.seconds * 1000) : new Date()
+            })))
+          }
         }
       } catch (error) {
         console.error('Error loading players for match:', error)
@@ -138,6 +210,10 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
       awayTeamScore: awayScore,
       homeTeamGoalScorers: homeScorers,
       awayTeamGoalScorers: awayScorers,
+      homeTeamYellowCards: homeYellowCards.map(name => ({ playerName: name })),
+      awayTeamYellowCards: awayYellowCards.map(name => ({ playerName: name })),
+      homeTeamRedCards: homeRedCards.map(name => ({ playerName: name })),
+      awayTeamRedCards: awayRedCards.map(name => ({ playerName: name })),
       createdAt: match.result?.createdAt || new Date(),
       updatedAt: new Date()
     }
@@ -206,10 +282,12 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
           </div>
           
           <div className="text-center">
-            <div className="bg-white p-3 rounded-lg shadow-sm border">
+            <div className="bg-white p-3 rounded-lg shadow-sm border" key={`score-${homeScore}-${awayScore}`}>
               <p className="text-sm text-gray-600 mb-1">Score Final</p>
               <div className="text-2xl font-bold text-gray-900">
-                {homeScore} - {awayScore}
+                <span className="text-green-600">{homeScore}</span>
+                <span className="mx-2">-</span>
+                <span className="text-blue-600">{awayScore}</span>
               </div>
             </div>
           </div>
@@ -253,7 +331,7 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
                     max="20"
                     value={homeScore}
                     onChange={(e) => setHomeScore(Number(e.target.value))}
-                    className="w-full px-4 py-3 text-2xl font-bold text-center border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none bg-white"
+                    className="w-full px-4 py-3 text-2xl font-bold text-center border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none bg-white text-gray-900"
                     required
                   />
                   <Target className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-green-500" />
@@ -303,7 +381,7 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
                     max="20"
                     value={awayScore}
                     onChange={(e) => setAwayScore(Number(e.target.value))}
-                    className="w-full px-4 py-3 text-2xl font-bold text-center border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                    className="w-full px-4 py-3 text-2xl font-bold text-center border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white text-gray-900"
                     required
                   />
                   <Target className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-500" />
@@ -382,7 +460,7 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
                     <div className="space-y-3">
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Sélectionner le buteur
+                          🎯 Qui a marqué ce but ?
                         </label>
                         <select
                           value={scorer.playerId || (scorer.playerName ? '__manual__' : '')}
@@ -397,29 +475,30 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
                               }
                             }
                           }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm bg-white text-gray-900 font-medium"
+                          style={{ color: scorer.playerId ? '#059669' : '#6B7280' }}
                         >
-                          <option value="">Choisir un joueur...</option>
+                          <option value="" className="text-gray-400">👆 Choisir le buteur dans la liste...</option>
                           {homePlayers.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.number ? `#${p.number} - ` : ''}{p.name}
+                            <option key={p.id} value={p.id} className="text-gray-900">
+                              ⚽ #{p.number} - {p.name}
                             </option>
                           ))}
-                          <option value="__manual__">✏️ Saisir manuellement</option>
+                          <option value="__manual__" className="text-blue-600">✏️ Autre joueur (saisir le nom)</option>
                         </select>
                       </div>
 
                       {(!scorer.playerId || scorer.playerName) && (
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Nom du buteur
+                            ✏️ Nom du buteur (si pas dans la liste)
                           </label>
                           <input
                             type="text"
-                            placeholder="Nom du joueur"
+                            placeholder="Tapez le nom du joueur qui a marqué..."
                             value={scorer.playerName}
                             onChange={(e) => handleScorerChange('home', index, 'playerName', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm bg-white text-gray-900 font-medium"
                             required
                             disabled={!!scorer.playerId}
                           />
@@ -428,10 +507,10 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
 
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Passeur décisif (optionnel)
+                          🅰️ Qui a fait la passe décisive ? (optionnel)
                         </label>
                         <select
-                          value={scorer.assists || ''}
+                          value={scorer.assists ? homePlayers.find(p => p.name === scorer.assists)?.id || '__manual_assist__' : ''}
                           onChange={(e) => {
                             const val = e.target.value
                             if (val === '__none__') {
@@ -443,15 +522,16 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
                               updateScorerFields('home', index, { assists: p ? p.name : '' })
                             }
                           }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm bg-white text-gray-900 font-medium"
+                          style={{ color: scorer.assists ? '#2563EB' : '#6B7280' }}
                         >
-                          <option value="">Aucun passeur</option>
+                          <option value="" className="text-gray-400">👆 Choisir le passeur ou laisser vide...</option>
                           {homePlayers.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.number ? `#${p.number} - ` : ''}{p.name}
+                            <option key={p.id} value={p.id} className="text-gray-900">
+                              🅰️ #{p.number} - {p.name}
                             </option>
                           ))}
-                          <option value="__manual_assist__">✏️ Autre joueur</option>
+                          <option value="__manual_assist__" className="text-blue-600">✏️ Autre joueur</option>
                         </select>
                       </div>
                     </div>
@@ -517,7 +597,7 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
                     <div className="space-y-3">
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Sélectionner le buteur
+                          🎯 Qui a marqué ce but ?
                         </label>
                         <select
                           value={scorer.playerId || (scorer.playerName ? '__manual__' : '')}
@@ -534,29 +614,30 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
                               }
                             }
                           }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm bg-white text-gray-900 font-medium"
+                          style={{ color: scorer.playerId ? '#059669' : '#6B7280' }}
                         >
-                          <option value="">Choisir un joueur...</option>
+                          <option value="" className="text-gray-400">👆 Choisir le buteur dans la liste...</option>
                           {awayPlayers.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.number ? `#${p.number} - ` : ''}{p.name}
+                            <option key={p.id} value={p.id} className="text-gray-900">
+                              ⚽ #{p.number} - {p.name}
                             </option>
                           ))}
-                          <option value="__manual__">✏️ Saisir manuellement</option>
+                          <option value="__manual__" className="text-blue-600">✏️ Autre joueur (saisir le nom)</option>
                         </select>
                       </div>
 
                       {(!scorer.playerId || scorer.playerName) && (
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Nom du buteur
+                            ✏️ Nom du buteur (si pas dans la liste)
                           </label>
                           <input
                             type="text"
-                            placeholder="Nom du joueur"
+                            placeholder="Tapez le nom du joueur qui a marqué..."
                             value={scorer.playerName}
                             onChange={(e) => handleScorerChange('away', index, 'playerName', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm bg-white text-gray-900 font-medium"
                             required
                             disabled={!!scorer.playerId}
                           />
@@ -565,10 +646,10 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
 
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Passeur décisif (optionnel)
+                          🅰️ Qui a fait la passe décisive ? (optionnel)
                         </label>
                         <select
-                          value={scorer.assists || ''}
+                          value={scorer.assists ? awayPlayers.find(p => p.name === scorer.assists)?.id || '__manual_assist__' : ''}
                           onChange={(e) => {
                             const val = e.target.value
                             if (val === '__none__') {
@@ -580,15 +661,16 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
                               updateScorerFields('away', index, { assists: p ? p.name : '' })
                             }
                           }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm bg-white text-gray-900 font-medium"
+                          style={{ color: scorer.assists ? '#2563EB' : '#6B7280' }}
                         >
-                          <option value="">Aucun passeur</option>
+                          <option value="" className="text-gray-400">👆 Choisir le passeur ou laisser vide...</option>
                           {awayPlayers.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.number ? `#${p.number} - ` : ''}{p.name}
+                            <option key={p.id} value={p.id} className="text-gray-900">
+                              🅰️ #{p.number} - {p.name}
                             </option>
                           ))}
-                          <option value="__manual_assist__">✏️ Autre joueur</option>
+                          <option value="__manual_assist__" className="text-blue-600">✏️ Autre joueur</option>
                         </select>
                       </div>
                     </div>
@@ -602,6 +684,221 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
                     <p className="text-xs">Cliquez sur "Ajouter" pour commencer</p>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+
+          {/* Cards Section - With Player Selection */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Home Team Cards */}
+            <div className="space-y-4">
+              <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Square className="w-5 h-5 text-yellow-500" />
+                Cartons - {match.homeTeam?.name}
+              </h4>
+
+              {/* Yellow Cards */}
+              <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h5 className="font-medium text-yellow-800 flex items-center gap-2">
+                    <Square className="w-4 h-4 text-yellow-500" />
+                    Cartons Jaunes
+                  </h5>
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const player = homePlayers.find(p => p.id === e.target.value)
+                        if (player) {
+                          handleAddCard('home', 'yellow', player.name)
+                        }
+                        e.target.value = '' // Reset selection
+                      }
+                    }}
+                    className="px-3 py-1 border border-yellow-300 rounded-lg text-sm bg-white text-gray-900"
+                  >
+                    <option value="">Ajouter un carton jaune</option>
+                    {homePlayers
+                      .filter(p => !homeYellowCards.includes(p.name))
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          #{p.number} - {p.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  {homeYellowCards.map((playerName, index) => (
+                    <div key={`home-yellow-${index}`} className="flex items-center justify-between bg-yellow-100 p-2 rounded">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-6 bg-yellow-400 border border-yellow-600 rounded-sm shadow-sm"></div>
+                        <span className="text-yellow-800 font-medium">{playerName}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCard('home', 'yellow', playerName)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Red Cards */}
+              <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h5 className="font-medium text-red-800 flex items-center gap-2">
+                    <Square className="w-4 h-4 text-red-500" />
+                    Cartons Rouges
+                  </h5>
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const player = homePlayers.find(p => p.id === e.target.value)
+                        if (player) {
+                          handleAddCard('home', 'red', player.name)
+                        }
+                        e.target.value = '' // Reset selection
+                      }
+                    }}
+                    className="px-3 py-1 border border-red-300 rounded-lg text-sm bg-white text-gray-900"
+                  >
+                    <option value="">Ajouter un carton rouge</option>
+                    {homePlayers
+                      .filter(p => !homeRedCards.includes(p.name))
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          #{p.number} - {p.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  {homeRedCards.map((playerName, index) => (
+                    <div key={`home-red-${index}`} className="flex items-center justify-between bg-red-100 p-2 rounded">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-6 bg-red-500 border border-red-700 rounded-sm shadow-sm"></div>
+                        <span className="text-red-800 font-medium">{playerName}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCard('home', 'red', playerName)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Away Team Cards */}
+            <div className="space-y-4">
+              <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Square className="w-5 h-5 text-yellow-500" />
+                Cartons - {match.awayTeam?.name}
+              </h4>
+
+              {/* Yellow Cards */}
+              <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h5 className="font-medium text-yellow-800 flex items-center gap-2">
+                    <Square className="w-4 h-4 text-yellow-500" />
+                    Cartons Jaunes
+                  </h5>
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const player = awayPlayers.find(p => p.id === e.target.value)
+                        if (player) {
+                          handleAddCard('away', 'yellow', player.name)
+                        }
+                        e.target.value = '' // Reset selection
+                      }
+                    }}
+                    className="px-3 py-1 border border-yellow-300 rounded-lg text-sm bg-white text-gray-900"
+                  >
+                    <option value="">Ajouter un carton jaune</option>
+                    {awayPlayers
+                      .filter(p => !awayYellowCards.includes(p.name))
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          #{p.number} - {p.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  {awayYellowCards.map((playerName, index) => (
+                    <div key={`away-yellow-${index}`} className="flex items-center justify-between bg-yellow-100 p-2 rounded">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-6 bg-yellow-400 border border-yellow-600 rounded-sm shadow-sm"></div>
+                        <span className="text-yellow-800 font-medium">{playerName}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCard('away', 'yellow', playerName)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Red Cards */}
+              <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h5 className="font-medium text-red-800 flex items-center gap-2">
+                    <Square className="w-4 h-4 text-red-500" />
+                    Cartons Rouges
+                  </h5>
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const player = awayPlayers.find(p => p.id === e.target.value)
+                        if (player) {
+                          handleAddCard('away', 'red', player.name)
+                        }
+                        e.target.value = '' // Reset selection
+                      }
+                    }}
+                    className="px-3 py-1 border border-red-300 rounded-lg text-sm bg-white text-gray-900"
+                  >
+                    <option value="">Ajouter un carton rouge</option>
+                    {awayPlayers
+                      .filter(p => !awayRedCards.includes(p.name))
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          #{p.number} - {p.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  {awayRedCards.map((playerName, index) => (
+                    <div key={`away-red-${index}`} className="flex items-center justify-between bg-red-100 p-2 rounded">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-6 bg-red-500 border border-red-700 rounded-sm shadow-sm"></div>
+                        <span className="text-red-800 font-medium">{playerName}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCard('away', 'red', playerName)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

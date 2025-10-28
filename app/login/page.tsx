@@ -1,94 +1,110 @@
-"use client"
+"use client";
 
-import { useState } from 'react'
-import { useAuth } from '@/lib/auth-context'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { AlertCircle, Mail, Lock, Chrome } from 'lucide-react'
-import { motion } from 'framer-motion'
-import { DomainError } from '@/components/auth/domain-error'
-import { ProfileCompletion } from '@/components/auth/profile-completion'
+import { useState } from "react";
+import { useAuth } from "@/lib/auth-context";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { AlertCircle, Mail, Lock, Chrome } from "lucide-react";
+import { motion } from "framer-motion";
+import { DomainError } from "@/components/auth/domain-error";
+import { ProfileCompletion } from "@/components/auth/profile-completion";
 
 export default function LoginPage() {
-  const { user, needsProfileCompletion, signInWithEmail, signUpWithEmail, signInWithGoogle, refreshProfile, loading } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [isSignUp, setIsSignUp] = useState(false)
-  const [isDomainError, setIsDomainError] = useState(false)
+  const {
+    user,
+    needsProfileCompletion,
+    signInWithEmail,
+    signUpWithEmail,
+    signInWithGoogle,
+    refreshProfile,
+    loading,
+  } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [isDomainError, setIsDomainError] = useState(false);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError('')
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     try {
       if (isSignUp) {
-        await signUpWithEmail(email, password)
+        await signUpWithEmail(email, password);
       } else {
-        await signInWithEmail(email, password)
+        await signInWithEmail(email, password);
       }
     } catch (error: any) {
-      if (error.code === 'auth/unauthorized-domain') {
-        setIsDomainError(true)
-        setError('')
+      if (error.code === "auth/unauthorized-domain") {
+        setIsDomainError(true);
+        setError("");
       } else {
-        setError(error.message || (isSignUp ? 'Erreur de création de compte' : 'Erreur de connexion'))
-        setIsDomainError(false)
+        setError(
+          error.message ||
+            (isSignUp ? "Erreur de création de compte" : "Erreur de connexion")
+        );
+        setIsDomainError(false);
       }
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleGoogleLogin = async () => {
-    setIsLoading(true)
-    setError('')
+    setIsLoading(true);
+    setError("");
 
     try {
-      await signInWithGoogle()
+      await signInWithGoogle();
     } catch (error: any) {
-      if (error.code === 'auth/unauthorized-domain') {
-        setIsDomainError(true)
-        setError('')
+      if (error.code === "auth/unauthorized-domain") {
+        setIsDomainError(true);
+        setError("");
       } else {
-        setError(error.message || 'Erreur de connexion avec Google')
-        setIsDomainError(false)
+        setError(error.message || "Erreur de connexion avec Google");
+        setIsDomainError(false);
       }
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
         <LoadingSpinner size="lg" />
       </div>
-    )
+    );
   }
 
   // Show domain error if detected
   if (isDomainError) {
     return (
       <div className="sofa-theme min-h-screen flex items-center justify-center p-4">
-        <DomainError currentDomain={typeof window !== 'undefined' ? window.location.hostname : undefined} />
+        <DomainError
+          currentDomain={
+            typeof window !== "undefined" ? window.location.hostname : undefined
+          }
+        />
       </div>
-    )
+    );
   }
 
   // Show profile completion if user is authenticated but needs to complete profile
   if (user && needsProfileCompletion) {
-    return (
-      <ProfileCompletion 
-        user={user} 
-        onComplete={refreshProfile}
-      />
-    )
+    return <ProfileCompletion user={user} onComplete={refreshProfile} />;
   }
 
   return (
@@ -107,9 +123,9 @@ export default function LoginPage() {
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
               className="mx-auto mb-4 w-16 h-16 flex items-center justify-center"
             >
-              <img 
-                src="/logo-comebac.svg" 
-                alt="ComeBac League" 
+              <img
+                src="/logo-comebac.svg"
+                alt="ComeBac League"
                 className="w-16 h-16 object-contain"
               />
             </motion.div>
@@ -117,7 +133,9 @@ export default function LoginPage() {
               ComeBac League
             </CardTitle>
             <CardDescription className="text-sofa-text-secondary">
-              {isSignUp ? 'Créez votre compte' : 'Connectez-vous au championnat scolaire'}
+              {isSignUp
+                ? "Créez votre compte"
+                : "Connectez-vous au championnat scolaire"}
             </CardDescription>
           </CardHeader>
 
@@ -135,7 +153,10 @@ export default function LoginPage() {
 
             <form onSubmit={handleEmailAuth} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="email"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Email
                 </Label>
                 <div className="relative">
@@ -153,7 +174,10 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="password"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Mot de passe
                 </Label>
                 <div className="relative">
@@ -177,8 +201,10 @@ export default function LoginPage() {
               >
                 {isLoading ? (
                   <LoadingSpinner size="sm" className="text-white" />
+                ) : isSignUp ? (
+                  "Créer le compte"
                 ) : (
-                  isSignUp ? 'Créer le compte' : 'Se connecter'
+                  "Se connecter"
                 )}
               </Button>
             </form>
@@ -215,13 +241,15 @@ export default function LoginPage() {
                 onClick={() => setIsSignUp(!isSignUp)}
                 className="text-sm text-sofa-text-accent hover:text-sofa-green underline"
               >
-                {isSignUp ? 'Déjà un compte ? Se connecter' : 'Pas de compte ? Créer un compte'}
+                {isSignUp
+                  ? "Déjà un compte ? Se connecter"
+                  : "Pas de compte ? Créer un compte"}
               </button>
-              
+
               <div className="text-xs text-gray-500">
                 En vous connectant, vous acceptez nos conditions d'utilisation
               </div>
-              
+
               {!isSignUp && (
                 <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
                   <strong>Compte Admin:</strong> admin@admin.com / Youssef
@@ -232,5 +260,5 @@ export default function LoginPage() {
         </Card>
       </motion.div>
     </div>
-  )
+  );
 }

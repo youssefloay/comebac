@@ -470,3 +470,192 @@ export async function checkUsernameAvailability(username: string): Promise<boole
     throw error
   }
 }
+// ============ TEAM LOGOS & PLAYER PROFILES ============
+
+/**
+ * Updates team logo
+ */
+export async function updateTeamLogo(teamId: string, logoUrl: string): Promise<void> {
+  try {
+    const teamRef = doc(db, "teams", teamId)
+    await updateDoc(teamRef, {
+      logo: logoUrl,
+      updatedAt: Timestamp.now()
+    })
+    console.log(`Team logo updated for team ${teamId}`)
+  } catch (error) {
+    console.error("Error updating team logo:", error)
+    throw error
+  }
+}
+
+/**
+ * Updates player photo and stats
+ */
+export async function updatePlayerProfile(
+  playerId: string, 
+  updates: {
+    photo?: string
+    age?: number
+    nationality?: string
+    height?: number
+    weight?: number
+    stats?: {
+      overall: number
+      pace: number
+      shooting: number
+      passing: number
+      dribbling: number
+      defending: number
+      physical: number
+    }
+    seasonStats?: {
+      goals: number
+      assists: number
+      matches: number
+      yellowCards: number
+      redCards: number
+      minutesPlayed: number
+    }
+  }
+): Promise<void> {
+  try {
+    const playerRef = doc(db, "players", playerId)
+    await updateDoc(playerRef, {
+      ...updates,
+      updatedAt: Timestamp.now()
+    })
+    console.log(`Player profile updated for player ${playerId}`)
+  } catch (error) {
+    console.error("Error updating player profile:", error)
+    throw error
+  }
+}
+
+/**
+ * Gets players with full profile data
+ */
+export async function getPlayersWithProfiles(): Promise<Player[]> {
+  try {
+    const playersCollection = collection(db, "players")
+    const playersSnapshot = await getDocs(playersCollection)
+    
+    return playersSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: parseDateValue(doc.data().createdAt) || new Date(),
+      updatedAt: parseDateValue(doc.data().updatedAt) || new Date(),
+    })) as Player[]
+  } catch (error) {
+    console.error("Error getting players with profiles:", error)
+    throw error
+  }
+}
+
+/**
+ * Gets players by team with full profile data
+ */
+export async function getTeamPlayersWithProfiles(teamId: string): Promise<Player[]> {
+  try {
+    const playersCollection = collection(db, "players")
+    const q = query(playersCollection, where("teamId", "==", teamId))
+    const playersSnapshot = await getDocs(q)
+    
+    return playersSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: parseDateValue(doc.data().createdAt) || new Date(),
+      updatedAt: parseDateValue(doc.data().updatedAt) || new Date(),
+    })) as Player[]
+  } catch (error) {
+    console.error("Error getting team players with profiles:", error)
+    throw error
+  }
+}
+
+/**
+ * Bulk update player season stats from match results
+ */
+export async function updatePlayerSeasonStats(): Promise<void> {
+  try {
+    const [players, results] = await Promise.all([
+      getPlayersWithProfiles(),
+      getAllMatchResults()
+    ])
+
+    const playerStats: Record<string, {
+      goals: number
+      assists: number
+      matches: number
+      yellowCards: number
+      redCards: number
+      minutesPlayed: number
+    }> = {}
+
+    // Initialize stats for all players
+    players.forEach(player => {
+      playerStats[player.name] = {
+        goals: 0,
+        assists: 0,
+        matches: 0,
+        yellowCards: 0,
+        redCards: 0,
+        minutesPlayed: 0
+      }
+    })
+
+    // Calculate stats from match results
+    results.forEach(result => {
+      const matchPlayers = new Set<string>()
+
+      // Count goals
+      result.homeTeamGoalScorers.forEach(goal => {
+        if (playerStats[goal.playerName]) {
+          playerStats[goal.playerName].goals++
+          matchPlayers.add(goal.playerName)
+        }
+        
+        // Count assists
+        if (goal.assists && playerStats[goal.assists]) {
+          playerStats[goal.assists].assists++
+          matchPlayers.add(goal.assists)
+        }
+      })
+
+      result.awayTeamGoalScorers.forEach(goal => {
+        if (playerStats[goal.playerName]) {
+          playerStats[goal.playerName].goals++
+          matchPlayers.add(goal.playerName)
+        }
+        
+        // Count assists
+        if (goal.assists && playerStats[goal.assists]) {
+          playerStats[goal.assists].assists++
+          matchPlayers.add(goal.assists)
+        }
+      })
+
+      // Count matches played
+      matchPlayers.forEach(playerName => {
+        if (playerStats[playerName]) {
+          playerStats[playerName].matches++
+          playerStats[playerName].minutesPlayed += 90 // Assume full match
+        }
+      })
+    })
+
+    // Update each player's season stats
+    for (const player of players) {
+      if (playerStats[player.name]) {
+        await updatePlayerProfile(player.id, {
+          seasonStats: playerStats[player.name]
+        })
+      }
+    }
+
+    console.log("Player season stats updated successfully")
+  } catch (error) {
+    console.error("Error updating player season stats:", error)
+    throw error
+  }
+}

@@ -28,6 +28,7 @@ const navigationItems = [
   { href: "/public/ranking", label: "Classement", icon: Trophy },
   { href: "/public/statistics", label: "Statistiques", icon: BarChart3 },
   { href: "/public/teams", label: "Équipes", icon: Users },
+  { href: "/public/players", label: "Cartes FIFA 🎮", icon: Users },
 ];
 
 export function MinimalistNavigation() {
