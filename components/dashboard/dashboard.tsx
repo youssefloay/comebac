@@ -108,6 +108,35 @@ export default function Dashboard({ user }: { user: any }) {
     }
   }
 
+  const handleGenerateResults = async () => {
+    if (!confirm("Générer des résultats pour les matchs sans résultats ?")) {
+      return
+    }
+
+    setIsSeeding(true)
+    setSeedMessage(null)
+    try {
+      const response = await fetch("/api/generate-results", { method: "POST" })
+      const data = await response.json()
+      if (response.ok) {
+        setSeedMessage({ type: "success", text: data.message })
+        // Mettre à jour automatiquement les statistiques après génération des résultats
+        const statsResponse = await fetch("/api/update-statistics", { method: "POST" })
+        const statsData = await statsResponse.json()
+        if (statsResponse.ok) {
+          setSeedMessage({ type: "success", text: `${data.message} Statistiques mises à jour!` })
+        }
+        setActiveTab("results")
+      } else {
+        setSeedMessage({ type: "error", text: data.error || "Erreur lors de la génération des résultats" })
+      }
+    } catch (error) {
+      setSeedMessage({ type: "error", text: "Erreur de connexion" })
+    } finally {
+      setIsSeeding(false)
+    }
+  }
+
   const tabs = [
     { id: "teams", label: "Équipes", icon: "⚽" },
     { id: "players", label: "Joueurs", icon: "👥" },
@@ -175,6 +204,23 @@ export default function Dashboard({ user }: { user: any }) {
               <>
                 <span>⚽</span>
                 {sidebarOpen && <span>Générer matchs</span>}
+              </>
+            )}
+          </button>
+          <button
+            onClick={handleGenerateResults}
+            disabled={isSeeding}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 text-white hover:bg-orange-700 disabled:bg-gray-400 rounded-lg transition text-sm font-medium"
+          >
+            {isSeeding ? (
+              <>
+                <Loader className="w-4 h-4 animate-spin" />
+                {sidebarOpen && <span>Génération...</span>}
+              </>
+            ) : (
+              <>
+                <span>🏆</span>
+                {sidebarOpen && <span>Générer résultats</span>}
               </>
             )}
           </button>
