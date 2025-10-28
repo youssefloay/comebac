@@ -71,16 +71,22 @@ export default function PublicHome() {
   useEffect(() => {
     const loadData = async () => {
       try {
+        console.log('🔄 Chargement des données...')
+        
         // Load teams with player counts
+        console.log('📊 Chargement des équipes...')
         const teamsSnap = await getDocs(collection(db, 'teams'))
         const teamsData = teamsSnap.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as Team[]
+        console.log(`✅ ${teamsData.length} équipes chargées`)
 
         // Load all players to count them per team
+        console.log('👥 Chargement des joueurs...')
         const playersSnap = await getDocs(collection(db, 'players'))
         const allPlayers = playersSnap.docs.map(doc => doc.data())
+        console.log(`✅ ${allPlayers.length} joueurs chargés`)
         
         // Add player counts to teams
         const teamsWithPlayerCounts = teamsData.map(team => ({
@@ -97,7 +103,9 @@ export default function PublicHome() {
         })
 
         // Load all matches
-        const matchesSnap = await getDocs(query(collection(db, 'matches'), orderBy('date', 'desc')))
+        console.log('⚽ Chargement des matchs...')
+        const matchesSnap = await getDocs(collection(db, 'matches'))
+        console.log(`✅ ${matchesSnap.docs.length} matchs trouvés`)
         const allMatches = matchesSnap.docs.map(doc => {
           const data = doc.data()
           return {
@@ -109,8 +117,13 @@ export default function PublicHome() {
           }
         }) as Match[]
 
+        // Trier les matchs par date côté client
+        allMatches.sort((a, b) => b.date.getTime() - a.date.getTime())
+
         // Load match results
+        console.log('🏆 Chargement des résultats...')
         const resultsSnap = await getDocs(collection(db, 'matchResults'))
+        console.log(`✅ ${resultsSnap.docs.length} résultats trouvés`)
         const resultsMap = new Map()
         let totalGoals = 0
         resultsSnap.docs.forEach(doc => {
@@ -205,8 +218,11 @@ export default function PublicHome() {
           completed: matchesWithResults.filter(m => m.status === 'completed').length
         })
 
+        console.log('✅ Toutes les données chargées avec succès')
+        
       } catch (error) {
-        console.error('Error loading data:', error)
+        console.error('❌ Erreur lors du chargement des données:', error)
+        console.error('Détails de l\'erreur:', error instanceof Error ? error.message : 'Erreur inconnue')
       } finally {
         setLoading(false)
       }
