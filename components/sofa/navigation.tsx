@@ -40,9 +40,9 @@ export function SofaNavigation() {
           >
             <div className="w-10 h-10 flex items-center justify-center">
               <img
-                src="/logo-comebac.svg"
+                src="/comebac.png"
                 alt="ComeBac League"
-                className="w-10 h-10 object-contain"
+                className="w-10 h-10 object-contain rounded-lg"
               />
             </div>
             <div>

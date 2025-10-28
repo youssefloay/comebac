@@ -124,9 +124,9 @@ export default function LoginPage() {
               className="mx-auto mb-4 w-16 h-16 flex items-center justify-center"
             >
               <img
-                src="/logo-comebac.svg"
+                src="/comebac.png"
                 alt="ComeBac League"
-                className="w-16 h-16 object-contain"
+                className="w-16 h-16 object-contain rounded-lg"
               />
             </motion.div>
             <CardTitle className="text-2xl font-bold text-sofa-text-primary">
