@@ -2,6 +2,8 @@
 
 import { motion } from 'framer-motion'
 import { Clock, MapPin, Calendar } from 'lucide-react'
+import { useState } from 'react'
+import { MatchDetailsPopup } from './match-details-popup'
 
 interface SofaMatchCardProps {
   match: {
@@ -19,6 +21,8 @@ interface SofaMatchCardProps {
 }
 
 export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
+  const [isPopupOpen, setIsPopupOpen] = useState(false)
+
   const getStatusBadge = () => {
     switch (match.status) {
       case 'live':
@@ -45,12 +49,14 @@ export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
-      className="sofa-match-card"
-    >
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.1 }}
+        className="sofa-match-card cursor-pointer hover:shadow-lg transition-shadow duration-200"
+        onClick={() => setIsPopupOpen(true)}
+      >
       {/* Header with status and time - Mobile Optimized */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-4">
         <div className="flex items-center gap-2 sm:gap-3">
@@ -69,60 +75,51 @@ export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
         </div>
       </div>
 
-      {/* Teams and Score - Mobile Optimized */}
-      <div className="space-y-3">
+      {/* Teams and Score - Clean Layout */}
+      <div className="space-y-6">
         {/* Mobile Layout */}
         <div className="block sm:hidden">
-          {/* Home Team Mobile */}
-          <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg mb-2">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center text-xs">
-                ⚽
+          <div className="space-y-4">
+            {/* Teams Row */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 flex-1">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center shadow-sm">
+                  <span className="text-lg">⚽</span>
+                </div>
+                <span className="font-bold text-gray-900 text-base">{match.teamA}</span>
               </div>
-              <span className="text-sm font-semibold text-gray-900">{match.teamA}</span>
+              
+              <div className="flex items-center gap-3 flex-1 justify-end">
+                <span className="font-bold text-gray-900 text-base">{match.teamB}</span>
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center shadow-sm">
+                  <span className="text-lg">⚽</span>
+                </div>
+              </div>
             </div>
-            {(match.status === 'completed' || match.status === 'live') && (
-              <div className="text-xl font-bold text-green-600">
-                {match.scoreA}
-              </div>
-            )}
-          </div>
-
-          {/* Score Mobile */}
-          <div className="text-center bg-gray-50 p-2 rounded-lg mb-2">
-            {match.status === 'completed' || match.status === 'live' ? (
-              <div className={`text-2xl font-bold ${match.status === 'live' ? 'text-red-600' : 'text-gray-900'}`}>
-                {match.scoreA} - {match.scoreB}
-              </div>
-            ) : (
-              <div className="text-gray-500 text-xl font-semibold">VS</div>
-            )}
-          </div>
-
-          {/* Away Team Mobile */}
-          <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs">
-                ⚽
-              </div>
-              <span className="text-sm font-semibold text-gray-900">{match.teamB}</span>
+            
+            {/* Score */}
+            <div className="text-center py-4">
+              {match.status === 'completed' || match.status === 'live' ? (
+                <div className={`text-4xl font-bold ${match.status === 'live' ? 'text-red-600' : 'text-gray-900'}`}>
+                  {match.scoreA} - {match.scoreB}
+                </div>
+              ) : (
+                <div className="text-gray-400 text-3xl font-bold">VS</div>
+              )}
             </div>
-            {(match.status === 'completed' || match.status === 'live') && (
-              <div className="text-xl font-bold text-blue-600">
-                {match.scoreB}
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Desktop Layout - Fixed Grid */}
-        <div className="hidden sm:grid grid-cols-3 gap-4 items-center">
+        {/* Desktop Layout - Clean Grid */}
+        <div className="hidden sm:grid grid-cols-3 gap-8 items-center py-2">
           {/* Home Team */}
           <div className="text-right">
-            <div className="flex items-center justify-end gap-2">
-              <span className="sofa-team-name font-semibold">{match.teamA}</span>
-              <div className="sofa-team-logo">
-                ⚽
+            <div className="flex items-center justify-end gap-4">
+              <div className="text-right">
+                <span className="font-bold text-xl text-gray-900 block">{match.teamA}</span>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center shadow-md">
+                <span className="text-xl">⚽</span>
               </div>
             </div>
           </div>
@@ -130,35 +127,53 @@ export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
           {/* Score - Centered */}
           <div className="text-center">
             {match.status === 'completed' || match.status === 'live' ? (
-              <div className={`sofa-score ${match.status === 'live' ? 'sofa-score-live' : ''}`}>
+              <div className={`text-5xl font-bold ${match.status === 'live' ? 'text-red-600' : 'text-gray-900'}`}>
                 {match.scoreA} - {match.scoreB}
               </div>
             ) : (
-              <div className="text-sofa-text-muted text-2xl font-bold">
-                VS
-              </div>
+              <div className="text-gray-400 text-4xl font-bold">VS</div>
             )}
           </div>
 
           {/* Away Team */}
           <div className="text-left">
-            <div className="flex items-center justify-start gap-2">
-              <div className="sofa-team-logo">
-                ⚽
+            <div className="flex items-center justify-start gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center shadow-md">
+                <span className="text-xl">⚽</span>
               </div>
-              <span className="sofa-team-name font-semibold">{match.teamB}</span>
+              <div className="text-left">
+                <span className="font-bold text-xl text-gray-900 block">{match.teamB}</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Venue */}
-      {match.venue && (
-        <div className="flex items-center justify-center gap-2 text-sofa-text-muted text-sm pt-3 border-t border-sofa-border">
-          <MapPin className="w-4 h-4" />
-          <span>{match.venue}</span>
-        </div>
-      )}
-    </motion.div>
+      {/* Venue and Click Indicator */}
+      <div className="pt-4 border-t border-gray-100">
+        {match.venue && (
+          <div className="flex items-center justify-center gap-2 text-gray-500 text-sm mb-3">
+            <MapPin className="w-4 h-4" />
+            <span>{match.venue}</span>
+          </div>
+        )}
+        
+        {/* Click indicator - Only show for completed matches */}
+        {(match.status === 'completed' || match.status === 'live') && (
+          <div className="text-center">
+            <span className="text-xs text-gray-400 bg-gray-50 px-4 py-2 rounded-full border border-gray-200 hover:bg-gray-100 transition-colors">
+              👆 Cliquez pour voir les détails du match
+            </span>
+          </div>
+        )}
+      </div>
+      </motion.div>
+
+      <MatchDetailsPopup
+        isOpen={isPopupOpen}
+        onClose={() => setIsPopupOpen(false)}
+        match={match}
+      />
+    </>
   )
 }

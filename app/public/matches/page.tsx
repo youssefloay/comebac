@@ -4,20 +4,14 @@ import { useEffect, useState } from "react"
 import { db } from "@/lib/firebase"
 import { collection, getDocs, query, orderBy } from "firebase/firestore"
 import type { Match, Team, MatchResult } from "@/lib/types"
-
+import { SofaMatchCard } from "@/components/sofa/match-card"
 
 import { 
   Calendar, 
   Clock, 
-  MapPin, 
   Trophy, 
   Users, 
-  Target,
-  Home,
-  Plane,
   CheckCircle,
-  PlayCircle,
-  XCircle,
   Filter,
   ChevronDown
 } from "lucide-react"
@@ -210,120 +204,7 @@ export default function MatchesPage() {
     setFilteredMatches(filtered)
   }, [matches, filterStatus, selectedRound])
 
-  const formatDate = (timestamp: any) => {
-    if (!timestamp) return "Date non définie"
-    const parseDateValue = (value: any): Date | null => {
-      if (!value) return null
-      if (typeof value.toDate === 'function') return value.toDate()
-      if (typeof value === 'object' && value.seconds != null) {
-        const secs = Number(value.seconds)
-        const nanos = Number(value.nanoseconds || 0)
-        return new Date(secs * 1000 + Math.round(nanos / 1e6))
-      }
-      if (typeof value === 'number') return value < 1e12 ? new Date(value * 1000) : new Date(value)
-      if (typeof value === 'string') {
-        const d = new Date(value)
-        if (!isNaN(d.getTime())) return d
-      }
-      if (value instanceof Date) return value
-      try {
-        const d = new Date(value)
-        if (!isNaN(d.getTime())) return d
-      } catch (e) {}
-      return null
-    }
 
-    const date = parseDateValue(timestamp) || new Date()
-    return date.toLocaleDateString("fr-FR", { 
-      weekday: "long", 
-      year: "numeric", 
-      month: "long", 
-      day: "numeric" 
-    })
-  }
-
-  const formatShortDate = (timestamp: any) => {
-    if (!timestamp) return ""
-    const date = new Date(timestamp)
-    return date.toLocaleDateString("fr-FR", { 
-      day: "2-digit", 
-      month: "2-digit",
-      year: "2-digit"
-    })
-  }
-
-  const formatTime = (timestamp: any) => {
-    if (!timestamp) return ""
-    const date = new Date(timestamp)
-    return date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
-  }
-
-  const getStatusInfo = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return {
-          label: 'Terminé',
-          color: 'bg-green-100 text-green-800 border-green-200',
-          icon: CheckCircle,
-          iconColor: 'text-green-600'
-        }
-      case 'in_progress':
-        return {
-          label: 'En cours',
-          color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-          icon: PlayCircle,
-          iconColor: 'text-yellow-600'
-        }
-      case 'cancelled':
-        return {
-          label: 'Annulé',
-          color: 'bg-red-100 text-red-800 border-red-200',
-          icon: XCircle,
-          iconColor: 'text-red-600'
-        }
-      default:
-        return {
-          label: 'À venir',
-          color: 'bg-blue-100 text-blue-800 border-blue-200',
-          icon: Clock,
-          iconColor: 'text-blue-600'
-        }
-    }
-  }
-
-  const getMatchResult = (match: Match & { result?: MatchResult }) => {
-    if (!match.result) return null
-    
-    const homeScore = match.result.homeTeamScore
-    const awayScore = match.result.awayTeamScore
-    
-    if (homeScore > awayScore) {
-      return { winner: 'home', result: 'Victoire à domicile' }
-    } else if (awayScore > homeScore) {
-      return { winner: 'away', result: 'Victoire à l\'extérieur' }
-    } else {
-      return { winner: 'draw', result: 'Match nul' }
-    }
-  }
-
-  const isMatchPassed = (matchDate: Date) => {
-    if (!matchDate) return false
-    
-    // Set current date to October 26, 2025
-    const now = new Date(2025, 9, 26) // Note: month is 0-based, so 9 is October
-    
-    // Set both dates to start of day for comparison
-    const matchDay = new Date(matchDate.getFullYear(), matchDate.getMonth(), matchDate.getDate())
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    
-    console.log('Comparing dates:', {
-      matchDate: matchDay.toISOString(),
-      today: today.toISOString(),
-      isPassed: matchDay < today
-    })
-    
-    return matchDay < today
-  }
 
 
 
@@ -457,297 +338,28 @@ export default function MatchesPage() {
           <p className="text-gray-600">Aucun match ne correspond aux filtres sélectionnés.</p>
         </div>
       ) : (
-        <div className="space-y-6">
-          {filteredMatches.map((match) => {
-            const statusInfo = getStatusInfo(match.status)
-            const matchResult = getMatchResult(match)
-            const StatusIcon = statusInfo.icon
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredMatches.map((match, index) => {
+            const convertedMatch = {
+              id: match.id,
+              teamA: match.homeTeam?.name || 'Équipe inconnue',
+              teamB: match.awayTeam?.name || 'Équipe inconnue', 
+              date: match.date,
+              scoreA: match.result?.homeTeamScore,
+              scoreB: match.result?.awayTeamScore,
+              status: match.status === 'completed' ? 'completed' as const : 
+                      match.status === 'in_progress' ? 'live' as const :
+                      'upcoming' as const,
+              venue: `Stade de ${match.homeTeam?.name || 'l\'équipe'}`,
+              round: match.round
+            }
             
             return (
-              <div key={`match-${match.id}`} className="bg-white rounded-xl shadow-sm border hover:shadow-md transition-all duration-200">
-                {/* Match Header - Mobile Optimized */}
-                <div className="p-4 md:p-6 border-b border-gray-100">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-blue-50 p-2 rounded-lg">
-                        <Calendar className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 text-sm md:text-base">{formatDate(match.date)}</p>
-                        <p className="text-xs md:text-sm text-gray-600 flex items-center gap-1">
-                          <Clock className="w-3 h-3 md:w-4 md:h-4" />
-                          {formatTime(match.date)}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 md:gap-3 flex-wrap">
-                      <span className="px-2 py-1 md:px-3 md:py-1 bg-blue-50 text-blue-700 text-xs md:text-sm font-medium rounded-full">
-                        Journée {match.round}
-                      </span>
-                      <span className={`px-2 py-1 md:px-3 md:py-1 text-xs md:text-sm font-medium rounded-full border ${statusInfo.color} flex items-center gap-1 md:gap-2`}>
-                        <StatusIcon className={`w-3 h-3 md:w-4 md:h-4 ${statusInfo.iconColor}`} />
-                        <span className="hidden sm:inline">{statusInfo.label}</span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Match Content - Mobile First Design */}
-                <div className="p-4 md:p-6">
-                  {/* Mobile Layout */}
-                  <div className="block md:hidden">
-                    {/* Teams and Score Mobile */}
-                    <div className="space-y-4">
-                      {/* Home Team Mobile */}
-                      <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <Home className="w-4 h-4 text-green-600" />
-                          <span className="text-xs font-medium text-green-700">DOMICILE</span>
-                        </div>
-                        <h3 className="text-sm font-bold text-gray-900">
-                          {match.homeTeam?.name || "Équipe inconnue"}
-                        </h3>
-                        {match.result && (
-                          <div className={`text-xl font-bold ${
-                            matchResult?.winner === 'home' ? 'text-green-600' : 'text-gray-600'
-                          }`}>
-                            {match.result.homeTeamScore}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Score Mobile */}
-                      {match.result ? (
-                        <div className="text-center bg-gray-50 p-3 rounded-lg">
-                          <div className="text-2xl font-bold text-gray-900 mb-1">
-                            {match.result.homeTeamScore} - {match.result.awayTeamScore}
-                          </div>
-                          {matchResult && (
-                            <p className={`text-sm font-medium ${
-                              matchResult.winner === 'home' ? 'text-green-600' : 
-                              matchResult.winner === 'away' ? 'text-blue-600' : 'text-yellow-600'
-                            }`}>
-                              {matchResult.result}
-                            </p>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-center bg-blue-50 p-3 rounded-lg">
-                          <div className="text-xl font-bold text-blue-600 mb-1">VS</div>
-                          <p className="text-sm text-blue-700">{formatTime(match.date)}</p>
-                        </div>
-                      )}
-
-                      {/* Away Team Mobile */}
-                      <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <Plane className="w-4 h-4 text-blue-600" />
-                          <span className="text-xs font-medium text-blue-700">EXTÉRIEUR</span>
-                        </div>
-                        <h3 className="text-sm font-bold text-gray-900">
-                          {match.awayTeam?.name || "Équipe inconnue"}
-                        </h3>
-                        {match.result && (
-                          <div className={`text-xl font-bold ${
-                            matchResult?.winner === 'away' ? 'text-blue-600' : 'text-gray-600'
-                          }`}>
-                            {match.result.awayTeamScore}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Cards Display Mobile */}
-                      {match.result && (
-                        <div className="mt-4">
-                          {/* Cards Display - Mobile Optimized */}
-                          {match.result && (
-                            <div className="space-y-3 mt-4">
-                              {/* Home Team Cards */}
-                              {(match.result.homeTeamYellowCards?.length > 0 || match.result.homeTeamRedCards?.length > 0) && (
-                                <div className="bg-gray-50 p-3 rounded-lg">
-                                  <div className="text-sm font-bold text-gray-800 mb-2">{match.homeTeam?.name}</div>
-                                  <div className="flex flex-wrap gap-2">
-                                    {match.result.homeTeamYellowCards?.map((card, idx) => (
-                                      <div key={`home-yellow-${idx}`} className="flex items-center gap-2 bg-yellow-200 px-3 py-2 rounded-lg shadow-sm">
-                                        <div className="w-4 h-6 bg-yellow-400 border-2 border-yellow-600 rounded-sm shadow-md"></div>
-                                        <span className="text-yellow-900 text-sm font-semibold">{card.playerName}</span>
-                                      </div>
-                                    ))}
-                                    {match.result.homeTeamRedCards?.map((card, idx) => (
-                                      <div key={`home-red-${idx}`} className="flex items-center gap-2 bg-red-200 px-3 py-2 rounded-lg shadow-sm">
-                                        <div className="w-4 h-6 bg-red-500 border-2 border-red-700 rounded-sm shadow-md"></div>
-                                        <span className="text-red-900 text-sm font-semibold">{card.playerName}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {/* Away Team Cards */}
-                              {(match.result.awayTeamYellowCards?.length > 0 || match.result.awayTeamRedCards?.length > 0) && (
-                                <div className="bg-gray-50 p-3 rounded-lg">
-                                  <div className="text-sm font-bold text-gray-800 mb-2">{match.awayTeam?.name}</div>
-                                  <div className="flex flex-wrap gap-2">
-                                    {match.result.awayTeamYellowCards?.map((card, idx) => (
-                                      <div key={`away-yellow-${idx}`} className="flex items-center gap-2 bg-yellow-200 px-3 py-2 rounded-lg shadow-sm">
-                                        <div className="w-4 h-6 bg-yellow-400 border-2 border-yellow-600 rounded-sm shadow-md"></div>
-                                        <span className="text-yellow-900 text-sm font-semibold">{card.playerName}</span>
-                                      </div>
-                                    ))}
-                                    {match.result.awayTeamRedCards?.map((card, idx) => (
-                                      <div key={`away-red-${idx}`} className="flex items-center gap-2 bg-red-200 px-3 py-2 rounded-lg shadow-sm">
-                                        <div className="w-4 h-6 bg-red-500 border-2 border-red-700 rounded-sm shadow-md"></div>
-                                        <span className="text-red-900 text-sm font-semibold">{card.playerName}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Desktop Layout */}
-                  <div className="hidden md:grid md:grid-cols-3 gap-6 items-center">
-                    {/* Home Team Desktop */}
-                    <div className="text-right">
-                      <div className="flex items-center justify-end gap-2 mb-2">
-                        <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">
-                          DOMICILE
-                        </span>
-                        <div className="bg-green-50 p-1.5 rounded-lg">
-                          <Home className="w-4 h-4 text-green-600" />
-                        </div>
-                      </div>
-                      
-                      <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">
-                        {match.homeTeam?.name || "Équipe inconnue"}
-                      </h3>
-                      
-                      {match.result && (
-                        <div className="space-y-2">
-                          <div className={`text-3xl md:text-4xl font-bold ${
-                            matchResult?.winner === 'home' ? 'text-green-600' : 
-                            matchResult?.winner === 'draw' ? 'text-yellow-600' : 'text-gray-600'
-                          }`}>
-                            {match.result.homeTeamScore}
-                          </div>
-                          
-                          {match.result.homeTeamGoalScorers.length > 0 && (
-                            <div className="space-y-1">
-                              <p className="text-sm font-medium text-gray-700 flex items-center justify-end gap-1">
-                                <Target className="w-4 h-4" />
-                                Buteurs
-                              </p>
-                              {match.result.homeTeamGoalScorers.map((scorer, idx) => (
-                                <div key={`home-scorer-${match.id}-${idx}`} className="text-sm text-gray-600">
-                                  <span className="font-medium">{scorer.playerName}</span>
-                                  {scorer.assists && (
-                                    <span className="text-blue-600 ml-1">(Passe: {scorer.assists})</span>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* VS Section - Centered */}
-                    <div className="flex flex-col items-center justify-center text-center">
-                      {match.result ? (
-                        <div className="bg-gray-50 p-4 rounded-xl">
-                          <div className="text-3xl font-bold text-gray-900 mb-2">
-                            {match.result.homeTeamScore} - {match.result.awayTeamScore}
-                          </div>
-                          {matchResult && (
-                            <p className={`text-sm font-medium ${
-                              matchResult.winner === 'home' ? 'text-green-600' : 
-                              matchResult.winner === 'away' ? 'text-blue-600' : 'text-yellow-600'
-                            }`}>
-                              {matchResult.result}
-                            </p>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="bg-blue-50 p-4 rounded-xl">
-                          <div className="text-3xl font-bold text-blue-600 mb-2">VS</div>
-                          <p className="text-sm text-blue-700">
-                            {formatTime(match.date)}
-                          </p>
-                        </div>
-                      )}
-                      
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mt-3">
-                        <MapPin className="w-4 h-4" />
-                        <span>Stade de {match.homeTeam?.name}</span>
-                      </div>
-                    </div>
-
-                    {/* Away Team */}
-                    <div className="text-left">
-                      <div className="flex items-center justify-start gap-2 mb-2">
-                        <div className="bg-blue-50 p-1.5 rounded-lg">
-                          <Plane className="w-4 h-4 text-blue-600" />
-                        </div>
-                        <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded">
-                          EXTÉRIEUR
-                        </span>
-                      </div>
-                      
-                      <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">
-                        {match.awayTeam?.name || "Équipe inconnue"}
-                      </h3>
-                      
-                      {match.result && (
-                        <div className="space-y-2">
-                          <div className={`text-4xl font-bold ${
-                            matchResult?.winner === 'away' ? 'text-green-600' : 
-                            matchResult?.winner === 'draw' ? 'text-yellow-600' : 'text-gray-600'
-                          }`}>
-                            {match.result.awayTeamScore}
-                          </div>
-                          
-                          {match.result.awayTeamGoalScorers.length > 0 && (
-                            <div className="space-y-1">
-                              <p className="text-sm font-medium text-gray-700 flex items-center justify-start gap-1">
-                                <Target className="w-4 h-4" />
-                                Buteurs
-                              </p>
-                              {match.result.awayTeamGoalScorers.map((scorer, idx) => (
-                                <div key={`away-scorer-${match.id}-${idx}`} className="text-sm text-gray-600">
-                                  <span className="font-medium">{scorer.playerName}</span>
-                                  {scorer.assists && (
-                                    <span className="text-blue-600 ml-1">(Passe: {scorer.assists})</span>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Match Actions */}
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-xl">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <span className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        {match.homeTeam?.name} vs {match.awayTeam?.name}
-                      </span>
-                    </div>
-                    
-
-                  </div>
-                </div>
-              </div>
+              <SofaMatchCard 
+                key={match.id} 
+                match={convertedMatch} 
+                index={index} 
+              />
             )
           })}
         </div>
