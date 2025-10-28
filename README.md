@@ -48,7 +48,7 @@ Une application web moderne pour la gestion complète d'une ligue de football sc
 - **Animations CSS** - Transitions fluides et modernes
 - **PWA Ready** - Installation possible sur mobile
 
-## 📱 Captures d'Écran
+## 📱 Captures d'Écran (a venir)
 
 ### 🏠 Page d'Accueil
 Interface moderne avec statistiques en temps réel et navigation intuitive.
@@ -73,8 +73,7 @@ Interface d'administration pour saisir les résultats avec cartons visuels.
 
 1. **Cloner le repository**
 ```bash
-git clone https://github.com/votre-username/sofa-score.git
-cd sofa-score
+git clone 
 ```
 
 2. **Installer les dépendances**
