@@ -115,35 +115,39 @@ export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
           </div>
         </div>
 
-        {/* Desktop Layout */}
-        <div className="hidden sm:flex items-center justify-between">
+        {/* Desktop Layout - Fixed Grid */}
+        <div className="hidden sm:grid grid-cols-3 gap-4 items-center">
           {/* Home Team */}
-          <div className="sofa-team flex-1">
-            <div className="sofa-team-logo">
-              ⚽
+          <div className="text-right">
+            <div className="flex items-center justify-end gap-2">
+              <span className="sofa-team-name font-semibold">{match.teamA}</span>
+              <div className="sofa-team-logo">
+                ⚽
+              </div>
             </div>
-            <span className="sofa-team-name">{match.teamA}</span>
           </div>
 
-          {/* Score */}
-          <div className="px-6">
+          {/* Score - Centered */}
+          <div className="text-center">
             {match.status === 'completed' || match.status === 'live' ? (
               <div className={`sofa-score ${match.status === 'live' ? 'sofa-score-live' : ''}`}>
                 {match.scoreA} - {match.scoreB}
               </div>
             ) : (
-              <div className="text-sofa-text-muted text-lg font-semibold">
-                vs
+              <div className="text-sofa-text-muted text-2xl font-bold">
+                VS
               </div>
             )}
           </div>
 
           {/* Away Team */}
-          <div className="sofa-team flex-1 flex-row-reverse">
-            <div className="sofa-team-logo">
-              ⚽
+          <div className="text-left">
+            <div className="flex items-center justify-start gap-2">
+              <div className="sofa-team-logo">
+                ⚽
+              </div>
+              <span className="sofa-team-name font-semibold">{match.teamB}</span>
             </div>
-            <span className="sofa-team-name text-right">{match.teamB}</span>
           </div>
         </div>
       </div>

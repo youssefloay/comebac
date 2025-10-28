@@ -26,11 +26,12 @@ export default function MatchesPage() {
   const [matches, setMatches] = useState<(Match & { homeTeam?: Team; awayTeam?: Team; result?: MatchResult })[]>([])
   const [filteredMatches, setFilteredMatches] = useState<(Match & { homeTeam?: Team; awayTeam?: Team; result?: MatchResult })[]>([])
   const [loading, setLoading] = useState(true)
-
   const [filterStatus, setFilterStatus] = useState<'all' | 'scheduled' | 'completed' | 'in_progress'>('all')
   const [selectedRound, setSelectedRound] = useState<number | 'all'>('all')
   const [rounds, setRounds] = useState<number[]>([])
   const [showFilters, setShowFilters] = useState(false)
+
+
 
   useEffect(() => {
     const fetchMatches = async () => {
@@ -613,14 +614,14 @@ export default function MatchesPage() {
                   {/* Desktop Layout */}
                   <div className="hidden md:grid md:grid-cols-3 gap-6 items-center">
                     {/* Home Team Desktop */}
-                    <div className="text-center lg:text-right">
-                      <div className="flex items-center justify-center lg:justify-end gap-2 mb-2">
-                        <div className="bg-green-50 p-1.5 rounded-lg">
-                          <Home className="w-4 h-4 text-green-600" />
-                        </div>
+                    <div className="text-right">
+                      <div className="flex items-center justify-end gap-2 mb-2">
                         <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">
                           DOMICILE
                         </span>
+                        <div className="bg-green-50 p-1.5 rounded-lg">
+                          <Home className="w-4 h-4 text-green-600" />
+                        </div>
                       </div>
                       
                       <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">
@@ -628,7 +629,7 @@ export default function MatchesPage() {
                       </h3>
                       
                       {match.result && (
-                        <div className="space-y-2 hidden lg:block">
+                        <div className="space-y-2">
                           <div className={`text-3xl md:text-4xl font-bold ${
                             matchResult?.winner === 'home' ? 'text-green-600' : 
                             matchResult?.winner === 'draw' ? 'text-yellow-600' : 'text-gray-600'
@@ -638,7 +639,7 @@ export default function MatchesPage() {
                           
                           {match.result.homeTeamGoalScorers.length > 0 && (
                             <div className="space-y-1">
-                              <p className="text-sm font-medium text-gray-700 flex items-center justify-center lg:justify-end gap-1">
+                              <p className="text-sm font-medium text-gray-700 flex items-center justify-end gap-1">
                                 <Target className="w-4 h-4" />
                                 Buteurs
                               </p>
@@ -656,94 +657,49 @@ export default function MatchesPage() {
                       )}
                     </div>
 
-                    {/* VS Section */}
-                    <div className="text-center order-2 lg:order-2">
-                      <div className="flex flex-col items-center gap-3">
-                        {match.result ? (
-                          <div className="bg-gray-50 p-3 md:p-4 rounded-xl w-full">
-                            <div className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                              {match.result.homeTeamScore} - {match.result.awayTeamScore}
-                            </div>
-                            {matchResult && (
-                              <p className={`text-sm font-medium mb-3 ${
-                                matchResult.winner === 'home' ? 'text-green-600' : 
-                                matchResult.winner === 'away' ? 'text-blue-600' : 'text-yellow-600'
-                              }`}>
-                                {matchResult.result}
-                              </p>
-                            )}
-                            
-                            {/* Cards Display */}
-                            {match.result && (
-                              <div className="space-y-2 text-xs">
-                                {/* Home Team Cards */}
-                                {(match.result.homeTeamYellowCards?.length > 0 || match.result.homeTeamRedCards?.length > 0) && (
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="font-medium text-gray-700">{match.homeTeam?.name}:</span>
-                                    {match.result.homeTeamYellowCards?.map((card, idx) => (
-                                      <div key={`home-yellow-${idx}`} className="flex items-center gap-1 bg-yellow-100 px-2 py-1 rounded">
-                                        <div className="w-3 h-4 bg-yellow-400 border border-yellow-600 rounded-sm shadow-sm"></div>
-                                        <span className="text-yellow-800 text-xs font-medium">{card.playerName}</span>
-                                      </div>
-                                    ))}
-                                    {match.result.homeTeamRedCards?.map((card, idx) => (
-                                      <div key={`home-red-${idx}`} className="flex items-center gap-1 bg-red-100 px-2 py-1 rounded">
-                                        <div className="w-3 h-4 bg-red-500 border border-red-700 rounded-sm shadow-sm"></div>
-                                        <span className="text-red-800 text-xs font-medium">{card.playerName}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                                
-                                {/* Away Team Cards */}
-                                {(match.result.awayTeamYellowCards?.length > 0 || match.result.awayTeamRedCards?.length > 0) && (
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="font-medium text-gray-700">{match.awayTeam?.name}:</span>
-                                    {match.result.awayTeamYellowCards?.map((card, idx) => (
-                                      <div key={`away-yellow-${idx}`} className="flex items-center gap-1 bg-yellow-100 px-2 py-1 rounded">
-                                        <div className="w-3 h-4 bg-yellow-400 border border-yellow-600 rounded-sm shadow-sm"></div>
-                                        <span className="text-yellow-800 text-xs font-medium">{card.playerName}</span>
-                                      </div>
-                                    ))}
-                                    {match.result.awayTeamRedCards?.map((card, idx) => (
-                                      <div key={`away-red-${idx}`} className="flex items-center gap-1 bg-red-100 px-2 py-1 rounded">
-                                        <div className="w-3 h-4 bg-red-500 border border-red-700 rounded-sm shadow-sm"></div>
-                                        <span className="text-red-800 text-xs font-medium">{card.playerName}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            )}
+                    {/* VS Section - Centered */}
+                    <div className="flex flex-col items-center justify-center text-center">
+                      {match.result ? (
+                        <div className="bg-gray-50 p-4 rounded-xl">
+                          <div className="text-3xl font-bold text-gray-900 mb-2">
+                            {match.result.homeTeamScore} - {match.result.awayTeamScore}
                           </div>
-                        ) : (
-                          <div className="bg-blue-50 p-4 rounded-xl">
-                            <div className="text-2xl font-bold text-blue-600 mb-2">VS</div>
-                            <p className="text-sm text-blue-700">
-                              {formatTime(match.date)}
+                          {matchResult && (
+                            <p className={`text-sm font-medium ${
+                              matchResult.winner === 'home' ? 'text-green-600' : 
+                              matchResult.winner === 'away' ? 'text-blue-600' : 'text-yellow-600'
+                            }`}>
+                              {matchResult.result}
                             </p>
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <MapPin className="w-4 h-4" />
-                          <span>Stade de {match.homeTeam?.name}</span>
+                          )}
                         </div>
+                      ) : (
+                        <div className="bg-blue-50 p-4 rounded-xl">
+                          <div className="text-3xl font-bold text-blue-600 mb-2">VS</div>
+                          <p className="text-sm text-blue-700">
+                            {formatTime(match.date)}
+                          </p>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mt-3">
+                        <MapPin className="w-4 h-4" />
+                        <span>Stade de {match.homeTeam?.name}</span>
                       </div>
                     </div>
 
                     {/* Away Team */}
-                    <div className="text-center lg:text-left">
-                      <div className="flex items-center justify-center lg:justify-start gap-3 mb-3">
-                        <span className="text-sm font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded">
+                    <div className="text-left">
+                      <div className="flex items-center justify-start gap-2 mb-2">
+                        <div className="bg-blue-50 p-1.5 rounded-lg">
+                          <Plane className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded">
                           EXTÉRIEUR
                         </span>
-                        <div className="bg-blue-50 p-2 rounded-lg">
-                          <Plane className="w-5 h-5 text-blue-600" />
-                        </div>
                       </div>
                       
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">
                         {match.awayTeam?.name || "Équipe inconnue"}
                       </h3>
                       
@@ -758,7 +714,7 @@ export default function MatchesPage() {
                           
                           {match.result.awayTeamGoalScorers.length > 0 && (
                             <div className="space-y-1">
-                              <p className="text-sm font-medium text-gray-700 flex items-center justify-center lg:justify-start gap-1">
+                              <p className="text-sm font-medium text-gray-700 flex items-center justify-start gap-1">
                                 <Target className="w-4 h-4" />
                                 Buteurs
                               </p>
@@ -788,12 +744,7 @@ export default function MatchesPage() {
                       </span>
                     </div>
                     
-                    <div className="bg-gray-100 px-3 py-2 rounded-lg border">
-                      <p className="text-sm text-gray-600 flex items-center gap-2">
-                        <XCircle className="w-4 h-4" />
-                        Seuls les administrateurs peuvent modifier les résultats
-                      </p>
-                    </div>
+
                   </div>
                 </div>
               </div>
