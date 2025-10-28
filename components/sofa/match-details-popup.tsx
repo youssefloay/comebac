@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Clock, MapPin, Calendar, Target, CreditCard, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { getMatchResult } from '@/lib/db'
-import type { MatchResult, Team } from '@/lib/types'
+import type { MatchResult } from '@/lib/types'
 
 interface MatchDetailsPopupProps {
   isOpen: boolean

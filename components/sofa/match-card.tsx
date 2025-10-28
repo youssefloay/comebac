@@ -80,70 +80,79 @@ export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
         {/* Mobile Layout */}
         <div className="block sm:hidden">
           <div className="space-y-4">
-            {/* Teams Row */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 flex-1">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center shadow-sm">
-                  <span className="text-lg">⚽</span>
-                </div>
-                <span className="font-bold text-gray-900 text-base">{match.teamA}</span>
+            {/* Home Team */}
+            <div className="flex items-center gap-3 bg-green-50 p-3 rounded-lg">
+              <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
+                <span className="text-lg">⚽</span>
               </div>
-              
-              <div className="flex items-center gap-3 flex-1 justify-end">
-                <span className="font-bold text-gray-900 text-base">{match.teamB}</span>
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center shadow-sm">
-                  <span className="text-lg">⚽</span>
-                </div>
+              <div className="flex-1 min-w-0">
+                <span className="font-bold text-gray-900 text-sm block truncate">{match.teamA}</span>
               </div>
+              {match.status === 'completed' || match.status === 'live' ? (
+                <div className="text-2xl font-bold text-green-700 flex-shrink-0">
+                  {match.scoreA}
+                </div>
+              ) : null}
             </div>
             
             {/* Score */}
-            <div className="text-center py-4">
+            <div className="text-center py-2">
               {match.status === 'completed' || match.status === 'live' ? (
-                <div className={`text-4xl font-bold ${match.status === 'live' ? 'text-red-600' : 'text-gray-900'}`}>
+                <div className={`text-3xl font-bold ${match.status === 'live' ? 'text-red-600' : 'text-gray-900'}`}>
                   {match.scoreA} - {match.scoreB}
                 </div>
               ) : (
-                <div className="text-gray-400 text-3xl font-bold">VS</div>
+                <div className="text-gray-400 text-2xl font-bold">VS</div>
               )}
+            </div>
+
+            {/* Away Team */}
+            <div className="flex items-center gap-3 bg-blue-50 p-3 rounded-lg">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
+                <span className="text-lg">⚽</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="font-bold text-gray-900 text-sm block truncate">{match.teamB}</span>
+              </div>
+              {match.status === 'completed' || match.status === 'live' ? (
+                <div className="text-2xl font-bold text-blue-700 flex-shrink-0">
+                  {match.scoreB}
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
 
         {/* Desktop Layout - Clean Grid */}
-        <div className="hidden sm:grid grid-cols-3 gap-8 items-center py-2">
+        <div className="hidden sm:grid grid-cols-5 gap-4 items-center py-4">
           {/* Home Team */}
-          <div className="text-right">
-            <div className="flex items-center justify-end gap-4">
-              <div className="text-right">
-                <span className="font-bold text-xl text-gray-900 block">{match.teamA}</span>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center shadow-md">
-                <span className="text-xl">⚽</span>
-              </div>
+          <div className="col-span-2 flex items-center justify-end gap-3">
+            <div className="text-right flex-1 min-w-0">
+              <span className="font-bold text-base text-gray-900 leading-tight block truncate">{match.teamA}</span>
+            </div>
+            <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center shadow-md flex-shrink-0">
+              <span className="text-lg">⚽</span>
             </div>
           </div>
 
           {/* Score - Centered */}
           <div className="text-center">
             {match.status === 'completed' || match.status === 'live' ? (
-              <div className={`text-5xl font-bold ${match.status === 'live' ? 'text-red-600' : 'text-gray-900'}`}>
+              <div className={`text-3xl font-bold ${match.status === 'live' ? 'text-red-600' : 'text-gray-900'}`}>
                 {match.scoreA} - {match.scoreB}
               </div>
             ) : (
-              <div className="text-gray-400 text-4xl font-bold">VS</div>
+              <div className="text-gray-400 text-2xl font-bold">VS</div>
             )}
           </div>
 
           {/* Away Team */}
-          <div className="text-left">
-            <div className="flex items-center justify-start gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center shadow-md">
-                <span className="text-xl">⚽</span>
-              </div>
-              <div className="text-left">
-                <span className="font-bold text-xl text-gray-900 block">{match.teamB}</span>
-              </div>
+          <div className="col-span-2 flex items-center justify-start gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center shadow-md flex-shrink-0">
+              <span className="text-lg">⚽</span>
+            </div>
+            <div className="text-left flex-1 min-w-0">
+              <span className="font-bold text-base text-gray-900 leading-tight block truncate">{match.teamB}</span>
             </div>
           </div>
         </div>
