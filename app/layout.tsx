@@ -13,16 +13,17 @@ const inter = Inter({
   weight: ["400", "500", "600", "700"],
 })
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+}
+
 export const metadata: Metadata = {
   title: "ComeBac League - Championnat Scolaire",
   description: "Application de gestion du championnat scolaire ComeBac League",
   generator: "v0.app",
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
   icons: {
     icon: [
       { url: '/comebac.png', sizes: '32x32', type: 'image/png' },
