@@ -6,7 +6,10 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "eslint .",
-    "start": "next start"
+    "start": "next start",
+    "setup-test-data": "npx tsx scripts/setup-test-data.ts",
+    "generate-results": "npx tsx scripts/generate-match-results.ts",
+    "update-stats": "npx tsx scripts/update-team-stats.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -69,6 +72,7 @@
     "@types/react-dom": "^19",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
+    "tsx": "^4.20.6",
     "tw-animate-css": "1.3.3",
     "typescript": "^5.1.0"
   }
