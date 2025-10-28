@@ -428,7 +428,8 @@
   }
   
   .sofa-match-card {
-    padding: 12px;
+    padding: 16px;
+    min-height: auto;
   }
   
   .sofa-team {
@@ -437,7 +438,8 @@
   
   .sofa-team-name {
     font-size: 0.875rem;
-    max-width: 100px;
+    max-width: 120px;
+    line-height: 1.2;
   }
   
   /* Mobile menu specific */

@@ -464,55 +464,172 @@ export default function MatchesPage() {
             
             return (
               <div key={`match-${match.id}`} className="bg-white rounded-xl shadow-sm border hover:shadow-md transition-all duration-200">
-                {/* Match Header */}
-                <div className="p-6 border-b border-gray-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-4">
+                {/* Match Header - Mobile Optimized */}
+                <div className="p-4 md:p-6 border-b border-gray-100">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+                    <div className="flex items-center gap-3">
                       <div className="bg-blue-50 p-2 rounded-lg">
-                        <Calendar className="w-5 h-5 text-blue-600" />
+                        <Calendar className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900">{formatDate(match.date)}</p>
-                        <p className="text-sm text-gray-600 flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
+                        <p className="font-semibold text-gray-900 text-sm md:text-base">{formatDate(match.date)}</p>
+                        <p className="text-xs md:text-sm text-gray-600 flex items-center gap-1">
+                          <Clock className="w-3 h-3 md:w-4 md:h-4" />
                           {formatTime(match.date)}
                         </p>
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-3">
-                      <span className="px-3 py-1 bg-blue-50 text-blue-700 text-sm font-medium rounded-full">
+                    <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+                      <span className="px-2 py-1 md:px-3 md:py-1 bg-blue-50 text-blue-700 text-xs md:text-sm font-medium rounded-full">
                         Journée {match.round}
                       </span>
-                      <span className={`px-3 py-1 text-sm font-medium rounded-full border ${statusInfo.color} flex items-center gap-2`}>
-                        <StatusIcon className={`w-4 h-4 ${statusInfo.iconColor}`} />
-                        {statusInfo.label}
+                      <span className={`px-2 py-1 md:px-3 md:py-1 text-xs md:text-sm font-medium rounded-full border ${statusInfo.color} flex items-center gap-1 md:gap-2`}>
+                        <StatusIcon className={`w-3 h-3 md:w-4 md:h-4 ${statusInfo.iconColor}`} />
+                        <span className="hidden sm:inline">{statusInfo.label}</span>
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Match Content */}
-                <div className="p-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
-                    {/* Home Team */}
-                    <div className="text-center lg:text-right">
-                      <div className="flex items-center justify-center lg:justify-end gap-3 mb-3">
-                        <div className="bg-green-50 p-2 rounded-lg">
-                          <Home className="w-5 h-5 text-green-600" />
+                {/* Match Content - Mobile First Design */}
+                <div className="p-4 md:p-6">
+                  {/* Mobile Layout */}
+                  <div className="block md:hidden">
+                    {/* Teams and Score Mobile */}
+                    <div className="space-y-4">
+                      {/* Home Team Mobile */}
+                      <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Home className="w-4 h-4 text-green-600" />
+                          <span className="text-xs font-medium text-green-700">DOMICILE</span>
                         </div>
-                        <span className="text-sm font-medium text-green-700 bg-green-50 px-2 py-1 rounded">
+                        <h3 className="text-sm font-bold text-gray-900">
+                          {match.homeTeam?.name || "Équipe inconnue"}
+                        </h3>
+                        {match.result && (
+                          <div className={`text-xl font-bold ${
+                            matchResult?.winner === 'home' ? 'text-green-600' : 'text-gray-600'
+                          }`}>
+                            {match.result.homeTeamScore}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Score Mobile */}
+                      {match.result ? (
+                        <div className="text-center bg-gray-50 p-3 rounded-lg">
+                          <div className="text-2xl font-bold text-gray-900 mb-1">
+                            {match.result.homeTeamScore} - {match.result.awayTeamScore}
+                          </div>
+                          {matchResult && (
+                            <p className={`text-sm font-medium ${
+                              matchResult.winner === 'home' ? 'text-green-600' : 
+                              matchResult.winner === 'away' ? 'text-blue-600' : 'text-yellow-600'
+                            }`}>
+                              {matchResult.result}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center bg-blue-50 p-3 rounded-lg">
+                          <div className="text-xl font-bold text-blue-600 mb-1">VS</div>
+                          <p className="text-sm text-blue-700">{formatTime(match.date)}</p>
+                        </div>
+                      )}
+
+                      {/* Away Team Mobile */}
+                      <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Plane className="w-4 h-4 text-blue-600" />
+                          <span className="text-xs font-medium text-blue-700">EXTÉRIEUR</span>
+                        </div>
+                        <h3 className="text-sm font-bold text-gray-900">
+                          {match.awayTeam?.name || "Équipe inconnue"}
+                        </h3>
+                        {match.result && (
+                          <div className={`text-xl font-bold ${
+                            matchResult?.winner === 'away' ? 'text-blue-600' : 'text-gray-600'
+                          }`}>
+                            {match.result.awayTeamScore}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Cards Display Mobile */}
+                      {match.result && (
+                        <div className="mt-4">
+                          {/* Cards Display - Mobile Optimized */}
+                          {match.result && (
+                            <div className="space-y-3 mt-4">
+                              {/* Home Team Cards */}
+                              {(match.result.homeTeamYellowCards?.length > 0 || match.result.homeTeamRedCards?.length > 0) && (
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                  <div className="text-sm font-bold text-gray-800 mb-2">{match.homeTeam?.name}</div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {match.result.homeTeamYellowCards?.map((card, idx) => (
+                                      <div key={`home-yellow-${idx}`} className="flex items-center gap-2 bg-yellow-200 px-3 py-2 rounded-lg shadow-sm">
+                                        <div className="w-4 h-6 bg-yellow-400 border-2 border-yellow-600 rounded-sm shadow-md"></div>
+                                        <span className="text-yellow-900 text-sm font-semibold">{card.playerName}</span>
+                                      </div>
+                                    ))}
+                                    {match.result.homeTeamRedCards?.map((card, idx) => (
+                                      <div key={`home-red-${idx}`} className="flex items-center gap-2 bg-red-200 px-3 py-2 rounded-lg shadow-sm">
+                                        <div className="w-4 h-6 bg-red-500 border-2 border-red-700 rounded-sm shadow-md"></div>
+                                        <span className="text-red-900 text-sm font-semibold">{card.playerName}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Away Team Cards */}
+                              {(match.result.awayTeamYellowCards?.length > 0 || match.result.awayTeamRedCards?.length > 0) && (
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                  <div className="text-sm font-bold text-gray-800 mb-2">{match.awayTeam?.name}</div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {match.result.awayTeamYellowCards?.map((card, idx) => (
+                                      <div key={`away-yellow-${idx}`} className="flex items-center gap-2 bg-yellow-200 px-3 py-2 rounded-lg shadow-sm">
+                                        <div className="w-4 h-6 bg-yellow-400 border-2 border-yellow-600 rounded-sm shadow-md"></div>
+                                        <span className="text-yellow-900 text-sm font-semibold">{card.playerName}</span>
+                                      </div>
+                                    ))}
+                                    {match.result.awayTeamRedCards?.map((card, idx) => (
+                                      <div key={`away-red-${idx}`} className="flex items-center gap-2 bg-red-200 px-3 py-2 rounded-lg shadow-sm">
+                                        <div className="w-4 h-6 bg-red-500 border-2 border-red-700 rounded-sm shadow-md"></div>
+                                        <span className="text-red-900 text-sm font-semibold">{card.playerName}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Desktop Layout */}
+                  <div className="hidden md:grid md:grid-cols-3 gap-6 items-center">
+                    {/* Home Team Desktop */}
+                    <div className="text-center lg:text-right">
+                      <div className="flex items-center justify-center lg:justify-end gap-2 mb-2">
+                        <div className="bg-green-50 p-1.5 rounded-lg">
+                          <Home className="w-4 h-4 text-green-600" />
+                        </div>
+                        <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">
                           DOMICILE
                         </span>
                       </div>
                       
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">
                         {match.homeTeam?.name || "Équipe inconnue"}
                       </h3>
                       
                       {match.result && (
-                        <div className="space-y-2">
-                          <div className={`text-4xl font-bold ${
+                        <div className="space-y-2 hidden lg:block">
+                          <div className={`text-3xl md:text-4xl font-bold ${
                             matchResult?.winner === 'home' ? 'text-green-600' : 
                             matchResult?.winner === 'draw' ? 'text-yellow-600' : 'text-gray-600'
                           }`}>
@@ -540,11 +657,11 @@ export default function MatchesPage() {
                     </div>
 
                     {/* VS Section */}
-                    <div className="text-center">
+                    <div className="text-center order-2 lg:order-2">
                       <div className="flex flex-col items-center gap-3">
                         {match.result ? (
-                          <div className="bg-gray-50 p-4 rounded-xl">
-                            <div className="text-3xl font-bold text-gray-900 mb-2">
+                          <div className="bg-gray-50 p-3 md:p-4 rounded-xl w-full">
+                            <div className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
                               {match.result.homeTeamScore} - {match.result.awayTeamScore}
                             </div>
                             {matchResult && (
