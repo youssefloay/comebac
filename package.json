@@ -9,7 +9,8 @@
     "start": "next start",
     "setup-test-data": "npx tsx scripts/setup-test-data.ts",
     "generate-results": "npx tsx scripts/generate-match-results.ts",
-    "update-stats": "npx tsx scripts/update-team-stats.ts"
+    "update-stats": "npx tsx scripts/update-team-stats.ts",
+    "debug-matches": "npx tsx scripts/debug-matches.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

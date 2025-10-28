@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { initializeApp, getApps } from 'firebase/app'
-import { getFirestore, collection, addDoc, getDocs, Timestamp } from 'firebase/firestore'
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, Timestamp } from 'firebase/firestore'
 
 // Configuration Firebase
 const firebaseConfig = {
@@ -149,6 +149,12 @@ export async function POST() {
         matchId: match.id,
         ...result,
         createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      })
+      
+      // Mettre à jour le statut du match pour qu'il apparaisse comme terminé
+      await updateDoc(doc(db, 'matches', match.id), {
+        status: 'completed',
         updatedAt: Timestamp.now()
       })
       

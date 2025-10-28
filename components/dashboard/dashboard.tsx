@@ -137,6 +137,29 @@ export default function Dashboard({ user }: { user: any }) {
     }
   }
 
+  const handleFixMatchStatus = async () => {
+    if (!confirm("Corriger le statut des matchs qui ont des résultats ?")) {
+      return
+    }
+
+    setIsSeeding(true)
+    setSeedMessage(null)
+    try {
+      const response = await fetch("/api/fix-match-status", { method: "POST" })
+      const data = await response.json()
+      if (response.ok) {
+        setSeedMessage({ type: "success", text: data.message })
+        setActiveTab("matches")
+      } else {
+        setSeedMessage({ type: "error", text: data.error || "Erreur lors de la correction du statut" })
+      }
+    } catch (error) {
+      setSeedMessage({ type: "error", text: "Erreur de connexion" })
+    } finally {
+      setIsSeeding(false)
+    }
+  }
+
   const tabs = [
     { id: "teams", label: "Équipes", icon: "⚽" },
     { id: "players", label: "Joueurs", icon: "👥" },
@@ -221,6 +244,23 @@ export default function Dashboard({ user }: { user: any }) {
               <>
                 <span>🏆</span>
                 {sidebarOpen && <span>Générer résultats</span>}
+              </>
+            )}
+          </button>
+          <button
+            onClick={handleFixMatchStatus}
+            disabled={isSeeding}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-yellow-600 text-white hover:bg-yellow-700 disabled:bg-gray-400 rounded-lg transition text-sm font-medium"
+          >
+            {isSeeding ? (
+              <>
+                <Loader className="w-4 h-4 animate-spin" />
+                {sidebarOpen && <span>Correction...</span>}
+              </>
+            ) : (
+              <>
+                <span>🔧</span>
+                {sidebarOpen && <span>Corriger statuts</span>}
               </>
             )}
           </button>
