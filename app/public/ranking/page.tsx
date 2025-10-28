@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { db } from "@/lib/firebase"
 import { collection, getDocs } from "firebase/firestore"
 import type { TeamStatistics, Team } from "@/lib/types"
+import { TeamLink } from "@/components/ui/team-link"
 
 interface RankingTeam extends TeamStatistics {
   teamName: string
@@ -149,22 +150,22 @@ export default function RankingPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-4xl font-bold text-sofa-text-primary">Classement Général</h1>
-        <div className="flex gap-3">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <h1 className="text-2xl sm:text-4xl font-bold text-sofa-text-primary">Classement Général</h1>
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           {ranking.length > 4 && (
             <button
               onClick={handleCleanupDuplicates}
               disabled={cleaning}
-              className="sofa-btn bg-sofa-red hover:bg-red-600"
+              className="sofa-btn bg-sofa-red hover:bg-red-600 text-xs sm:text-sm"
             >
               {cleaning ? 'Nettoyage...' : '🧹 Nettoyer Doublons'}
             </button>
           )}
           <button
             onClick={() => setShowDebug(!showDebug)}
-            className="sofa-btn-secondary sofa-btn"
+            className="sofa-btn-secondary sofa-btn text-xs sm:text-sm"
           >
             {showDebug ? 'Masquer Debug' : 'Debug Info'}
           </button>
@@ -196,22 +197,25 @@ export default function RankingPage() {
           <p className="text-sofa-text-secondary">Aucune donnée de classement disponible</p>
         </div>
       ) : (
-        <div className="sofa-table">
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className="text-left">Pos</th>
-                <th className="text-left">Équipe</th>
-                <th className="text-center">Matchs</th>
-                <th className="text-center">V</th>
-                <th className="text-center">N</th>
-                <th className="text-center">D</th>
-                <th className="text-center">BP</th>
-                <th className="text-center">BC</th>
-                <th className="text-center">Diff</th>
-                <th className="text-center">Pts</th>
-              </tr>
-            </thead>
+        <div>
+          {/* Desktop Table */}
+          <div className="hidden md:block w-full overflow-x-auto">
+          <div className="sofa-table min-w-full">
+            <table className="w-full min-w-[600px]">
+              <thead>
+                <tr>
+                  <th className="text-left whitespace-nowrap">Pos</th>
+                  <th className="text-left whitespace-nowrap">Équipe</th>
+                  <th className="text-center whitespace-nowrap">Matchs</th>
+                  <th className="text-center whitespace-nowrap">V</th>
+                  <th className="text-center whitespace-nowrap">N</th>
+                  <th className="text-center whitespace-nowrap">D</th>
+                  <th className="text-center whitespace-nowrap">BP</th>
+                  <th className="text-center whitespace-nowrap">BC</th>
+                  <th className="text-center whitespace-nowrap">Diff</th>
+                  <th className="text-center whitespace-nowrap">Pts</th>
+                </tr>
+              </thead>
             <tbody>
               {ranking.map((team, idx) => {
                 const position = idx + 1
@@ -230,11 +234,13 @@ export default function RankingPage() {
                       </div>
                     </td>
                     <td>
-                      <div className="flex items-center gap-3">
-                        <div className="sofa-team-logo text-sm">⚽</div>
-                        <span className="font-semibold text-sofa-text-primary group-hover:text-sofa-text-accent transition-colors">
-                          {team.teamName}
-                        </span>
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <div className="sofa-team-logo text-sm flex-shrink-0">⚽</div>
+                        <TeamLink 
+                          teamId={team.teamId} 
+                          teamName={team.teamName}
+                          className="font-semibold text-sofa-text-primary group-hover:text-sofa-text-accent transition-colors"
+                        />
                       </div>
                     </td>
                     <td className="text-center text-sofa-text-secondary">
@@ -263,7 +269,113 @@ export default function RankingPage() {
                 )
               })}
             </tbody>
-          </table>
+            </table>
+          </div>
+        </div>
+
+        {/* Mobile Optimized Table */}
+        <div className="md:hidden w-full">
+          <div className="sofa-table">
+            <table className="w-full text-xs table-fixed">
+              <thead>
+                <tr>
+                  <th className="text-left py-2 px-1" style={{width: '8%'}}>#</th>
+                  <th className="text-left py-2 px-1" style={{width: '20%'}}>Équipe</th>
+                  <th className="text-center py-2 px-1" style={{width: '8%'}}>MJ</th>
+                  <th className="text-center py-2 px-1" style={{width: '8%'}}>V</th>
+                  <th className="text-center py-2 px-1" style={{width: '8%'}}>N</th>
+                  <th className="text-center py-2 px-1" style={{width: '8%'}}>D</th>
+                  <th className="text-center py-2 px-1" style={{width: '8%'}}>BP</th>
+                  <th className="text-center py-2 px-1" style={{width: '8%'}}>BC</th>
+                  <th className="text-center py-2 px-1" style={{width: '10%'}}>Diff</th>
+                  <th className="text-center py-2 px-1" style={{width: '14%'}}>Pts</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ranking.map((team, idx) => {
+                  const position = idx + 1
+                  const goalDiff = team.goalDifference
+                  
+                  // Créer une abréviation du nom d'équipe
+                  const getTeamAbbreviation = (teamName: string) => {
+                    const words = teamName.split(' ')
+                    if (words.length === 1) {
+                      return teamName.substring(0, 4).toUpperCase()
+                    } else if (words.length === 2) {
+                      return (words[0].substring(0, 2) + words[1].substring(0, 2)).toUpperCase()
+                    } else {
+                      return words.map(word => word.substring(0, 1)).join('').toUpperCase().substring(0, 4)
+                    }
+                  }
+                  
+                  return (
+                    <tr key={team.id} className="group border-b border-sofa-border/50 hover:bg-sofa-bg-hover">
+                      <td className="py-2 px-1">
+                        <div className="flex items-center justify-center">
+                          <span className="font-bold text-sofa-text-primary text-sm">
+                            {position}
+                          </span>
+                          {position <= 3 && (
+                            <span className="text-sofa-yellow text-xs ml-1">🏆</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2 px-1">
+                        <div title={team.teamName}>
+                          <TeamLink 
+                            teamId={team.teamId} 
+                            teamName={getTeamAbbreviation(team.teamName)}
+                            className="font-bold text-sofa-text-primary text-xs hover:text-sofa-text-accent transition-colors block"
+                          />
+                        </div>
+                      </td>
+                      <td className="text-center py-2 px-1">
+                        <span className="text-sofa-text-secondary font-medium text-xs">
+                          {team.matchesPlayed}
+                        </span>
+                      </td>
+                      <td className="text-center py-2 px-1">
+                        <span className="font-semibold text-sofa-green text-xs">
+                          {team.wins}
+                        </span>
+                      </td>
+                      <td className="text-center py-2 px-1">
+                        <span className="font-semibold text-sofa-orange text-xs">
+                          {team.draws}
+                        </span>
+                      </td>
+                      <td className="text-center py-2 px-1">
+                        <span className="font-semibold text-sofa-red text-xs">
+                          {team.losses}
+                        </span>
+                      </td>
+                      <td className="text-center py-2 px-1">
+                        <span className="text-sofa-text-secondary text-xs font-medium">
+                          {team.goalsFor}
+                        </span>
+                      </td>
+                      <td className="text-center py-2 px-1">
+                        <span className="text-sofa-text-secondary text-xs font-medium">
+                          {team.goalsAgainst}
+                        </span>
+                      </td>
+                      <td className="text-center py-2 px-1">
+                        <span className={`font-bold text-xs ${goalDiff >= 0 ? 'text-sofa-green' : 'text-sofa-red'}`}>
+                          {goalDiff > 0 ? '+' : ''}{goalDiff}
+                        </span>
+                      </td>
+                      <td className="text-center py-2 px-1">
+                        <span className="font-bold text-sofa-text-accent text-sm">
+                          {team.points}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
         </div>
       )}
     </div>

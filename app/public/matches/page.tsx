@@ -343,7 +343,9 @@ export default function MatchesPage() {
             const convertedMatch = {
               id: match.id,
               teamA: match.homeTeam?.name || 'Équipe inconnue',
-              teamB: match.awayTeam?.name || 'Équipe inconnue', 
+              teamB: match.awayTeam?.name || 'Équipe inconnue',
+              teamAId: match.homeTeamId,
+              teamBId: match.awayTeamId,
               date: match.date,
               scoreA: match.result?.homeTeamScore,
               scoreB: match.result?.awayTeamScore,

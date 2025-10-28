@@ -5,6 +5,7 @@ import { X, Clock, MapPin, Calendar, Target, CreditCard, Users } from 'lucide-re
 import { useEffect, useState } from 'react'
 import { getMatchResult } from '@/lib/db'
 import type { MatchResult } from '@/lib/types'
+import { TeamLink } from '@/components/ui/team-link'
 
 interface MatchDetailsPopupProps {
   isOpen: boolean
@@ -13,6 +14,8 @@ interface MatchDetailsPopupProps {
     id: string
     teamA: string
     teamB: string
+    teamAId?: string
+    teamBId?: string
     scoreA?: number
     scoreB?: number
     date: Date
@@ -123,7 +126,15 @@ export function MatchDetailsPopup({ isOpen, onClose, match }: MatchDetailsPopupP
                     <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                       <span className="text-3xl">⚽</span>
                     </div>
-                    <h3 className="font-bold text-xl text-gray-900">{match.teamA}</h3>
+                    {match.teamAId ? (
+                      <TeamLink 
+                        teamId={match.teamAId} 
+                        teamName={match.teamA}
+                        className="font-bold text-xl text-gray-900 hover:text-green-600 transition-colors"
+                      />
+                    ) : (
+                      <h3 className="font-bold text-xl text-gray-900">{match.teamA}</h3>
+                    )}
                   </div>
 
                   {/* Score */}
@@ -148,7 +159,15 @@ export function MatchDetailsPopup({ isOpen, onClose, match }: MatchDetailsPopupP
                     <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                       <span className="text-3xl">⚽</span>
                     </div>
-                    <h3 className="font-bold text-xl text-gray-900">{match.teamB}</h3>
+                    {match.teamBId ? (
+                      <TeamLink 
+                        teamId={match.teamBId} 
+                        teamName={match.teamB}
+                        className="font-bold text-xl text-gray-900 hover:text-blue-600 transition-colors"
+                      />
+                    ) : (
+                      <h3 className="font-bold text-xl text-gray-900">{match.teamB}</h3>
+                    )}
                   </div>
                 </div>
 
@@ -183,7 +202,15 @@ export function MatchDetailsPopup({ isOpen, onClose, match }: MatchDetailsPopupP
                               <div className="w-6 h-6 bg-green-200 rounded-full flex items-center justify-center">
                                 <span className="text-sm">⚽</span>
                               </div>
-                              {match.teamA}
+                              {match.teamAId ? (
+                                <TeamLink 
+                                  teamId={match.teamAId} 
+                                  teamName={match.teamA}
+                                  className="hover:text-green-900 transition-colors"
+                                />
+                              ) : (
+                                match.teamA
+                              )}
                             </h5>
                             <div className="space-y-3">
                               {matchResult.homeTeamGoalScorers.map((goal, index) => (
@@ -212,7 +239,15 @@ export function MatchDetailsPopup({ isOpen, onClose, match }: MatchDetailsPopupP
                               <div className="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center">
                                 <span className="text-sm">⚽</span>
                               </div>
-                              {match.teamB}
+                              {match.teamBId ? (
+                                <TeamLink 
+                                  teamId={match.teamBId} 
+                                  teamName={match.teamB}
+                                  className="hover:text-blue-900 transition-colors"
+                                />
+                              ) : (
+                                match.teamB
+                              )}
                             </h5>
                             <div className="space-y-3">
                               {matchResult.awayTeamGoalScorers.map((goal, index) => (
@@ -252,7 +287,15 @@ export function MatchDetailsPopup({ isOpen, onClose, match }: MatchDetailsPopupP
                           <div className="bg-gray-50 p-4 rounded-xl">
                             <h5 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
                               <CreditCard className="w-5 h-5 text-gray-600" />
-                              {match.teamA}
+                              {match.teamAId ? (
+                                <TeamLink 
+                                  teamId={match.teamAId} 
+                                  teamName={match.teamA}
+                                  className="hover:text-gray-900 transition-colors"
+                                />
+                              ) : (
+                                match.teamA
+                              )}
                             </h5>
                             <div className="space-y-2">
                               {matchResult.homeTeamYellowCards?.map((card, index) => (
@@ -277,7 +320,15 @@ export function MatchDetailsPopup({ isOpen, onClose, match }: MatchDetailsPopupP
                           <div className="bg-gray-50 p-4 rounded-xl">
                             <h5 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
                               <CreditCard className="w-5 h-5 text-gray-600" />
-                              {match.teamB}
+                              {match.teamBId ? (
+                                <TeamLink 
+                                  teamId={match.teamBId} 
+                                  teamName={match.teamB}
+                                  className="hover:text-gray-900 transition-colors"
+                                />
+                              ) : (
+                                match.teamB
+                              )}
                             </h5>
                             <div className="space-y-2">
                               {matchResult.awayTeamYellowCards?.map((card, index) => (

@@ -234,7 +234,9 @@ export default function PublicHome() {
   const convertMatchFormat = (match: Match) => ({
     id: match.id,
     teamA: match.homeTeam?.name || 'Équipe inconnue',
-    teamB: match.awayTeam?.name || 'Équipe inconnue', 
+    teamB: match.awayTeam?.name || 'Équipe inconnue',
+    teamAId: match.homeTeamId,
+    teamBId: match.awayTeamId,
     date: match.date,
     scoreA: match.homeTeamScore,
     scoreB: match.awayTeamScore,

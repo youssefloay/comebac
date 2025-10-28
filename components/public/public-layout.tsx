@@ -55,7 +55,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         </div>
       </div>
 
-      <main className="min-h-screen pb-20 md:pb-0">
+      <main className="min-h-screen pb-20 md:pb-0 w-full overflow-x-hidden">
         {children}
       </main>
       

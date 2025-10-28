@@ -4,12 +4,15 @@ import { motion } from 'framer-motion'
 import { Clock, MapPin, Calendar } from 'lucide-react'
 import { useState } from 'react'
 import { MatchDetailsPopup } from './match-details-popup'
+import { TeamLink } from '@/components/ui/team-link'
 
 interface SofaMatchCardProps {
   match: {
     id: string
     teamA: string
     teamB: string
+    teamAId?: string
+    teamBId?: string
     scoreA?: number
     scoreB?: number
     date: Date
@@ -84,7 +87,15 @@ export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
             {/* Home Team */}
             <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg">
               <div className="flex-1 pr-3">
-                <span className="font-bold text-gray-900 text-sm leading-tight block break-words hyphens-auto">{match.teamA}</span>
+                {match.teamAId ? (
+                  <TeamLink 
+                    teamId={match.teamAId} 
+                    teamName={match.teamA}
+                    className="font-bold text-gray-900 text-sm leading-tight block break-words hyphens-auto hover:text-green-600"
+                  />
+                ) : (
+                  <span className="font-bold text-gray-900 text-sm leading-tight block break-words hyphens-auto">{match.teamA}</span>
+                )}
               </div>
               {match.status === 'completed' || match.status === 'live' ? (
                 <div className="text-xl font-bold text-green-700 flex-shrink-0">
@@ -107,7 +118,15 @@ export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
             {/* Away Team */}
             <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
               <div className="flex-1 pr-3">
-                <span className="font-bold text-gray-900 text-sm leading-tight block break-words hyphens-auto">{match.teamB}</span>
+                {match.teamBId ? (
+                  <TeamLink 
+                    teamId={match.teamBId} 
+                    teamName={match.teamB}
+                    className="font-bold text-gray-900 text-sm leading-tight block break-words hyphens-auto hover:text-blue-600"
+                  />
+                ) : (
+                  <span className="font-bold text-gray-900 text-sm leading-tight block break-words hyphens-auto">{match.teamB}</span>
+                )}
               </div>
               {match.status === 'completed' || match.status === 'live' ? (
                 <div className="text-xl font-bold text-blue-700 flex-shrink-0">
@@ -122,7 +141,15 @@ export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
         <div className="hidden sm:grid grid-cols-3 gap-3 md:gap-4 items-center py-4">
           {/* Home Team */}
           <div className="text-right pr-2">
-            <span className="font-bold text-sm md:text-base text-gray-900 leading-tight block break-words hyphens-auto">{match.teamA}</span>
+            {match.teamAId ? (
+              <TeamLink 
+                teamId={match.teamAId} 
+                teamName={match.teamA}
+                className="font-bold text-sm md:text-base text-gray-900 leading-tight block break-words hyphens-auto hover:text-green-600"
+              />
+            ) : (
+              <span className="font-bold text-sm md:text-base text-gray-900 leading-tight block break-words hyphens-auto">{match.teamA}</span>
+            )}
           </div>
 
           {/* Score - Centered */}
@@ -138,7 +165,15 @@ export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
 
           {/* Away Team */}
           <div className="text-left pl-2">
-            <span className="font-bold text-sm md:text-base text-gray-900 leading-tight block break-words hyphens-auto">{match.teamB}</span>
+            {match.teamBId ? (
+              <TeamLink 
+                teamId={match.teamBId} 
+                teamName={match.teamB}
+                className="font-bold text-sm md:text-base text-gray-900 leading-tight block break-words hyphens-auto hover:text-blue-600"
+              />
+            ) : (
+              <span className="font-bold text-sm md:text-base text-gray-900 leading-tight block break-words hyphens-auto">{match.teamB}</span>
+            )}
           </div>
         </div>
       </div>
