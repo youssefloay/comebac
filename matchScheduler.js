@@ -46,7 +46,7 @@ const results = []; // Stocker les résultats des matchs
 const standings = {}; // Classement des équipes
 
 // Initialiser le classement
-teams.forEach(team => {
+teams.forEach((team) => {
   standings[team] = { points: 0, goalsFor: 0, goalsAgainst: 0 };
 });
 
@@ -89,7 +89,10 @@ recordMatchResult(
   2, // Score de l'équipe à domicile
   1, // Score de l'équipe à l'extérieur
   {
-    home: [{ name: "Joueur 1", assists: 1 }, { name: "Joueur 2", assists: 0 }],
+    home: [
+      { name: "Joueur 1", assists: 1 },
+      { name: "Joueur 2", assists: 0 },
+    ],
     away: [{ name: "Joueur 3", assists: 0 }],
   }
 );

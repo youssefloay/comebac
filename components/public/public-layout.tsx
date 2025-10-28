@@ -2,8 +2,7 @@
 
 import type React from "react"
 import { SofaNavigation } from '@/components/sofa/navigation'
-import { UserMenuFAB } from '@/components/sofa/user-menu-fab'
-import { FloatingMenu } from '@/components/sofa/floating-menu'
+import { BottomNavigation } from '@/components/sofa/bottom-navigation'
 import { useAuth } from '@/lib/auth-context'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import '@/styles/sofascore-theme.css'
@@ -35,12 +34,35 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
   return (
     <div className="sofa-theme">
-      <SofaNavigation />
-      <main className="min-h-screen">
+      {/* Desktop Navigation */}
+      <div className="hidden md:block">
+        <SofaNavigation />
+      </div>
+      
+      {/* Mobile Header - Simplified */}
+      <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-30">
+        <div className="flex items-center justify-center">
+          <div className="flex items-center gap-3">
+            <img
+              src="/comebac.png"
+              alt="ComeBac League"
+              className="w-8 h-8 object-contain rounded"
+            />
+            <div>
+              <h1 className="text-lg font-bold text-gray-900">ComeBac League</h1>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <main className="min-h-screen pb-20 md:pb-0">
         {children}
       </main>
-      <FloatingMenu />
-      <UserMenuFAB />
+      
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden">
+        <BottomNavigation />
+      </div>
     </div>
   )
 }

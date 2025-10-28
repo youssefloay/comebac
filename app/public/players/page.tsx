@@ -133,36 +133,56 @@ export default function PlayersPage() {
         </h1>
       </div>
 
-      {/* Statistiques rapides */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
-        <div className="bg-white rounded-lg shadow p-3 md:p-4 text-center">
-          <div className="text-xl md:text-2xl font-bold text-blue-600 mb-1">
-            {players.length}
-          </div>
-          <div className="text-xs md:text-sm text-gray-600">Joueurs Total</div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-3 md:p-4 text-center">
-          <div className="text-xl md:text-2xl font-bold text-green-600 mb-1">
-            {players.filter((p) => p.overall && p.overall >= 80).length}
-          </div>
-          <div className="text-xs md:text-sm text-gray-600">
-            Joueurs Elite (80+)
+      {/* Statistiques rapides - Design mobile amélioré */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-4 text-white transform hover:scale-105 transition-transform">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-2xl md:text-3xl font-bold mb-1">
+                {players.length}
+              </div>
+              <div className="text-blue-100 text-sm font-medium">Joueurs Total</div>
+            </div>
+            <div className="text-3xl opacity-80">👥</div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-3 md:p-4 text-center">
-          <div className="text-xl md:text-2xl font-bold text-blue-600 mb-1">
-            {players.reduce((sum, p) => sum + (p.seasonStats?.goals || 0), 0)}
+        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-4 text-white transform hover:scale-105 transition-transform">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-2xl md:text-3xl font-bold mb-1">
+                {players.filter((p) => p.overall && p.overall >= 80).length}
+              </div>
+              <div className="text-emerald-100 text-sm font-medium">
+                Joueurs Elite (80+)
+              </div>
+            </div>
+            <div className="text-3xl opacity-80">⭐</div>
           </div>
-          <div className="text-xs md:text-sm text-gray-600">Buts Total</div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-3 md:p-4 text-center">
-          <div className="text-xl md:text-2xl font-bold text-yellow-600 mb-1">
-            {players.reduce((sum, p) => sum + (p.seasonStats?.assists || 0), 0)}
+        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-4 text-white transform hover:scale-105 transition-transform">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-2xl md:text-3xl font-bold mb-1">
+                {players.reduce((sum, p) => sum + (p.seasonStats?.goals || 0), 0)}
+              </div>
+              <div className="text-orange-100 text-sm font-medium">Buts Total</div>
+            </div>
+            <div className="text-3xl opacity-80">⚽</div>
           </div>
-          <div className="text-xs md:text-sm text-gray-600">Passes Total</div>
+        </div>
+
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-4 text-white transform hover:scale-105 transition-transform">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-2xl md:text-3xl font-bold mb-1">
+                {players.reduce((sum, p) => sum + (p.seasonStats?.assists || 0), 0)}
+              </div>
+              <div className="text-purple-100 text-sm font-medium">Passes Total</div>
+            </div>
+            <div className="text-3xl opacity-80">🎯</div>
+          </div>
         </div>
       </div>
 
@@ -264,15 +284,11 @@ export default function PlayersPage() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded"></div>
-            <span className="text-sm text-gray-600">
-              Légende (90+)
-            </span>
+            <span className="text-sm text-gray-600">Légende (90+)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-gradient-to-r from-purple-400 to-purple-600 rounded"></div>
-            <span className="text-sm text-gray-600">
-              Héros (85+)
-            </span>
+            <span className="text-sm text-gray-600">Héros (85+)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-gradient-to-r from-blue-400 to-blue-600 rounded"></div>
@@ -280,15 +296,11 @@ export default function PlayersPage() {
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-gradient-to-r from-green-400 to-green-600 rounded"></div>
-            <span className="text-sm text-gray-600">
-              Non-rare (75+)
-            </span>
+            <span className="text-sm text-gray-600">Non-rare (75+)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-gradient-to-r from-gray-400 to-gray-600 rounded"></div>
-            <span className="text-sm text-gray-600">
-              Bronze (&lt;75)
-            </span>
+            <span className="text-sm text-gray-600">Bronze (&lt;75)</span>
           </div>
         </div>
       </div>

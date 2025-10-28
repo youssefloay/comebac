@@ -586,4 +586,59 @@ html, body {
     margin-right: 0;
     max-width: 100%;
   }
+}/* Bottom 
+Navigation Styles */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Bottom Navigation Animation */
+.bottom-nav-item {
+  position: relative;
+  transition: all 0.2s ease-in-out;
+}
+
+.bottom-nav-item.active {
+  transform: translateY(-2px);
+}
+
+.bottom-nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 4px;
+  background: var(--sofa-green);
+  border-radius: 2px;
+}
+
+/* Mobile Header Styles */
+.mobile-header {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* Bottom Menu Overlay */
+.bottom-menu-overlay {
+  backdrop-filter: blur(4px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sofa-theme {
+    padding-bottom: 0;
+  }
+  
+  .main-content {
+    padding-bottom: 80px;
+  }
+}
+
+/* iOS Safe Area Support */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-area-pb {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  }
 }
