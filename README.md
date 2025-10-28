@@ -48,7 +48,7 @@ Une application web moderne pour la gestion complète d'une ligue de football sc
 - **Animations CSS** - Transitions fluides et modernes
 - **PWA Ready** - Installation possible sur mobile
 
-## 📱 Captures d'Écran
+## 📱 Captures d'Écran (a venir)
 
 ### 🏠 Page d'Accueil
 Interface moderne avec statistiques en temps réel et navigation intuitive.
@@ -73,8 +73,7 @@ Interface d'administration pour saisir les résultats avec cartons visuels.
 
 1. **Cloner le repository**
 ```bash
-git clone https://github.com/votre-username/sofa-score.git
-cd sofa-score
+git clone 
 ```
 
 2. **Installer les dépendances**
@@ -193,15 +192,6 @@ Pour signaler un bug, veuillez :
    - Captures d'écran si applicable
    - Informations sur votre environnement
 
-## 📄 Licence
-
-Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
-
-## 👥 Équipe
-
-- **Développeur Principal** : [Votre Nom]
-- **Design UI/UX** : Interface inspirée FIFA et SofaScore
-- **Données de Test** : Joueurs égyptiens avec écoles françaises du Caire
 
 ## 🙏 Remerciements
 
@@ -209,12 +199,6 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 - **SofaScore** pour l'inspiration de l'interface statistiques
 - **Communauté Open Source** pour les outils et bibliothèques utilisés
 
-## 📞 Support
-
-Pour toute question ou support :
-- 📧 Email : [votre-email@example.com]
-- 💬 Discord : [Lien vers serveur Discord]
-- 📱 Twitter : [@votre-handle]
 
 ---
 
