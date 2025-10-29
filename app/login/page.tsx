@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { AlertCircle, Mail, Lock, Chrome } from "lucide-react";
+import { SimpleLogo } from "@/components/ui/logo";
 import { motion } from "framer-motion";
 import { DomainError } from "@/components/auth/domain-error";
 import { ProfileCompletion } from "@/components/auth/profile-completion";
@@ -149,10 +150,9 @@ export default function LoginPage() {
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
               className="mx-auto mb-4 w-16 h-16 flex items-center justify-center"
             >
-              <img
-                src="/comebac.png"
-                alt="ComeBac League"
+              <SimpleLogo
                 className="w-16 h-16 object-contain rounded-lg"
+                alt="ComeBac League"
               />
             </motion.div>
             <CardTitle className="text-2xl font-bold text-sofa-text-primary">

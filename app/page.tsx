@@ -1,20 +1,27 @@
-"use client"
+"use client";
 
-import { useAuth } from '@/lib/auth-context'
-import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuth } from "@/lib/auth-context";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { SimpleLogo } from "@/components/ui/logo";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function HomePage() {
-  const { user, loading } = useAuth()
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
-    )
+    );
   }
 
   // If user is logged in, they will be redirected by AuthProvider
@@ -24,20 +31,19 @@ export default function HomePage() {
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 w-16 h-16 flex items-center justify-center">
-            <img 
-              src="/ebac.svg" 
-              alt="ComeBac League" 
+            <SimpleLogo
               className="w-16 h-16 object-contain"
+              alt="ComeBac League"
             />
           </div>
           <CardTitle className="text-2xl font-bold">ComeBac League</CardTitle>
-          <CardDescription>Connectez-vous pour accéder au championnat scolaire</CardDescription>
+          <CardDescription>
+            Connectez-vous pour accéder au championnat scolaire
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Link href="/login" className="block">
-            <Button className="w-full sofa-btn">
-              Se Connecter (Admin)
-            </Button>
+            <Button className="w-full sofa-btn">Se Connecter</Button>
           </Link>
           <Link href="/login" className="block">
             <Button variant="outline" className="w-full">
@@ -47,5 +53,5 @@ export default function HomePage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

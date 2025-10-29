@@ -91,8 +91,9 @@ export default function RootLayout({
     <html lang="fr">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" type="image/png" href="/comebac.png" />
-        <link rel="shortcut icon" type="image/png" href="/comebac.png" />
+        <link rel="shortcut icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="apple-touch-icon" href="/comebac.png" />
         <link rel="apple-touch-icon-precomposed" href="/comebac.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

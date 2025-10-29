@@ -14,6 +14,7 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
+import { SimpleLogo } from "@/components/ui/logo";
 
 const navigationItems = [
   { href: "/public", label: "Accueil", icon: Home },
@@ -39,10 +40,9 @@ export function SofaNavigation() {
             className="flex items-center gap-3"
           >
             <div className="w-10 h-10 flex items-center justify-center">
-              <img
-                src="/comebac.png"
-                alt="ComeBac League"
+              <SimpleLogo 
                 className="w-10 h-10 object-contain rounded-lg"
+                alt="ComeBac League"
               />
             </div>
             <div>

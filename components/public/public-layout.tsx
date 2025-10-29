@@ -4,6 +4,7 @@ import type React from "react"
 import { SofaNavigation } from '@/components/sofa/navigation'
 import { BottomNavigation } from '@/components/sofa/bottom-navigation'
 import { UserMenuFAB } from '@/components/sofa/user-menu-fab'
+import { SimpleLogo } from '@/components/ui/logo'
 import { useAuth } from '@/lib/auth-context'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import '@/styles/sofascore-theme.css'
@@ -46,10 +47,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-30">
         <div className="flex items-center justify-center">
           <div className="flex items-center gap-3">
-            <img
-              src="/comebac.png"
-              alt="ComeBac League"
+            <SimpleLogo 
               className="w-8 h-8 object-contain rounded"
+              alt="ComeBac League"
             />
             <div>
               <h1 className="text-lg font-bold text-gray-900">ComeBac League</h1>
