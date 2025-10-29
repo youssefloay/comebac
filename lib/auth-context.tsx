@@ -8,7 +8,8 @@ import {
   GoogleAuthProvider, 
   signOut, 
   onAuthStateChanged,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
+  sendEmailVerification
 } from 'firebase/auth'
 import { auth } from './firebase'
 import { useRouter } from 'next/navigation'
@@ -25,6 +26,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>
   logout: () => Promise<void>
   refreshProfile: () => Promise<void>
+  resendVerificationEmail: () => Promise<void>
   isAdmin: boolean
 }
 
@@ -109,18 +111,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password)
-    } catch (error) {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      
+      // Vérifier si l'email est vérifié (sauf pour l'admin)
+      if (!userCredential.user.emailVerified && email !== "admin@admin.com") {
+        await signOut(auth) // Déconnecter l'utilisateur
+        throw new Error("Veuillez vérifier votre email avant de vous connecter. Vérifiez votre boîte mail et cliquez sur le lien de vérification.")
+      }
+    } catch (error: any) {
       console.error('Error signing in with email:', error)
+      
+      // Améliorer les messages d'erreur
+      if (error.code === 'auth/user-not-found') {
+        throw new Error('Aucun compte trouvé avec cet email. Créez un compte d\'abord.')
+      } else if (error.code === 'auth/wrong-password') {
+        throw new Error('Mot de passe incorrect. Vérifiez votre mot de passe.')
+      } else if (error.code === 'auth/invalid-email') {
+        throw new Error('L\'adresse email n\'est pas valide.')
+      } else if (error.code === 'auth/too-many-requests') {
+        throw new Error('Trop de tentatives de connexion. Réessayez plus tard.')
+      }
+      
       throw error
     }
   }
 
   const signUpWithEmail = async (email: string, password: string) => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password)
-    } catch (error) {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      
+      // Envoyer l'email de vérification
+      await sendEmailVerification(userCredential.user)
+      
+      // IMPORTANT: Déconnecter l'utilisateur immédiatement après création
+      // Il ne pourra se reconnecter qu'après avoir vérifié son email
+      await signOut(auth)
+      
+      console.log('Email de vérification envoyé à:', email, '- Utilisateur déconnecté en attente de vérification')
+    } catch (error: any) {
       console.error('Error signing up with email:', error)
+      
+      // Améliorer les messages d'erreur
+      if (error.code === 'auth/email-already-in-use') {
+        throw new Error('Cet email est déjà utilisé. Essayez de vous connecter ou utilisez un autre email.')
+      } else if (error.code === 'auth/weak-password') {
+        throw new Error('Le mot de passe est trop faible. Utilisez au moins 6 caractères.')
+      } else if (error.code === 'auth/invalid-email') {
+        throw new Error('L\'adresse email n\'est pas valide.')
+      }
+      
       throw error
     }
   }
@@ -160,6 +199,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const resendVerificationEmail = async () => {
+    if (user && !user.emailVerified) {
+      await sendEmailVerification(user)
+      console.log('Email de vérification renvoyé à:', user.email)
+    }
+  }
+
   const value = {
     user,
     userProfile,
@@ -170,6 +216,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithGoogle,
     logout,
     refreshProfile,
+    resendVerificationEmail,
     isAdmin
   }
 

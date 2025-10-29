@@ -50,9 +50,8 @@
 ## 🔐 **Comptes de Test**
 
 ### **Admin**
-- **Email :** `admin@admin.com`
-- **Mot de passe :** `Youssef`
 - **Accès :** Interface admin + interface publique
+- **Note :** Compte admin configuré dans la base de données
 
 ### **Utilisateur Standard**
 - Créer un compte via `/login` → "Créer un compte"

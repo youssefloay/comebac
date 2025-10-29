@@ -3,6 +3,7 @@
 import type React from "react"
 import { SofaNavigation } from '@/components/sofa/navigation'
 import { BottomNavigation } from '@/components/sofa/bottom-navigation'
+import { UserMenuFAB } from '@/components/sofa/user-menu-fab'
 import { useAuth } from '@/lib/auth-context'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import '@/styles/sofascore-theme.css'
@@ -28,6 +29,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             Se Connecter
           </a>
         </div>
+        {/* User Menu FAB - Shows login button for non-authenticated users */}
+        <UserMenuFAB />
       </div>
     )
   }
@@ -63,6 +66,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <div className="md:hidden">
         <BottomNavigation />
       </div>
+      
+      {/* User Menu FAB - Available on all screen sizes */}
+      <UserMenuFAB />
     </div>
   )
 }

@@ -7,18 +7,8 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      message: 'Admin account setup instructions',
-      instructions: {
-        email: 'admin@admin.com',
-        password: 'Youssef',
-        steps: [
-          '1. Go to /login page',
-          '2. Click "Créer un compte" if needed',
-          '3. Use email: admin@admin.com',
-          '4. Use password: Youssef',
-          '5. The system will automatically recognize this as admin'
-        ]
-      }
+      message: 'Admin account is configured in the database',
+      note: 'Admin credentials are managed securely and not exposed via API'
     })
     
   } catch (error) {

@@ -12,16 +12,12 @@ export async function createAdminAccount() {
     )
     
     console.log('✅ Admin account created successfully!')
-    console.log('📧 Email: admin@admin.com')
-    console.log('🔑 Password: Youssef')
     console.log('👤 User ID:', userCredential.user.uid)
     
     return userCredential.user
   } catch (error: any) {
     if (error.code === 'auth/email-already-in-use') {
       console.log('ℹ️ Admin account already exists')
-      console.log('📧 Email: admin@admin.com')
-      console.log('🔑 Password: Youssef')
     } else {
       console.error('❌ Error creating admin account:', error.message)
       throw error

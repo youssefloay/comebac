@@ -26,6 +26,7 @@ export default function LoginPage() {
     signUpWithEmail,
     signInWithGoogle,
     refreshProfile,
+    resendVerificationEmail,
     loading,
   } = useAuth();
   const [email, setEmail] = useState("");
@@ -34,6 +35,8 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [isDomainError, setIsDomainError] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [showResendButton, setShowResendButton] = useState(false);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +46,10 @@ export default function LoginPage() {
     try {
       if (isSignUp) {
         await signUpWithEmail(email, password);
+        setEmailSent(true);
+        setIsSignUp(false); // Revenir au mode connexion après création
+        setError(""); // Clear any previous errors
+        setShowResendButton(false); // Reset resend button
       } else {
         await signInWithEmail(email, password);
       }
@@ -51,11 +58,16 @@ export default function LoginPage() {
         setIsDomainError(true);
         setError("");
       } else {
-        setError(
+        const errorMessage =
           error.message ||
-            (isSignUp ? "Erreur de création de compte" : "Erreur de connexion")
-        );
+          (isSignUp ? "Erreur de création de compte" : "Erreur de connexion");
+        setError(errorMessage);
         setIsDomainError(false);
+
+        // Afficher le bouton de renvoi si c'est une erreur de vérification d'email
+        if (errorMessage.includes("vérifier votre email")) {
+          setShowResendButton(true);
+        }
       }
     } finally {
       setIsLoading(false);
@@ -76,6 +88,20 @@ export default function LoginPage() {
         setError(error.message || "Erreur de connexion avec Google");
         setIsDomainError(false);
       }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    try {
+      setIsLoading(true);
+      await resendVerificationEmail();
+      setEmailSent(true);
+      setShowResendButton(false);
+      setError("");
+    } catch (error: any) {
+      setError("Erreur lors de l'envoi de l'email de vérification");
     } finally {
       setIsLoading(false);
     }
@@ -144,10 +170,63 @@ export default function LoginPage() {
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+                className="flex flex-col gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
               >
-                <AlertCircle className="w-4 h-4" />
-                {error}
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  {error}
+                </div>
+                {showResendButton && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResendVerification}
+                    disabled={isLoading}
+                    className="mt-2 text-xs"
+                  >
+                    Renvoyer l'email de vérification
+                  </Button>
+                )}
+              </motion.div>
+            )}
+
+            {emailSent && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm"
+              >
+                <div className="flex items-start gap-3">
+                  <Mail className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-green-800 mb-2">
+                      ✅ Compte créé avec succès !
+                    </p>
+                    <p className="mb-2 font-medium text-orange-700">
+                      ⚠️ Vous devez vérifier votre email avant de pouvoir vous
+                      connecter.
+                    </p>
+                    <p className="mb-2">
+                      Un email de vérification a été envoyé à :
+                    </p>
+                    <p className="font-medium bg-green-100 px-2 py-1 rounded text-green-800 mb-3">
+                      {email}
+                    </p>
+                    <div className="text-xs space-y-1">
+                      <p>
+                        📧 <strong>Étapes suivantes :</strong>
+                      </p>
+                      <p>1. Vérifiez votre boîte mail (et le dossier spam)</p>
+                      <p>2. Cliquez sur le lien de vérification</p>
+                      <p>3. Revenez ici pour vous connecter</p>
+                      <p className="font-medium text-orange-700 mt-2">
+                        🚫 Vous ne pouvez pas accéder à la plateforme sans
+                        vérification !
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             )}
 
@@ -249,12 +328,6 @@ export default function LoginPage() {
               <div className="text-xs text-gray-500">
                 En vous connectant, vous acceptez nos conditions d'utilisation
               </div>
-
-              {!isSignUp && (
-                <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
-                  <strong>Compte Admin:</strong> admin@admin.com / Youssef
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>
