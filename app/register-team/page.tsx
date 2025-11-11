@@ -16,6 +16,7 @@ interface Player {
   phone: string
   birthDate: string
   height: string
+  tshirtSize: 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL'
   position: 'Gardien' | 'Défenseur' | 'Milieu' | 'Attaquant'
   foot: 'Droitier' | 'Gaucher' | 'Ambidextre'
   jerseyNumber: string
@@ -48,11 +49,11 @@ export default function RegisterTeamPage() {
   const [captainPhone, setCaptainPhone] = useState('')
   const [captainIsCaptain, setCaptainIsCaptain] = useState(true) // Le capitaine est toujours joueur
   const [players, setPlayers] = useState<Player[]>([
-    { id: '1', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-    { id: '2', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-    { id: '3', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-    { id: '4', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-    { id: '5', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' }
+    { id: '1', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+    { id: '2', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+    { id: '3', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+    { id: '4', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+    { id: '5', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' }
   ])
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -68,11 +69,11 @@ export default function RegisterTeamPage() {
     setCaptainEmail('')
     setCaptainPhone('')
     setPlayers([
-      { id: '1', firstName: '', lastName: '', email: '', phone: '', height: '', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-      { id: '2', firstName: '', lastName: '', email: '', phone: '', height: '', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-      { id: '3', firstName: '', lastName: '', email: '', phone: '', height: '', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-      { id: '4', firstName: '', lastName: '', email: '', phone: '', height: '', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-      { id: '5', firstName: '', lastName: '', email: '', phone: '', height: '', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' }
+      { id: '1', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+      { id: '2', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+      { id: '3', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+      { id: '4', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+      { id: '5', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' }
     ])
     setSuccess(false)
   }
@@ -92,6 +93,20 @@ export default function RegisterTeamPage() {
     }
   }
 
+  const updateCaptainEmail = (value: string) => {
+    setCaptainEmail(value)
+    if (captainIsCaptain) {
+      setPlayers(prev => prev.map((p, idx) => idx === 0 ? { ...p, email: value } : p))
+    }
+  }
+
+  const updateCaptainPhone = (value: string) => {
+    setCaptainPhone(value)
+    if (captainIsCaptain) {
+      setPlayers(prev => prev.map((p, idx) => idx === 0 ? { ...p, phone: value } : p))
+    }
+  }
+
   const addPlayer = () => {
     if (players.length < 10) {
       setPlayers([...players, {
@@ -102,6 +117,7 @@ export default function RegisterTeamPage() {
         phone: '',
         birthDate: '',
         height: '',
+        tshirtSize: 'M',
         position: '' as any,
         foot: '' as any,
         jerseyNumber: '',
@@ -139,10 +155,12 @@ export default function RegisterTeamPage() {
     setPlayers(players.map((p, idx) => {
       if (p.id === id) {
         const updated = { ...p, [field]: value }
-        // Si c'est le premier joueur et qu'on modifie le nom, synchroniser avec le capitaine
+        // Si c'est le premier joueur, synchroniser avec le capitaine
         if (idx === 0 && captainIsCaptain) {
           if (field === 'firstName') setCaptainFirstName(value)
           if (field === 'lastName') setCaptainLastName(value)
+          if (field === 'email') setCaptainEmail(value)
+          if (field === 'phone') setCaptainPhone(value)
         }
         return updated
       }
@@ -223,6 +241,7 @@ export default function RegisterTeamPage() {
           birthDate: p.birthDate,
           age: calculateAge(p.birthDate),
           height: parseFloat(p.height),
+          tshirtSize: p.tshirtSize,
           position: p.position,
           foot: p.foot,
           jerseyNumber: parseInt(p.jerseyNumber),
@@ -364,7 +383,7 @@ export default function RegisterTeamPage() {
                   type="text"
                   value={teamName}
                   onChange={(e) => setTeamName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
                   placeholder="Ex: Les Aigles"
                   required
                 />
@@ -402,7 +421,7 @@ export default function RegisterTeamPage() {
                     type="text"
                     value={customSchool}
                     onChange={(e) => setCustomSchool(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
                     placeholder="Entrez le nom de votre école"
                     required
                   />
@@ -475,7 +494,7 @@ export default function RegisterTeamPage() {
                 <input
                   type="email"
                   value={captainEmail}
-                  onChange={(e) => setCaptainEmail(e.target.value)}
+                  onChange={(e) => updateCaptainEmail(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
@@ -488,7 +507,7 @@ export default function RegisterTeamPage() {
                 <input
                   type="tel"
                   value={captainPhone}
-                  onChange={(e) => setCaptainPhone(e.target.value)}
+                  onChange={(e) => updateCaptainPhone(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
@@ -578,7 +597,7 @@ export default function RegisterTeamPage() {
                         type="email"
                         value={player.email}
                         onChange={(e) => updatePlayer(player.id, 'email', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
                         placeholder="joueur@email.com"
                         required
                       />
@@ -592,10 +611,28 @@ export default function RegisterTeamPage() {
                         type="tel"
                         value={player.phone}
                         onChange={(e) => updatePlayer(player.id, 'phone', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
                         placeholder="+20 123 456 7890"
                         required
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Date de naissance *
+                      </label>
+                      <input
+                        type="date"
+                        value={player.birthDate}
+                        onChange={(e) => updatePlayer(player.id, 'birthDate', e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                      {player.birthDate && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Âge: {calculateAge(player.birthDate)} ans
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -611,6 +648,25 @@ export default function RegisterTeamPage() {
                         max="250"
                         required
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Taille T-shirt *
+                      </label>
+                      <select
+                        value={player.tshirtSize}
+                        onChange={(e) => updatePlayer(player.id, 'tshirtSize', e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      >
+                        <option value="XS">XS</option>
+                        <option value="S">S</option>
+                        <option value="M">M</option>
+                        <option value="L">L</option>
+                        <option value="XL">XL</option>
+                        <option value="XXL">XXL</option>
+                      </select>
                     </div>
 
                     <div>

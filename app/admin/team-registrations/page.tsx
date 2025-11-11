@@ -14,7 +14,10 @@ interface Player {
   lastName: string
   email: string
   phone: string
+  birthDate?: string
+  age?: number
   height: number
+  tshirtSize?: string
   position: string
   foot: string
   jerseyNumber: number
@@ -470,6 +473,15 @@ export default function TeamRegistrationsPage() {
                               <p className="text-xs text-gray-600">Téléphone</p>
                               <p className="text-sm font-semibold text-gray-900">{player.phone}</p>
                             </div>
+                            {player.birthDate && (
+                              <div>
+                                <p className="text-xs text-gray-600">Date de naissance</p>
+                                <p className="text-sm font-semibold text-gray-900">
+                                  {new Date(player.birthDate).toLocaleDateString('fr-FR')}
+                                  {player.age && <span className="text-gray-600"> ({player.age} ans)</span>}
+                                </p>
+                              </div>
+                            )}
                             <div>
                               <p className="text-xs text-gray-600">Position</p>
                               <p className="text-sm font-semibold text-gray-900">{player.position}</p>
@@ -482,6 +494,12 @@ export default function TeamRegistrationsPage() {
                               <p className="text-xs text-gray-600">Taille</p>
                               <p className="text-sm font-semibold text-gray-900">{player.height} cm</p>
                             </div>
+                            {player.tshirtSize && (
+                              <div>
+                                <p className="text-xs text-gray-600">T-shirt</p>
+                                <p className="text-sm font-semibold text-gray-900">{player.tshirtSize}</p>
+                              </div>
+                            )}
                             <div>
                               <p className="text-xs text-gray-600">Pied</p>
                               <p className="text-sm font-semibold text-gray-900">{player.foot}</p>
