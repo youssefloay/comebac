@@ -12,6 +12,7 @@ interface Player {
   id: string
   firstName: string
   lastName: string
+  nickname: string
   email: string
   phone: string
   birthDate: string
@@ -49,11 +50,11 @@ export default function RegisterTeamPage() {
   const [captainPhone, setCaptainPhone] = useState('')
   const [captainIsCaptain, setCaptainIsCaptain] = useState(true) // Le capitaine est toujours joueur
   const [players, setPlayers] = useState<Player[]>([
-    { id: '1', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-    { id: '2', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-    { id: '3', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-    { id: '4', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-    { id: '5', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' }
+    { id: '1', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+    { id: '2', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+    { id: '3', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+    { id: '4', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+    { id: '5', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' }
   ])
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -69,11 +70,11 @@ export default function RegisterTeamPage() {
     setCaptainEmail('')
     setCaptainPhone('')
     setPlayers([
-      { id: '1', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-      { id: '2', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-      { id: '3', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-      { id: '4', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-      { id: '5', firstName: '', lastName: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' }
+      { id: '1', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+      { id: '2', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+      { id: '3', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+      { id: '4', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+      { id: '5', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' }
     ])
     setSuccess(false)
   }
@@ -113,6 +114,7 @@ export default function RegisterTeamPage() {
         id: Date.now().toString(),
         firstName: '',
         lastName: '',
+        nickname: '',
         email: '',
         phone: '',
         birthDate: '',
@@ -236,6 +238,7 @@ export default function RegisterTeamPage() {
         players: players.map(p => ({
           firstName: p.firstName,
           lastName: p.lastName,
+          nickname: p.nickname,
           email: p.email,
           phone: p.phone,
           birthDate: p.birthDate,
@@ -587,6 +590,21 @@ export default function RegisterTeamPage() {
                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         required
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Surnom sur T-shirt
+                      </label>
+                      <input
+                        type="text"
+                        value={player.nickname}
+                        onChange={(e) => updatePlayer(player.id, 'nickname', e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+                        placeholder="Ex: CR7, Messi..."
+                        maxLength={15}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Optionnel - Max 15 caractères</p>
                     </div>
 
                     <div>

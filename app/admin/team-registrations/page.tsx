@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 interface Player {
   firstName: string
   lastName: string
+  nickname?: string
   email: string
   phone: string
   birthDate?: string
@@ -463,7 +464,10 @@ export default function TeamRegistrationsPage() {
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                             <div>
                               <p className="text-xs text-gray-600">Nom</p>
-                              <p className="text-sm font-semibold text-gray-900">{player.firstName} {player.lastName}</p>
+                              <p className="text-sm font-semibold text-gray-900">
+                                {player.firstName} {player.lastName}
+                                {player.nickname && <span className="text-blue-600"> "{player.nickname}"</span>}
+                              </p>
                             </div>
                             <div>
                               <p className="text-xs text-gray-600">Email</p>
