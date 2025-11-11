@@ -49,6 +49,8 @@ export default function TeamRegistrationsPage() {
   const [registrations, setRegistrations] = useState<Registration[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedRegistration, setSelectedRegistration] = useState<Registration | null>(null)
+  const [editMode, setEditMode] = useState(false)
+  const [editedRegistration, setEditedRegistration] = useState<Registration | null>(null)
   const [processing, setProcessing] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending')
@@ -84,6 +86,45 @@ export default function TeamRegistrationsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const saveEdits = async () => {
+    if (!editedRegistration) return
+
+    setProcessing(true)
+    setMessage(null)
+
+    try {
+      await updateDoc(doc(db, 'teamRegistrations', editedRegistration.id), {
+        teamName: editedRegistration.teamName,
+        schoolName: editedRegistration.schoolName,
+        teamGrade: editedRegistration.teamGrade,
+        captain: editedRegistration.captain,
+        players: editedRegistration.players
+      })
+
+      setMessage({ type: 'success', text: 'Modifications sauvegardées!' })
+      setEditMode(false)
+      setSelectedRegistration(editedRegistration)
+      loadRegistrations()
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error)
+      setMessage({ type: 'error', text: 'Erreur lors de la sauvegarde' })
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  const startEdit = () => {
+    if (selectedRegistration) {
+      setEditedRegistration(JSON.parse(JSON.stringify(selectedRegistration)))
+      setEditMode(true)
+    }
+  }
+
+  const cancelEdit = () => {
+    setEditMode(false)
+    setEditedRegistration(null)
   }
 
   const approveRegistration = async (registration: Registration) => {
@@ -461,89 +502,277 @@ export default function TeamRegistrationsPage() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="p-6 border-b border-gray-200 sticky top-0 bg-white">
-                  <h2 className="text-2xl font-bold text-gray-900">{selectedRegistration.teamName}</h2>
-                  {selectedRegistration.schoolName && (
-                    <p className="text-sm text-blue-600 font-medium">🏫 {selectedRegistration.schoolName}</p>
+                  {editMode && editedRegistration ? (
+                    <>
+                      <input
+                        type="text"
+                        value={editedRegistration.teamName}
+                        onChange={(e) => setEditedRegistration({...editedRegistration, teamName: e.target.value})}
+                        className="text-2xl font-bold text-gray-900 border-b-2 border-blue-600 mb-2 w-full"
+                      />
+                      <input
+                        type="text"
+                        value={editedRegistration.schoolName || ''}
+                        onChange={(e) => setEditedRegistration({...editedRegistration, schoolName: e.target.value})}
+                        className="text-sm text-blue-600 font-medium border-b border-blue-300 mb-1 w-full"
+                        placeholder="École"
+                      />
+                      <select
+                        value={editedRegistration.teamGrade || '1ère'}
+                        onChange={(e) => setEditedRegistration({...editedRegistration, teamGrade: e.target.value as '1ère' | 'Terminale'})}
+                        className="text-sm text-purple-600 font-medium border border-purple-300 rounded px-2 py-1"
+                      >
+                        <option value="1ère">1ère</option>
+                        <option value="Terminale">Terminale</option>
+                      </select>
+                    </>
+                  ) : (
+                    <>
+                      <h2 className="text-2xl font-bold text-gray-900">{selectedRegistration.teamName}</h2>
+                      {selectedRegistration.schoolName && (
+                        <p className="text-sm text-blue-600 font-medium">🏫 {selectedRegistration.schoolName}</p>
+                      )}
+                      {selectedRegistration.teamGrade && (
+                        <p className="text-sm text-purple-600 font-medium">📚 Classe: {selectedRegistration.teamGrade}</p>
+                      )}
+                      <p className="text-sm text-gray-600">Détails de l'inscription</p>
+                    </>
                   )}
-                  {selectedRegistration.teamGrade && (
-                    <p className="text-sm text-purple-600 font-medium">📚 Classe: {selectedRegistration.teamGrade}</p>
-                  )}
-                  <p className="text-sm text-gray-600">Détails de l'inscription</p>
                 </div>
 
                 <div className="p-6 space-y-6">
                   {/* Captain Info */}
                   <div>
                     <h3 className="text-lg font-bold text-gray-900 mb-3">Capitaine</h3>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-sm text-gray-900"><span className="font-semibold">Nom:</span> {selectedRegistration.captain.firstName} {selectedRegistration.captain.lastName}</p>
-                      <p className="text-sm text-gray-900"><span className="font-semibold">Email:</span> {selectedRegistration.captain.email}</p>
-                      <p className="text-sm text-gray-900"><span className="font-semibold">Téléphone:</span> {selectedRegistration.captain.phone}</p>
+                    <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                      {editMode && editedRegistration ? (
+                        <>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={editedRegistration.captain.firstName}
+                              onChange={(e) => setEditedRegistration({
+                                ...editedRegistration,
+                                captain: {...editedRegistration.captain, firstName: e.target.value}
+                              })}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded"
+                              placeholder="Prénom"
+                            />
+                            <input
+                              type="text"
+                              value={editedRegistration.captain.lastName}
+                              onChange={(e) => setEditedRegistration({
+                                ...editedRegistration,
+                                captain: {...editedRegistration.captain, lastName: e.target.value}
+                              })}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded"
+                              placeholder="Nom"
+                            />
+                          </div>
+                          <input
+                            type="email"
+                            value={editedRegistration.captain.email}
+                            onChange={(e) => setEditedRegistration({
+                              ...editedRegistration,
+                              captain: {...editedRegistration.captain, email: e.target.value}
+                            })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded"
+                            placeholder="Email"
+                          />
+                          <input
+                            type="tel"
+                            value={editedRegistration.captain.phone}
+                            onChange={(e) => setEditedRegistration({
+                              ...editedRegistration,
+                              captain: {...editedRegistration.captain, phone: e.target.value}
+                            })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded"
+                            placeholder="Téléphone"
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-sm text-gray-900"><span className="font-semibold">Nom:</span> {selectedRegistration.captain.firstName} {selectedRegistration.captain.lastName}</p>
+                          <p className="text-sm text-gray-900"><span className="font-semibold">Email:</span> {selectedRegistration.captain.email}</p>
+                          <p className="text-sm text-gray-900"><span className="font-semibold">Téléphone:</span> {selectedRegistration.captain.phone}</p>
+                        </>
+                      )}
                     </div>
                   </div>
 
                   {/* Players */}
                   <div>
                     <h3 className="text-lg font-bold text-gray-900 mb-3">
-                      Joueurs ({selectedRegistration.players.length})
+                      Joueurs ({editMode && editedRegistration ? editedRegistration.players.length : selectedRegistration.players.length})
                     </h3>
                     <div className="space-y-3">
-                      {selectedRegistration.players.map((player, index) => (
+                      {(editMode && editedRegistration ? editedRegistration.players : selectedRegistration.players).map((player, index) => (
                         <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            <div>
-                              <p className="text-xs text-gray-600">Nom</p>
-                              <p className="text-sm font-semibold text-gray-900">
-                                {player.firstName} {player.lastName}
-                                {player.nickname && <span className="text-blue-600"> "{player.nickname}"</span>}
-                              </p>
+                          {editMode && editedRegistration ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <input
+                                type="text"
+                                value={player.firstName}
+                                onChange={(e) => {
+                                  const newPlayers = [...editedRegistration.players]
+                                  newPlayers[index].firstName = e.target.value
+                                  setEditedRegistration({...editedRegistration, players: newPlayers})
+                                }}
+                                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                                placeholder="Prénom"
+                              />
+                              <input
+                                type="text"
+                                value={player.lastName}
+                                onChange={(e) => {
+                                  const newPlayers = [...editedRegistration.players]
+                                  newPlayers[index].lastName = e.target.value
+                                  setEditedRegistration({...editedRegistration, players: newPlayers})
+                                }}
+                                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                                placeholder="Nom"
+                              />
+                              <input
+                                type="text"
+                                value={player.nickname || ''}
+                                onChange={(e) => {
+                                  const newPlayers = [...editedRegistration.players]
+                                  newPlayers[index].nickname = e.target.value
+                                  setEditedRegistration({...editedRegistration, players: newPlayers})
+                                }}
+                                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                                placeholder="Surnom"
+                              />
+                              <input
+                                type="email"
+                                value={player.email}
+                                onChange={(e) => {
+                                  const newPlayers = [...editedRegistration.players]
+                                  newPlayers[index].email = e.target.value
+                                  setEditedRegistration({...editedRegistration, players: newPlayers})
+                                }}
+                                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                                placeholder="Email"
+                              />
+                              <input
+                                type="tel"
+                                value={player.phone}
+                                onChange={(e) => {
+                                  const newPlayers = [...editedRegistration.players]
+                                  newPlayers[index].phone = e.target.value
+                                  setEditedRegistration({...editedRegistration, players: newPlayers})
+                                }}
+                                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                                placeholder="Téléphone"
+                              />
+                              <select
+                                value={player.position}
+                                onChange={(e) => {
+                                  const newPlayers = [...editedRegistration.players]
+                                  newPlayers[index].position = e.target.value
+                                  setEditedRegistration({...editedRegistration, players: newPlayers})
+                                }}
+                                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                              >
+                                <option value="Gardien">Gardien</option>
+                                <option value="Défenseur">Défenseur</option>
+                                <option value="Milieu">Milieu</option>
+                                <option value="Attaquant">Attaquant</option>
+                              </select>
+                              <input
+                                type="number"
+                                value={player.jerseyNumber}
+                                onChange={(e) => {
+                                  const newPlayers = [...editedRegistration.players]
+                                  newPlayers[index].jerseyNumber = parseInt(e.target.value)
+                                  setEditedRegistration({...editedRegistration, players: newPlayers})
+                                }}
+                                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                                placeholder="N° Maillot"
+                                min="1"
+                                max="99"
+                              />
+                              <input
+                                type="number"
+                                value={player.height}
+                                onChange={(e) => {
+                                  const newPlayers = [...editedRegistration.players]
+                                  newPlayers[index].height = parseFloat(e.target.value)
+                                  setEditedRegistration({...editedRegistration, players: newPlayers})
+                                }}
+                                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                                placeholder="Taille (cm)"
+                              />
+                              <select
+                                value={player.foot}
+                                onChange={(e) => {
+                                  const newPlayers = [...editedRegistration.players]
+                                  newPlayers[index].foot = e.target.value
+                                  setEditedRegistration({...editedRegistration, players: newPlayers})
+                                }}
+                                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                              >
+                                <option value="Droitier">Droitier</option>
+                                <option value="Gaucher">Gaucher</option>
+                                <option value="Ambidextre">Ambidextre</option>
+                              </select>
                             </div>
-                            <div>
-                              <p className="text-xs text-gray-600">Email</p>
-                              <p className="text-sm font-semibold text-gray-900">{player.email}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-600">Téléphone</p>
-                              <p className="text-sm font-semibold text-gray-900">{player.phone}</p>
-                            </div>
-                            {player.birthDate && (
+                          ) : (
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                               <div>
-                                <p className="text-xs text-gray-600">Date de naissance</p>
+                                <p className="text-xs text-gray-600">Nom</p>
                                 <p className="text-sm font-semibold text-gray-900">
-                                  {new Date(player.birthDate).toLocaleDateString('fr-FR')}
-                                  {player.age && <span className="text-gray-600"> ({player.age} ans)</span>}
+                                  {player.firstName} {player.lastName}
+                                  {player.nickname && <span className="text-blue-600"> "{player.nickname}"</span>}
                                 </p>
                               </div>
-                            )}
-                            <div>
-                              <p className="text-xs text-gray-600">Position</p>
-                              <p className="text-sm font-semibold text-gray-900">{player.position}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-600">N° Maillot</p>
-                              <p className="text-sm font-semibold text-gray-900">{player.jerseyNumber}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-600">Taille</p>
-                              <p className="text-sm font-semibold text-gray-900">{player.height} cm</p>
-                            </div>
-                            {player.tshirtSize && (
                               <div>
-                                <p className="text-xs text-gray-600">T-shirt</p>
-                                <p className="text-sm font-semibold text-gray-900">{player.tshirtSize}</p>
+                                <p className="text-xs text-gray-600">Email</p>
+                                <p className="text-sm font-semibold text-gray-900">{player.email}</p>
                               </div>
-                            )}
-                            <div>
-                              <p className="text-xs text-gray-600">Pied</p>
-                              <p className="text-sm font-semibold text-gray-900">{player.foot}</p>
-                            </div>
-                            {player.grade && (
                               <div>
-                                <p className="text-xs text-gray-600">Classe</p>
-                                <p className="text-sm font-semibold text-gray-900">{player.grade}</p>
+                                <p className="text-xs text-gray-600">Téléphone</p>
+                                <p className="text-sm font-semibold text-gray-900">{player.phone}</p>
                               </div>
-                            )}
-                          </div>
+                              {player.birthDate && (
+                                <div>
+                                  <p className="text-xs text-gray-600">Date de naissance</p>
+                                  <p className="text-sm font-semibold text-gray-900">
+                                    {new Date(player.birthDate).toLocaleDateString('fr-FR')}
+                                    {player.age && <span className="text-gray-600"> ({player.age} ans)</span>}
+                                  </p>
+                                </div>
+                              )}
+                              <div>
+                                <p className="text-xs text-gray-600">Position</p>
+                                <p className="text-sm font-semibold text-gray-900">{player.position}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-600">N° Maillot</p>
+                                <p className="text-sm font-semibold text-gray-900">{player.jerseyNumber}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-600">Taille</p>
+                                <p className="text-sm font-semibold text-gray-900">{player.height} cm</p>
+                              </div>
+                              {player.tshirtSize && (
+                                <div>
+                                  <p className="text-xs text-gray-600">T-shirt</p>
+                                  <p className="text-sm font-semibold text-gray-900">{player.tshirtSize}</p>
+                                </div>
+                              )}
+                              <div>
+                                <p className="text-xs text-gray-600">Pied</p>
+                                <p className="text-sm font-semibold text-gray-900">{player.foot}</p>
+                              </div>
+                              {player.grade && (
+                                <div>
+                                  <p className="text-xs text-gray-600">Classe</p>
+                                  <p className="text-sm font-semibold text-gray-900">{player.grade}</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -551,8 +780,16 @@ export default function TeamRegistrationsPage() {
                 </div>
 
                 <div className="p-6 border-t border-gray-200 flex gap-3">
-                  {selectedRegistration.status === 'pending' && (
+                  {selectedRegistration.status === 'pending' && !editMode && (
                     <>
+                      <button
+                        onClick={startEdit}
+                        disabled={processing}
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition font-medium"
+                      >
+                        <Eye className="w-5 h-5" />
+                        Modifier
+                      </button>
                       <button
                         onClick={() => approveRegistration(selectedRegistration)}
                         disabled={processing}
@@ -568,6 +805,26 @@ export default function TeamRegistrationsPage() {
                       >
                         <X className="w-5 h-5" />
                         Rejeter
+                      </button>
+                    </>
+                  )}
+                  {editMode && (
+                    <>
+                      <button
+                        onClick={saveEdits}
+                        disabled={processing}
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition font-medium"
+                      >
+                        <Check className="w-5 h-5" />
+                        Sauvegarder
+                      </button>
+                      <button
+                        onClick={cancelEdit}
+                        disabled={processing}
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:bg-gray-400 transition font-medium"
+                      >
+                        <X className="w-5 h-5" />
+                        Annuler
                       </button>
                     </>
                   )}
