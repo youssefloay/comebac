@@ -9,7 +9,8 @@ import {
   signOut, 
   onAuthStateChanged,
   createUserWithEmailAndPassword,
-  sendEmailVerification
+  sendEmailVerification,
+  sendPasswordResetEmail
 } from 'firebase/auth'
 import { auth } from './firebase'
 import { useRouter } from 'next/navigation'
@@ -27,6 +28,7 @@ interface AuthContextType {
   logout: () => Promise<void>
   refreshProfile: () => Promise<void>
   resendVerificationEmail: () => Promise<void>
+  resetPassword: (email: string) => Promise<void>
   isAdmin: boolean
 }
 
@@ -206,6 +208,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const resetPassword = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email)
+      console.log('Email de réinitialisation envoyé à:', email)
+    } catch (error) {
+      console.error('Error sending password reset email:', error)
+      throw error
+    }
+  }
+
   const value = {
     user,
     userProfile,
@@ -217,6 +229,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     refreshProfile,
     resendVerificationEmail,
+    resetPassword,
     isAdmin
   }
 

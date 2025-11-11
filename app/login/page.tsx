@@ -28,6 +28,7 @@ export default function LoginPage() {
     signInWithGoogle,
     refreshProfile,
     resendVerificationEmail,
+    resetPassword,
     loading,
   } = useAuth();
   const [email, setEmail] = useState("");
@@ -38,6 +39,8 @@ export default function LoginPage() {
   const [isDomainError, setIsDomainError] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [showResendButton, setShowResendButton] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,6 +106,29 @@ export default function LoginPage() {
       setError("");
     } catch (error: any) {
       setError("Erreur lors de l'envoi de l'email de vérification");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError("Veuillez entrer votre email");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError("");
+      await resetPassword(email);
+      setResetEmailSent(true);
+      setShowForgotPassword(false);
+    } catch (error: any) {
+      if (error.code === 'auth/user-not-found') {
+        setError("Aucun compte trouvé avec cet email");
+      } else {
+        setError("Erreur lors de l'envoi de l'email de réinitialisation");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -253,12 +279,23 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label
-                  htmlFor="password"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Mot de passe
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label
+                    htmlFor="password"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Mot de passe
+                  </Label>
+                  {!isSignUp && (
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-xs text-sofa-text-accent hover:text-sofa-green underline"
+                    >
+                      Mot de passe oublié?
+                    </button>
+                  )}
+                </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
@@ -272,6 +309,46 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
+
+              {resetEmailSent && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm"
+                >
+                  ✅ Email de réinitialisation envoyé à <strong>{email}</strong>. Vérifiez votre boîte mail!
+                </motion.div>
+              )}
+
+              {showForgotPassword && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="p-4 bg-blue-50 border border-blue-200 rounded-lg"
+                >
+                  <p className="text-sm text-blue-800 mb-3">
+                    Entrez votre email pour recevoir un lien de réinitialisation
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      disabled={isLoading}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    >
+                      Envoyer
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setShowForgotPassword(false)}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      Annuler
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
 
               <Button
                 type="submit"
