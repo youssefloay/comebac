@@ -493,6 +493,7 @@ export async function createUserProfile(
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   try {
+    // Chercher d'abord dans userProfiles
     const q = query(collection(db, "userProfiles"), where("uid", "==", uid));
     const querySnapshot = await getDocs(q);
     if (querySnapshot.docs.length > 0) {
@@ -504,6 +505,26 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
         updatedAt: doc.data().updatedAt?.toDate() || new Date(),
       } as UserProfile;
     }
+    
+    // Si pas trouvé, chercher dans playerAccounts
+    const playerQuery = query(collection(db, "playerAccounts"), where("uid", "==", uid));
+    const playerSnapshot = await getDocs(playerQuery);
+    if (playerSnapshot.docs.length > 0) {
+      const doc = playerSnapshot.docs[0];
+      const data = doc.data();
+      // Convertir les données joueur en format UserProfile
+      return {
+        id: doc.id,
+        uid: data.uid,
+        email: data.email,
+        fullName: `${data.firstName} ${data.lastName}`,
+        username: data.email.split('@')[0],
+        role: 'player',
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.createdAt?.toDate() || new Date(),
+      } as UserProfile;
+    }
+    
     return null;
   } catch (error) {
     console.error("Error getting user profile:", error);

@@ -49,6 +49,7 @@ export function UserMenuFAB() {
       }
 
       try {
+        // Chercher d'abord dans players
         const playersQuery = query(
           collection(db, 'players'),
           where('email', '==', user.email)
@@ -58,6 +59,22 @@ export function UserMenuFAB() {
         if (!playersSnap.empty) {
           const playerDoc = playersSnap.docs[0]
           setPlayerData({ id: playerDoc.id, ...playerDoc.data() } as PlayerData)
+        } else {
+          // Si pas trouvé, chercher dans playerAccounts
+          const playerAccountsQuery = query(
+            collection(db, 'playerAccounts'),
+            where('email', '==', user.email)
+          )
+          const playerAccountsSnap = await getDocs(playerAccountsQuery)
+
+          if (!playerAccountsSnap.empty) {
+            const playerDoc = playerAccountsSnap.docs[0]
+            const data = { id: playerDoc.id, ...playerDoc.data() } as PlayerData
+            console.log('✅ Player data loaded in FAB:', data)
+            setPlayerData(data)
+          } else {
+            console.log('ℹ️ No player data found for:', user.email)
+          }
         }
       } catch (error) {
         console.error('Erreur lors du chargement du profil joueur:', error)
@@ -247,24 +264,52 @@ export function UserMenuFAB() {
                 </>
               )}
 
-              {/* Section publique */}
+              {/* Navigation principale */}
               <Link
                 href="/public"
                 className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors"
                 onClick={() => setShowMenu(false)}
               >
                 <Home className="w-4 h-4" />
-                Accueil
+                Accueil Public
               </Link>
 
-              <Link
-                href="/public/players"
-                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors"
-                onClick={() => setShowMenu(false)}
-              >
-                <Users className="w-4 h-4" />
-                Cartes FIFA 🎮
-              </Link>
+              {/* Toggle Button - Only show if player data exists */}
+              {playerData && (
+                <>
+                  <div className="my-2 border-t border-sofa-border"></div>
+                  <Link
+                    href="/player"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 rounded-lg transition-colors font-medium shadow-md"
+                    onClick={() => setShowMenu(false)}
+                  >
+                    <Activity className="w-4 h-4" />
+                    Basculer sur Joueur
+                  </Link>
+                </>
+              )}
+
+              {!playerData && (
+                <Link
+                  href="/public/players"
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors"
+                  onClick={() => setShowMenu(false)}
+                >
+                  <Users className="w-4 h-4" />
+                  Cartes FIFA 🎮
+                </Link>
+              )}
+
+              {playerData && (
+                <Link
+                  href="/player"
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors bg-sofa-green bg-opacity-5"
+                  onClick={() => setShowMenu(false)}
+                >
+                  <Activity className="w-4 h-4" />
+                  Retour Espace Joueur
+                </Link>
+              )}
 
               {isAdmin && (
                 <>

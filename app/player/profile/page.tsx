@@ -1,43 +1,30 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
 import { useAuth } from '@/lib/auth-context'
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { SofaMatchCard } from '@/components/sofa/match-card'
-import { SofaStatCard } from '@/components/sofa/stat-card'
-import Link from 'next/link'
 import { 
   User, 
-  Trophy, 
-  Target, 
-  Users, 
+  Mail,
+  Phone,
   Calendar,
-  TrendingUp,
-  Award,
-  AlertCircle,
-  Edit,
-  Star,
-  Activity
+  Ruler,
+  Users,
+  Activity,
+  Shield,
+  AlertCircle
 } from 'lucide-react'
-import PublicLayout from '@/components/public/public-layout'
-
-interface PlayerStats {
-  matchesPlayed: number
-  goals: number
-  assists: number
-  mvpCount: number
-  fouls: number
-  averageRating: number
-}
+import Link from 'next/link'
 
 interface PlayerData {
   id: string
   firstName: string
   lastName: string
   nickname?: string
+  email: string
+  phone: string
   position: string
   jerseyNumber: number
   teamId: string
@@ -46,34 +33,13 @@ interface PlayerData {
   grade: string
   height: number
   foot: string
-}
-
-interface Match {
-  id: string
-  homeTeamId: string
-  awayTeamId: string
-  homeTeam?: { name: string }
-  awayTeam?: { name: string }
-  date: Date
-  homeTeamScore?: number
-  awayTeamScore?: number
-  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
-  round: number
+  birthDate?: string
+  tshirtSize?: string
 }
 
 export default function PlayerProfilePage() {
   const { user } = useAuth()
   const [playerData, setPlayerData] = useState<PlayerData | null>(null)
-  const [stats, setStats] = useState<PlayerStats>({
-    matchesPlayed: 0,
-    goals: 0,
-    assists: 0,
-    mvpCount: 0,
-    fouls: 0,
-    averageRating: 0
-  })
-  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([])
-  const [pastMatches, setPastMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -81,24 +47,43 @@ export default function PlayerProfilePage() {
       if (!user?.email) return
 
       try {
-        // Trouver le joueur par email
-        const playersQuery = query(
-          collection(db, 'players'),
+        // Trouver le joueur par email dans playerAccounts
+        const playerAccountsQuery = query(
+          collection(db, 'playerAccounts'),
           where('email', '==', user.email)
         )
-        const playersSnap = await getDocs(playersQuery)
+        const playerAccountsSnap = await getDocs(playerAccountsQuery)
 
-        if (playersSnap.empty) {
+        if (playerAccountsSnap.empty) {
           console.log('Aucun joueur trouvé pour cet email')
           setLoading(false)
           return
         }
 
-        const playerDoc = playersSnap.docs[0]
-        const player = { id: playerDoc.id, ...playerDoc.data() } as PlayerData
+        const playerDoc = playerAccountsSnap.docs[0]
+        const playerDataRaw = playerDoc.data()
+        
+        const player: PlayerData = {
+          id: playerDoc.id,
+          firstName: playerDataRaw.firstName,
+          lastName: playerDataRaw.lastName,
+          nickname: playerDataRaw.nickname,
+          email: playerDataRaw.email,
+          phone: playerDataRaw.phone,
+          position: playerDataRaw.position,
+          jerseyNumber: playerDataRaw.jerseyNumber,
+          teamId: playerDataRaw.teamId,
+          teamName: playerDataRaw.teamName,
+          photo: playerDataRaw.photo,
+          grade: playerDataRaw.grade || '1ère',
+          height: playerDataRaw.height || 0,
+          foot: playerDataRaw.foot || 'Droitier',
+          birthDate: playerDataRaw.birthDate,
+          tshirtSize: playerDataRaw.tshirtSize
+        }
 
-        // Récupérer le nom de l'équipe
-        if (player.teamId) {
+        // Récupérer le nom de l'équipe si pas déjà présent
+        if (player.teamId && !player.teamName) {
           const teamDoc = await getDoc(doc(db, 'teams', player.teamId))
           if (teamDoc.exists()) {
             player.teamName = teamDoc.data().name
@@ -106,68 +91,6 @@ export default function PlayerProfilePage() {
         }
 
         setPlayerData(player)
-
-        // Charger les statistiques du joueur
-        const statsQuery = query(
-          collection(db, 'playerStatistics'),
-          where('playerId', '==', player.id)
-        )
-        const statsSnap = await getDocs(statsQuery)
-        
-        if (!statsSnap.empty) {
-          const statsData = statsSnap.docs[0].data()
-          setStats({
-            matchesPlayed: statsData.matchesPlayed || 0,
-            goals: statsData.goals || 0,
-            assists: statsData.assists || 0,
-            mvpCount: statsData.mvpCount || 0,
-            fouls: statsData.fouls || 0,
-            averageRating: statsData.averageRating || 0
-          })
-        }
-
-        // Charger les matchs de l'équipe
-        if (player.teamId) {
-          const matchesQuery = query(collection(db, 'matches'))
-          const matchesSnap = await getDocs(matchesQuery)
-          
-          const teamsMap = new Map()
-          const teamsSnap = await getDocs(collection(db, 'teams'))
-          teamsSnap.docs.forEach(doc => {
-            teamsMap.set(doc.id, doc.data())
-          })
-
-          const allMatches = matchesSnap.docs
-            .map(doc => {
-              const data = doc.data()
-              return {
-                id: doc.id,
-                ...data,
-                date: data.date?.toDate() || new Date(),
-                homeTeam: teamsMap.get(data.homeTeamId),
-                awayTeam: teamsMap.get(data.awayTeamId)
-              }
-            })
-            .filter(match => 
-              match.homeTeamId === player.teamId || 
-              match.awayTeamId === player.teamId
-            ) as Match[]
-
-          const now = new Date()
-          const upcoming = allMatches
-            .filter(m => m.date > now && m.status === 'scheduled')
-            .sort((a, b) => a.date.getTime() - b.date.getTime())
-            .slice(0, 5)
-
-          const past = allMatches
-            .filter(m => m.status === 'completed')
-            .sort((a, b) => b.date.getTime() - a.date.getTime())
-            .slice(0, 5)
-
-          setUpcomingMatches(upcoming)
-          setPastMatches(past)
-        }
-
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error)
       } finally {
@@ -178,324 +101,197 @@ export default function PlayerProfilePage() {
     loadPlayerData()
   }, [user])
 
-  const convertMatchFormat = (match: Match) => ({
-    id: match.id,
-    teamA: match.homeTeam?.name || 'Équipe inconnue',
-    teamB: match.awayTeam?.name || 'Équipe inconnue',
-    teamAId: match.homeTeamId,
-    teamBId: match.awayTeamId,
-    date: match.date,
-    scoreA: match.homeTeamScore,
-    scoreB: match.awayTeamScore,
-    status: match.status === 'completed' ? 'completed' as const : 
-            match.status === 'in_progress' ? 'live' as const :
-            'upcoming' as const,
-    venue: `Stade de ${match.homeTeam?.name || 'l\'équipe'}`,
-    round: match.round
-  })
-
   if (loading) {
     return (
-      <PublicLayout>
-        <div className="min-h-screen flex items-center justify-center">
-          <LoadingSpinner size="lg" />
-        </div>
-      </PublicLayout>
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
     )
   }
 
   if (!playerData) {
     return (
-      <PublicLayout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <AlertCircle className="w-16 h-16 text-sofa-text-muted mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-sofa-text-primary mb-2">
-              Profil non trouvé
-            </h2>
-            <p className="text-sofa-text-secondary mb-6">
-              Aucun profil joueur n'est associé à votre compte.
-            </p>
-            <Link href="/public" className="sofa-btn">
-              Retour à l'accueil
-            </Link>
-          </div>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center">
+          <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Profil non trouvé
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Aucun profil joueur n'est associé à votre compte.
+          </p>
+          <Link href="/player" className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            Retour au tableau de bord
+          </Link>
         </div>
-      </PublicLayout>
+      </div>
     )
   }
 
   return (
-    <PublicLayout>
-      <div className="space-y-6 pb-8">
-        {/* Header fixe avec photo et infos */}
-        <div className="sticky top-0 z-20 bg-gradient-to-br from-sofa-bg-secondary via-sofa-bg-tertiary to-sofa-bg-card border-b border-sofa-border">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-            <div className="flex items-center gap-6">
-              {/* Photo du joueur */}
-              <div className="relative">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-sofa-blue to-sofa-green flex items-center justify-center text-white text-3xl sm:text-4xl font-bold shadow-lg">
-                  {playerData.photo ? (
-                    <img 
-                      src={playerData.photo} 
-                      alt={`${playerData.firstName} ${playerData.lastName}`}
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  ) : (
-                    `${playerData.firstName[0]}${playerData.lastName[0]}`
-                  )}
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-sofa-green rounded-full flex items-center justify-center text-white font-bold text-sm border-2 border-white">
-                  {playerData.jerseyNumber}
-                </div>
-              </div>
+    <div className="p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Mon Profil</h1>
+          <p className="text-gray-600">Mes informations personnelles</p>
+        </div>
 
-              {/* Infos du joueur */}
-              <div className="flex-1">
-                <h1 className="text-2xl sm:text-3xl font-bold text-sofa-text-primary mb-1">
-                  {playerData.firstName} {playerData.lastName}
-                  {playerData.nickname && (
-                    <span className="text-lg text-sofa-text-accent ml-2">
-                      "{playerData.nickname}"
-                    </span>
-                  )}
-                </h1>
-                <div className="flex flex-wrap items-center gap-3 text-sm text-sofa-text-secondary">
-                  <span className="flex items-center gap-1">
-                    <Activity className="w-4 h-4" />
-                    {playerData.position}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    {playerData.teamName || 'Équipe inconnue'}
-                  </span>
-                  <span className="px-2 py-1 bg-sofa-bg-card rounded text-sofa-text-accent font-medium">
-                    {playerData.grade}
-                  </span>
-                </div>
+        {/* Photo et infos principales */}
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-6">
+          <div className="flex items-center gap-6 mb-6">
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-600 to-green-600 flex items-center justify-center text-white text-3xl font-bold">
+                {playerData.photo ? (
+                  <img 
+                    src={playerData.photo} 
+                    alt={`${playerData.firstName} ${playerData.lastName}`}
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                ) : (
+                  `${playerData.firstName[0]}${playerData.lastName[0]}`
+                )}
               </div>
-
-              {/* Bouton modifier */}
-              <Link 
-                href="/player/profile/edit"
-                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-sofa-blue text-white rounded-lg hover:bg-opacity-90 transition"
-              >
-                <Edit className="w-4 h-4" />
-                Modifier
-              </Link>
+              <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm border-2 border-white">
+                {playerData.jerseyNumber}
+              </div>
             </div>
+            
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                {playerData.firstName} {playerData.lastName}
+                {playerData.nickname && (
+                  <span className="text-lg text-blue-600 ml-2">
+                    "{playerData.nickname}"
+                  </span>
+                )}
+              </h2>
+              <div className="flex items-center gap-2 text-gray-600">
+                <Activity className="w-4 h-4" />
+                <span>{playerData.position} • #{playerData.jerseyNumber}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Équipe */}
+          {playerData.teamName && (
+            <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <Shield className="w-6 h-6 text-blue-600" />
+              <div>
+                <p className="text-sm text-gray-600">Mon Équipe</p>
+                <p className="font-bold text-gray-900">{playerData.teamName}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Informations personnelles */}
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-6">
+          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <User className="w-5 h-5 text-blue-600" />
+            Informations Personnelles
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <Mail className="w-5 h-5 text-gray-600" />
+              <div>
+                <p className="text-sm text-gray-600">Email</p>
+                <p className="font-medium text-gray-900">{playerData.email}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <Phone className="w-5 h-5 text-gray-600" />
+              <div>
+                <p className="text-sm text-gray-600">Téléphone</p>
+                <p className="font-medium text-gray-900">{playerData.phone}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <Calendar className="w-5 h-5 text-gray-600" />
+              <div>
+                <p className="text-sm text-gray-600">Classe</p>
+                <p className="font-medium text-gray-900">{playerData.grade}</p>
+              </div>
+            </div>
+
+            {playerData.birthDate && (
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <Calendar className="w-5 h-5 text-gray-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Date de naissance</p>
+                  <p className="font-medium text-gray-900">
+                    {new Date(playerData.birthDate).toLocaleDateString('fr-FR')}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
-          {/* Statistiques personnelles */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="text-2xl font-bold text-sofa-text-primary mb-4 flex items-center gap-3">
-              <Trophy className="w-6 h-6 text-sofa-green" />
-              Mes Statistiques
-            </h2>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              <SofaStatCard
-                title="Matchs"
-                value={stats.matchesPlayed}
-                icon={Calendar}
-                color="blue"
-                index={0}
-              />
-              <SofaStatCard
-                title="Buts"
-                value={stats.goals}
-                icon={Target}
-                color="green"
-                index={1}
-              />
-              <SofaStatCard
-                title="Passes D."
-                value={stats.assists}
-                icon={TrendingUp}
-                color="purple"
-                index={2}
-              />
-              <SofaStatCard
-                title="MVP"
-                value={stats.mvpCount}
-                icon={Star}
-                color="orange"
-                index={3}
-              />
-              <SofaStatCard
-                title="Fautes"
-                value={stats.fouls}
-                icon={AlertCircle}
-                color="red"
-                index={4}
-              />
-              <div className="sofa-card p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Award className="w-5 h-5 text-sofa-blue" />
-                  <h3 className="text-sm font-medium text-sofa-text-secondary">Note Moy.</h3>
-                </div>
-                <div className="text-2xl font-bold text-sofa-text-primary">
-                  {stats.averageRating.toFixed(1)}
-                  <span className="text-sm text-sofa-text-muted">/10</span>
+        {/* Informations sportives */}
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Activity className="w-5 h-5 text-green-600" />
+            Informations Sportives
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <Users className="w-5 h-5 text-gray-600" />
+              <div>
+                <p className="text-sm text-gray-600">Position</p>
+                <p className="font-medium text-gray-900">{playerData.position}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <Shield className="w-5 h-5 text-gray-600" />
+              <div>
+                <p className="text-sm text-gray-600">Numéro de maillot</p>
+                <p className="font-medium text-gray-900">#{playerData.jerseyNumber}</p>
+              </div>
+            </div>
+
+            {playerData.height > 0 && (
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <Ruler className="w-5 h-5 text-gray-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Taille</p>
+                  <p className="font-medium text-gray-900">{playerData.height} cm</p>
                 </div>
               </div>
-            </div>
-          </motion.section>
+            )}
 
-          {/* Graphique de performances */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            <h2 className="text-2xl font-bold text-sofa-text-primary mb-4 flex items-center gap-3">
-              <TrendingUp className="w-6 h-6 text-sofa-blue" />
-              Évolution des Performances
-            </h2>
-            
-            <div className="sofa-card p-6">
-              <div className="text-center text-sofa-text-muted py-12">
-                <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>Graphique des performances à venir</p>
-                <p className="text-sm mt-2">Vos statistiques seront affichées après plusieurs matchs</p>
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <Activity className="w-5 h-5 text-gray-600" />
+              <div>
+                <p className="text-sm text-gray-600">Pied</p>
+                <p className="font-medium text-gray-900">{playerData.foot}</p>
               </div>
             </div>
-          </motion.section>
 
-          {/* Prochains matchs */}
-          {upcomingMatches.length > 0 && (
-            <motion.section
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-sofa-text-primary flex items-center gap-3">
-                  <Calendar className="w-6 h-6 text-sofa-blue" />
-                  Mes Prochains Matchs
-                </h2>
-                <Link href="/public/matches" className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium">
-                  Tous les matchs →
-                </Link>
+            {playerData.tshirtSize && (
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <User className="w-5 h-5 text-gray-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Taille T-shirt</p>
+                  <p className="font-medium text-gray-900">{playerData.tshirtSize}</p>
+                </div>
               </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {upcomingMatches.map((match, index) => (
-                  <motion.div
-                    key={match.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                  >
-                    <SofaMatchCard 
-                      match={convertMatchFormat(match)} 
-                      index={index} 
-                    />
-                  </motion.div>
-                ))}
-              </div>
-            </motion.section>
-          )}
+            )}
+          </div>
+        </div>
 
-          {/* Matchs passés */}
-          {pastMatches.length > 0 && (
-            <motion.section
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-sofa-text-primary flex items-center gap-3">
-                  <Trophy className="w-6 h-6 text-sofa-green" />
-                  Mes Derniers Matchs
-                </h2>
-                <Link href="/public/matches" className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium">
-                  Historique complet →
-                </Link>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {pastMatches.map((match, index) => (
-                  <motion.div
-                    key={match.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                  >
-                    <SofaMatchCard 
-                      match={convertMatchFormat(match)} 
-                      index={index} 
-                    />
-                  </motion.div>
-                ))}
-              </div>
-            </motion.section>
-          )}
-
-          {/* Badges et récompenses */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            <h2 className="text-2xl font-bold text-sofa-text-primary mb-4 flex items-center gap-3">
-              <Award className="w-6 h-6 text-sofa-green" />
-              Badges & Récompenses
-            </h2>
-            
-            <div className="sofa-card p-6">
-              <div className="text-center text-sofa-text-muted py-12">
-                <Award className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>Aucun badge pour le moment</p>
-                <p className="text-sm mt-2">Jouez des matchs pour débloquer des badges!</p>
-              </div>
-            </div>
-          </motion.section>
-
-          {/* Accès rapide aux autres sections */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-          >
-            <h2 className="text-2xl font-bold text-sofa-text-primary mb-4">
-              Navigation Rapide
-            </h2>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <Link href="/public/ranking" className="sofa-card p-4 hover:shadow-lg transition-shadow">
-                <Trophy className="w-8 h-8 text-sofa-green mb-2" />
-                <h3 className="font-semibold text-sofa-text-primary">Classement</h3>
-                <p className="text-xs text-sofa-text-muted mt-1">Voir le classement</p>
-              </Link>
-              
-              <Link href="/public/teams" className="sofa-card p-4 hover:shadow-lg transition-shadow">
-                <Users className="w-8 h-8 text-sofa-blue mb-2" />
-                <h3 className="font-semibold text-sofa-text-primary">Équipes</h3>
-                <p className="text-xs text-sofa-text-muted mt-1">Toutes les équipes</p>
-              </Link>
-              
-              <Link href="/public/players" className="sofa-card p-4 hover:shadow-lg transition-shadow">
-                <User className="w-8 h-8 text-sofa-purple mb-2" />
-                <h3 className="font-semibold text-sofa-text-primary">Joueurs</h3>
-                <p className="text-xs text-sofa-text-muted mt-1">Tous les joueurs</p>
-              </Link>
-              
-              <Link href="/public/statistics" className="sofa-card p-4 hover:shadow-lg transition-shadow">
-                <TrendingUp className="w-8 h-8 text-sofa-orange mb-2" />
-                <h3 className="font-semibold text-sofa-text-primary">Stats</h3>
-                <p className="text-xs text-sofa-text-muted mt-1">Statistiques</p>
-              </Link>
-            </div>
-          </motion.section>
+        {/* Note d'information */}
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-sm text-blue-800">
+            💡 Pour modifier vos informations, contactez un administrateur de la ligue.
+          </p>
         </div>
       </div>
-    </PublicLayout>
+    </div>
   )
 }

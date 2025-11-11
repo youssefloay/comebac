@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import {
   Home,
@@ -37,6 +37,30 @@ export function BottomNavigation() {
   const pathname = usePathname()
   const { user, userProfile, logout, isAdmin } = useAuth()
   const [showMoreMenu, setShowMoreMenu] = useState(false)
+  const [isPlayer, setIsPlayer] = useState(false)
+
+  // Check if user is a player
+  useEffect(() => {
+    if (!user?.email) return
+    
+    const checkPlayer = async () => {
+      try {
+        const { collection, query, where, getDocs } = await import('firebase/firestore')
+        const { db } = await import('@/lib/firebase')
+        
+        const playerAccountsQuery = query(
+          collection(db, 'playerAccounts'),
+          where('email', '==', user.email)
+        )
+        const playerAccountsSnap = await getDocs(playerAccountsQuery)
+        setIsPlayer(!playerAccountsSnap.empty)
+      } catch (error) {
+        console.error('Error checking player status:', error)
+      }
+    }
+    
+    checkPlayer()
+  }, [user])
 
   if (!user) return null
 
@@ -192,6 +216,20 @@ export function BottomNavigation() {
                     )
                   })}
                 </div>
+
+                {/* Player Toggle Button */}
+                {isPlayer && (
+                  <div className="mb-6">
+                    <Link
+                      href="/player"
+                      onClick={() => setShowMoreMenu(false)}
+                      className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all shadow-md"
+                    >
+                      <Gamepad2 className="w-5 h-5" />
+                      <span className="font-semibold">Basculer sur Joueur</span>
+                    </Link>
+                  </div>
+                )}
 
                 {/* Admin Section */}
                 {isAdmin && (

@@ -77,6 +77,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else if (profile?.role === 'admin') {
             console.log('Admin user, redirecting to /admin')
             router.push('/admin')
+          } else if (profile?.role === 'player') {
+            console.log('Player user, redirecting to /player')
+            router.push('/player')
           } else {
             console.log('Regular user with profile, redirecting to /public')
             router.push('/public')
@@ -87,6 +90,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (profile?.role === 'admin') {
               console.log('Admin user, redirecting to /admin')
               router.push('/admin')
+            } else if (profile?.role === 'player') {
+              console.log('Player user, redirecting to /player')
+              router.push('/player')
             } else {
               console.log('Regular user with profile, redirecting to /public')
               router.push('/public')
@@ -196,6 +202,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (userProfile?.role === 'admin') {
         console.log('Admin user, redirecting to /admin')
         router.push('/admin')
+      } else if (userProfile?.role === 'player') {
+        console.log('Player user, redirecting to /player')
+        router.push('/player')
       } else {
         router.push('/public')
       }
