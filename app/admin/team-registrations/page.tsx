@@ -87,7 +87,7 @@ export default function TeamRegistrationsPage() {
   }
 
   const approveRegistration = async (registration: Registration) => {
-    if (!confirm(`Approuver l'équipe "${registration.teamName}" ?`)) return
+    if (!confirm(`Approuver l'équipe "${registration.teamName}" ?\n\nCela va créer automatiquement des comptes joueurs et envoyer des emails pour créer leur mot de passe.`)) return
 
     setProcessing(true)
     setMessage(null)
@@ -111,7 +111,15 @@ export default function TeamRegistrationsPage() {
           teamId: teamRef.id,
           nationality: 'Égypte',
           // Informations du formulaire d'inscription
+          email: player.email,
+          phone: player.phone,
+          firstName: player.firstName,
+          lastName: player.lastName,
+          nickname: player.nickname,
+          birthDate: player.birthDate,
+          age: player.age,
           height: player.height,
+          tshirtSize: player.tshirtSize,
           strongFoot: player.foot === 'Droitier' ? 'Droit' : player.foot === 'Gaucher' ? 'Gauche' : 'Ambidextre',
           grade: player.grade || registration.teamGrade,
           school: registration.schoolName,
@@ -130,7 +138,28 @@ export default function TeamRegistrationsPage() {
       )
       await Promise.all(playerPromises)
 
-      // 3. Initialiser les statistiques de l'équipe
+      // 3. Créer les comptes joueurs et envoyer les emails
+      try {
+        const accountsResponse = await fetch('/api/admin/create-player-accounts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            teamId: teamRef.id,
+            players: registration.players
+          })
+        })
+        
+        const accountsData = await accountsResponse.json()
+        
+        if (accountsData.errors && accountsData.errors.length > 0) {
+          console.warn('Certains comptes n\'ont pas pu être créés:', accountsData.errors)
+        }
+      } catch (accountError) {
+        console.error('Erreur lors de la création des comptes:', accountError)
+        // On continue même si la création des comptes échoue
+      }
+
+      // 4. Initialiser les statistiques de l'équipe
       await addDoc(collection(db, 'teamStatistics'), {
         teamId: teamRef.id,
         points: 0,
@@ -144,7 +173,7 @@ export default function TeamRegistrationsPage() {
         updatedAt: serverTimestamp()
       })
 
-      // 4. Mettre à jour le statut de l'inscription
+      // 5. Mettre à jour le statut de l'inscription
       await updateDoc(doc(db, 'teamRegistrations', registration.id), {
         status: 'approved',
         processedAt: serverTimestamp(),

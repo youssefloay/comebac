@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
+import { collection, query, where, getDocs } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import { 
   User, 
   LogOut, 
@@ -11,14 +13,61 @@ import {
   ChevronUp,
   Home,
   Users,
-  LogIn
+  LogIn,
+  Trophy,
+  Target,
+  Award,
+  Bell,
+  Activity
 } from 'lucide-react'
+
+interface PlayerData {
+  id: string
+  firstName: string
+  lastName: string
+  nickname?: string
+  position: string
+  jerseyNumber: number
+  teamId: string
+  photo?: string
+}
 
 export function UserMenuFAB() {
   const { user, userProfile, logout, isAdmin } = useAuth()
   const [showMenu, setShowMenu] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [playerData, setPlayerData] = useState<PlayerData | null>(null)
+  const [loadingPlayer, setLoadingPlayer] = useState(true)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  // Load player data if user is a player
+  useEffect(() => {
+    const loadPlayerData = async () => {
+      if (!user?.email) {
+        setLoadingPlayer(false)
+        return
+      }
+
+      try {
+        const playersQuery = query(
+          collection(db, 'players'),
+          where('email', '==', user.email)
+        )
+        const playersSnap = await getDocs(playersQuery)
+
+        if (!playersSnap.empty) {
+          const playerDoc = playersSnap.docs[0]
+          setPlayerData({ id: playerDoc.id, ...playerDoc.data() } as PlayerData)
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement du profil joueur:', error)
+      } finally {
+        setLoadingPlayer(false)
+      }
+    }
+
+    loadPlayerData()
+  }, [user])
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -76,18 +125,129 @@ export function UserMenuFAB() {
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="mb-4 sofa-user-menu min-w-[200px]"
+            className="mb-4 sofa-user-menu min-w-[240px]"
           >
-            <div className="p-3 border-b border-sofa-border">
-              <p className="text-sm font-medium text-sofa-text-primary truncate">
-                {userProfile?.fullName || user.email}
-              </p>
-              <p className="text-xs text-sofa-text-muted">
-                @{userProfile?.username || 'utilisateur'} • {isAdmin ? 'Admin' : 'Utilisateur'}
-              </p>
+            {/* Header avec photo/avatar */}
+            <div className="p-4 border-b border-sofa-border">
+              <div className="flex items-center gap-3">
+                {/* Avatar ou photo */}
+                <div className="relative flex-shrink-0">
+                  {playerData ? (
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sofa-blue to-sofa-green flex items-center justify-center text-white text-lg font-bold">
+                      {playerData.photo ? (
+                        <img 
+                          src={playerData.photo} 
+                          alt={`${playerData.firstName} ${playerData.lastName}`}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        `${playerData.firstName[0]}${playerData.lastName[0]}`
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-sofa-bg-secondary flex items-center justify-center">
+                      <User className="w-6 h-6 text-sofa-text-muted" />
+                    </div>
+                  )}
+                  {playerData && (
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-sofa-green rounded-full flex items-center justify-center text-white font-bold text-xs border-2 border-white">
+                      {playerData.jerseyNumber}
+                    </div>
+                  )}
+                </div>
+
+                {/* Infos utilisateur */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-sofa-text-primary truncate">
+                    {playerData 
+                      ? `${playerData.firstName} ${playerData.lastName}`
+                      : userProfile?.fullName || user.email
+                    }
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {playerData && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-sofa-green bg-opacity-10 text-sofa-green rounded text-xs font-medium">
+                        <Activity className="w-3 h-3" />
+                        Joueur
+                      </span>
+                    )}
+                    {isAdmin && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-sofa-blue bg-opacity-10 text-sofa-blue rounded text-xs font-medium">
+                        <Settings className="w-3 h-3" />
+                        Admin
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
             
             <div className="p-2 space-y-1">
+              {/* Section Joueur si applicable */}
+              {playerData && (
+                <>
+                  <div className="px-3 py-2">
+                    <p className="text-xs font-semibold text-sofa-text-muted uppercase tracking-wider">
+                      Espace Joueur
+                    </p>
+                  </div>
+                  
+                  <Link
+                    href="/player/profile"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors"
+                    onClick={() => setShowMenu(false)}
+                  >
+                    <User className="w-4 h-4" />
+                    Mon Profil
+                  </Link>
+
+                  <Link
+                    href="/player/matches"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors"
+                    onClick={() => setShowMenu(false)}
+                  >
+                    <Trophy className="w-4 h-4" />
+                    Mes Matchs
+                  </Link>
+
+                  <Link
+                    href="/player/stats"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors"
+                    onClick={() => setShowMenu(false)}
+                  >
+                    <Target className="w-4 h-4" />
+                    Mes Stats
+                  </Link>
+
+                  <Link
+                    href="/player/badges"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors"
+                    onClick={() => setShowMenu(false)}
+                  >
+                    <Award className="w-4 h-4" />
+                    Badges
+                  </Link>
+
+                  <Link
+                    href="/player/notifications"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors"
+                    onClick={() => setShowMenu(false)}
+                  >
+                    <Bell className="w-4 h-4" />
+                    Notifications
+                  </Link>
+
+                  <div className="my-2 border-t border-sofa-border"></div>
+
+                  <div className="px-3 py-2">
+                    <p className="text-xs font-semibold text-sofa-text-muted uppercase tracking-wider">
+                      Navigation
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {/* Section publique */}
               <Link
                 href="/public"
                 className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors"
@@ -107,15 +267,20 @@ export function UserMenuFAB() {
               </Link>
 
               {isAdmin && (
-                <Link
-                  href="/admin"
-                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors"
-                  onClick={() => setShowMenu(false)}
-                >
-                  <Settings className="w-4 h-4" />
-                  Admin
-                </Link>
+                <>
+                  <div className="my-2 border-t border-sofa-border"></div>
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-blue hover:bg-sofa-bg-hover rounded-lg transition-colors font-medium"
+                    onClick={() => setShowMenu(false)}
+                  >
+                    <Settings className="w-4 h-4" />
+                    Administration
+                  </Link>
+                </>
               )}
+              
+              <div className="my-2 border-t border-sofa-border"></div>
               
               <button
                 onClick={() => {
@@ -132,23 +297,37 @@ export function UserMenuFAB() {
         )}
       </AnimatePresence>
 
-      {/* FAB Button */}
+      {/* FAB Button avec photo si joueur */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setShowMenu(!showMenu)}
-        className="w-14 h-14 sofa-fab rounded-full flex items-center justify-center"
+        className="w-14 h-14 sofa-fab rounded-full flex items-center justify-center overflow-hidden"
       >
-        <motion.div
-          animate={{ rotate: showMenu ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          {showMenu ? (
-            <ChevronUp className="w-6 h-6 text-white" />
-          ) : (
-            <User className="w-6 h-6 text-white" />
-          )}
-        </motion.div>
+        {playerData && !showMenu ? (
+          <div className="w-full h-full bg-gradient-to-br from-sofa-blue to-sofa-green flex items-center justify-center text-white text-xl font-bold">
+            {playerData.photo ? (
+              <img 
+                src={playerData.photo} 
+                alt={`${playerData.firstName} ${playerData.lastName}`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              `${playerData.firstName[0]}${playerData.lastName[0]}`
+            )}
+          </div>
+        ) : (
+          <motion.div
+            animate={{ rotate: showMenu ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {showMenu ? (
+              <ChevronUp className="w-6 h-6 text-white" />
+            ) : (
+              <User className="w-6 h-6 text-white" />
+            )}
+          </motion.div>
+        )}
       </motion.button>
     </div>
   )
