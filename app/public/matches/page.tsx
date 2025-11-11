@@ -215,98 +215,133 @@ export default function MatchesPage() {
     matchesWithResults: matches.filter(m => m.result).length
   })
 
+  // Organize matches by priority
+  const liveMatches = filteredMatches.filter(m => m.status === 'in_progress')
+  const todayMatches = filteredMatches.filter(m => {
+    const today = new Date()
+    const matchDate = new Date(m.date)
+    return matchDate.toDateString() === today.toDateString() && m.status !== 'in_progress'
+  })
+  const upcomingMatches = filteredMatches.filter(m => 
+    m.status === 'scheduled' && 
+    !todayMatches.includes(m)
+  ).slice(0, 6)
+  const recentMatches = filteredMatches.filter(m => m.status === 'completed').slice(0, 6)
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Calendrier des Matchs</h1>
-        <p className="text-gray-600">Suivez tous les matchs de la ligue scolaire</p>
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Compact Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-sofa-text-primary mb-2">Calendrier des Matchs</h1>
+        <p className="text-sofa-text-secondary">Suivez tous les matchs de la ComeBac League</p>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-xl">
-          <div className="flex items-center gap-3">
-            <Calendar className="w-8 h-8" />
-            <div>
-              <p className="text-blue-100 text-sm">Total Matchs</p>
-              <p className="text-2xl font-bold">{matches.length}</p>
-            </div>
+      {/* Quick Stats - More Compact */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div className="sofa-stat-card">
+          <div className="flex items-center gap-2 mb-2">
+            <Calendar className="w-5 h-5 text-sofa-blue" />
+            <span className="text-sm font-medium text-sofa-text-secondary">Total</span>
           </div>
+          <div className="sofa-stat-number text-xl">{matches.length}</div>
         </div>
         
-        <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="w-8 h-8" />
-            <div>
-              <p className="text-green-100 text-sm">Terminés</p>
-              <p className="text-2xl font-bold">{matches.filter(m => m.status === 'completed').length}</p>
-            </div>
+        <div className="sofa-stat-card">
+          <div className="flex items-center gap-2 mb-2">
+            <CheckCircle className="w-5 h-5 text-sofa-green" />
+            <span className="text-sm font-medium text-sofa-text-secondary">Terminés</span>
           </div>
+          <div className="sofa-stat-number text-xl">{matches.filter(m => m.status === 'completed').length}</div>
         </div>
         
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-xl">
-          <div className="flex items-center gap-3">
-            <Clock className="w-8 h-8" />
-            <div>
-              <p className="text-orange-100 text-sm">À venir</p>
-              <p className="text-2xl font-bold">{matches.filter(m => m.status === 'scheduled').length}</p>
-            </div>
+        <div className="sofa-stat-card">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="w-5 h-5 text-sofa-orange" />
+            <span className="text-sm font-medium text-sofa-text-secondary">À venir</span>
           </div>
+          <div className="sofa-stat-number text-xl">{matches.filter(m => m.status === 'scheduled').length}</div>
         </div>
         
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-xl">
-          <div className="flex items-center gap-3">
-            <Trophy className="w-8 h-8" />
-            <div>
-              <p className="text-purple-100 text-sm">Journées</p>
-              <p className="text-2xl font-bold">{rounds.length}</p>
-            </div>
+        <div className="sofa-stat-card">
+          <div className="flex items-center gap-2 mb-2">
+            <Trophy className="w-5 h-5 text-sofa-text-accent" />
+            <span className="text-sm font-medium text-sofa-text-secondary">Journées</span>
           </div>
+          <div className="sofa-stat-number text-xl">{rounds.length}</div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Filter className="w-5 h-5" />
+      {/* Improved Filters */}
+      <div className="sofa-card p-4 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-sofa-text-primary flex items-center gap-2">
+            <Filter className="w-4 h-4" />
             Filtres
           </h2>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="md:hidden flex items-center gap-2 text-gray-600 hover:text-gray-900"
+            className="md:hidden flex items-center gap-2 text-sofa-text-muted hover:text-sofa-text-primary transition-colors"
           >
             <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
             {showFilters ? 'Masquer' : 'Afficher'}
           </button>
         </div>
         
-        <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${showFilters ? 'block' : 'hidden md:grid'}`}>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value as any)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+        <div className={`grid grid-cols-1 md:grid-cols-4 gap-3 ${showFilters ? 'block' : 'hidden md:grid'}`}>
+          {/* Quick Filter Buttons */}
+          <div className="md:col-span-4 flex flex-wrap gap-2 mb-3">
+            <button
+              onClick={() => setFilterStatus('all')}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                filterStatus === 'all' 
+                  ? 'bg-sofa-text-accent text-white' 
+                  : 'bg-sofa-bg-tertiary text-sofa-text-muted hover:bg-sofa-bg-hover'
+              }`}
             >
-              <option value="all">Tous les matchs</option>
-              <option value="scheduled">À venir</option>
-              <option value="in_progress">En cours</option>
-              <option value="completed">Terminés</option>
-            </select>
+              Tous
+            </button>
+            <button
+              onClick={() => setFilterStatus('in_progress')}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                filterStatus === 'in_progress' 
+                  ? 'bg-sofa-red text-white' 
+                  : 'bg-sofa-bg-tertiary text-sofa-text-muted hover:bg-sofa-bg-hover'
+              }`}
+            >
+              🔴 En direct
+            </button>
+            <button
+              onClick={() => setFilterStatus('scheduled')}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                filterStatus === 'scheduled' 
+                  ? 'bg-sofa-blue text-white' 
+                  : 'bg-sofa-bg-tertiary text-sofa-text-muted hover:bg-sofa-bg-hover'
+              }`}
+            >
+              📅 À venir
+            </button>
+            <button
+              onClick={() => setFilterStatus('completed')}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                filterStatus === 'completed' 
+                  ? 'bg-sofa-green text-white' 
+                  : 'bg-sofa-bg-tertiary text-sofa-text-muted hover:bg-sofa-bg-hover'
+              }`}
+            >
+              ✅ Terminés
+            </button>
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Journée</label>
+            <label className="block text-xs font-medium text-sofa-text-muted mb-1">Journée</label>
             <select
               value={selectedRound}
               onChange={(e) => setSelectedRound(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full px-3 py-2 border border-sofa-border rounded-lg focus:ring-2 focus:ring-sofa-text-accent outline-none bg-sofa-bg-card text-sofa-text-primary"
             >
-              <option value="all">Toutes les journées</option>
+              <option value="all">Toutes</option>
               {rounds.map(round => (
-                <option key={round} value={round}>Journée {round}</option>
+                <option key={round} value={round}>J{round}</option>
               ))}
             </select>
           </div>
@@ -317,7 +352,7 @@ export default function MatchesPage() {
                 setFilterStatus('all')
                 setSelectedRound('all')
               }}
-              className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+              className="w-full px-3 py-2 bg-sofa-bg-tertiary text-sofa-text-primary rounded-lg hover:bg-sofa-bg-hover transition-colors text-sm"
             >
               Réinitialiser
             </button>
@@ -325,45 +360,239 @@ export default function MatchesPage() {
         </div>
       </div>
 
-      {/* Matches List */}
+      {/* Organized Matches Display */}
       {loading ? (
         <div className="text-center py-12">
-          <div className="w-12 h-12 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement des matchs...</p>
+          <div className="w-12 h-12 border-4 border-sofa-border border-t-sofa-text-accent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-sofa-text-muted">Chargement des matchs...</p>
         </div>
       ) : filteredMatches.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border p-12 text-center">
-          <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucun match trouvé</h3>
-          <p className="text-gray-600">Aucun match ne correspond aux filtres sélectionnés.</p>
+        <div className="sofa-card p-12 text-center">
+          <Calendar className="w-16 h-16 text-sofa-text-muted mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-sofa-text-primary mb-2">Aucun match trouvé</h3>
+          <p className="text-sofa-text-muted">Aucun match ne correspond aux filtres sélectionnés.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMatches.map((match, index) => {
-            const convertedMatch = {
-              id: match.id,
-              teamA: match.homeTeam?.name || 'Équipe inconnue',
-              teamB: match.awayTeam?.name || 'Équipe inconnue',
-              teamAId: match.homeTeamId,
-              teamBId: match.awayTeamId,
-              date: match.date,
-              scoreA: match.result?.homeTeamScore,
-              scoreB: match.result?.awayTeamScore,
-              status: match.status === 'completed' ? 'completed' as const : 
-                      match.status === 'in_progress' ? 'live' as const :
-                      'upcoming' as const,
-              venue: `Stade de ${match.homeTeam?.name || 'l\'équipe'}`,
-              round: match.round
-            }
-            
-            return (
-              <SofaMatchCard 
-                key={match.id} 
-                match={convertedMatch} 
-                index={index} 
-              />
-            )
-          })}
+        <div className="space-y-8">
+          {/* Live Matches - Highest Priority */}
+          {liveMatches.length > 0 && (
+            <section>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-3 h-3 bg-sofa-red rounded-full animate-pulse"></div>
+                <h2 className="text-xl font-bold text-sofa-text-primary">Matchs en Direct</h2>
+                <span className="bg-sofa-red text-white px-2 py-1 rounded-full text-xs font-medium">
+                  {liveMatches.length}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {liveMatches.map((match, index) => {
+                  const convertedMatch = {
+                    id: match.id,
+                    teamA: match.homeTeam?.name || 'Équipe inconnue',
+                    teamB: match.awayTeam?.name || 'Équipe inconnue',
+                    teamAId: match.homeTeamId,
+                    teamBId: match.awayTeamId,
+                    date: match.date,
+                    scoreA: match.result?.homeTeamScore,
+                    scoreB: match.result?.awayTeamScore,
+                    status: 'live' as const,
+                    venue: `Stade de ${match.homeTeam?.name || 'l\'équipe'}`,
+                    round: match.round
+                  }
+                  
+                  return (
+                    <SofaMatchCard 
+                      key={match.id} 
+                      match={convertedMatch} 
+                      index={index} 
+                    />
+                  )
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* Today's Matches */}
+          {todayMatches.length > 0 && (
+            <section>
+              <div className="flex items-center gap-3 mb-4">
+                <Calendar className="w-5 h-5 text-sofa-blue" />
+                <h2 className="text-xl font-bold text-sofa-text-primary">Aujourd'hui</h2>
+                <span className="bg-sofa-blue text-white px-2 py-1 rounded-full text-xs font-medium">
+                  {todayMatches.length}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {todayMatches.map((match, index) => {
+                  const convertedMatch = {
+                    id: match.id,
+                    teamA: match.homeTeam?.name || 'Équipe inconnue',
+                    teamB: match.awayTeam?.name || 'Équipe inconnue',
+                    teamAId: match.homeTeamId,
+                    teamBId: match.awayTeamId,
+                    date: match.date,
+                    scoreA: match.result?.homeTeamScore,
+                    scoreB: match.result?.awayTeamScore,
+                    status: match.status === 'completed' ? 'completed' as const : 'upcoming' as const,
+                    venue: `Stade de ${match.homeTeam?.name || 'l\'équipe'}`,
+                    round: match.round
+                  }
+                  
+                  return (
+                    <SofaMatchCard 
+                      key={match.id} 
+                      match={convertedMatch} 
+                      index={index} 
+                    />
+                  )
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* Upcoming Matches */}
+          {upcomingMatches.length > 0 && filterStatus !== 'completed' && (
+            <section>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <Clock className="w-5 h-5 text-sofa-orange" />
+                  <h2 className="text-xl font-bold text-sofa-text-primary">Prochains Matchs</h2>
+                  <span className="bg-sofa-orange text-white px-2 py-1 rounded-full text-xs font-medium">
+                    {upcomingMatches.length}
+                  </span>
+                </div>
+                {upcomingMatches.length > 6 && (
+                  <button 
+                    onClick={() => setFilterStatus('scheduled')}
+                    className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium"
+                  >
+                    Voir tous →
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {upcomingMatches.map((match, index) => {
+                  const convertedMatch = {
+                    id: match.id,
+                    teamA: match.homeTeam?.name || 'Équipe inconnue',
+                    teamB: match.awayTeam?.name || 'Équipe inconnue',
+                    teamAId: match.homeTeamId,
+                    teamBId: match.awayTeamId,
+                    date: match.date,
+                    scoreA: match.result?.homeTeamScore,
+                    scoreB: match.result?.awayTeamScore,
+                    status: 'upcoming' as const,
+                    venue: `Stade de ${match.homeTeam?.name || 'l\'équipe'}`,
+                    round: match.round
+                  }
+                  
+                  return (
+                    <SofaMatchCard 
+                      key={match.id} 
+                      match={convertedMatch} 
+                      index={index} 
+                    />
+                  )
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* Recent Results */}
+          {recentMatches.length > 0 && filterStatus !== 'scheduled' && (
+            <section>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <Trophy className="w-5 h-5 text-sofa-green" />
+                  <h2 className="text-xl font-bold text-sofa-text-primary">Derniers Résultats</h2>
+                  <span className="bg-sofa-green text-white px-2 py-1 rounded-full text-xs font-medium">
+                    {recentMatches.length}
+                  </span>
+                </div>
+                {recentMatches.length > 6 && (
+                  <button 
+                    onClick={() => setFilterStatus('completed')}
+                    className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium"
+                  >
+                    Voir tous →
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {recentMatches.map((match, index) => {
+                  const convertedMatch = {
+                    id: match.id,
+                    teamA: match.homeTeam?.name || 'Équipe inconnue',
+                    teamB: match.awayTeam?.name || 'Équipe inconnue',
+                    teamAId: match.homeTeamId,
+                    teamBId: match.awayTeamId,
+                    date: match.date,
+                    scoreA: match.result?.homeTeamScore,
+                    scoreB: match.result?.awayTeamScore,
+                    status: 'completed' as const,
+                    venue: `Stade de ${match.homeTeam?.name || 'l\'équipe'}`,
+                    round: match.round
+                  }
+                  
+                  return (
+                    <SofaMatchCard 
+                      key={match.id} 
+                      match={convertedMatch} 
+                      index={index} 
+                    />
+                  )
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* All Matches (when filters are applied) */}
+          {(filterStatus !== 'all' || selectedRound !== 'all') && (
+            <section>
+              <div className="flex items-center gap-3 mb-4">
+                <Filter className="w-5 h-5 text-sofa-text-accent" />
+                <h2 className="text-xl font-bold text-sofa-text-primary">
+                  Résultats filtrés
+                  {filterStatus !== 'all' && ` - ${
+                    filterStatus === 'scheduled' ? 'À venir' :
+                    filterStatus === 'completed' ? 'Terminés' :
+                    filterStatus === 'in_progress' ? 'En direct' : ''
+                  }`}
+                  {selectedRound !== 'all' && ` - Journée ${selectedRound}`}
+                </h2>
+                <span className="bg-sofa-text-accent text-white px-2 py-1 rounded-full text-xs font-medium">
+                  {filteredMatches.length}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredMatches.map((match, index) => {
+                  const convertedMatch = {
+                    id: match.id,
+                    teamA: match.homeTeam?.name || 'Équipe inconnue',
+                    teamB: match.awayTeam?.name || 'Équipe inconnue',
+                    teamAId: match.homeTeamId,
+                    teamBId: match.awayTeamId,
+                    date: match.date,
+                    scoreA: match.result?.homeTeamScore,
+                    scoreB: match.result?.awayTeamScore,
+                    status: match.status === 'completed' ? 'completed' as const : 
+                            match.status === 'in_progress' ? 'live' as const :
+                            'upcoming' as const,
+                    venue: `Stade de ${match.homeTeam?.name || 'l\'équipe'}`,
+                    round: match.round
+                  }
+                  
+                  return (
+                    <SofaMatchCard 
+                      key={match.id} 
+                      match={convertedMatch} 
+                      index={index} 
+                    />
+                  )
+                })}
+              </div>
+            </section>
+          )}
         </div>
       )}
     </div>

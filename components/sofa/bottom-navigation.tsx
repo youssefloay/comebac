@@ -42,10 +42,14 @@ export function BottomNavigation() {
 
   return (
     <>
-      {/* Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 safe-area-pb">
-        <div className="flex items-center justify-around px-2 py-2">
-          {/* Main Tabs */}
+      {/* Bottom Navigation Bar - Improved */}
+      <nav 
+        className="fixed bottom-0 left-0 right-0 z-40 bg-sofa-bg-card border-t border-sofa-border safe-area-pb"
+        role="navigation"
+        aria-label="Navigation mobile principale"
+      >
+        <div className="flex items-center justify-around px-1 py-2">
+          {/* Main Tabs - Improved accessibility */}
           {mainTabs.map((tab) => {
             const isActive = pathname === tab.href
             const Icon = tab.icon
@@ -54,18 +58,23 @@ export function BottomNavigation() {
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 ${
+                className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-200 min-w-0 flex-1 relative ${
                   isActive 
-                    ? 'text-green-600 bg-green-50' 
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    ? 'text-sofa-text-accent bg-sofa-text-accent/10' 
+                    : 'text-sofa-text-muted hover:text-sofa-text-primary hover:bg-sofa-bg-hover'
                 }`}
+                aria-current={isActive ? "page" : undefined}
+                aria-label={tab.label}
               >
-                <Icon className={`w-5 h-5 mb-1 ${isActive ? 'scale-110' : ''} transition-transform`} />
+                <Icon 
+                  className={`w-5 h-5 mb-1 ${isActive ? 'scale-110' : ''} transition-transform`} 
+                  aria-hidden="true"
+                />
                 <span className="text-xs font-medium truncate">{tab.label}</span>
                 {isActive && (
                   <motion.div
                     layoutId="activeBottomTab"
-                    className="absolute -top-0.5 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-green-600 rounded-full"
+                    className="absolute -top-0.5 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-sofa-text-accent rounded-full"
                     initial={false}
                     transition={{
                       type: "spring",
@@ -78,21 +87,23 @@ export function BottomNavigation() {
             )
           })}
 
-          {/* More Button */}
+          {/* More Button - Improved */}
           <button
             onClick={() => setShowMoreMenu(true)}
-            className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 ${
+            className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-200 min-w-0 flex-1 relative ${
               secondaryTabs.some(tab => pathname === tab.href)
-                ? 'text-green-600 bg-green-50'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                ? 'text-sofa-text-accent bg-sofa-text-accent/10'
+                : 'text-sofa-text-muted hover:text-sofa-text-primary hover:bg-sofa-bg-hover'
             }`}
+            aria-label="Ouvrir le menu supplémentaire"
+            aria-expanded={showMoreMenu}
           >
-            <MoreHorizontal className="w-5 h-5 mb-1" />
+            <MoreHorizontal className="w-5 h-5 mb-1" aria-hidden="true" />
             <span className="text-xs font-medium">Plus</span>
             {secondaryTabs.some(tab => pathname === tab.href) && (
               <motion.div
                 layoutId="activeBottomTab"
-                className="absolute -top-0.5 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-green-600 rounded-full"
+                className="absolute -top-0.5 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-sofa-text-accent rounded-full"
                 initial={false}
                 transition={{
                   type: "spring",
@@ -103,7 +114,7 @@ export function BottomNavigation() {
             )}
           </button>
         </div>
-      </div>
+      </nav>
 
       {/* More Menu Overlay */}
       <AnimatePresence>

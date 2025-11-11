@@ -97,16 +97,18 @@ export default function TeamsTab() {
   }
 
   const handleDelete = async (id: string, teamName: string) => {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer l'équipe "${teamName}"?`)) {
+    if (confirm(`⚠️ ATTENTION: Supprimer l'équipe "${teamName}"?\n\nCela supprimera également:\n- Tous les joueurs de l'équipe\n- Tous les matchs de l'équipe\n- Toutes les statistiques\n- Tous les résultats\n\nCette action est IRRÉVERSIBLE!`)) {
       try {
         setError(null)
         const response = await fetch(`/api/admin/teams?id=${id}`, {
           method: 'DELETE'
         })
         if (!response.ok) throw new Error('Failed to delete team')
-        setSuccess("Équipe supprimée avec succès")
+        
+        const result = await response.json()
+        setSuccess(`Équipe supprimée avec succès! (${result.deleted.players} joueurs, ${result.deleted.matches} matchs, ${result.deleted.statistics} stats supprimés)`)
         await loadTeams()
-        setTimeout(() => setSuccess(null), 3000)
+        setTimeout(() => setSuccess(null), 5000)
       } catch (err) {
         setError("Erreur lors de la suppression de l'équipe")
         console.error("Error deleting team:", err)

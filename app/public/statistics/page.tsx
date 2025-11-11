@@ -192,35 +192,128 @@ export default function PublicStatisticsPage() {
     )
   }
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold text-sofa-text-primary mb-8">Statistiques Complètes</h1>
+  // Organize data by priority
+  const topTeams = ranking.slice(0, 3)
+  const topScorersData = topScorers.slice(0, 5)
+  const recentMatches = matchHistory.slice(0, 5)
 
-      {/* Navigation Tabs */}
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Compact Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-sofa-text-primary mb-2">Statistiques de la Ligue</h1>
+        <p className="text-sofa-text-secondary">Analyses complètes et données en temps réel</p>
+      </div>
+
+      {/* Priority Content - Key Stats Overview */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Top 3 Teams */}
+        <div className="sofa-card p-6">
+          <h2 className="text-lg font-bold text-sofa-text-primary mb-4 flex items-center gap-2">
+            🏆 Podium Actuel
+          </h2>
+          <div className="space-y-3">
+            {topTeams.map((team, index) => (
+              <div key={team.teamId} className="flex items-center gap-3 p-3 bg-sofa-bg-tertiary rounded-lg">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                  index === 0 ? 'bg-sofa-green' : index === 1 ? 'bg-gray-400' : 'bg-orange-500'
+                }`}>
+                  {index + 1}
+                </div>
+                <div className="flex-1">
+                  <div className="font-semibold text-sofa-text-primary">{getTeamName(team.teamId)}</div>
+                  <div className="text-sm text-sofa-text-muted">{team.wins}V - {team.draws}N - {team.losses}D</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-lg font-bold text-sofa-text-accent">{team.points}</div>
+                  <div className="text-xs text-sofa-text-muted">pts</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Top Scorers */}
+        <div className="sofa-card p-6">
+          <h2 className="text-lg font-bold text-sofa-text-primary mb-4 flex items-center gap-2">
+            ⚽ Meilleurs Buteurs
+          </h2>
+          <div className="space-y-3">
+            {topScorersData.map((scorer, index) => (
+              <div key={`${scorer.name}-${index}`} className="flex items-center gap-3 p-3 bg-sofa-bg-tertiary rounded-lg">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                  index === 0 ? 'bg-sofa-green' : index === 1 ? 'bg-gray-400' : 'bg-orange-500'
+                }`}>
+                  {index + 1}
+                </div>
+                <div className="flex-1">
+                  <div className="font-semibold text-sofa-text-primary">{scorer.name}</div>
+                  <div className="text-sm text-sofa-text-muted">{scorer.matches} matchs</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-lg font-bold text-sofa-text-accent">{scorer.goals}</div>
+                  <div className="text-xs text-sofa-text-muted">buts</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Matches */}
+        <div className="sofa-card p-6">
+          <h2 className="text-lg font-bold text-sofa-text-primary mb-4 flex items-center gap-2">
+            📅 Derniers Résultats
+          </h2>
+          <div className="space-y-3">
+            {recentMatches.map((match, index) => (
+              <div key={`${match.id}-${index}`} className="p-3 bg-sofa-bg-tertiary rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-medium text-sofa-text-primary">
+                    {getTeamName(match.homeTeamId)} vs {getTeamName(match.awayTeamId)}
+                  </div>
+                  <div className="text-sm text-sofa-text-muted">
+                    J{match.round}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="text-lg font-bold text-sofa-text-accent">
+                    {match.result.homeTeamScore} - {match.result.awayTeamScore}
+                  </div>
+                  <div className="text-xs text-sofa-text-muted">
+                    {formatDate(match.date)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Improved Navigation Tabs */}
       <div className="sofa-card mb-8">
         <div className="border-b border-sofa-border">
-          <nav className="flex space-x-2 md:space-x-8 px-4 md:px-6 overflow-x-auto scrollbar-hide">
+          <nav className="flex space-x-1 px-4 overflow-x-auto scrollbar-hide" role="tablist">
             {[
-              { id: 'ranking', label: 'Classement', icon: TrendingUp },
-              { id: 'scorers', label: 'Buteurs & Passeurs', icon: Target },
-              { id: 'matches', label: 'Historique Matchs', icon: Calendar },
-              { id: 'team-details', label: 'Détails Équipe', icon: Users },
-              { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-              { id: 'comparison', label: 'Comparaison', icon: GitCompare },
-              { id: 'trends', label: 'Tendances', icon: Activity },
-              { id: 'predictions', label: 'Prédictions', icon: Brain },
-              { id: 'awards', label: 'Récompenses', icon: Star }
-            ].map(({ id, label, icon: Icon }) => (
+              { id: 'ranking', label: 'Classement', icon: TrendingUp, priority: 1 },
+              { id: 'scorers', label: 'Buteurs', icon: Target, priority: 2 },
+              { id: 'matches', label: 'Matchs', icon: Calendar, priority: 3 },
+              { id: 'team-details', label: 'Équipes', icon: Users, priority: 4 },
+              { id: 'analytics', label: 'Analytics', icon: BarChart3, priority: 5 },
+              { id: 'comparison', label: 'Comparaison', icon: GitCompare, priority: 6 }
+            ].map(({ id, label, icon: Icon, priority }) => (
               <button
                 key={id}
                 onClick={() => setActiveTab(id as any)}
-                className={`flex items-center gap-1 md:gap-2 py-4 px-2 md:px-1 border-b-2 font-medium text-xs md:text-sm transition-colors whitespace-nowrap ${
+                className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-sm transition-all whitespace-nowrap ${
                   activeTab === id
-                    ? 'border-sofa-text-accent text-sofa-text-accent bg-sofa-bg-secondary rounded-t-lg'
-                    : 'border-transparent text-sofa-text-secondary hover:text-sofa-text-accent hover:border-sofa-border'
+                    ? 'border-sofa-text-accent text-sofa-text-accent bg-sofa-text-accent/10 rounded-t-lg'
+                    : 'border-transparent text-sofa-text-secondary hover:text-sofa-text-accent hover:bg-sofa-bg-hover rounded-t-lg'
                 }`}
+                role="tab"
+                aria-selected={activeTab === id}
+                aria-controls={`panel-${id}`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-4 h-4" aria-hidden="true" />
                 <span className="hidden sm:inline">{label}</span>
                 <span className="sm:hidden">{label.split(' ')[0]}</span>
               </button>

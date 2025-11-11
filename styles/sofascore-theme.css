@@ -79,7 +79,7 @@
   border: 1px solid var(--sofa-border);
   border-radius: var(--sofa-radius);
   box-shadow: var(--sofa-shadow);
-  transition: all 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sofa-card:hover {
@@ -175,9 +175,11 @@
   font-weight: 600;
   font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
 }
 
 .sofa-btn:hover {
@@ -266,15 +268,33 @@
   color: var(--sofa-text-secondary);
   padding: 12px 20px;
   border-radius: var(--sofa-radius-sm);
-  transition: all 0.3s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-weight: 500;
   text-decoration: none;
+  position: relative;
+}
+
+.sofa-nav-item::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--sofa-text-accent);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(-50%);
 }
 
 .sofa-nav-item:hover,
 .sofa-nav-item.active {
   color: var(--sofa-text-accent);
   background: rgba(0, 212, 170, 0.1);
+}
+
+.sofa-nav-item:hover::after,
+.sofa-nav-item.active::after {
+  width: 80%;
 }
 
 /* Score display */
@@ -631,5 +651,169 @@ Navigation Styles */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .safe-area-pb {
     padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  }
+}
+/* Enhan
+ced Animations and Micro-interactions */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-up {
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+
+.loading-shimmer {
+  background: linear-gradient(90deg, var(--sofa-bg-secondary) 25%, var(--sofa-bg-tertiary) 50%, var(--sofa-bg-secondary) 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Micro-interactions */
+.hover-lift {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.hover-scale {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+.focus-ring {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.focus-ring:focus {
+  outline: 2px solid var(--sofa-text-accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 212, 170, 0.1);
+}
+
+/* Enhanced button interactions - merged with original definition */
+
+.sofa-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.sofa-btn:hover::before {
+  left: 100%;
+}
+
+.sofa-btn:active {
+  transform: translateY(1px);
+}
+
+/* Enhanced card hover effects - merged with original definition */
+
+/* Enhanced navigation - merged with original definition */
+
+/* Enhanced table interactions */
+.sofa-table tbody tr {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sofa-table tbody tr:hover {
+  background: var(--sofa-bg-hover);
+  transform: translateX(2px);
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Stagger animations for lists */
+.stagger-item {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0.1s; }
+.stagger-item:nth-child(2) { animation-delay: 0.2s; }
+.stagger-item:nth-child(3) { animation-delay: 0.3s; }
+.stagger-item:nth-child(4) { animation-delay: 0.4s; }
+.stagger-item:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Improved accessibility and focus states */
+.sofa-btn:focus,
+.sofa-nav-item:focus,
+button:focus,
+select:focus,
+input:focus {
+  outline: 2px solid var(--sofa-text-accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 212, 170, 0.1);
+}
+
+/* Enhanced loading states */
+.loading-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Smooth transitions for theme switching */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Enhanced mobile interactions */
+@media (max-width: 768px) {
+  .hover-lift:active,
+  .hover-scale:active {
+    transform: scale(0.98);
+  }
+  
+  .sofa-card:active {
+    transform: translateY(1px);
+  }
+  
+  /* Larger touch targets */
+  .sofa-btn,
+  .sofa-nav-item,
+  button {
+    min-height: 44px;
+    min-width: 44px;
   }
 }

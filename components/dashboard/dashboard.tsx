@@ -10,7 +10,7 @@ import MatchesTab from "./tabs/matches-tab"
 import ResultsTab from "./tabs/results-tab"
 import StatisticsTab from "./tabs/statistics-tab"
 
-type TabType = "teams" | "players" | "matches" | "results" | "statistics"
+type TabType = "teams" | "players" | "matches" | "results" | "statistics" | "registrations" | "archives"
 
 export default function Dashboard({ user }: { user: any }) {
   const [activeTab, setActiveTab] = useState<TabType>("teams")
@@ -166,7 +166,64 @@ export default function Dashboard({ user }: { user: any }) {
     { id: "matches", label: "Matchs", icon: "📅" },
     { id: "results", label: "Résultats", icon: "📊" },
     { id: "statistics", label: "Statistiques", icon: "📈" },
+    { id: "registrations", label: "Inscriptions", icon: "📝" },
+    { id: "archives", label: "Archives", icon: "📦" },
   ]
+
+  const handleGoToRegistrations = () => {
+    window.location.href = '/admin/team-registrations'
+  }
+
+  const handleEndSeason = async () => {
+    const seasonName = prompt(
+      '🏁 FIN DE SAISON\n\nDonnez un nom à cette saison pour l\'archiver:\n(ex: "Saison 2024-2025", "Championnat Automne 2024")'
+    )
+    
+    if (!seasonName) return
+
+    if (!confirm(
+      `⚠️ ATTENTION: Fin de saison "${seasonName}"\n\n` +
+      `Cette action va:\n` +
+      `✅ Archiver toutes les données actuelles\n` +
+      `✅ Garder les équipes et joueurs\n` +
+      `🗑️ Supprimer tous les matchs et résultats\n` +
+      `🔄 Réinitialiser toutes les statistiques à 0\n\n` +
+      `Les archives seront accessibles pour consultation.\n\n` +
+      `Continuer?`
+    )) {
+      return
+    }
+
+    setIsSeeding(true)
+    setSeedMessage(null)
+    
+    try {
+      const response = await fetch('/api/admin/end-season', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seasonName })
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok) {
+        setSeedMessage({ 
+          type: 'success', 
+          text: `${data.message}\n${data.summary.totalMatches} matchs, ${data.summary.totalResults} résultats archivés.`
+        })
+        setActiveTab('teams')
+      } else {
+        setSeedMessage({ 
+          type: 'error', 
+          text: data.error || 'Erreur lors de la fin de saison' 
+        })
+      }
+    } catch (error) {
+      setSeedMessage({ type: 'error', text: 'Erreur de connexion' })
+    } finally {
+      setIsSeeding(false)
+    }
+  }
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -196,6 +253,30 @@ export default function Dashboard({ user }: { user: any }) {
         </nav>
 
         <div className="p-4 border-t border-gray-200 space-y-2">
+          <button
+            onClick={handleGoToRegistrations}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition text-sm font-medium"
+          >
+            <span>📝</span>
+            {sidebarOpen && <span>Inscriptions</span>}
+          </button>
+          <button
+            onClick={handleEndSeason}
+            disabled={isSeeding}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white hover:bg-red-700 disabled:bg-gray-400 rounded-lg transition text-sm font-medium"
+          >
+            {isSeeding ? (
+              <>
+                <Loader className="w-4 h-4 animate-spin" />
+                {sidebarOpen && <span>Archivage...</span>}
+              </>
+            ) : (
+              <>
+                <span>🏁</span>
+                {sidebarOpen && <span>Fin de saison</span>}
+              </>
+            )}
+          </button>
           <button
             onClick={handleCreateTestMatch}
             disabled={isSeeding}
@@ -329,6 +410,30 @@ export default function Dashboard({ user }: { user: any }) {
           {activeTab === "matches" && <MatchesTab />}
           {activeTab === "results" && <ResultsTab />}
           {activeTab === "statistics" && <StatisticsTab />}
+          {activeTab === "registrations" && (
+            <div className="text-center py-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Inscriptions d'Équipes</h2>
+              <p className="text-gray-600 mb-6">Gérez les demandes d'inscription des équipes</p>
+              <button
+                onClick={handleGoToRegistrations}
+                className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium"
+              >
+                📝 Voir les inscriptions
+              </button>
+            </div>
+          )}
+          {activeTab === "archives" && (
+            <div className="text-center py-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Archives des Saisons</h2>
+              <p className="text-gray-600 mb-6">Consultez les statistiques des saisons passées</p>
+              <button
+                onClick={() => window.location.href = '/admin/archives'}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+              >
+                📦 Voir les archives
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

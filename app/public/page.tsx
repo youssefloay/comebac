@@ -2,26 +2,19 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { collection, query, where, onSnapshot, orderBy, getDocs } from 'firebase/firestore'
+import { collection, query, orderBy, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { SofaMatchCard } from '@/components/sofa/match-card'
-import { SofaStandingsTable } from '@/components/sofa/standings-table'
 import { SofaStatCard } from '@/components/sofa/stat-card'
 import { SofaTeamCard } from '@/components/sofa/team-card'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { 
   Calendar, 
   Clock, 
   Trophy, 
   Users, 
-  TrendingUp,
-  ChevronRight,
-  Zap,
-  Target,
-  BarChart3
+  Target
 } from 'lucide-react'
 
 interface Match {
@@ -257,200 +250,326 @@ export default function PublicHome() {
     )
   }
 
+  // Get next match (most important info)
+  const nextMatch = upcomingMatches.length > 0 ? upcomingMatches[0] : null
+  const liveMatch = todayMatches.find(match => match.status === 'in_progress')
+  const featuredMatch = liveMatch || nextMatch
+
+  // Get top 3 teams for podium display
+  const topThreeTeams = standings.slice(0, 3)
+
   return (
-    <div className="space-y-8 pb-8">
-      {/* Hero Section */}
+    <div className="space-y-6 pb-8">
+      {/* Compact Hero Section */}
       <div className="relative overflow-hidden hero-section">
         <div className="absolute inset-0 bg-gradient-to-br from-sofa-bg-secondary via-sofa-bg-tertiary to-sofa-bg-card"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center"
           >
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 text-sofa-text-primary">
-              ComeBac
-              <span className="block text-sofa-text-accent">League</span>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 text-sofa-text-primary">
+              ComeBac League
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-sofa-text-secondary mb-8 sm:mb-12 max-w-2xl mx-auto px-4">
-              Suivez tous les matchs, équipes et statistiques en temps réel de la ComeBac League
+            <p className="text-sm sm:text-base text-sofa-text-secondary mb-6 max-w-xl mx-auto">
+              Championnat scolaire en temps réel
             </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link href="/public/matches">
-                <button className="sofa-btn">
-                  📅 Voir les matchs
-                </button>
-              </Link>
-              <Link href="/public/ranking">
-                <button className="sofa-btn-secondary sofa-btn">
-                  🏆 Classement
-                </button>
-              </Link>
-              <Link href="/public/statistics">
-                <button className="sofa-btn-secondary sofa-btn">
-                  📊 Statistiques
-                </button>
-              </Link>
-            </div>
           </motion.div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8 sm:space-y-12">
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
-          <SofaStatCard
-            title="Équipes"
-            value={stats.teams}
-            icon={Users}
-            color="blue"
-            index={0}
-          />
-          <SofaStatCard
-            title="Matchs"
-            value={stats.matches}
-            icon={Calendar}
-            color="green"
-            index={1}
-          />
-          <SofaStatCard
-            title="Buts"
-            value={stats.goals}
-            icon={Target}
-            color="purple"
-            index={2}
-          />
-          <SofaStatCard
-            title="Terminés"
-            value={stats.completed}
-            icon={Trophy}
-            color="orange"
-            index={3}
-          />
-        </div>
-
-        {/* Today's Matches */}
-        {todayMatches.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold text-sofa-text-primary flex items-center gap-3">
-                <Zap className="w-8 h-8 text-sofa-red" />
-                Matchs d'Aujourd'hui
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
+        {/* Priority 1: Featured Match (Live or Next) */}
+        {featuredMatch && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-sofa-text-primary flex items-center gap-3">
+                {liveMatch ? (
+                  <>
+                    <div className="w-3 h-3 bg-sofa-red rounded-full animate-pulse"></div>
+                    Match en Direct
+                  </>
+                ) : (
+                  <>
+                    <Clock className="w-6 h-6 text-sofa-blue" />
+                    Prochain Match
+                  </>
+                )}
               </h2>
-              <Link href="/public/matches">
-                <ChevronRight className="w-6 h-6 text-sofa-text-muted hover:text-sofa-text-accent transition-colors" />
+              <Link href="/public/matches" className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium">
+                Tous les matchs →
               </Link>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {todayMatches.map((match, index) => (
-                <SofaMatchCard 
-                  key={match.id} 
-                  match={convertMatchFormat(match)} 
-                  index={index} 
-                />
-              ))}
+            <div className="max-w-2xl">
+              <SofaMatchCard 
+                match={convertMatchFormat(featuredMatch)} 
+                index={0} 
+              />
             </div>
-          </section>
+          </motion.section>
         )}
 
-        {/* Recent Matches */}
+        {/* Priority 2: Top 3 Teams Podium */}
+        {topThreeTeams.length >= 3 && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-sofa-text-primary flex items-center gap-3">
+                <Trophy className="w-6 h-6 text-sofa-green" />
+                Podium
+              </h2>
+              <Link href="/public/ranking" className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium">
+                Classement complet →
+              </Link>
+            </div>
+            
+            {/* Podium Layout */}
+            <div className="grid grid-cols-3 gap-4 max-w-2xl">
+              {/* 2nd Place */}
+              <div className="order-1 pt-8">
+                <div className="sofa-card p-4 text-center relative">
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                    2
+                  </div>
+                  <h3 className="font-semibold text-sofa-text-primary mb-2 text-sm">{topThreeTeams[1].teamName}</h3>
+                  <div className="text-lg font-bold text-sofa-text-accent">{topThreeTeams[1].points} pts</div>
+                  <div className="text-xs text-sofa-text-muted">{topThreeTeams[1].wins}V - {topThreeTeams[1].draws}N - {topThreeTeams[1].losses}D</div>
+                </div>
+              </div>
+              
+              {/* 1st Place */}
+              <div className="order-2">
+                <div className="sofa-card p-4 text-center relative bg-gradient-to-br from-sofa-bg-card to-sofa-bg-secondary">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-sofa-green text-white rounded-full flex items-center justify-center font-bold">
+                    1
+                  </div>
+                  <div className="mb-2">👑</div>
+                  <h3 className="font-bold text-sofa-text-primary mb-2">{topThreeTeams[0].teamName}</h3>
+                  <div className="text-xl font-bold text-sofa-green">{topThreeTeams[0].points} pts</div>
+                  <div className="text-xs text-sofa-text-muted">{topThreeTeams[0].wins}V - {topThreeTeams[0].draws}N - {topThreeTeams[0].losses}D</div>
+                </div>
+              </div>
+              
+              {/* 3rd Place */}
+              <div className="order-3 pt-12">
+                <div className="sofa-card p-4 text-center relative">
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                    3
+                  </div>
+                  <h3 className="font-semibold text-sofa-text-primary mb-2 text-sm">{topThreeTeams[2].teamName}</h3>
+                  <div className="text-lg font-bold text-sofa-text-accent">{topThreeTeams[2].points} pts</div>
+                  <div className="text-xs text-sofa-text-muted">{topThreeTeams[2].wins}V - {topThreeTeams[2].draws}N - {topThreeTeams[2].losses}D</div>
+                </div>
+              </div>
+            </div>
+          </motion.section>
+        )}
+
+        {/* Priority 3: Quick Stats - More Compact */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          <h2 className="text-xl font-bold text-sofa-text-primary mb-4">Statistiques de la Ligue</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <SofaStatCard
+              title="Équipes"
+              value={stats.teams}
+              icon={Users}
+              color="blue"
+              index={0}
+            />
+            <SofaStatCard
+              title="Matchs"
+              value={stats.matches}
+              icon={Calendar}
+              color="green"
+              index={1}
+            />
+            <SofaStatCard
+              title="Buts"
+              value={stats.goals}
+              icon={Target}
+              color="purple"
+              index={2}
+            />
+            <SofaStatCard
+              title="Terminés"
+              value={stats.completed}
+              icon={Trophy}
+              color="orange"
+              index={3}
+            />
+          </div>
+        </motion.section>
+
+        {/* Priority 4: Recent Results - Compact List */}
         {recentMatches.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold text-sofa-text-primary flex items-center gap-3">
-                <Trophy className="w-8 h-8 text-sofa-green" />
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-sofa-text-primary flex items-center gap-3">
+                <Trophy className="w-5 h-5 text-sofa-green" />
                 Derniers Résultats
               </h2>
-              <Link href="/public/matches">
-                <ChevronRight className="w-6 h-6 text-sofa-text-muted hover:text-sofa-text-accent transition-colors" />
+              <Link href="/public/matches" className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium">
+                Tous les résultats →
               </Link>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {recentMatches.map((match, index) => (
-                <SofaMatchCard 
-                  key={match.id} 
-                  match={convertMatchFormat(match)} 
-                  index={index} 
-                />
+            {/* Compact Results List */}
+            <div className="sofa-card p-4 space-y-3">
+              {recentMatches.slice(0, 3).map((match, index) => (
+                <motion.div 
+                  key={match.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className="flex items-center justify-between py-2 border-b border-sofa-border last:border-b-0"
+                >
+                  <div className="flex items-center space-x-3 flex-1">
+                    <div className="text-sm font-medium text-sofa-text-primary">
+                      {match.homeTeam?.name} vs {match.awayTeam?.name}
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="text-lg font-bold text-sofa-text-primary">
+                      {match.homeTeamScore} - {match.awayTeamScore}
+                    </div>
+                    <div className="text-xs text-sofa-text-muted">
+                      {new Intl.DateTimeFormat('fr-FR', { 
+                        day: 'numeric', 
+                        month: 'short' 
+                      }).format(match.date)}
+                    </div>
+                  </div>
+                </motion.div>
               ))}
             </div>
-          </section>
+          </motion.section>
         )}
 
-        {/* Upcoming Matches */}
-        {upcomingMatches.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold text-sofa-text-primary flex items-center gap-3">
-                <Clock className="w-8 h-8 text-sofa-blue" />
+        {/* Priority 5: Upcoming Matches - Compact */}
+        {upcomingMatches.length > 1 && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-sofa-text-primary flex items-center gap-3">
+                <Calendar className="w-5 h-5 text-sofa-blue" />
                 Prochains Matchs
               </h2>
-              <Link href="/public/matches">
-                <ChevronRight className="w-6 h-6 text-sofa-text-muted hover:text-sofa-text-accent transition-colors" />
+              <Link href="/public/matches" className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium">
+                Calendrier complet →
               </Link>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {upcomingMatches.map((match, index) => (
-                <SofaMatchCard 
-                  key={match.id} 
-                  match={convertMatchFormat(match)} 
-                  index={index} 
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {upcomingMatches.slice(1, 5).map((match, index) => (
+                <motion.div
+                  key={match.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                >
+                  <SofaMatchCard 
+                    match={convertMatchFormat(match)} 
+                    index={index} 
+                  />
+                </motion.div>
               ))}
             </div>
-          </section>
+          </motion.section>
         )}
 
-        {/* League Standings Preview */}
-        {standings.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold text-sofa-text-primary flex items-center gap-3">
-                <TrendingUp className="w-8 h-8 text-sofa-green" />
-                Classement
-              </h2>
-              <Link href="/public/ranking">
-                <ChevronRight className="w-6 h-6 text-sofa-text-muted hover:text-sofa-text-accent transition-colors" />
-              </Link>
-            </div>
-            
-            <SofaStandingsTable standings={standings} />
-          </section>
-        )}
-
-        {/* Teams Preview */}
+        {/* Priority 6: Teams Overview - Simplified */}
         {teams.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold text-sofa-text-primary flex items-center gap-3">
-                <Users className="w-8 h-8 text-sofa-blue" />
-                Équipes
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-sofa-text-primary flex items-center gap-3">
+                <Users className="w-5 h-5 text-sofa-blue" />
+                Équipes ({teams.length})
               </h2>
-              <Link href="/public/teams">
-                <ChevronRight className="w-6 h-6 text-sofa-text-muted hover:text-sofa-text-accent transition-colors" />
+              <Link href="/public/teams" className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium">
+                Toutes les équipes →
               </Link>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {teams.slice(0, 4).map((team, index) => (
-                <SofaTeamCard 
-                  key={team.id} 
-                  team={{
-                    id: team.id,
-                    name: team.name,
-                    color: team.color,
-                    playerCount: team.playerCount || 0
-                  }} 
-                  index={index} 
-                />
+                <motion.div
+                  key={team.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                >
+                  <SofaTeamCard 
+                    team={{
+                      id: team.id,
+                      name: team.name,
+                      color: team.color,
+                      playerCount: team.playerCount || 0
+                    }} 
+                    index={index} 
+                  />
+                </motion.div>
               ))}
             </div>
-          </section>
+          </motion.section>
         )}
+
+        {/* Quick Navigation */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+          className="sofa-card p-6"
+        >
+          <h3 className="text-lg font-bold text-sofa-text-primary mb-4">Navigation Rapide</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <Link href="/public/matches" className="sofa-btn-secondary sofa-btn text-center">
+              📅 Tous les Matchs
+            </Link>
+            <Link href="/public/ranking" className="sofa-btn-secondary sofa-btn text-center">
+              🏆 Classement Complet
+            </Link>
+            <Link href="/public/teams" className="sofa-btn-secondary sofa-btn text-center">
+              👥 Toutes les Équipes
+            </Link>
+            <Link href="/public/statistics" className="sofa-btn-secondary sofa-btn text-center">
+              📊 Statistiques
+            </Link>
+            <Link href="/public/players" className="sofa-btn-secondary sofa-btn text-center">
+              ⭐ Joueurs
+            </Link>
+            <Link href="/register-team" className="sofa-btn bg-sofa-green hover:bg-green-700 text-center">
+              ➕ Inscrire une Équipe
+            </Link>
+            <Link href="/login" className="sofa-btn text-center">
+              🔐 Connexion
+            </Link>
+          </div>
+        </motion.section>
 
 
       </div>

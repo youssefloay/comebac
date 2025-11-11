@@ -96,9 +96,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserProfile(null)
         setNeedsProfileCompletion(false)
         
-        // User is not logged in - redirect to login for all pages except login and root
+        // User is not logged in - redirect to login for all pages except login, root, and register-team
         const currentPath = window.location.pathname
-        if (currentPath !== '/login' && currentPath !== '/') {
+        if (currentPath !== '/login' && currentPath !== '/' && currentPath !== '/register-team') {
           router.push('/login')
         }
       }
