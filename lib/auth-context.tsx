@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [needsProfileCompletion, setNeedsProfileCompletion] = useState(false)
   const router = useRouter()
 
-  const isAdmin = user?.email === "admin@admin.com"
+  const isAdmin = user?.email === "admin@admin.com" || user?.email === "contact@comebac.com"
 
   const loadUserProfile = async (firebaseUser: User) => {
     try {
