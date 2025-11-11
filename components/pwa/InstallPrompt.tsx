@@ -34,21 +34,8 @@ export function InstallPrompt() {
 
   const handleDismiss = () => {
     setShowPrompt(false)
-    // Remember dismissal for 7 days
-    localStorage.setItem('pwa-prompt-dismissed', Date.now().toString())
+    // Le popup réapparaîtra au prochain rechargement de page
   }
-
-  // Check if user dismissed recently
-  useEffect(() => {
-    const dismissed = localStorage.getItem('pwa-prompt-dismissed')
-    if (dismissed) {
-      const dismissedTime = parseInt(dismissed)
-      const sevenDays = 7 * 24 * 60 * 60 * 1000
-      if (Date.now() - dismissedTime < sevenDays) {
-        setShowPrompt(false)
-      }
-    }
-  }, [])
 
   return (
     <AnimatePresence>
