@@ -93,13 +93,17 @@ export async function POST(request: Request) {
             resetLink
           )
           
-          await sendEmail({
+          const emailResult = await sendEmail({
             to: player.email,
             subject: emailContent.subject,
             html: emailContent.html
           })
           
-          console.log(`✅ Email envoyé à ${player.email}`)
+          if (emailResult.success) {
+            console.log(`✅ Email envoyé à ${player.email}`)
+          } else {
+            console.error(`❌ Échec d'envoi d'email pour ${player.email}:`, emailResult.error)
+          }
         } catch (emailError) {
           console.error(`❌ Erreur d'envoi d'email pour ${player.email}:`, emailError)
           // On continue même si l'email échoue
