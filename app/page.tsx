@@ -50,6 +50,24 @@ export default function HomePage() {
               Créer un Compte
             </Button>
           </Link>
+          
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">ou</span>
+            </div>
+          </div>
+
+          <Link href="/register-team" className="block">
+            <Button variant="outline" className="w-full border-green-500 text-green-600 hover:bg-green-50">
+              ➕ Inscrire une Équipe
+            </Button>
+          </Link>
+          <p className="text-xs text-center text-gray-500">
+            Aucun compte requis pour l'inscription d'équipe
+          </p>
         </CardContent>
       </Card>
     </div>

@@ -538,40 +538,6 @@ export default function PublicHome() {
           </motion.section>
         )}
 
-        {/* Quick Navigation */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.7 }}
-          className="sofa-card p-6"
-        >
-          <h3 className="text-lg font-bold text-sofa-text-primary mb-4">Navigation Rapide</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <Link href="/public/matches" className="sofa-btn-secondary sofa-btn text-center">
-              📅 Tous les Matchs
-            </Link>
-            <Link href="/public/ranking" className="sofa-btn-secondary sofa-btn text-center">
-              🏆 Classement Complet
-            </Link>
-            <Link href="/public/teams" className="sofa-btn-secondary sofa-btn text-center">
-              👥 Toutes les Équipes
-            </Link>
-            <Link href="/public/statistics" className="sofa-btn-secondary sofa-btn text-center">
-              📊 Statistiques
-            </Link>
-            <Link href="/public/players" className="sofa-btn-secondary sofa-btn text-center">
-              ⭐ Joueurs
-            </Link>
-            <Link href="/register-team" className="sofa-btn bg-sofa-green hover:bg-green-700 text-center">
-              ➕ Inscrire une Équipe
-            </Link>
-            <Link href="/login" className="sofa-btn text-center">
-              🔐 Connexion
-            </Link>
-          </div>
-        </motion.section>
-
-
       </div>
     </div>
   )
