@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [needsProfileCompletion, setNeedsProfileCompletion] = useState(false)
   const router = useRouter()
 
-  const isAdmin = user?.email === "admin@admin.com" || user?.email === "contact@comebac.com"
+  const isAdmin = userProfile?.role === 'admin'
 
   const loadUserProfile = async (firebaseUser: User) => {
     try {
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // User needs to complete profile - stay on login page
             // The login page will show the profile completion component
             console.log('User needs to complete profile, staying on login page')
-          } else if (user.email === "admin@admin.com") {
+          } else if (profile?.role === 'admin') {
             console.log('Admin user, redirecting to /admin')
             router.push('/admin')
           } else {
@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else if (currentPath === '/') {
           // For root path, redirect authenticated users appropriately
           if (profile) {
-            if (user.email === "admin@admin.com") {
+            if (profile?.role === 'admin') {
               console.log('Admin user, redirecting to /admin')
               router.push('/admin')
             } else {
@@ -115,8 +115,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
       
-      // Vérifier si l'email est vérifié (sauf pour l'admin)
-      if (!userCredential.user.emailVerified && email !== "admin@admin.com") {
+      // Vérifier si l'email est vérifié (sauf pour l'admin principal)
+      if (!userCredential.user.emailVerified && email !== "contact@comebac.com") {
         await signOut(auth) // Déconnecter l'utilisateur
         throw new Error("Veuillez vérifier votre email avant de vous connecter. Vérifiez votre boîte mail et cliquez sur le lien de vérification.")
       }
@@ -193,7 +193,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await loadUserProfile(user)
       
       // After profile completion, redirect appropriately
-      if (user.email === "admin@admin.com") {
+      if (userProfile?.role === 'admin') {
+        console.log('Admin user, redirecting to /admin')
         router.push('/admin')
       } else {
         router.push('/public')

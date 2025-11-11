@@ -135,30 +135,32 @@ export default function AccountsManagementPage() {
       const account = accounts.find(a => a.id === accountId)
       if (!account) return
 
-      // Déterminer la collection à mettre à jour
-      const collection_name = editForm.role === 'player' ? 'playerAccounts' : 'userProfiles'
-      
-      const updateData: any = {}
-      
-      if (editForm.role !== account.role) {
-        updateData.role = editForm.role
+      // Utiliser l'API de changement de rôle
+      const response = await fetch('/api/admin/change-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accountId: accountId,
+          currentRole: account.role,
+          newRole: editForm.role || account.role,
+          uid: account.uid,
+          email: account.email,
+          firstName: editForm.firstName || account.firstName,
+          lastName: editForm.lastName || account.lastName,
+          teamId: editForm.teamId
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: data.message || 'Compte mis à jour avec succès!' })
+        setEditingAccount(null)
+        setEditForm({})
+        loadData()
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Erreur lors de la mise à jour' })
       }
-      
-      if (editForm.role === 'player' && editForm.teamId) {
-        updateData.teamId = editForm.teamId
-        const team = teams.find(t => t.id === editForm.teamId)
-        updateData.teamName = team?.name
-      }
-
-      if (editForm.firstName) updateData.firstName = editForm.firstName
-      if (editForm.lastName) updateData.lastName = editForm.lastName
-
-      await updateDoc(doc(db, collection_name, accountId), updateData)
-
-      setMessage({ type: 'success', text: 'Compte mis à jour avec succès!' })
-      setEditingAccount(null)
-      setEditForm({})
-      loadData()
     } catch (error) {
       console.error('Erreur lors de la mise à jour:', error)
       setMessage({ type: 'error', text: 'Erreur lors de la mise à jour du compte' })
