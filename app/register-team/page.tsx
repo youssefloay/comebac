@@ -259,6 +259,24 @@ export default function RegisterTeamPage() {
         createdAt: serverTimestamp()
       })
 
+      // Envoyer une notification à l'admin
+      try {
+        await fetch('/api/notify-admin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            teamName,
+            schoolName: schoolName === 'Autre' ? customSchool : schoolName,
+            captainName: `${captainFirstName} ${captainLastName}`,
+            captainEmail,
+            playersCount: players.length
+          })
+        })
+      } catch (notifError) {
+        console.error('Erreur notification admin:', notifError)
+        // On continue même si la notification échoue
+      }
+
       setSuccess(true)
       
     } catch (err) {
