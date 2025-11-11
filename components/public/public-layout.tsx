@@ -7,6 +7,7 @@ import { UserMenuFAB } from '@/components/sofa/user-menu-fab'
 import { SimpleLogo } from '@/components/ui/logo'
 import { useAuth } from '@/lib/auth-context'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { InstallPrompt } from '@/components/pwa/InstallPrompt'
 import '@/styles/sofascore-theme.css'
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -69,6 +70,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       
       {/* User Menu FAB - Available on all screen sizes */}
       <UserMenuFAB />
+      
+      {/* PWA Install Prompt */}
+      <InstallPrompt />
     </div>
   )
 }

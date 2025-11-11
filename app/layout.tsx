@@ -4,6 +4,8 @@ import { Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { AuthProvider } from "@/lib/auth-context"
 import { ThemeProvider } from "@/lib/theme-context"
+import { RegisterSW } from "@/components/pwa/RegisterSW"
+import { InstallPrompt } from "@/components/pwa/InstallPrompt"
 import "./globals.css"
 import "@/styles/sofascore-theme.css"
 import "@/styles/fifa-cards.css"
@@ -108,8 +110,10 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             {children}
+            <InstallPrompt />
           </AuthProvider>
         </ThemeProvider>
+        <RegisterSW />
         <Analytics />
       </body>
     </html>

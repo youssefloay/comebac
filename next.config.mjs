@@ -7,7 +7,7 @@ const nextConfig = {
     unoptimized: true,
   },
   env: {
-    MATCH_SCHEDULE_ENABLED: "true", // Activer ou désactiver la planification des matchs
+    MATCH_SCHEDULE_ENABLED: "true",
   },
   async headers() {
     return [

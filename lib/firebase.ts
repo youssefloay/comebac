@@ -31,13 +31,21 @@ export const auth = getAuth(app);
 
 let db: Firestore;
 try {
-  db = initializeFirestore(app, {
-    localCache: persistentLocalCache()
-  });
-  console.log('Firestore initialized successfully with persistent cache');
+  // Essayer d'abord de récupérer l'instance existante
+  db = getFirestore(app);
+  console.log('Using existing Firestore instance');
 } catch (error) {
-  console.error('Error initializing Firestore:', error);
-  throw error;
+  // Si ça échoue, initialiser avec le cache persistant
+  try {
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache()
+    });
+    console.log('Firestore initialized successfully with persistent cache');
+  } catch (initError) {
+    console.error('Error initializing Firestore:', initError);
+    // En dernier recours, utiliser getFirestore
+    db = getFirestore(app);
+  }
 }
 export { db }
 
