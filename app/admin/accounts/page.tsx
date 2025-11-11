@@ -1,0 +1,533 @@
+"use client"
+
+import { useState, useEffect } from 'react'
+import { useAuth } from '@/lib/auth-context'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { useRouter } from 'next/navigation'
+import { collection, getDocs, doc, updateDoc, query, where } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { Users, Shield, User, Edit, Save, X, Trash2, Mail, MoreVertical } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+
+interface Account {
+  id: string
+  uid: string
+  email: string
+  firstName?: string
+  lastName?: string
+  role: 'user' | 'player' | 'admin'
+  teamId?: string
+  teamName?: string
+  position?: string
+  jerseyNumber?: number
+  createdAt: any
+}
+
+interface Team {
+  id: string
+  name: string
+}
+
+export default function AccountsManagementPage() {
+  const { user, loading: authLoading, isAdmin } = useAuth()
+  const router = useRouter()
+  const [accounts, setAccounts] = useState<Account[]>([])
+  const [teams, setTeams] = useState<Team[]>([])
+  const [loading, setLoading] = useState(true)
+  const [editingAccount, setEditingAccount] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState<Partial<Account>>({})
+  const [saving, setSaving] = useState(false)
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [filter, setFilter] = useState<'all' | 'user' | 'player' | 'admin'>('all')
+  const [showActionsMenu, setShowActionsMenu] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user) {
+        router.push('/login')
+      } else if (!isAdmin) {
+        router.push('/public')
+      }
+    }
+  }, [user, authLoading, isAdmin, router])
+
+  useEffect(() => {
+    if (user && isAdmin) {
+      loadData()
+    }
+  }, [user, isAdmin])
+
+  const loadData = async () => {
+    try {
+      // Charger les équipes
+      const teamsSnap = await getDocs(collection(db, 'teams'))
+      const teamsData = teamsSnap.docs.map(doc => ({
+        id: doc.id,
+        name: doc.data().name
+      })) as Team[]
+      setTeams(teamsData)
+
+      // Charger les comptes joueurs
+      const playerAccountsSnap = await getDocs(collection(db, 'playerAccounts'))
+      const playerAccounts = playerAccountsSnap.docs.map(doc => {
+        const data = doc.data()
+        const team = teamsData.find(t => t.id === data.teamId)
+        return {
+          id: doc.id,
+          uid: data.uid,
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          role: 'player' as const,
+          teamId: data.teamId,
+          teamName: team?.name,
+          position: data.position,
+          jerseyNumber: data.jerseyNumber,
+          createdAt: data.createdAt
+        }
+      })
+
+      // Charger les profils utilisateurs (pour les admins et users)
+      const userProfilesSnap = await getDocs(collection(db, 'userProfiles'))
+      const userProfiles = userProfilesSnap.docs.map(doc => {
+        const data = doc.data()
+        return {
+          id: doc.id,
+          uid: data.uid,
+          email: data.email,
+          firstName: data.fullName?.split(' ')[0],
+          lastName: data.fullName?.split(' ').slice(1).join(' '),
+          role: data.role || 'user' as 'user' | 'admin',
+          createdAt: data.createdAt
+        }
+      })
+
+      const allAccounts = [...playerAccounts, ...userProfiles]
+      setAccounts(allAccounts)
+    } catch (error) {
+      console.error('Erreur lors du chargement des comptes:', error)
+      setMessage({ type: 'error', text: 'Erreur lors du chargement des comptes' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const startEdit = (account: Account) => {
+    setEditingAccount(account.id)
+    setEditForm({
+      role: account.role,
+      teamId: account.teamId,
+      firstName: account.firstName,
+      lastName: account.lastName
+    })
+  }
+
+  const cancelEdit = () => {
+    setEditingAccount(null)
+    setEditForm({})
+  }
+
+  const saveAccount = async (accountId: string) => {
+    setSaving(true)
+    setMessage(null)
+
+    try {
+      const account = accounts.find(a => a.id === accountId)
+      if (!account) return
+
+      // Déterminer la collection à mettre à jour
+      const collection_name = editForm.role === 'player' ? 'playerAccounts' : 'userProfiles'
+      
+      const updateData: any = {}
+      
+      if (editForm.role !== account.role) {
+        updateData.role = editForm.role
+      }
+      
+      if (editForm.role === 'player' && editForm.teamId) {
+        updateData.teamId = editForm.teamId
+        const team = teams.find(t => t.id === editForm.teamId)
+        updateData.teamName = team?.name
+      }
+
+      if (editForm.firstName) updateData.firstName = editForm.firstName
+      if (editForm.lastName) updateData.lastName = editForm.lastName
+
+      await updateDoc(doc(db, collection_name, accountId), updateData)
+
+      setMessage({ type: 'success', text: 'Compte mis à jour avec succès!' })
+      setEditingAccount(null)
+      setEditForm({})
+      loadData()
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour:', error)
+      setMessage({ type: 'error', text: 'Erreur lors de la mise à jour du compte' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const deleteAccount = async (account: Account) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le compte de ${account.firstName} ${account.lastName} (${account.email})?\n\nCette action est irréversible!`)) {
+      return
+    }
+
+    setSaving(true)
+    setMessage(null)
+
+    try {
+      const collection_name = account.role === 'player' ? 'playerAccounts' : 'userProfiles'
+      
+      const response = await fetch('/api/admin/manage-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete',
+          uid: account.uid,
+          accountId: account.id,
+          collection: collection_name
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'Compte supprimé avec succès!' })
+        loadData()
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Erreur lors de la suppression' })
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error)
+      setMessage({ type: 'error', text: 'Erreur lors de la suppression du compte' })
+    } finally {
+      setSaving(false)
+      setShowActionsMenu(null)
+    }
+  }
+
+  const sendPasswordReset = async (account: Account) => {
+    if (!confirm(`Envoyer un email de réinitialisation de mot de passe à ${account.email}?`)) {
+      return
+    }
+
+    setSaving(true)
+    setMessage(null)
+
+    try {
+      const response = await fetch('/api/admin/manage-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'resetPassword',
+          email: account.email
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: `Email de réinitialisation envoyé à ${account.email}!` })
+        console.log('Lien de réinitialisation:', data.resetLink)
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Erreur lors de l\'envoi' })
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi:', error)
+      setMessage({ type: 'error', text: 'Erreur lors de l\'envoi de l\'email' })
+    } finally {
+      setSaving(false)
+      setShowActionsMenu(null)
+    }
+  }
+
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  if (!user || !isAdmin) {
+    return null
+  }
+
+  const filteredAccounts = accounts.filter(acc => 
+    filter === 'all' ? true : acc.role === filter
+  )
+
+  const stats = {
+    total: accounts.length,
+    users: accounts.filter(a => a.role === 'user').length,
+    players: accounts.filter(a => a.role === 'player').length,
+    admins: accounts.filter(a => a.role === 'admin').length
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+            <Users className="w-8 h-8 text-blue-600" />
+            Gestion des Comptes
+          </h1>
+          <p className="text-gray-600">Gérez les rôles et les équipes des utilisateurs</p>
+        </div>
+
+        {/* Message */}
+        {message && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className={`mb-6 p-4 rounded-lg ${
+              message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}
+          >
+            {message.text}
+          </motion.div>
+        )}
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white p-6 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total</p>
+                <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+              </div>
+              <Users className="w-12 h-12 text-gray-400 opacity-20" />
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Utilisateurs</p>
+                <p className="text-3xl font-bold text-blue-600">{stats.users}</p>
+              </div>
+              <User className="w-12 h-12 text-blue-600 opacity-20" />
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Joueurs</p>
+                <p className="text-3xl font-bold text-green-600">{stats.players}</p>
+              </div>
+              <Users className="w-12 h-12 text-green-600 opacity-20" />
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Admins</p>
+                <p className="text-3xl font-bold text-purple-600">{stats.admins}</p>
+              </div>
+              <Shield className="w-12 h-12 text-purple-600 opacity-20" />
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white p-4 rounded-lg border border-gray-200 mb-6">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFilter('all')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                filter === 'all' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Tous ({stats.total})
+            </button>
+            <button
+              onClick={() => setFilter('user')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                filter === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Utilisateurs ({stats.users})
+            </button>
+            <button
+              onClick={() => setFilter('player')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                filter === 'player' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Joueurs ({stats.players})
+            </button>
+            <button
+              onClick={() => setFilter('admin')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                filter === 'admin' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Admins ({stats.admins})
+            </button>
+          </div>
+        </div>
+
+        {/* Accounts Table */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Utilisateur
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Rôle
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Équipe
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredAccounts.map((account, index) => (
+                  <motion.tr
+                    key={account.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="hover:bg-gray-50"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {editingAccount === account.id ? (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={editForm.firstName || ''}
+                            onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                            placeholder="Prénom"
+                          />
+                          <input
+                            type="text"
+                            value={editForm.lastName || ''}
+                            onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                            placeholder="Nom"
+                          />
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {account.firstName} {account.lastName}
+                          </div>
+                          {account.position && (
+                            <div className="text-xs text-gray-500">
+                              {account.position} • #{account.jerseyNumber}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{account.email}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {editingAccount === account.id ? (
+                        <select
+                          value={editForm.role}
+                          onChange={(e) => setEditForm({ ...editForm, role: e.target.value as any })}
+                          className="px-3 py-1 border border-gray-300 rounded text-sm"
+                        >
+                          <option value="user">Utilisateur</option>
+                          <option value="player">Joueur</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      ) : (
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          account.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                          account.role === 'player' ? 'bg-green-100 text-green-800' :
+                          'bg-blue-100 text-blue-800'
+                        }`}>
+                          {account.role === 'admin' ? 'Admin' : account.role === 'player' ? 'Joueur' : 'Utilisateur'}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {editingAccount === account.id && editForm.role === 'player' ? (
+                        <select
+                          value={editForm.teamId || ''}
+                          onChange={(e) => setEditForm({ ...editForm, teamId: e.target.value })}
+                          className="px-3 py-1 border border-gray-300 rounded text-sm"
+                        >
+                          <option value="">Sélectionner une équipe</option>
+                          {teams.map(team => (
+                            <option key={team.id} value={team.id}>{team.name}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div className="text-sm text-gray-900">
+                          {account.teamName || '-'}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      {editingAccount === account.id ? (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => saveAccount(account.id)}
+                            disabled={saving}
+                            className="text-green-600 hover:text-green-900 disabled:opacity-50"
+                            title="Sauvegarder"
+                          >
+                            <Save className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={cancelEdit}
+                            disabled={saving}
+                            className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                            title="Annuler"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2 relative">
+                          <button
+                            onClick={() => startEdit(account)}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Modifier"
+                          >
+                            <Edit className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => sendPasswordReset(account)}
+                            disabled={saving}
+                            className="text-orange-600 hover:text-orange-900 disabled:opacity-50"
+                            title="Réinitialiser mot de passe"
+                          >
+                            <Mail className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => deleteAccount(account)}
+                            disabled={saving}
+                            className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                            title="Supprimer"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

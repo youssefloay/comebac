@@ -144,6 +144,7 @@ export default function Dashboard({ user }: { user: any }) {
     { id: "matches", label: "Matchs", icon: "📅" },
     { id: "results", label: "Résultats", icon: "📊" },
     { id: "statistics", label: "Statistiques", icon: "📈" },
+    { id: "accounts", label: "Comptes", icon: "👤" },
     { id: "registrations", label: "Inscriptions", icon: "📝" },
     { id: "archives", label: "Archives", icon: "📦" },
   ]
@@ -329,6 +330,18 @@ export default function Dashboard({ user }: { user: any }) {
           {activeTab === "matches" && <MatchesTab />}
           {activeTab === "results" && <ResultsTab />}
           {activeTab === "statistics" && <StatisticsTab />}
+          {activeTab === "accounts" && (
+            <div className="text-center py-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Gestion des Comptes</h2>
+              <p className="text-gray-600 mb-6">Gérez les rôles et les équipes des utilisateurs</p>
+              <button
+                onClick={() => window.location.href = '/admin/accounts'}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+              >
+                👤 Gérer les comptes
+              </button>
+            </div>
+          )}
           {activeTab === "registrations" && (
             <div className="text-center py-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Inscriptions d'Équipes</h2>
