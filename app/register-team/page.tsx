@@ -54,7 +54,9 @@ export default function RegisterTeamPage() {
     { id: '2', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
     { id: '3', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
     { id: '4', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-    { id: '5', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' }
+    { id: '5', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+    { id: '6', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+    { id: '7', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' }
   ])
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -74,7 +76,9 @@ export default function RegisterTeamPage() {
       { id: '2', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
       { id: '3', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
       { id: '4', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-      { id: '5', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' }
+      { id: '5', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+      { id: '6', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
+      { id: '7', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' }
     ])
     setSuccess(false)
   }
@@ -148,7 +152,7 @@ export default function RegisterTeamPage() {
   }
 
   const removePlayer = (id: string) => {
-    if (players.length > 5) {
+    if (players.length > 7) {
       setPlayers(players.filter(p => p.id !== id))
     }
   }
@@ -179,7 +183,7 @@ export default function RegisterTeamPage() {
     if (!captainEmail.trim()) return 'L\'email du capitaine est requis'
     if (!captainPhone.trim()) return 'Le téléphone du capitaine est requis'
     
-    if (players.length < 5) return 'Vous devez avoir au minimum 5 joueurs'
+    if (players.length < 7) return 'Vous devez avoir au minimum 7 joueurs'
     if (players.length > 10) return 'Vous ne pouvez pas avoir plus de 10 joueurs'
     
     for (const player of players) {
@@ -530,7 +534,7 @@ export default function RegisterTeamPage() {
                 <h2 className="text-xl font-bold text-gray-900">
                   Joueurs ({players.length}/10)
                 </h2>
-                <p className="text-sm text-gray-600">Minimum 5 joueurs requis</p>
+                <p className="text-sm text-gray-600">Entre 7 et 10 joueurs requis</p>
               </div>
               <button
                 type="button"

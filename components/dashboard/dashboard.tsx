@@ -23,14 +23,82 @@ export default function Dashboard({ user }: { user: any }) {
   }
 
   const handleGenerateMatches = async () => {
-    if (!confirm("Générer automatiquement tous les matchs ? Cela supprimera les matchs existants.")) {
+    // Demander la date du premier match
+    const dateInput = prompt(
+      "📅 Date du premier match (jeudi)\n\nFormat: JJ/MM/AAAA\nExemple: 15/01/2025"
+    )
+    
+    if (!dateInput) return
+
+    // Demander l'heure
+    const timeInput = prompt(
+      "⏰ Heure des matchs\n\nFormat: HH:MM\nExemple: 16:00"
+    )
+    
+    if (!timeInput) return
+
+    // Demander le nombre de matchs par jeudi
+    const matchesPerDayInput = prompt(
+      "⚽ Combien de matchs par jeudi?\n\nPar défaut: 1\n(Entrez un nombre entre 1 et 10)"
+    )
+    
+    const matchesPerDay = matchesPerDayInput ? parseInt(matchesPerDayInput) : 1
+    
+    if (isNaN(matchesPerDay) || matchesPerDay < 1 || matchesPerDay > 10) {
+      alert("❌ Nombre invalide. Utilisez un nombre entre 1 et 10")
+      return
+    }
+
+    // Valider le format de date
+    const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/
+    const dateMatch = dateInput.match(dateRegex)
+    if (!dateMatch) {
+      alert("❌ Format de date invalide. Utilisez JJ/MM/AAAA")
+      return
+    }
+
+    // Valider le format d'heure
+    const timeRegex = /^(\d{2}):(\d{2})$/
+    const timeMatch = timeInput.match(timeRegex)
+    if (!timeMatch) {
+      alert("❌ Format d'heure invalide. Utilisez HH:MM")
+      return
+    }
+
+    const [, day, month, year] = dateMatch
+    const [, hours, minutes] = timeMatch
+    const startDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes))
+
+    // Vérifier que c'est un jeudi
+    if (startDate.getDay() !== 4) {
+      const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
+      alert(`❌ Cette date est un ${dayNames[startDate.getDay()]}. Les matchs doivent être le jeudi.`)
+      return
+    }
+
+    if (!confirm(
+      `🏆 Générer les matchs\n\n` +
+      `📅 Premier match: ${dateInput} à ${timeInput}\n` +
+      `⚽ ${matchesPerDay} match(s) par jeudi\n` +
+      `📆 Tous les jeudis suivants à ${timeInput}\n\n` +
+      `Les matchs existants ne seront pas supprimés.\n\n` +
+      `Continuer?`
+    )) {
       return
     }
 
     setIsSeeding(true)
     setSeedMessage(null)
     try {
-      const response = await fetch("/api/admin/generate-matches", { method: "POST" })
+      const response = await fetch("/api/admin/generate-matches", { 
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          startDate: startDate.toISOString(),
+          time: timeInput,
+          matchesPerDay: matchesPerDay
+        })
+      })
       const data = await response.json()
       if (response.ok) {
         setSeedMessage({ type: "success", text: data.message })

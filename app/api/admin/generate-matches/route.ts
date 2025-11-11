@@ -2,8 +2,17 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/firebase'
 import { collection, getDocs, addDoc, Timestamp, query, where } from 'firebase/firestore'
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
+    const body = await request.json()
+    const { startDate, time, matchesPerDay = 1 } = body
+
+    if (!startDate || !time) {
+      return NextResponse.json({ 
+        error: 'Date et heure requises' 
+      }, { status: 400 })
+    }
+
     // Récupérer toutes les équipes
     const teamsSnapshot = await getDocs(collection(db, 'teams'))
     const teams = teamsSnapshot.docs.map(doc => ({
@@ -17,15 +26,15 @@ export async function POST() {
       }, { status: 400 })
     }
 
-    // Vérifier que chaque équipe a au moins 8 joueurs (5 titulaires + 3 remplaçants)
+    // Vérifier que chaque équipe a au moins 7 joueurs (5 titulaires + 2 remplaçants minimum)
     const teamsWithPlayers = []
     for (const team of teams) {
       const playersQuery = query(collection(db, 'players'), where('teamId', '==', team.id))
       const playersSnapshot = await getDocs(playersQuery)
       
-      if (playersSnapshot.docs.length < 8) {
+      if (playersSnapshot.docs.length < 7) {
         return NextResponse.json({ 
-          error: `L'équipe "${team.name}" doit avoir au moins 8 joueurs (5 titulaires + 3 remplaçants)` 
+          error: `L'équipe "${team.name}" doit avoir au moins 7 joueurs (5 titulaires + 2 remplaçants minimum)` 
         }, { status: 400 })
       }
       
@@ -35,15 +44,10 @@ export async function POST() {
       })
     }
 
-    // Supprimer les anciens matchs
-    const existingMatchesSnapshot = await getDocs(collection(db, 'matches'))
-    const deletePromises = existingMatchesSnapshot.docs.map(doc => doc.ref.delete())
-    await Promise.all(deletePromises)
+    // Ne plus supprimer les matchs existants (ils sont archivés en fin de saison)
 
     // Générer tous les matchs (chaque équipe joue contre chaque autre équipe à domicile et à l'extérieur)
     const matches = []
-    const startDate = new Date()
-    let matchDate = new Date(startDate)
     
     for (let i = 0; i < teams.length; i++) {
       for (let j = 0; j < teams.length; j++) {
@@ -52,15 +56,10 @@ export async function POST() {
           matches.push({
             homeTeamId: teams[i].id,
             awayTeamId: teams[j].id,
-            date: new Date(matchDate),
             status: 'scheduled',
             homeTeamName: teams[i].name,
             awayTeamName: teams[j].name,
-            round: Math.floor(matches.length / teams.length) + 1
           })
-          
-          // Espacer les matchs de 3 jours
-          matchDate.setDate(matchDate.getDate() + 3)
         }
       }
     }
@@ -72,11 +71,21 @@ export async function POST() {
     }
 
     // Réassigner les dates après mélange
-    matchDate = new Date(startDate)
+    // matchesPerDay matchs par jeudi
+    let matchDate = new Date(startDate)
+    let matchCounter = 0
+    
     matches.forEach((match, index) => {
       match.date = new Date(matchDate)
-      match.round = Math.floor(index / (teams.length / 2)) + 1
-      matchDate.setDate(matchDate.getDate() + 2) // 2 jours entre chaque match
+      match.round = Math.floor(index / matchesPerDay) + 1
+      
+      matchCounter++
+      
+      // Si on a atteint le nombre de matchs par jour, passer au jeudi suivant
+      if (matchCounter >= matchesPerDay) {
+        matchDate.setDate(matchDate.getDate() + 7) // Prochain jeudi
+        matchCounter = 0
+      }
     })
 
     // Sauvegarder les matchs dans Firestore
