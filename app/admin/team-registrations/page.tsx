@@ -22,14 +22,21 @@ interface Player {
   position: string
   foot: string
   jerseyNumber: number
-  grade?: '1ère' | 'Terminale'
+  grade?: string
 }
 
 interface Registration {
   id: string
   teamName: string
   schoolName?: string
-  teamGrade?: '1ère' | 'Terminale'
+  teamGrade?: string
+  coach?: {
+    firstName: string
+    lastName: string
+    birthDate: string
+    email: string
+    phone: string
+  }
   captain: {
     firstName: string
     lastName: string
@@ -820,6 +827,107 @@ export default function TeamRegistrationsPage() {
                     </div>
                   </div>
 
+                  {/* Coach Info */}
+                  {(selectedRegistration.coach || (editMode && editedRegistration)) && (
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 mb-3">Entraîneur</h3>
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
+                        {editMode && editedRegistration ? (
+                          <div className="space-y-2">
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={editedRegistration.coach?.firstName || ''}
+                                onChange={(e) => setEditedRegistration({
+                                  ...editedRegistration,
+                                  coach: {...(editedRegistration.coach || {firstName: '', lastName: '', birthDate: '', email: '', phone: ''}), firstName: e.target.value}
+                                })}
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded text-gray-900 bg-white"
+                                placeholder="Prénom"
+                              />
+                              <input
+                                type="text"
+                                value={editedRegistration.coach?.lastName || ''}
+                                onChange={(e) => setEditedRegistration({
+                                  ...editedRegistration,
+                                  coach: {...(editedRegistration.coach || {firstName: '', lastName: '', birthDate: '', email: '', phone: ''}), lastName: e.target.value}
+                                })}
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded text-gray-900 bg-white"
+                                placeholder="Nom"
+                              />
+                            </div>
+                            <input
+                              type="date"
+                              value={editedRegistration.coach?.birthDate || ''}
+                              onChange={(e) => setEditedRegistration({
+                                ...editedRegistration,
+                                coach: {...(editedRegistration.coach || {firstName: '', lastName: '', birthDate: '', email: '', phone: ''}), birthDate: e.target.value}
+                              })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 bg-white"
+                              placeholder="Date de naissance"
+                            />
+                            <input
+                              type="email"
+                              value={editedRegistration.coach?.email || ''}
+                              onChange={(e) => setEditedRegistration({
+                                ...editedRegistration,
+                                coach: {...(editedRegistration.coach || {firstName: '', lastName: '', birthDate: '', email: '', phone: ''}), email: e.target.value}
+                              })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 bg-white"
+                              placeholder="Email"
+                            />
+                            <input
+                              type="tel"
+                              value={editedRegistration.coach?.phone || ''}
+                              onChange={(e) => setEditedRegistration({
+                                ...editedRegistration,
+                                coach: {...(editedRegistration.coach || {firstName: '', lastName: '', birthDate: '', email: '', phone: ''}), phone: e.target.value}
+                              })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 bg-white"
+                              placeholder="Téléphone"
+                            />
+                          </div>
+                        ) : selectedRegistration.coach ? (
+                          <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg">
+                              {selectedRegistration.coach.firstName.charAt(0)}{selectedRegistration.coach.lastName.charAt(0)}
+                            </div>
+                            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div>
+                                <p className="text-xs text-gray-600">Nom complet</p>
+                                <p className="font-semibold text-gray-900">
+                                  {selectedRegistration.coach.firstName} {selectedRegistration.coach.lastName}
+                                </p>
+                              </div>
+                              {selectedRegistration.coach.birthDate && (
+                                <div>
+                                  <p className="text-xs text-gray-600">Date de naissance</p>
+                                  <p className="font-medium text-gray-900">
+                                    {new Date(selectedRegistration.coach.birthDate).toLocaleDateString('fr-FR')}
+                                  </p>
+                                </div>
+                              )}
+                              {selectedRegistration.coach.email && (
+                                <div>
+                                  <p className="text-xs text-gray-600">Email</p>
+                                  <p className="font-medium text-gray-900">{selectedRegistration.coach.email}</p>
+                                </div>
+                              )}
+                              {selectedRegistration.coach.phone && (
+                                <div>
+                                  <p className="text-xs text-gray-600">Téléphone</p>
+                                  <p className="font-medium text-gray-900">{selectedRegistration.coach.phone}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-600 italic">Aucun entraîneur renseigné</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Players */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
@@ -842,7 +950,14 @@ export default function TeamRegistrationsPage() {
                           {editMode && editedRegistration ? (
                             <>
                               <div className="flex items-center justify-between mb-3">
-                                <span className="text-sm font-bold text-gray-700">Joueur {index + 1}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-bold text-gray-700">Joueur {index + 1}</span>
+                                  {index === 0 && (
+                                    <span className="inline-flex items-center justify-center w-5 h-5 bg-yellow-500 text-white text-xs font-bold rounded-full" title="Capitaine">
+                                      C
+                                    </span>
+                                  )}
+                                </div>
                                 <button
                                   onClick={() => removePlayer(index)}
                                   disabled={editedRegistration.players.length <= 7}
@@ -1004,9 +1119,16 @@ export default function TeamRegistrationsPage() {
                               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
                                 <div>
                                   <p className="text-xs text-gray-600">Nom</p>
-                                  <p className="text-sm font-semibold text-gray-900">
-                                    {player.firstName} {player.lastName}
-                                    {player.nickname && <span className="text-blue-600"> "{player.nickname}"</span>}
+                                  <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                                    <span>
+                                      {player.firstName} {player.lastName}
+                                      {player.nickname && <span className="text-blue-600"> "{player.nickname}"</span>}
+                                    </span>
+                                    {index === 0 && (
+                                      <span className="inline-flex items-center justify-center w-5 h-5 bg-yellow-500 text-white text-xs font-bold rounded-full" title="Capitaine">
+                                        C
+                                      </span>
+                                    )}
                                   </p>
                                 </div>
                                 <div>

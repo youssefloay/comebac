@@ -21,7 +21,7 @@ interface Player {
   position: 'Gardien' | 'Défenseur' | 'Milieu' | 'Attaquant'
   foot: 'Droitier' | 'Gaucher' | 'Ambidextre'
   jerseyNumber: string
-  grade: '1ère' | 'Terminale'
+  grade: string
 }
 
 const CAIRO_FRENCH_SCHOOLS = [
@@ -50,6 +50,15 @@ export default function RegisterTeamPage() {
   const [captainEmail, setCaptainEmail] = useState('')
   const [captainPhone, setCaptainPhone] = useState('')
   const [captainIsCaptain, setCaptainIsCaptain] = useState(true) // Le capitaine est toujours joueur
+  
+  // Coach info (optional)
+  const [hasCoach, setHasCoach] = useState(false)
+  const [coachFirstName, setCoachFirstName] = useState('')
+  const [coachLastName, setCoachLastName] = useState('')
+  const [coachBirthDate, setCoachBirthDate] = useState('')
+  const [coachEmail, setCoachEmail] = useState('')
+  const [coachPhone, setCoachPhone] = useState('')
+  
   const [players, setPlayers] = useState<Player[]>([
     { id: '1', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
     { id: '2', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
@@ -73,6 +82,12 @@ export default function RegisterTeamPage() {
     setCaptainLastName('')
     setCaptainEmail('')
     setCaptainPhone('')
+    setHasCoach(false)
+    setCoachFirstName('')
+    setCoachLastName('')
+    setCoachBirthDate('')
+    setCoachEmail('')
+    setCoachPhone('')
     setPlayers([
       { id: '1', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
       { id: '2', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
@@ -234,7 +249,7 @@ export default function RegisterTeamPage() {
     setError('')
 
     try {
-      await addDoc(collection(db, 'teamRegistrations'), {
+      const registrationData: any = {
         teamName,
         schoolName: schoolName === 'Autre' ? customSchool : schoolName,
         teamGrade: teamGrade === 'Autre' ? customGrade : teamGrade,
@@ -265,7 +280,20 @@ export default function RegisterTeamPage() {
         status: 'pending',
         submittedAt: serverTimestamp(),
         createdAt: serverTimestamp()
-      })
+      }
+      
+      // Add coach info if provided
+      if (hasCoach && coachFirstName && coachLastName) {
+        registrationData.coach = {
+          firstName: coachFirstName,
+          lastName: coachLastName,
+          birthDate: coachBirthDate,
+          email: coachEmail,
+          phone: coachPhone
+        }
+      }
+      
+      await addDoc(collection(db, 'teamRegistrations'), registrationData)
 
       // Envoyer une notification à l'admin
       try {
@@ -564,6 +592,107 @@ export default function RegisterTeamPage() {
                 />
               </div>
             </div>
+          </motion.div>
+
+          {/* Coach Info (Optional) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="bg-white p-6 rounded-lg shadow-md"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Entraîneur (Optionnel)</h2>
+                <p className="text-sm text-gray-600">Informations de l'entraîneur de l'équipe</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHasCoach(!hasCoach)}
+                className={`px-4 py-2 rounded-lg transition font-medium ${
+                  hasCoach 
+                    ? 'bg-red-100 text-red-700 hover:bg-red-200' 
+                    : 'bg-green-100 text-green-700 hover:bg-green-200'
+                }`}
+              >
+                {hasCoach ? 'Retirer l\'entraîneur' : 'Ajouter un entraîneur'}
+              </button>
+            </div>
+            
+            <AnimatePresence>
+              {hasCoach && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                >
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Prénom *
+                    </label>
+                    <input
+                      type="text"
+                      value={coachFirstName}
+                      onChange={(e) => setCoachFirstName(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required={hasCoach}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nom *
+                    </label>
+                    <input
+                      type="text"
+                      value={coachLastName}
+                      onChange={(e) => setCoachLastName(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required={hasCoach}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Date de naissance
+                    </label>
+                    <input
+                      type="date"
+                      value={coachBirthDate}
+                      onChange={(e) => setCoachBirthDate(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={coachEmail}
+                      onChange={(e) => setCoachEmail(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="coach@example.com"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Téléphone
+                    </label>
+                    <input
+                      type="tel"
+                      value={coachPhone}
+                      onChange={(e) => setCoachPhone(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="+20 123 456 7890"
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
 
           {/* Players */}
