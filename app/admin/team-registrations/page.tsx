@@ -95,6 +95,7 @@ export default function TeamRegistrationsPage() {
     setMessage(null)
 
     try {
+      // 1. Mettre à jour l'inscription
       await updateDoc(doc(db, 'teamRegistrations', editedRegistration.id), {
         teamName: editedRegistration.teamName,
         schoolName: editedRegistration.schoolName,
@@ -102,6 +103,113 @@ export default function TeamRegistrationsPage() {
         captain: editedRegistration.captain,
         players: editedRegistration.players
       })
+
+      // 2. Si l'équipe est approuvée, mettre à jour aussi l'équipe et les joueurs dans la DB
+      if (editedRegistration.status === 'approved') {
+        // Trouver l'équipe
+        const teamsSnap = await getDocs(collection(db, 'teams'))
+        const teamDoc = teamsSnap.docs.find(doc => doc.data().name === selectedRegistration?.teamName)
+        
+        if (teamDoc) {
+          // Mettre à jour le nom de l'équipe
+          await updateDoc(doc(db, 'teams', teamDoc.id), {
+            name: editedRegistration.teamName,
+            schoolName: editedRegistration.schoolName,
+            teamGrade: editedRegistration.teamGrade,
+            captain: editedRegistration.captain
+          })
+
+          // Récupérer les joueurs existants de cette équipe
+          const playersSnap = await getDocs(collection(db, 'players'))
+          const existingPlayers = playersSnap.docs.filter(doc => doc.data().teamId === teamDoc.id)
+
+          // Mettre à jour ou créer les joueurs
+          for (let i = 0; i < editedRegistration.players.length; i++) {
+            const player = editedRegistration.players[i]
+            const existingPlayer = existingPlayers[i]
+
+            const playerData: any = {
+              name: `${player.firstName} ${player.lastName}`,
+              number: player.jerseyNumber,
+              position: player.position,
+              teamId: teamDoc.id,
+              nationality: 'Égypte',
+              email: player.email,
+              phone: player.phone,
+              firstName: player.firstName,
+              lastName: player.lastName,
+              nickname: player.nickname || '',
+              birthDate: player.birthDate || '',
+              height: player.height || 0,
+              tshirtSize: player.tshirtSize || 'M',
+              strongFoot: player.foot === 'Droitier' ? 'Droit' : player.foot === 'Gaucher' ? 'Gauche' : 'Ambidextre',
+              grade: player.grade || editedRegistration.teamGrade,
+              school: editedRegistration.schoolName,
+              updatedAt: serverTimestamp()
+            }
+
+            if (player.age && player.age > 0) {
+              playerData.age = player.age
+            }
+
+            if (existingPlayer) {
+              // Mettre à jour le joueur existant
+              await updateDoc(doc(db, 'players', existingPlayer.id), playerData)
+            } else {
+              // Créer un nouveau joueur
+              await addDoc(collection(db, 'players'), {
+                ...playerData,
+                overall: 75,
+                seasonStats: {
+                  goals: 0,
+                  assists: 0,
+                  matches: 0,
+                  yellowCards: 0,
+                  redCards: 0
+                },
+                createdAt: serverTimestamp()
+              })
+            }
+          }
+
+          // Supprimer les joueurs en trop si on en a retiré
+          if (existingPlayers.length > editedRegistration.players.length) {
+            for (let i = editedRegistration.players.length; i < existingPlayers.length; i++) {
+              await deleteDoc(doc(db, 'players', existingPlayers[i].id))
+            }
+          }
+
+          // Mettre à jour les comptes joueurs (playerAccounts)
+          const playerAccountsSnap = await getDocs(collection(db, 'playerAccounts'))
+          const existingAccounts = playerAccountsSnap.docs.filter(doc => doc.data().teamId === teamDoc.id)
+
+          for (let i = 0; i < editedRegistration.players.length; i++) {
+            const player = editedRegistration.players[i]
+            const existingAccount = existingAccounts.find(acc => acc.data().email === player.email)
+
+            const accountData = {
+              firstName: player.firstName,
+              lastName: player.lastName,
+              nickname: player.nickname || '',
+              email: player.email,
+              phone: player.phone,
+              position: player.position,
+              jerseyNumber: player.jerseyNumber,
+              teamId: teamDoc.id,
+              teamName: editedRegistration.teamName,
+              birthDate: player.birthDate || '',
+              height: player.height || 0,
+              tshirtSize: player.tshirtSize || 'M',
+              foot: player.foot,
+              grade: player.grade || editedRegistration.teamGrade
+            }
+
+            if (existingAccount) {
+              await updateDoc(doc(db, 'playerAccounts', existingAccount.id), accountData)
+            }
+          }
+        }
+      }
 
       setMessage({ type: 'success', text: 'Modifications sauvegardées!' })
       setEditMode(false)
@@ -194,6 +302,38 @@ export default function TeamRegistrationsPage() {
     } catch (error) {
       console.error('Erreur:', error)
       setMessage({ type: 'error', text: 'Erreur lors du renvoi des emails' })
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  const resendPlayerEmail = async (player: Player, teamName: string) => {
+    if (!confirm(`Renvoyer l'email de création de mot de passe à ${player.firstName} ${player.lastName} ?`)) return
+
+    setProcessing(true)
+    setMessage(null)
+
+    try {
+      const response = await fetch('/api/admin/resend-player-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playerEmail: player.email,
+          playerName: `${player.firstName} ${player.lastName}`,
+          teamName: teamName
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: data.message })
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Erreur lors du renvoi' })
+      }
+    } catch (error) {
+      console.error('Erreur:', error)
+      setMessage({ type: 'error', text: 'Erreur lors du renvoi de l\'email' })
     } finally {
       setProcessing(false)
     }
@@ -860,60 +1000,71 @@ export default function TeamRegistrationsPage() {
                               </div>
                             </>
                           ) : (
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                              <div>
-                                <p className="text-xs text-gray-600">Nom</p>
-                                <p className="text-sm font-semibold text-gray-900">
-                                  {player.firstName} {player.lastName}
-                                  {player.nickname && <span className="text-blue-600"> "{player.nickname}"</span>}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-xs text-gray-600">Email</p>
-                                <p className="text-sm font-semibold text-gray-900">{player.email}</p>
-                              </div>
-                              <div>
-                                <p className="text-xs text-gray-600">Téléphone</p>
-                                <p className="text-sm font-semibold text-gray-900">{player.phone}</p>
-                              </div>
-                              {player.birthDate && (
+                            <>
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
                                 <div>
-                                  <p className="text-xs text-gray-600">Date de naissance</p>
+                                  <p className="text-xs text-gray-600">Nom</p>
                                   <p className="text-sm font-semibold text-gray-900">
-                                    {new Date(player.birthDate).toLocaleDateString('fr-FR')}
-                                    {player.age && <span className="text-gray-600"> ({player.age} ans)</span>}
+                                    {player.firstName} {player.lastName}
+                                    {player.nickname && <span className="text-blue-600"> "{player.nickname}"</span>}
                                   </p>
                                 </div>
-                              )}
-                              <div>
-                                <p className="text-xs text-gray-600">Position</p>
-                                <p className="text-sm font-semibold text-gray-900">{player.position}</p>
-                              </div>
-                              <div>
-                                <p className="text-xs text-gray-600">N° Maillot</p>
-                                <p className="text-sm font-semibold text-gray-900">{player.jerseyNumber}</p>
-                              </div>
-                              <div>
-                                <p className="text-xs text-gray-600">Taille</p>
-                                <p className="text-sm font-semibold text-gray-900">{player.height} cm</p>
-                              </div>
-                              {player.tshirtSize && (
                                 <div>
-                                  <p className="text-xs text-gray-600">T-shirt</p>
-                                  <p className="text-sm font-semibold text-gray-900">{player.tshirtSize}</p>
+                                  <p className="text-xs text-gray-600">Email</p>
+                                  <p className="text-sm font-semibold text-gray-900">{player.email}</p>
                                 </div>
-                              )}
-                              <div>
-                                <p className="text-xs text-gray-600">Pied</p>
-                                <p className="text-sm font-semibold text-gray-900">{player.foot}</p>
-                              </div>
-                              {player.grade && (
                                 <div>
-                                  <p className="text-xs text-gray-600">Classe</p>
-                                  <p className="text-sm font-semibold text-gray-900">{player.grade}</p>
+                                  <p className="text-xs text-gray-600">Téléphone</p>
+                                  <p className="text-sm font-semibold text-gray-900">{player.phone}</p>
                                 </div>
+                                {player.birthDate && (
+                                  <div>
+                                    <p className="text-xs text-gray-600">Date de naissance</p>
+                                    <p className="text-sm font-semibold text-gray-900">
+                                      {new Date(player.birthDate).toLocaleDateString('fr-FR')}
+                                      {player.age && <span className="text-gray-600"> ({player.age} ans)</span>}
+                                    </p>
+                                  </div>
+                                )}
+                                <div>
+                                  <p className="text-xs text-gray-600">Position</p>
+                                  <p className="text-sm font-semibold text-gray-900">{player.position}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-gray-600">N° Maillot</p>
+                                  <p className="text-sm font-semibold text-gray-900">{player.jerseyNumber}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-gray-600">Taille</p>
+                                  <p className="text-sm font-semibold text-gray-900">{player.height} cm</p>
+                                </div>
+                                {player.tshirtSize && (
+                                  <div>
+                                    <p className="text-xs text-gray-600">T-shirt</p>
+                                    <p className="text-sm font-semibold text-gray-900">{player.tshirtSize}</p>
+                                  </div>
+                                )}
+                                <div>
+                                  <p className="text-xs text-gray-600">Pied</p>
+                                  <p className="text-sm font-semibold text-gray-900">{player.foot}</p>
+                                </div>
+                                {player.grade && (
+                                  <div>
+                                    <p className="text-xs text-gray-600">Classe</p>
+                                    <p className="text-sm font-semibold text-gray-900">{player.grade}</p>
+                                  </div>
+                                )}
+                              </div>
+                              {selectedRegistration.status === 'approved' && (
+                                <button
+                                  onClick={() => resendPlayerEmail(player, selectedRegistration.teamName)}
+                                  disabled={processing}
+                                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition text-sm font-medium"
+                                >
+                                  📧 Renvoyer l'email à ce joueur
+                                </button>
                               )}
-                            </div>
+                            </>
                           )}
                         </div>
                       ))}
@@ -970,15 +1121,22 @@ export default function TeamRegistrationsPage() {
                       </button>
                     </>
                   )}
-                  {selectedRegistration.status === 'approved' && (
+                  {selectedRegistration.status === 'approved' && !editMode && (
                     <>
                       <button
-                        onClick={() => resendEmails(selectedRegistration)}
+                        onClick={startEdit}
                         disabled={processing}
                         className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition font-medium"
                       >
-                        <Check className="w-5 h-5" />
-                        Renvoyer les emails
+                        <Eye className="w-5 h-5" />
+                        Modifier
+                      </button>
+                      <button
+                        onClick={() => resendEmails(selectedRegistration)}
+                        disabled={processing}
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition font-medium"
+                      >
+                        📧 Renvoyer tous les emails
                       </button>
                       <button
                         onClick={() => deleteRegistration(selectedRegistration)}
