@@ -141,6 +141,7 @@ export default function TeamRegistrationsPage() {
               position: player.position,
               teamId: teamDoc.id,
               nationality: 'Égypte',
+              isCaptain: i === 0, // Le premier joueur est le capitaine
               email: player.email,
               phone: player.phone,
               firstName: player.firstName,
@@ -363,13 +364,14 @@ export default function TeamRegistrationsPage() {
       })
 
       // 2. Créer les joueurs avec le format attendu par le système
-      const playerPromises = registration.players.map(player => {
+      const playerPromises = registration.players.map((player, index) => {
         const playerData: any = {
           name: `${player.firstName} ${player.lastName}`,
           number: player.jerseyNumber,
           position: player.position,
           teamId: teamRef.id,
           nationality: 'Égypte',
+          isCaptain: index === 0, // Le premier joueur est le capitaine
           // Informations du formulaire d'inscription
           email: player.email,
           phone: player.phone,
@@ -744,14 +746,26 @@ export default function TeamRegistrationsPage() {
                         className="text-sm text-gray-900 bg-white font-medium border-b border-blue-300 mb-1 w-full px-2 py-1"
                         placeholder="École"
                       />
-                      <select
-                        value={editedRegistration.teamGrade || '1ère'}
-                        onChange={(e) => setEditedRegistration({...editedRegistration, teamGrade: e.target.value as '1ère' | 'Terminale'})}
-                        className="text-sm text-gray-900 bg-white font-medium border border-purple-300 rounded px-2 py-1"
-                      >
-                        <option value="1ère">1ère</option>
-                        <option value="Terminale">Terminale</option>
-                      </select>
+                      <div className="space-y-2">
+                        <select
+                          value={editedRegistration.teamGrade || '1ère'}
+                          onChange={(e) => setEditedRegistration({...editedRegistration, teamGrade: e.target.value})}
+                          className="text-sm text-gray-900 bg-white font-medium border border-purple-300 rounded px-2 py-1"
+                        >
+                          <option value="1ère">1ère</option>
+                          <option value="Terminale">Terminale</option>
+                          <option value="Autre">Autre</option>
+                        </select>
+                        {editedRegistration.teamGrade === 'Autre' && (
+                          <input
+                            type="text"
+                            value={editedRegistration.teamGrade === 'Autre' ? '' : editedRegistration.teamGrade}
+                            onChange={(e) => setEditedRegistration({...editedRegistration, teamGrade: e.target.value})}
+                            className="text-sm text-gray-900 bg-white font-medium border border-purple-300 rounded px-2 py-1 w-full"
+                            placeholder="Précisez la classe (ex: 2nde, 3ème...)"
+                          />
+                        )}
+                      </div>
                     </>
                   ) : (
                     <>
@@ -1100,18 +1114,34 @@ export default function TeamRegistrationsPage() {
                                 <option value="XL">XL</option>
                                 <option value="XXL">XXL</option>
                               </select>
-                              <select
-                                value={player.grade || editedRegistration.teamGrade || '1ère'}
-                                onChange={(e) => {
-                                  const newPlayers = [...editedRegistration.players]
-                                  newPlayers[index].grade = e.target.value as '1ère' | 'Terminale'
-                                  setEditedRegistration({...editedRegistration, players: newPlayers})
-                                }}
-                                className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
-                              >
-                                <option value="1ère">1ère</option>
-                                <option value="Terminale">Terminale</option>
-                              </select>
+                              <div className="space-y-2">
+                                <select
+                                  value={player.grade || editedRegistration.teamGrade || '1ère'}
+                                  onChange={(e) => {
+                                    const newPlayers = [...editedRegistration.players]
+                                    newPlayers[index].grade = e.target.value
+                                    setEditedRegistration({...editedRegistration, players: newPlayers})
+                                  }}
+                                  className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white w-full"
+                                >
+                                  <option value="1ère">1ère</option>
+                                  <option value="Terminale">Terminale</option>
+                                  <option value="Autre">Autre</option>
+                                </select>
+                                {player.grade === 'Autre' && (
+                                  <input
+                                    type="text"
+                                    value={player.grade === 'Autre' ? '' : player.grade}
+                                    onChange={(e) => {
+                                      const newPlayers = [...editedRegistration.players]
+                                      newPlayers[index].grade = e.target.value
+                                      setEditedRegistration({...editedRegistration, players: newPlayers})
+                                    }}
+                                    className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white w-full"
+                                    placeholder="Précisez la classe"
+                                  />
+                                )}
+                              </div>
                               </div>
                             </>
                           ) : (

@@ -419,8 +419,13 @@ export default function TeamDetailPage() {
                               </span>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-gray-900 truncate">
-                                {player.name}
+                              <h3 className="font-semibold text-gray-900 truncate flex items-center gap-2">
+                                <span>{player.name}</span>
+                                {(player as any).isCaptain && (
+                                  <span className="inline-flex items-center justify-center w-5 h-5 bg-yellow-500 text-white text-xs font-bold rounded-full flex-shrink-0" title="Capitaine">
+                                    C
+                                  </span>
+                                )}
                               </h3>
                               <p className={`text-sm ${getPositionColor(player.position || '')} truncate`}>
                                 {player.position || 'Position non définie'}
