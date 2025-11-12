@@ -118,8 +118,23 @@ export default function TeamsPage() {
                       </h2>
                     </div>
                     <div className="absolute top-4 right-6">
-                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                        <span className="text-2xl">⚽</span>
+                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
+                        {team.logo ? (
+                          <img 
+                            src={team.logo} 
+                            alt={team.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                              const parent = e.currentTarget.parentElement
+                              if (parent) {
+                                parent.innerHTML = '<span class="text-2xl">⚽</span>'
+                              }
+                            }}
+                          />
+                        ) : (
+                          <span className="text-2xl">⚽</span>
+                        )}
                       </div>
                     </div>
                   </div>

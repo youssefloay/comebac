@@ -252,8 +252,23 @@ export default function TeamDetailPage() {
               </div>
             </div>
             <div className="absolute top-4 sm:top-6 right-4 sm:right-6">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-full flex items-center justify-center">
-                <span className="text-2xl sm:text-3xl">⚽</span>
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
+                {team.logo ? (
+                  <img 
+                    src={team.logo} 
+                    alt={team.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                      const parent = e.currentTarget.parentElement
+                      if (parent) {
+                        parent.innerHTML = '<span class="text-2xl sm:text-3xl">⚽</span>'
+                      }
+                    }}
+                  />
+                ) : (
+                  <span className="text-2xl sm:text-3xl">⚽</span>
+                )}
               </div>
             </div>
           </div>
