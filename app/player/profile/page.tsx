@@ -37,9 +37,18 @@ interface PlayerData {
   tshirtSize?: string
 }
 
+interface CoachData {
+  firstName: string
+  lastName: string
+  birthDate: string
+  email: string
+  phone: string
+}
+
 export default function PlayerProfilePage() {
   const { user } = useAuth()
   const [playerData, setPlayerData] = useState<PlayerData | null>(null)
+  const [coachData, setCoachData] = useState<CoachData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -82,11 +91,17 @@ export default function PlayerProfilePage() {
           tshirtSize: playerDataRaw.tshirtSize
         }
 
-        // Récupérer le nom de l'équipe si pas déjà présent
+        // Récupérer le nom de l'équipe et l'entraîneur si pas déjà présent
         if (player.teamId && !player.teamName) {
           const teamDoc = await getDoc(doc(db, 'teams', player.teamId))
           if (teamDoc.exists()) {
-            player.teamName = teamDoc.data().name
+            const teamData = teamDoc.data()
+            player.teamName = teamData.name
+            
+            // Récupérer les infos de l'entraîneur
+            if (teamData.coach) {
+              setCoachData(teamData.coach)
+            }
           }
         }
 
@@ -175,12 +190,43 @@ export default function PlayerProfilePage() {
 
           {/* Équipe */}
           {playerData.teamName && (
-            <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <Shield className="w-6 h-6 text-blue-600" />
-              <div>
-                <p className="text-sm text-gray-600">Mon Équipe</p>
-                <p className="font-bold text-gray-900">{playerData.teamName}</p>
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-3 mb-3">
+                <Shield className="w-6 h-6 text-blue-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Mon Équipe</p>
+                  <p className="font-bold text-gray-900">{playerData.teamName}</p>
+                </div>
               </div>
+              
+              {/* Coach Info */}
+              {coachData && (
+                <div className="mt-3 pt-3 border-t border-blue-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-green-600 text-white flex items-center justify-center font-bold text-sm">
+                      {coachData.firstName.charAt(0)}{coachData.lastName.charAt(0)}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-600">Entraîneur</p>
+                      <p className="font-semibold text-gray-900">
+                        {coachData.firstName} {coachData.lastName}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-1 text-xs text-gray-600">
+                        {coachData.email && (
+                          <span className="flex items-center gap-1">
+                            📧 {coachData.email}
+                          </span>
+                        )}
+                        {coachData.phone && (
+                          <span className="flex items-center gap-1">
+                            📞 {coachData.phone}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

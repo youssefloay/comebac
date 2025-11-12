@@ -43,7 +43,8 @@ export default function RegisterTeamPage() {
   const [teamName, setTeamName] = useState('')
   const [schoolName, setSchoolName] = useState('')
   const [customSchool, setCustomSchool] = useState('')
-  const [teamGrade, setTeamGrade] = useState<'1ère' | 'Terminale'>('1ère')
+  const [teamGrade, setTeamGrade] = useState<'1ère' | 'Terminale' | 'Autre'>('1ère')
+  const [customGrade, setCustomGrade] = useState('')
   const [captainFirstName, setCaptainFirstName] = useState('')
   const [captainLastName, setCaptainLastName] = useState('')
   const [captainEmail, setCaptainEmail] = useState('')
@@ -67,6 +68,7 @@ export default function RegisterTeamPage() {
     setSchoolName('')
     setCustomSchool('')
     setTeamGrade('1ère')
+    setCustomGrade('')
     setCaptainFirstName('')
     setCaptainLastName('')
     setCaptainEmail('')
@@ -146,9 +148,11 @@ export default function RegisterTeamPage() {
   }
 
   // Mettre à jour la classe de tous les joueurs quand la classe de l'équipe change
-  const updateTeamGrade = (grade: '1ère' | 'Terminale') => {
+  const updateTeamGrade = (grade: '1ère' | 'Terminale' | 'Autre') => {
     setTeamGrade(grade)
-    setPlayers(prev => prev.map(p => ({ ...p, grade })))
+    if (grade !== 'Autre') {
+      setPlayers(prev => prev.map(p => ({ ...p, grade })))
+    }
   }
 
   const removePlayer = (id: string) => {
@@ -179,6 +183,7 @@ export default function RegisterTeamPage() {
     if (!schoolName) return 'L\'école est requise'
     if (schoolName === 'Autre' && !customSchool.trim()) return 'Veuillez préciser le nom de votre école'
     if (!teamGrade) return 'La classe de l\'équipe est requise'
+    if (teamGrade === 'Autre' && !customGrade.trim()) return 'Veuillez préciser la classe'
     if (!captainFirstName.trim() || !captainLastName.trim()) return 'Le nom du capitaine est requis'
     if (!captainEmail.trim()) return 'L\'email du capitaine est requis'
     if (!captainPhone.trim()) return 'Le téléphone du capitaine est requis'
@@ -232,28 +237,31 @@ export default function RegisterTeamPage() {
       await addDoc(collection(db, 'teamRegistrations'), {
         teamName,
         schoolName: schoolName === 'Autre' ? customSchool : schoolName,
-        teamGrade,
+        teamGrade: teamGrade === 'Autre' ? customGrade : teamGrade,
         captain: {
           firstName: captainFirstName,
           lastName: captainLastName,
           email: captainEmail,
           phone: captainPhone
         },
-        players: players.map(p => ({
-          firstName: p.firstName,
-          lastName: p.lastName,
-          nickname: p.nickname,
-          email: p.email,
-          phone: p.phone,
-          birthDate: p.birthDate,
-          age: calculateAge(p.birthDate),
-          height: parseFloat(p.height),
-          tshirtSize: p.tshirtSize,
-          position: p.position,
-          foot: p.foot,
-          jerseyNumber: parseInt(p.jerseyNumber),
-          grade: p.grade
-        })),
+        players: players.map(p => {
+          const age = calculateAge(p.birthDate)
+          return {
+            firstName: p.firstName,
+            lastName: p.lastName,
+            nickname: p.nickname || '',
+            email: p.email,
+            phone: p.phone,
+            birthDate: p.birthDate || '',
+            ...(age > 0 && { age }), // N'inclure age que s'il est valide
+            height: parseFloat(p.height) || 0,
+            tshirtSize: p.tshirtSize,
+            position: p.position,
+            foot: p.foot,
+            jerseyNumber: parseInt(p.jerseyNumber) || 0,
+            grade: p.grade
+          }
+        }),
         status: 'pending',
         submittedAt: serverTimestamp(),
         createdAt: serverTimestamp()
@@ -459,13 +467,31 @@ export default function RegisterTeamPage() {
                 </label>
                 <select
                   value={teamGrade}
-                  onChange={(e) => updateTeamGrade(e.target.value as '1ère' | 'Terminale')}
+                  onChange={(e) => updateTeamGrade(e.target.value as '1ère' | 'Terminale' | 'Autre')}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 >
                   <option value="1ère">1ère</option>
                   <option value="Terminale">Terminale</option>
+                  <option value="Autre">Autre</option>
                 </select>
+                {teamGrade === 'Autre' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-2"
+                  >
+                    <input
+                      type="text"
+                      value={customGrade}
+                      onChange={(e) => setCustomGrade(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+                      placeholder="Précisez la classe (ex: 2nde, 3ème...)"
+                      required
+                    />
+                  </motion.div>
+                )}
                 <p className="text-xs text-gray-500 mt-1">
                   Cette classe s'appliquera à tous les joueurs de l'équipe
                 </p>

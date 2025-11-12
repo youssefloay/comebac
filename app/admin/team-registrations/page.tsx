@@ -216,8 +216,8 @@ export default function TeamRegistrationsPage() {
       })
 
       // 2. Créer les joueurs avec le format attendu par le système
-      const playerPromises = registration.players.map(player =>
-        addDoc(collection(db, 'players'), {
+      const playerPromises = registration.players.map(player => {
+        const playerData: any = {
           name: `${player.firstName} ${player.lastName}`,
           number: player.jerseyNumber,
           position: player.position,
@@ -228,14 +228,22 @@ export default function TeamRegistrationsPage() {
           phone: player.phone,
           firstName: player.firstName,
           lastName: player.lastName,
-          nickname: player.nickname,
-          birthDate: player.birthDate,
-          age: player.age,
-          height: player.height,
-          tshirtSize: player.tshirtSize,
+          nickname: player.nickname || '',
+          birthDate: player.birthDate || '',
+          height: player.height || 0,
+          tshirtSize: player.tshirtSize || 'M',
           strongFoot: player.foot === 'Droitier' ? 'Droit' : player.foot === 'Gaucher' ? 'Gauche' : 'Ambidextre',
           grade: player.grade || registration.teamGrade,
           school: registration.schoolName,
+        }
+        
+        // N'ajouter age que s'il existe et est valide
+        if (player.age && player.age > 0) {
+          playerData.age = player.age
+        }
+        
+        return addDoc(collection(db, 'players'), {
+          ...playerData,
           // Valeurs par défaut
           overall: 75,
           seasonStats: {
@@ -248,7 +256,7 @@ export default function TeamRegistrationsPage() {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         })
-      )
+      })
       await Promise.all(playerPromises)
 
       // 3. Créer les comptes joueurs et envoyer les emails

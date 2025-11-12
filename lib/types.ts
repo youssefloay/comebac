@@ -3,6 +3,13 @@ export interface Team {
   name: string
   logo: string
   color: string
+  coach?: {
+    firstName: string
+    lastName: string
+    birthDate: string
+    email: string
+    phone: string
+  }
   createdAt: Date
   updatedAt: Date
 }

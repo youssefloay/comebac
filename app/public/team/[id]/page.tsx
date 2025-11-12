@@ -257,6 +257,35 @@ export default function TeamDetailPage() {
               </div>
             </div>
           </div>
+          
+          {/* Coach Info */}
+          {team.coach && (
+            <div className="p-4 sm:p-6 bg-gray-50 border-t">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-green-500 to-green-600 text-white flex items-center justify-center font-bold text-lg">
+                  {team.coach.firstName.charAt(0)}{team.coach.lastName.charAt(0)}
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1">Entraîneur</p>
+                  <p className="font-semibold text-gray-900 text-base sm:text-lg">
+                    {team.coach.firstName} {team.coach.lastName}
+                  </p>
+                  <div className="flex flex-wrap gap-3 mt-2 text-xs sm:text-sm text-gray-600">
+                    {team.coach.email && (
+                      <span className="flex items-center gap-1">
+                        📧 {team.coach.email}
+                      </span>
+                    )}
+                    {team.coach.phone && (
+                      <span className="flex items-center gap-1">
+                        📞 {team.coach.phone}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
