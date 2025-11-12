@@ -429,6 +429,63 @@ export default function TeamRegistrationsPage() {
         // On continue même si la création des comptes échoue
       }
 
+      // 3.5. Créer le compte entraîneur si présent
+      if (registration.coach && registration.coach.email) {
+        try {
+          // Créer un "joueur" spécial pour l'entraîneur
+          await addDoc(collection(db, 'players'), {
+            name: `${registration.coach.firstName} ${registration.coach.lastName}`,
+            number: 0, // Numéro 0 pour l'entraîneur
+            position: 'Entraîneur',
+            teamId: teamRef.id,
+            nationality: 'Égypte',
+            isCoach: true, // Flag spécial pour identifier l'entraîneur
+            email: registration.coach.email,
+            phone: registration.coach.phone,
+            firstName: registration.coach.firstName,
+            lastName: registration.coach.lastName,
+            birthDate: registration.coach.birthDate || '',
+            overall: 0,
+            seasonStats: {
+              goals: 0,
+              assists: 0,
+              matches: 0,
+              yellowCards: 0,
+              redCards: 0
+            },
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          })
+
+          // Créer le compte pour l'entraîneur
+          const coachAccountResponse = await fetch('/api/admin/create-player-accounts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              teamId: teamRef.id,
+              players: [{
+                firstName: registration.coach.firstName,
+                lastName: registration.coach.lastName,
+                email: registration.coach.email,
+                phone: registration.coach.phone,
+                position: 'Entraîneur',
+                jerseyNumber: 0,
+                height: 0,
+                foot: 'Droitier',
+                grade: registration.teamGrade
+              }]
+            })
+          })
+
+          if (coachAccountResponse.ok) {
+            console.log('✅ Compte entraîneur créé avec succès')
+          }
+        } catch (coachError) {
+          console.error('Erreur lors de la création du compte entraîneur:', coachError)
+          // On continue même si la création du compte entraîneur échoue
+        }
+      }
+
       // 4. Initialiser les statistiques de l'équipe
       await addDoc(collection(db, 'teamStatistics'), {
         teamId: teamRef.id,
@@ -902,38 +959,61 @@ export default function TeamRegistrationsPage() {
                             />
                           </div>
                         ) : selectedRegistration.coach ? (
-                          <div className="flex items-start gap-4">
-                            <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg">
-                              {selectedRegistration.coach.firstName.charAt(0)}{selectedRegistration.coach.lastName.charAt(0)}
-                            </div>
-                            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
-                              <div>
-                                <p className="text-xs text-gray-600">Nom complet</p>
-                                <p className="font-semibold text-gray-900">
-                                  {selectedRegistration.coach.firstName} {selectedRegistration.coach.lastName}
-                                </p>
+                          <div className="space-y-3">
+                            <div className="flex items-start gap-4">
+                              <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg">
+                                {selectedRegistration.coach.firstName.charAt(0)}{selectedRegistration.coach.lastName.charAt(0)}
                               </div>
-                              {selectedRegistration.coach.birthDate && (
+                              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div>
-                                  <p className="text-xs text-gray-600">Date de naissance</p>
-                                  <p className="font-medium text-gray-900">
-                                    {new Date(selectedRegistration.coach.birthDate).toLocaleDateString('fr-FR')}
+                                  <p className="text-xs text-gray-600">Nom complet</p>
+                                  <p className="font-semibold text-gray-900">
+                                    {selectedRegistration.coach.firstName} {selectedRegistration.coach.lastName}
                                   </p>
                                 </div>
-                              )}
-                              {selectedRegistration.coach.email && (
-                                <div>
-                                  <p className="text-xs text-gray-600">Email</p>
-                                  <p className="font-medium text-gray-900">{selectedRegistration.coach.email}</p>
-                                </div>
-                              )}
-                              {selectedRegistration.coach.phone && (
-                                <div>
-                                  <p className="text-xs text-gray-600">Téléphone</p>
-                                  <p className="font-medium text-gray-900">{selectedRegistration.coach.phone}</p>
-                                </div>
-                              )}
+                                {selectedRegistration.coach.birthDate && (
+                                  <div>
+                                    <p className="text-xs text-gray-600">Date de naissance</p>
+                                    <p className="font-medium text-gray-900">
+                                      {new Date(selectedRegistration.coach.birthDate).toLocaleDateString('fr-FR')}
+                                    </p>
+                                  </div>
+                                )}
+                                {selectedRegistration.coach.email && (
+                                  <div>
+                                    <p className="text-xs text-gray-600">Email</p>
+                                    <p className="font-medium text-gray-900">{selectedRegistration.coach.email}</p>
+                                  </div>
+                                )}
+                                {selectedRegistration.coach.phone && (
+                                  <div>
+                                    <p className="text-xs text-gray-600">Téléphone</p>
+                                    <p className="font-medium text-gray-900">{selectedRegistration.coach.phone}</p>
+                                  </div>
+                                )}
+                              </div>
                             </div>
+                            {selectedRegistration.status === 'approved' && selectedRegistration.coach.email && (
+                              <button
+                                onClick={() => resendPlayerEmail(
+                                  {
+                                    firstName: selectedRegistration.coach!.firstName,
+                                    lastName: selectedRegistration.coach!.lastName,
+                                    email: selectedRegistration.coach!.email,
+                                    phone: selectedRegistration.coach!.phone,
+                                    position: 'Entraîneur',
+                                    jerseyNumber: 0,
+                                    height: 0,
+                                    foot: 'Droitier'
+                                  } as any,
+                                  selectedRegistration.teamName
+                                )}
+                                disabled={processing}
+                                className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition text-sm font-medium"
+                              >
+                                📧 Renvoyer l'email à l'entraîneur
+                              </button>
+                            )}
                           </div>
                         ) : (
                           <p className="text-sm text-gray-600 italic">Aucun entraîneur renseigné</p>
