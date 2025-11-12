@@ -508,19 +508,19 @@ export default function TeamRegistrationsPage() {
                         type="text"
                         value={editedRegistration.teamName}
                         onChange={(e) => setEditedRegistration({...editedRegistration, teamName: e.target.value})}
-                        className="text-2xl font-bold text-gray-900 border-b-2 border-blue-600 mb-2 w-full"
+                        className="text-2xl font-bold text-gray-900 bg-white border-b-2 border-blue-600 mb-2 w-full px-2 py-1"
                       />
                       <input
                         type="text"
                         value={editedRegistration.schoolName || ''}
                         onChange={(e) => setEditedRegistration({...editedRegistration, schoolName: e.target.value})}
-                        className="text-sm text-blue-600 font-medium border-b border-blue-300 mb-1 w-full"
+                        className="text-sm text-gray-900 bg-white font-medium border-b border-blue-300 mb-1 w-full px-2 py-1"
                         placeholder="École"
                       />
                       <select
                         value={editedRegistration.teamGrade || '1ère'}
                         onChange={(e) => setEditedRegistration({...editedRegistration, teamGrade: e.target.value as '1ère' | 'Terminale'})}
-                        className="text-sm text-purple-600 font-medium border border-purple-300 rounded px-2 py-1"
+                        className="text-sm text-gray-900 bg-white font-medium border border-purple-300 rounded px-2 py-1"
                       >
                         <option value="1ère">1ère</option>
                         <option value="Terminale">Terminale</option>
@@ -555,7 +555,7 @@ export default function TeamRegistrationsPage() {
                                 ...editedRegistration,
                                 captain: {...editedRegistration.captain, firstName: e.target.value}
                               })}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded"
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded text-gray-900 bg-white"
                               placeholder="Prénom"
                             />
                             <input
@@ -565,7 +565,7 @@ export default function TeamRegistrationsPage() {
                                 ...editedRegistration,
                                 captain: {...editedRegistration.captain, lastName: e.target.value}
                               })}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded"
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded text-gray-900 bg-white"
                               placeholder="Nom"
                             />
                           </div>
@@ -576,7 +576,7 @@ export default function TeamRegistrationsPage() {
                               ...editedRegistration,
                               captain: {...editedRegistration.captain, email: e.target.value}
                             })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded"
+                            className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 bg-white"
                             placeholder="Email"
                           />
                           <input
@@ -586,7 +586,7 @@ export default function TeamRegistrationsPage() {
                               ...editedRegistration,
                               captain: {...editedRegistration.captain, phone: e.target.value}
                             })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded"
+                            className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 bg-white"
                             placeholder="Téléphone"
                           />
                         </>
@@ -618,7 +618,7 @@ export default function TeamRegistrationsPage() {
                                   newPlayers[index].firstName = e.target.value
                                   setEditedRegistration({...editedRegistration, players: newPlayers})
                                 }}
-                                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                                className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
                                 placeholder="Prénom"
                               />
                               <input
@@ -629,7 +629,7 @@ export default function TeamRegistrationsPage() {
                                   newPlayers[index].lastName = e.target.value
                                   setEditedRegistration({...editedRegistration, players: newPlayers})
                                 }}
-                                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                                className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
                                 placeholder="Nom"
                               />
                               <input
@@ -640,7 +640,7 @@ export default function TeamRegistrationsPage() {
                                   newPlayers[index].nickname = e.target.value
                                   setEditedRegistration({...editedRegistration, players: newPlayers})
                                 }}
-                                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                                className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
                                 placeholder="Surnom"
                               />
                               <input
@@ -651,7 +651,7 @@ export default function TeamRegistrationsPage() {
                                   newPlayers[index].email = e.target.value
                                   setEditedRegistration({...editedRegistration, players: newPlayers})
                                 }}
-                                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                                className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
                                 placeholder="Email"
                               />
                               <input
@@ -662,7 +662,7 @@ export default function TeamRegistrationsPage() {
                                   newPlayers[index].phone = e.target.value
                                   setEditedRegistration({...editedRegistration, players: newPlayers})
                                 }}
-                                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                                className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
                                 placeholder="Téléphone"
                               />
                               <select
@@ -672,7 +672,7 @@ export default function TeamRegistrationsPage() {
                                   newPlayers[index].position = e.target.value
                                   setEditedRegistration({...editedRegistration, players: newPlayers})
                                 }}
-                                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                                className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
                               >
                                 <option value="Gardien">Gardien</option>
                                 <option value="Défenseur">Défenseur</option>
@@ -687,7 +687,7 @@ export default function TeamRegistrationsPage() {
                                   newPlayers[index].jerseyNumber = parseInt(e.target.value)
                                   setEditedRegistration({...editedRegistration, players: newPlayers})
                                 }}
-                                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                                className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
                                 placeholder="N° Maillot"
                                 min="1"
                                 max="99"
@@ -700,7 +700,7 @@ export default function TeamRegistrationsPage() {
                                   newPlayers[index].height = parseFloat(e.target.value)
                                   setEditedRegistration({...editedRegistration, players: newPlayers})
                                 }}
-                                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                                className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
                                 placeholder="Taille (cm)"
                               />
                               <select
@@ -710,7 +710,7 @@ export default function TeamRegistrationsPage() {
                                   newPlayers[index].foot = e.target.value
                                   setEditedRegistration({...editedRegistration, players: newPlayers})
                                 }}
-                                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                                className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
                               >
                                 <option value="Droitier">Droitier</option>
                                 <option value="Gaucher">Gaucher</option>
