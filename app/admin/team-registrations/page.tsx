@@ -223,6 +223,93 @@ export default function TeamRegistrationsPage() {
               await updateDoc(doc(db, 'playerAccounts', existingAccount.id), accountData)
             }
           }
+
+          // Gérer l'entraîneur si ajouté/modifié
+          if (editedRegistration.coach && editedRegistration.coach.email && editedRegistration.coach.firstName && editedRegistration.coach.lastName) {
+            // Vérifier si l'entraîneur existe déjà dans les joueurs
+            const coachPlayerExists = playersSnap.docs.find(doc => 
+              doc.data().teamId === teamDoc.id && 
+              doc.data().isCoach === true
+            )
+
+            if (!coachPlayerExists) {
+              // Créer le joueur entraîneur
+              await addDoc(collection(db, 'players'), {
+                name: `${editedRegistration.coach.firstName} ${editedRegistration.coach.lastName}`,
+                number: 0,
+                position: 'Entraîneur',
+                teamId: teamDoc.id,
+                nationality: 'Égypte',
+                isCoach: true,
+                email: editedRegistration.coach.email,
+                phone: editedRegistration.coach.phone,
+                firstName: editedRegistration.coach.firstName,
+                lastName: editedRegistration.coach.lastName,
+                birthDate: editedRegistration.coach.birthDate || '',
+                overall: 0,
+                seasonStats: {
+                  goals: 0,
+                  assists: 0,
+                  matches: 0,
+                  yellowCards: 0,
+                  redCards: 0
+                },
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+              })
+
+              // Créer le compte pour l'entraîneur
+              try {
+                const coachAccountResponse = await fetch('/api/admin/create-player-accounts', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    teamId: teamDoc.id,
+                    players: [{
+                      firstName: editedRegistration.coach.firstName,
+                      lastName: editedRegistration.coach.lastName,
+                      email: editedRegistration.coach.email,
+                      phone: editedRegistration.coach.phone,
+                      position: 'Entraîneur',
+                      jerseyNumber: 0,
+                      height: 0,
+                      foot: 'Droitier',
+                      grade: editedRegistration.teamGrade
+                    }]
+                  })
+                })
+
+                if (coachAccountResponse.ok) {
+                  console.log('✅ Compte entraîneur créé avec succès')
+                }
+              } catch (coachError) {
+                console.error('Erreur lors de la création du compte entraîneur:', coachError)
+              }
+            } else {
+              // Mettre à jour l'entraîneur existant
+              await updateDoc(doc(db, 'players', coachPlayerExists.id), {
+                name: `${editedRegistration.coach.firstName} ${editedRegistration.coach.lastName}`,
+                email: editedRegistration.coach.email,
+                phone: editedRegistration.coach.phone,
+                firstName: editedRegistration.coach.firstName,
+                lastName: editedRegistration.coach.lastName,
+                birthDate: editedRegistration.coach.birthDate || '',
+                updatedAt: serverTimestamp()
+              })
+
+              // Mettre à jour le compte
+              const coachAccount = existingAccounts.find(acc => acc.data().email === editedRegistration.coach!.email)
+              if (coachAccount) {
+                await updateDoc(doc(db, 'playerAccounts', coachAccount.id), {
+                  firstName: editedRegistration.coach.firstName,
+                  lastName: editedRegistration.coach.lastName,
+                  email: editedRegistration.coach.email,
+                  phone: editedRegistration.coach.phone,
+                  birthDate: editedRegistration.coach.birthDate || ''
+                })
+              }
+            }
+          }
         }
       }
 
