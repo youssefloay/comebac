@@ -119,12 +119,19 @@ export default function TeamRegistrationsPage() {
         
         if (teamDoc) {
           // Mettre à jour le nom de l'équipe
-          await updateDoc(doc(db, 'teams', teamDoc.id), {
+          const teamUpdateData: any = {
             name: editedRegistration.teamName,
             schoolName: editedRegistration.schoolName,
             teamGrade: editedRegistration.teamGrade,
             captain: editedRegistration.captain
-          })
+          }
+          
+          // Ajouter ou mettre à jour l'entraîneur
+          if (editedRegistration.coach && editedRegistration.coach.firstName && editedRegistration.coach.lastName) {
+            teamUpdateData.coach = editedRegistration.coach
+          }
+          
+          await updateDoc(doc(db, 'teams', teamDoc.id), teamUpdateData)
 
           // Récupérer les joueurs existants de cette équipe
           const playersSnap = await getDocs(collection(db, 'players'))
@@ -355,13 +362,20 @@ export default function TeamRegistrationsPage() {
 
     try {
       // 1. Créer l'équipe
-      const teamRef = await addDoc(collection(db, 'teams'), {
+      const teamData: any = {
         name: registration.teamName,
         schoolName: registration.schoolName,
         teamGrade: registration.teamGrade,
         createdAt: serverTimestamp(),
         captain: registration.captain
-      })
+      }
+      
+      // Ajouter l'entraîneur si présent
+      if (registration.coach) {
+        teamData.coach = registration.coach
+      }
+      
+      const teamRef = await addDoc(collection(db, 'teams'), teamData)
 
       // 2. Créer les joueurs avec le format attendu par le système
       const playerPromises = registration.players.map((player, index) => {
