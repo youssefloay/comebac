@@ -53,6 +53,7 @@ export default function TeamsTab() {
   })
   const [showCoachForm, setShowCoachForm] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
@@ -222,6 +223,52 @@ export default function TeamsTab() {
     setError(null)
   }
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Veuillez sélectionner une image')
+      return
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setError('L\'image ne doit pas dépasser 2MB')
+      return
+    }
+
+    setUploadingLogo(true)
+    setError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('teamId', editingId || 'new')
+
+      const response = await fetch('/api/upload-team-logo', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setFormData(prev => ({ ...prev, logo: data.url }))
+        setSuccess('Logo uploadé avec succès!')
+        setTimeout(() => setSuccess(null), 3000)
+      } else {
+        setError(data.error || 'Erreur lors de l\'upload')
+      }
+    } catch (error) {
+      console.error('Error uploading logo:', error)
+      setError('Erreur lors de l\'upload du logo')
+    } finally {
+      setUploadingLogo(false)
+    }
+  }
+
   const handleTeamClick = async (team: Team) => {
     setSelectedTeam(team)
     setLoadingDetails(true)
@@ -327,15 +374,39 @@ export default function TeamsTab() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    URL du logo (optionnel)
+                    Logo de l'équipe (optionnel)
                   </label>
-                  <input
-                    type="text"
-                    placeholder="https://example.com/logo.png"
-                    value={formData.logo}
-                    onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
+                  <div className="space-y-2">
+                    {formData.logo && (
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <img 
+                          src={formData.logo} 
+                          alt="Logo" 
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, logo: '' })}
+                          className="text-sm text-red-600 hover:text-red-700"
+                        >
+                          Supprimer
+                        </button>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      disabled={uploadingLogo}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                    {uploadingLogo && (
+                      <p className="text-sm text-blue-600">Upload en cours...</p>
+                    )}
+                    <p className="text-xs text-gray-500">
+                      Format: JPG, PNG, GIF (max 2MB)
+                    </p>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -476,10 +547,23 @@ export default function TeamsTab() {
                 onClick={() => handleTeamClick(team)}
               >
                 <div
-                  className="w-12 h-12 rounded-lg mb-3 flex items-center justify-center text-white font-bold text-lg"
-                  style={{ backgroundColor: team.color }}
+                  className="w-12 h-12 rounded-lg mb-3 flex items-center justify-center text-white font-bold text-lg overflow-hidden"
+                  style={{ backgroundColor: team.logo ? 'transparent' : team.color }}
                 >
-                  {team.logo ? "🏆" : "⚽"}
+                  {team.logo ? (
+                    <img 
+                      src={team.logo} 
+                      alt={team.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                        e.currentTarget.parentElement!.style.backgroundColor = team.color
+                        e.currentTarget.parentElement!.innerHTML = '⚽'
+                      }}
+                    />
+                  ) : (
+                    "⚽"
+                  )}
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition">{team.name}</h3>
               </div>
@@ -519,10 +603,23 @@ export default function TeamsTab() {
             <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div
-                  className="w-16 h-16 rounded-lg flex items-center justify-center text-white font-bold text-2xl"
-                  style={{ backgroundColor: selectedTeam.color }}
+                  className="w-16 h-16 rounded-lg flex items-center justify-center text-white font-bold text-2xl overflow-hidden"
+                  style={{ backgroundColor: selectedTeam.logo ? 'transparent' : selectedTeam.color }}
                 >
-                  {selectedTeam.logo ? "🏆" : "⚽"}
+                  {selectedTeam.logo ? (
+                    <img 
+                      src={selectedTeam.logo} 
+                      alt={selectedTeam.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                        e.currentTarget.parentElement!.style.backgroundColor = selectedTeam.color
+                        e.currentTarget.parentElement!.innerHTML = '⚽'
+                      }}
+                    />
+                  ) : (
+                    "⚽"
+                  )}
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">{selectedTeam.name}</h2>
