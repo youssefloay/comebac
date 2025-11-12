@@ -9,8 +9,9 @@ import PlayersTab from "./tabs/players-tab"
 import MatchesTab from "./tabs/matches-tab"
 import ResultsTab from "./tabs/results-tab"
 import StatisticsTab from "./tabs/statistics-tab"
+import LineupsTab from "./tabs/lineups-tab"
 
-type TabType = "teams" | "players" | "matches" | "results" | "statistics" | "registrations" | "archives"
+type TabType = "teams" | "players" | "matches" | "results" | "statistics" | "lineups" | "registrations" | "archives"
 
 export default function Dashboard({ user }: { user: any }) {
   const [activeTab, setActiveTab] = useState<TabType>("teams")
@@ -141,6 +142,7 @@ export default function Dashboard({ user }: { user: any }) {
   const tabs = [
     { id: "teams", label: "Équipes", icon: "⚽" },
     { id: "players", label: "Joueurs", icon: "👥" },
+    { id: "lineups", label: "Compositions", icon: "🎯" },
     { id: "matches", label: "Matchs", icon: "📅" },
     { id: "results", label: "Résultats", icon: "📊" },
     { id: "statistics", label: "Statistiques", icon: "📈" },
@@ -324,9 +326,10 @@ export default function Dashboard({ user }: { user: any }) {
         </div>
 
         {/* Tab Content */}
-        <div className="flex-1 overflow-auto p-8">
+        <div className="flex-1 overflow-auto p-8 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {activeTab === "teams" && <TeamsTab />}
           {activeTab === "players" && <PlayersTab />}
+          {activeTab === "lineups" && <LineupsTab />}
           {activeTab === "matches" && <MatchesTab />}
           {activeTab === "results" && <ResultsTab />}
           {activeTab === "statistics" && <StatisticsTab />}

@@ -21,6 +21,8 @@ export interface Player {
   position: "Gardien" | "Défenseur" | "Milieu" | "Attaquant"
   teamId: string
   photo?: string // URL de la photo du joueur
+  isCaptain?: boolean // Si le joueur est capitaine
+  isCoach?: boolean // Si c'est un entraîneur
   
   // Informations personnelles
   birthDate?: string // Date de naissance (YYYY-MM-DD)

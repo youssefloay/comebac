@@ -193,6 +193,23 @@ export default function RegisterTeamPage() {
     }))
   }
 
+  // Vérifier si un email est valide
+  const isEmailValid = (email: string) => {
+    if (!email.trim()) return true // Ne pas valider si vide (requis géré par HTML)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email.trim())
+  }
+
+  // Vérifier si un email est en double
+  const isEmailDuplicate = (email: string, currentPlayerId: string) => {
+    if (!email.trim()) return false
+    const normalizedEmail = email.trim().toLowerCase()
+    return players.some(p => 
+      p.id !== currentPlayerId && 
+      p.email.trim().toLowerCase() === normalizedEmail
+    )
+  }
+
   const validateForm = () => {
     if (!teamName.trim()) return 'Le nom de l\'équipe est requis'
     if (!schoolName) return 'L\'école est requise'
@@ -201,10 +218,18 @@ export default function RegisterTeamPage() {
     if (teamGrade === 'Autre' && !customGrade.trim()) return 'Veuillez préciser la classe'
     if (!captainFirstName.trim() || !captainLastName.trim()) return 'Le nom du capitaine est requis'
     if (!captainEmail.trim()) return 'L\'email du capitaine est requis'
+    if (!isEmailValid(captainEmail)) return 'L\'email du capitaine n\'est pas valide'
     if (!captainPhone.trim()) return 'Le téléphone du capitaine est requis'
     
     if (players.length < 7) return 'Vous devez avoir au minimum 7 joueurs'
     if (players.length > 10) return 'Vous ne pouvez pas avoir plus de 10 joueurs'
+    
+    // Vérifier les emails en double
+    const emails = players.map(p => p.email.trim().toLowerCase()).filter(e => e)
+    const duplicateEmails = emails.filter((email, index) => emails.indexOf(email) !== index)
+    if (duplicateEmails.length > 0) {
+      return `Emails en double détectés: ${duplicateEmails.join(', ')}. Chaque joueur doit avoir une adresse email unique.`
+    }
     
     for (const player of players) {
       if (!player.firstName.trim() || !player.lastName.trim()) {
@@ -212,6 +237,9 @@ export default function RegisterTeamPage() {
       }
       if (!player.email.trim()) {
         return 'L\'email de tous les joueurs est requis'
+      }
+      if (!isEmailValid(player.email)) {
+        return `L'email de ${player.firstName} ${player.lastName} n'est pas valide`
       }
       if (!player.phone.trim()) {
         return 'Le téléphone de tous les joueurs est requis'
@@ -574,9 +602,19 @@ export default function RegisterTeamPage() {
                   type="email"
                   value={captainEmail}
                   onChange={(e) => updateCaptainEmail(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+                    captainEmail && !isEmailValid(captainEmail)
+                      ? 'border-red-500 focus:ring-red-500 bg-red-50'
+                      : 'border-gray-300 focus:ring-blue-500'
+                  }`}
                   required
                 />
+                {captainEmail && !isEmailValid(captainEmail) && (
+                  <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    Format d'email invalide
+                  </p>
+                )}
               </div>
               
               <div>
@@ -673,9 +711,19 @@ export default function RegisterTeamPage() {
                       type="email"
                       value={coachEmail}
                       onChange={(e) => setCoachEmail(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+                        coachEmail && !isEmailValid(coachEmail)
+                          ? 'border-red-500 focus:ring-red-500 bg-red-50'
+                          : 'border-gray-300 focus:ring-blue-500'
+                      }`}
                       placeholder="coach@example.com"
                     />
+                    {coachEmail && !isEmailValid(coachEmail) && (
+                      <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        Format d'email invalide
+                      </p>
+                    )}
                   </div>
                   
                   <div>
@@ -792,10 +840,26 @@ export default function RegisterTeamPage() {
                         type="email"
                         value={player.email}
                         onChange={(e) => updatePlayer(player.id, 'email', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:border-transparent placeholder:text-gray-400 ${
+                          player.email && (!isEmailValid(player.email) || isEmailDuplicate(player.email, player.id))
+                            ? 'border-red-500 focus:ring-red-500 bg-red-50'
+                            : 'border-gray-300 focus:ring-blue-500'
+                        }`}
                         placeholder="joueur@email.com"
                         required
                       />
+                      {player.email && !isEmailValid(player.email) && (
+                        <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          Format d'email invalide
+                        </p>
+                      )}
+                      {player.email && isEmailValid(player.email) && isEmailDuplicate(player.email, player.id) && (
+                        <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          Cet email est déjà utilisé
+                        </p>
+                      )}
                     </div>
 
                     <div>
