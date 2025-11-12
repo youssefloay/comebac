@@ -233,9 +233,9 @@ export default function TeamsTab() {
       return
     }
 
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      setError('L\'image ne doit pas dépasser 2MB')
+    // Validate file size (max 500KB for base64)
+    if (file.size > 500 * 1024) {
+      setError('L\'image ne doit pas dépasser 500KB')
       return
     }
 
@@ -245,7 +245,6 @@ export default function TeamsTab() {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('teamId', editingId || 'new')
 
       const response = await fetch('/api/upload-team-logo', {
         method: 'POST',
@@ -404,7 +403,7 @@ export default function TeamsTab() {
                       <p className="text-sm text-blue-600">Upload en cours...</p>
                     )}
                     <p className="text-xs text-gray-500">
-                      Format: JPG, PNG, GIF (max 2MB)
+                      Format: JPG, PNG, GIF (max 500KB)
                     </p>
                   </div>
                 </div>
