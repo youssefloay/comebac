@@ -127,6 +127,78 @@ export default function TeamRegistrationsPage() {
     setEditedRegistration(null)
   }
 
+  const addPlayer = () => {
+    if (!editedRegistration) return
+    
+    const newPlayer: Player = {
+      firstName: '',
+      lastName: '',
+      nickname: '',
+      email: '',
+      phone: '',
+      height: 170,
+      position: 'Milieu',
+      foot: 'Droitier',
+      jerseyNumber: 1,
+      grade: editedRegistration.teamGrade || '1ère'
+    }
+    
+    setEditedRegistration({
+      ...editedRegistration,
+      players: [...editedRegistration.players, newPlayer]
+    })
+  }
+
+  const removePlayer = (index: number) => {
+    if (!editedRegistration || editedRegistration.players.length <= 7) {
+      alert('Une équipe doit avoir au minimum 7 joueurs')
+      return
+    }
+    
+    const newPlayers = editedRegistration.players.filter((_, i) => i !== index)
+    setEditedRegistration({
+      ...editedRegistration,
+      players: newPlayers
+    })
+  }
+
+  const resendEmails = async (registration: Registration) => {
+    if (!confirm(`Renvoyer les emails de création de mot de passe à tous les joueurs de "${registration.teamName}" ?`)) return
+
+    setProcessing(true)
+    setMessage(null)
+
+    try {
+      // Trouver l'équipe créée pour cette inscription
+      const teamsSnap = await getDocs(collection(db, 'teams'))
+      const team = teamsSnap.docs.find(doc => doc.data().name === registration.teamName)
+      
+      if (!team) {
+        setMessage({ type: 'error', text: 'Équipe non trouvée' })
+        return
+      }
+
+      const response = await fetch('/api/admin/resend-player-emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teamId: team.id })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: data.message })
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Erreur lors du renvoi' })
+      }
+    } catch (error) {
+      console.error('Erreur:', error)
+      setMessage({ type: 'error', text: 'Erreur lors du renvoi des emails' })
+    } finally {
+      setProcessing(false)
+    }
+  }
+
   const approveRegistration = async (registration: Registration) => {
     if (!confirm(`Approuver l'équipe "${registration.teamName}" ?\n\nCela va créer automatiquement des comptes joueurs et envoyer des emails pour créer leur mot de passe.`)) return
 
@@ -602,14 +674,36 @@ export default function TeamRegistrationsPage() {
 
                   {/* Players */}
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-3">
-                      Joueurs ({editMode && editedRegistration ? editedRegistration.players.length : selectedRegistration.players.length})
-                    </h3>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-lg font-bold text-gray-900">
+                        Joueurs ({editMode && editedRegistration ? editedRegistration.players.length : selectedRegistration.players.length})
+                      </h3>
+                      {editMode && editedRegistration && (
+                        <button
+                          onClick={addPlayer}
+                          disabled={editedRegistration.players.length >= 10}
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition text-sm font-medium"
+                        >
+                          + Ajouter un joueur
+                        </button>
+                      )}
+                    </div>
                     <div className="space-y-3">
                       {(editMode && editedRegistration ? editedRegistration.players : selectedRegistration.players).map((player, index) => (
-                        <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                        <div key={index} className="bg-gray-50 p-4 rounded-lg relative">
                           {editMode && editedRegistration ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <>
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="text-sm font-bold text-gray-700">Joueur {index + 1}</span>
+                                <button
+                                  onClick={() => removePlayer(index)}
+                                  disabled={editedRegistration.players.length <= 7}
+                                  className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 transition text-xs"
+                                >
+                                  Supprimer
+                                </button>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               <input
                                 type="text"
                                 value={player.firstName}
@@ -665,6 +759,17 @@ export default function TeamRegistrationsPage() {
                                 className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
                                 placeholder="Téléphone"
                               />
+                              <input
+                                type="date"
+                                value={player.birthDate || ''}
+                                onChange={(e) => {
+                                  const newPlayers = [...editedRegistration.players]
+                                  newPlayers[index].birthDate = e.target.value
+                                  setEditedRegistration({...editedRegistration, players: newPlayers})
+                                }}
+                                className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
+                                placeholder="Date de naissance"
+                              />
                               <select
                                 value={player.position}
                                 onChange={(e) => {
@@ -716,7 +821,36 @@ export default function TeamRegistrationsPage() {
                                 <option value="Gaucher">Gaucher</option>
                                 <option value="Ambidextre">Ambidextre</option>
                               </select>
-                            </div>
+                              <select
+                                value={player.tshirtSize || 'M'}
+                                onChange={(e) => {
+                                  const newPlayers = [...editedRegistration.players]
+                                  newPlayers[index].tshirtSize = e.target.value
+                                  setEditedRegistration({...editedRegistration, players: newPlayers})
+                                }}
+                                className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
+                              >
+                                <option value="XS">XS</option>
+                                <option value="S">S</option>
+                                <option value="M">M</option>
+                                <option value="L">L</option>
+                                <option value="XL">XL</option>
+                                <option value="XXL">XXL</option>
+                              </select>
+                              <select
+                                value={player.grade || editedRegistration.teamGrade || '1ère'}
+                                onChange={(e) => {
+                                  const newPlayers = [...editedRegistration.players]
+                                  newPlayers[index].grade = e.target.value as '1ère' | 'Terminale'
+                                  setEditedRegistration({...editedRegistration, players: newPlayers})
+                                }}
+                                className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
+                              >
+                                <option value="1ère">1ère</option>
+                                <option value="Terminale">Terminale</option>
+                              </select>
+                              </div>
+                            </>
                           ) : (
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                               <div>
@@ -828,7 +962,27 @@ export default function TeamRegistrationsPage() {
                       </button>
                     </>
                   )}
-                  {selectedRegistration.status !== 'pending' && (
+                  {selectedRegistration.status === 'approved' && (
+                    <>
+                      <button
+                        onClick={() => resendEmails(selectedRegistration)}
+                        disabled={processing}
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition font-medium"
+                      >
+                        <Check className="w-5 h-5" />
+                        Renvoyer les emails
+                      </button>
+                      <button
+                        onClick={() => deleteRegistration(selectedRegistration)}
+                        disabled={processing}
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 transition font-medium"
+                      >
+                        <X className="w-5 h-5" />
+                        Supprimer
+                      </button>
+                    </>
+                  )}
+                  {selectedRegistration.status === 'rejected' && (
                     <button
                       onClick={() => deleteRegistration(selectedRegistration)}
                       disabled={processing}
