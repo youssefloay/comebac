@@ -143,7 +143,7 @@ export default function CoachTeamPage() {
 
     setUpdatingPlayer(editingPlayer.id)
     try {
-      await updateDoc(doc(db, 'playerAccounts', editingPlayer.id), {
+      const updatedData = {
         firstName: capitalizeWords(editingPlayer.firstName),
         lastName: capitalizeWords(editingPlayer.lastName),
         nickname: capitalizeWords(editingPlayer.nickname) || '',
@@ -154,7 +154,64 @@ export default function CoachTeamPage() {
         birthDate: editingPlayer.birthDate || '',
         height: editingPlayer.height || 0,
         updatedAt: new Date()
-      })
+      }
+
+      // 1. Mettre à jour playerAccounts
+      await updateDoc(doc(db, 'playerAccounts', editingPlayer.id), updatedData)
+      
+      // 2. Synchroniser avec la collection players
+      const playersQuery = query(
+        collection(db, 'players'),
+        where('email', '==', editingPlayer.email)
+      )
+      const playersSnap = await getDocs(playersQuery)
+      
+      for (const playerDoc of playersSnap.docs) {
+        await updateDoc(doc(db, 'players', playerDoc.id), {
+          firstName: updatedData.firstName,
+          lastName: updatedData.lastName,
+          name: `${updatedData.firstName} ${updatedData.lastName}`,
+          email: updatedData.email,
+          phone: updatedData.phone,
+          position: updatedData.position,
+          number: updatedData.jerseyNumber,
+          birthDate: updatedData.birthDate,
+          height: updatedData.height
+        })
+      }
+
+      // 3. Synchroniser avec teamRegistrations
+      const registrationsQuery = query(collection(db, 'teamRegistrations'))
+      const registrationsSnap = await getDocs(registrationsQuery)
+      
+      for (const regDoc of registrationsSnap.docs) {
+        const regData = regDoc.data()
+        if (regData.players && Array.isArray(regData.players)) {
+          const updatedPlayers = regData.players.map((p: any) => {
+            if (p.email === editingPlayer.email) {
+              return {
+                ...p,
+                firstName: updatedData.firstName,
+                lastName: updatedData.lastName,
+                nickname: updatedData.nickname,
+                email: updatedData.email,
+                phone: updatedData.phone,
+                position: updatedData.position,
+                jerseyNumber: updatedData.jerseyNumber,
+                birthDate: updatedData.birthDate,
+                height: updatedData.height
+              }
+            }
+            return p
+          })
+          
+          if (JSON.stringify(updatedPlayers) !== JSON.stringify(regData.players)) {
+            await updateDoc(doc(db, 'teamRegistrations', regDoc.id), {
+              players: updatedPlayers
+            })
+          }
+        }
+      }
       
       setPlayers(players.map(p => 
         p.id === editingPlayer.id ? editingPlayer : p
