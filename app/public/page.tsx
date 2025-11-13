@@ -528,7 +528,8 @@ export default function PublicHome() {
                       id: team.id,
                       name: team.name,
                       color: team.color,
-                      playerCount: team.playerCount || 0
+                      playerCount: team.playerCount || 0,
+                      logo: team.logo
                     }} 
                     index={index} 
                   />
