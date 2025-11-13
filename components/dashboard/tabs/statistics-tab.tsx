@@ -169,14 +169,14 @@ export default function StatisticsTab() {
     //   const result = await resetAndRecalculateStatistics()
     //   
     //   console.log(`🎉 Reset completed: ${result.deletedCount} deleted, ${result.createdCount} created`)
-      
-      await loadData() // Reload all data
-    } catch (err) {
-      setError("Erreur lors du reset des statistiques")
-      console.error("Error resetting statistics:", err)
-    } finally {
-      setResetting(false)
-    }
+    //   
+    //   await loadData() // Reload all data
+    // } catch (err) {
+    //   setError("Erreur lors du reset des statistiques")
+    //   console.error("Error resetting statistics:", err)
+    // } finally {
+    //   setResetting(false)
+    // }
   }
 
   if (loading) {
