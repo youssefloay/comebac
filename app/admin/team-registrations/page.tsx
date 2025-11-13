@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useRouter } from 'next/navigation'
-import { collection, query, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp, orderBy } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { Check, X, Eye, Users, Clock, CheckCircle, XCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -108,7 +108,8 @@ export default function TeamRegistrationsPage() {
         schoolName: editedRegistration.schoolName,
         teamGrade: editedRegistration.teamGrade,
         captain: editedRegistration.captain,
-        players: editedRegistration.players
+        players: editedRegistration.players,
+        coach: editedRegistration.coach || null
       })
 
       // 2. Si l'équipe est approuvée, mettre à jour aussi l'équipe et les joueurs dans la DB
@@ -127,8 +128,53 @@ export default function TeamRegistrationsPage() {
           }
           
           // Ajouter ou mettre à jour l'entraîneur
-          if (editedRegistration.coach && editedRegistration.coach.firstName && editedRegistration.coach.lastName) {
-            teamUpdateData.coach = editedRegistration.coach
+          if (editedRegistration.coach && editedRegistration.coach.firstName && editedRegistration.coach.lastName && editedRegistration.coach.email) {
+            teamUpdateData.coach = {
+              firstName: editedRegistration.coach.firstName,
+              lastName: editedRegistration.coach.lastName,
+              email: editedRegistration.coach.email,
+              phone: editedRegistration.coach.phone || '',
+              birthDate: editedRegistration.coach.birthDate || ''
+            }
+
+            // Créer le compte entraîneur s'il n'existe pas déjà
+            try {
+              const coachQuery = query(
+                collection(db, 'coachAccounts'),
+                where('email', '==', editedRegistration.coach.email)
+              )
+              const coachSnap = await getDocs(coachQuery)
+
+              if (coachSnap.empty) {
+                // Créer le compte dans coachAccounts
+                await addDoc(collection(db, 'coachAccounts'), {
+                  email: editedRegistration.coach.email,
+                  firstName: editedRegistration.coach.firstName,
+                  lastName: editedRegistration.coach.lastName,
+                  phone: editedRegistration.coach.phone || '',
+                  birthDate: editedRegistration.coach.birthDate || '',
+                  teamId: teamDoc.id,
+                  teamName: editedRegistration.teamName,
+                  photo: '',
+                  createdAt: serverTimestamp(),
+                  updatedAt: serverTimestamp()
+                })
+
+                // Créer le compte Firebase Auth et envoyer l'email
+                await fetch('/api/admin/create-coach-account', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    email: editedRegistration.coach.email,
+                    firstName: editedRegistration.coach.firstName,
+                    lastName: editedRegistration.coach.lastName,
+                    teamName: editedRegistration.teamName
+                  })
+                })
+              }
+            } catch (coachError) {
+              console.error('Erreur lors de la création du compte entraîneur:', coachError)
+            }
           }
           
           await updateDoc(doc(db, 'teams', teamDoc.id), teamUpdateData)
@@ -1041,6 +1087,25 @@ export default function TeamRegistrationsPage() {
                               className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 bg-white"
                               placeholder="Téléphone"
                             />
+                            
+                            {/* Bouton de sauvegarde de l'entraîneur */}
+                            <button
+                              onClick={saveEdits}
+                              disabled={processing}
+                              className="mt-4 w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                              {processing ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                  Sauvegarde...
+                                </>
+                              ) : (
+                                <>
+                                  <Check className="w-4 h-4" />
+                                  Sauvegarder l'entraîneur
+                                </>
+                              )}
+                            </button>
                           </div>
                         ) : selectedRegistration.coach ? (
                           <div className="space-y-3">
