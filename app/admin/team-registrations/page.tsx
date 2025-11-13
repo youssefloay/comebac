@@ -8,6 +8,7 @@ import { collection, query, where, getDocs, doc, getDoc, updateDoc, addDoc, dele
 import { db } from '@/lib/firebase'
 import { Check, X, Eye, Users, Clock, CheckCircle, XCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { capitalizeWords } from '@/lib/text-utils'
 
 interface Player {
   firstName: string
@@ -121,8 +122,8 @@ export default function TeamRegistrationsPage() {
         if (teamDoc) {
           // Mettre à jour le nom de l'équipe
           const teamUpdateData: any = {
-            name: editedRegistration.teamName,
-            schoolName: editedRegistration.schoolName,
+            name: capitalizeWords(editedRegistration.teamName),
+            schoolName: capitalizeWords(editedRegistration.schoolName),
             teamGrade: editedRegistration.teamGrade,
             captain: editedRegistration.captain
           }
@@ -130,8 +131,8 @@ export default function TeamRegistrationsPage() {
           // Ajouter ou mettre à jour l'entraîneur
           if (editedRegistration.coach && editedRegistration.coach.firstName && editedRegistration.coach.lastName && editedRegistration.coach.email) {
             teamUpdateData.coach = {
-              firstName: editedRegistration.coach.firstName,
-              lastName: editedRegistration.coach.lastName,
+              firstName: capitalizeWords(editedRegistration.coach.firstName),
+              lastName: capitalizeWords(editedRegistration.coach.lastName),
               email: editedRegistration.coach.email,
               phone: editedRegistration.coach.phone || '',
               birthDate: editedRegistration.coach.birthDate || ''

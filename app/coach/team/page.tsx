@@ -6,6 +6,7 @@ import { collection, query, where, getDocs, doc, getDoc, updateDoc } from 'fireb
 import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Users, Mail, Phone, Calendar, Ruler, Shield, Target, TrendingUp, Award, BarChart3, Edit, X, Save } from 'lucide-react'
+import { capitalizeWords } from '@/lib/text-utils'
 
 interface Player {
   id: string
@@ -143,9 +144,9 @@ export default function CoachTeamPage() {
     setUpdatingPlayer(editingPlayer.id)
     try {
       await updateDoc(doc(db, 'playerAccounts', editingPlayer.id), {
-        firstName: editingPlayer.firstName,
-        lastName: editingPlayer.lastName,
-        nickname: editingPlayer.nickname || '',
+        firstName: capitalizeWords(editingPlayer.firstName),
+        lastName: capitalizeWords(editingPlayer.lastName),
+        nickname: capitalizeWords(editingPlayer.nickname) || '',
         email: editingPlayer.email,
         phone: editingPlayer.phone,
         position: editingPlayer.position,
