@@ -129,44 +129,46 @@ export default function StatisticsTab() {
   }
 
   const handleCleanupDuplicates = async () => {
-    try {
-      setCleaning(true)
-      setError(null)
-      
-      // Import the direct cleanup function
-      const { directCleanupDuplicates, showCurrentStats } = await import('@/scripts/direct-cleanup')
-      
-      console.log('🔍 Showing current stats before cleanup:')
-      await showCurrentStats()
-      
-      const result = await directCleanupDuplicates()
-      
-      console.log(`🎉 Cleanup completed: ${result.deletedCount} duplicates removed`)
-      console.log(`📊 Teams: ${result.totalTeams}, Original docs: ${result.originalCount}`)
-      
-      await loadData() // Reload all data
-    } catch (err) {
-      setError("Erreur lors du nettoyage des doublons")
-      console.error("Error cleaning duplicates:", err)
-    } finally {
-      setCleaning(false)
-    }
+    setError("Cette fonctionnalité a été désactivée")
+    // try {
+    //   setCleaning(true)
+    //   setError(null)
+    //   
+    //   // Import the direct cleanup function
+    //   const { directCleanupDuplicates, showCurrentStats } = await import('@/scripts/direct-cleanup')
+    //   
+    //   console.log('🔍 Showing current stats before cleanup:')
+    //   await showCurrentStats()
+    //   
+    //   const result = await directCleanupDuplicates()
+    //   
+    //   console.log(`🎉 Cleanup completed: ${result.deletedCount} duplicates removed`)
+    //   console.log(`📊 Teams: ${result.totalTeams}, Original docs: ${result.originalCount}`)
+    //   
+    //   await loadData() // Reload all data
+    // } catch (err) {
+    //   setError("Erreur lors du nettoyage des doublons")
+    //   console.error("Error cleaning duplicates:", err)
+    // } finally {
+    //   setCleaning(false)
+    // }
   }
 
   const handleResetStatistics = async () => {
-    if (!confirm('⚠️ ATTENTION: Ceci va supprimer TOUTES les statistiques existantes et les recalculer depuis zéro. Continuer?')) {
-      return
-    }
-    
-    try {
-      setResetting(true)
-      setError(null)
-      
-      // Import the reset function
-      const { resetAndRecalculateStatistics } = await import('@/scripts/reset-statistics')
-      const result = await resetAndRecalculateStatistics()
-      
-      console.log(`🎉 Reset completed: ${result.deletedCount} deleted, ${result.createdCount} created`)
+    setError("Cette fonctionnalité a été désactivée")
+    // if (!confirm('⚠️ ATTENTION: Ceci va supprimer TOUTES les statistiques existantes et les recalculer depuis zéro. Continuer?')) {
+    //   return
+    // }
+    // 
+    // try {
+    //   setResetting(true)
+    //   setError(null)
+    //   
+    //   // Import the reset function
+    //   const { resetAndRecalculateStatistics } = await import('@/scripts/reset-statistics')
+    //   const result = await resetAndRecalculateStatistics()
+    //   
+    //   console.log(`🎉 Reset completed: ${result.deletedCount} deleted, ${result.createdCount} created`)
       
       await loadData() // Reload all data
     } catch (err) {
