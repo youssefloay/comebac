@@ -140,6 +140,35 @@ export default function Dashboard({ user }: { user: any }) {
     }
   }
 
+  const handleCapitalizeData = async () => {
+    if (!confirm(
+      "📝 Capitaliser tous les noms\n\n" +
+      "Cette action va mettre en majuscule la première lettre de:\n" +
+      "• Noms et prénoms des joueurs\n" +
+      "• Noms et prénoms des entraîneurs\n" +
+      "• Noms des équipes et écoles\n\n" +
+      "Continuer?"
+    )) {
+      return
+    }
+
+    setIsSeeding(true)
+    setSeedMessage(null)
+    try {
+      const response = await fetch("/api/admin/capitalize-data", { method: "POST" })
+      const data = await response.json()
+      if (response.ok) {
+        setSeedMessage({ type: "success", text: data.message })
+      } else {
+        setSeedMessage({ type: "error", text: data.error || "Erreur lors de la capitalisation" })
+      }
+    } catch (error) {
+      setSeedMessage({ type: "error", text: "Erreur de connexion" })
+    } finally {
+      setIsSeeding(false)
+    }
+  }
+
   const tabs = [
     { id: "teams", label: "Équipes", icon: "⚽" },
     { id: "players", label: "Joueurs", icon: "👥" },
@@ -298,6 +327,23 @@ export default function Dashboard({ user }: { user: any }) {
               <>
                 <span>🔧</span>
                 {sidebarOpen && <span>Corriger statuts</span>}
+              </>
+            )}
+          </button>
+          <button
+            onClick={handleCapitalizeData}
+            disabled={isSeeding}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white hover:bg-purple-700 disabled:bg-gray-400 rounded-lg transition text-sm font-medium"
+          >
+            {isSeeding ? (
+              <>
+                <Loader className="w-4 h-4 animate-spin" />
+                {sidebarOpen && <span>Capitalisation...</span>}
+              </>
+            ) : (
+              <>
+                <span>📝</span>
+                {sidebarOpen && <span>Capitaliser noms</span>}
               </>
             )}
           </button>

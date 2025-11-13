@@ -9,6 +9,7 @@ import { TeamLink } from "@/components/ui/team-link"
 interface RankingTeam extends TeamStatistics {
   teamName: string
   goalDifference: number
+  teamLogo?: string
 }
 
 export default function RankingPage() {
@@ -87,6 +88,7 @@ export default function RankingPage() {
               id: data.docId || data.id,
               teamId: data.teamId,
               teamName: team?.name || "Équipe inconnue",
+              teamLogo: team?.logo,
               points: data.points || 0,
               wins: data.wins || 0,
               draws: data.draws || 0,
@@ -330,7 +332,15 @@ export default function RankingPage() {
                         </td>
                         <td>
                           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                            <div className="sofa-team-logo text-sm flex-shrink-0">⚽</div>
+                            {team.teamLogo && (
+                              <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                                <img 
+                                  src={team.teamLogo} 
+                                  alt={team.teamName}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            )}
                             <TeamLink 
                               teamId={team.teamId} 
                               teamName={team.teamName}
