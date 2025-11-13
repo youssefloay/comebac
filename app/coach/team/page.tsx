@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth-context'
 import { collection, query, where, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { Users, Mail, Phone, Calendar, Ruler, Shield, Target, TrendingUp, Award, BarChart3 } from 'lucide-react'
+import { Users, Mail, Phone, Calendar, Ruler, Shield, Target, TrendingUp, Award, BarChart3, Edit, X, Save } from 'lucide-react'
 
 interface Player {
   id: string
@@ -36,6 +36,8 @@ export default function CoachTeamPage() {
   const [loading, setLoading] = useState(true)
   const [teamId, setTeamId] = useState<string | null>(null)
   const [updatingPlayer, setUpdatingPlayer] = useState<string | null>(null)
+  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
 
   useEffect(() => {
     const loadTeamData = async () => {
@@ -125,6 +127,43 @@ export default function CoachTeamPage() {
     } catch (error) {
       console.error('Erreur lors de la mise à jour du statut:', error)
       alert('Erreur lors de la mise à jour du statut')
+    } finally {
+      setUpdatingPlayer(null)
+    }
+  }
+
+  const handleEditPlayer = (player: Player) => {
+    setEditingPlayer({ ...player })
+    setShowEditModal(true)
+  }
+
+  const handleSavePlayer = async () => {
+    if (!editingPlayer) return
+
+    setUpdatingPlayer(editingPlayer.id)
+    try {
+      await updateDoc(doc(db, 'playerAccounts', editingPlayer.id), {
+        firstName: editingPlayer.firstName,
+        lastName: editingPlayer.lastName,
+        nickname: editingPlayer.nickname || '',
+        email: editingPlayer.email,
+        phone: editingPlayer.phone,
+        position: editingPlayer.position,
+        jerseyNumber: editingPlayer.jerseyNumber,
+        birthDate: editingPlayer.birthDate || '',
+        height: editingPlayer.height || 0,
+        updatedAt: new Date()
+      })
+      
+      setPlayers(players.map(p => 
+        p.id === editingPlayer.id ? editingPlayer : p
+      ))
+      
+      setShowEditModal(false)
+      setEditingPlayer(null)
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du joueur:', error)
+      alert('Erreur lors de la mise à jour du joueur')
     } finally {
       setUpdatingPlayer(null)
     }
@@ -318,7 +357,7 @@ export default function CoachTeamPage() {
                 </div>
 
                 {/* Contact */}
-                <div className="space-y-1 text-xs">
+                <div className="space-y-1 text-xs mb-4">
                   <div className="flex items-center gap-2 text-gray-600">
                     <Mail className="w-3 h-3" />
                     <span className="truncate">{player.email}</span>
@@ -328,6 +367,15 @@ export default function CoachTeamPage() {
                     <span>{player.phone}</span>
                   </div>
                 </div>
+
+                {/* Bouton d'édition */}
+                <button
+                  onClick={() => handleEditPlayer(player)}
+                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                >
+                  <Edit className="w-4 h-4" />
+                  Modifier les infos
+                </button>
               </div>
             )
           })}
@@ -340,6 +388,183 @@ export default function CoachTeamPage() {
           </div>
         )}
       </div>
+
+      {/* Modal d'édition */}
+      {showEditModal && editingPlayer && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowEditModal(false)}>
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Modifier {editingPlayer.firstName} {editingPlayer.lastName}
+                </h2>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6 text-gray-600" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Nom et Prénom */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Prénom *
+                    </label>
+                    <input
+                      type="text"
+                      value={editingPlayer.firstName}
+                      onChange={(e) => setEditingPlayer({ ...editingPlayer, firstName: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nom *
+                    </label>
+                    <input
+                      type="text"
+                      value={editingPlayer.lastName}
+                      onChange={(e) => setEditingPlayer({ ...editingPlayer, lastName: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Surnom */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Surnom
+                  </label>
+                  <input
+                    type="text"
+                    value={editingPlayer.nickname || ''}
+                    onChange={(e) => setEditingPlayer({ ...editingPlayer, nickname: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-400"
+                    placeholder="Optionnel"
+                  />
+                </div>
+
+                {/* Position et Numéro */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Position *
+                    </label>
+                    <select
+                      value={editingPlayer.position}
+                      onChange={(e) => setEditingPlayer({ ...editingPlayer, position: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    >
+                      <option value="Gardien">Gardien</option>
+                      <option value="Défenseur">Défenseur</option>
+                      <option value="Milieu">Milieu</option>
+                      <option value="Attaquant">Attaquant</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Numéro *
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="99"
+                      value={editingPlayer.jerseyNumber}
+                      onChange={(e) => setEditingPlayer({ ...editingPlayer, jerseyNumber: parseInt(e.target.value) || 0 })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Email et Téléphone */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      value={editingPlayer.email}
+                      onChange={(e) => setEditingPlayer({ ...editingPlayer, email: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Téléphone *
+                    </label>
+                    <input
+                      type="tel"
+                      value={editingPlayer.phone}
+                      onChange={(e) => setEditingPlayer({ ...editingPlayer, phone: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Date de naissance et Taille */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Date de naissance
+                    </label>
+                    <input
+                      type="date"
+                      value={editingPlayer.birthDate || ''}
+                      onChange={(e) => setEditingPlayer({ ...editingPlayer, birthDate: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Taille (cm)
+                    </label>
+                    <input
+                      type="number"
+                      min="100"
+                      max="250"
+                      value={editingPlayer.height || ''}
+                      onChange={(e) => setEditingPlayer({ ...editingPlayer, height: parseInt(e.target.value) || 0 })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-400"
+                      placeholder="Ex: 175"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Boutons d'action */}
+              <div className="flex gap-3 mt-6 pt-6 border-t border-gray-200">
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleSavePlayer}
+                  disabled={updatingPlayer === editingPlayer.id}
+                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {updatingPlayer === editingPlayer.id ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Enregistrement...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Enregistrer
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
