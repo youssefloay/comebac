@@ -14,9 +14,13 @@ import {
   Users,
   Activity,
   Shield,
-  AlertCircle
+  AlertCircle,
+  Trophy,
+  Target
 } from 'lucide-react'
 import Link from 'next/link'
+import { calculatePlayerBadges } from '@/lib/player-badges'
+import { PlayerBadges } from '@/components/player/player-badges'
 
 interface PlayerData {
   id: string
@@ -35,6 +39,15 @@ interface PlayerData {
   foot: string
   birthDate?: string
   tshirtSize?: string
+  stats?: {
+    matchesPlayed: number
+    minutesPlayed: number
+    goals: number
+    assists: number
+    yellowCards: number
+    redCards: number
+    cleanSheets?: number
+  }
 }
 
 interface CoachData {
@@ -112,7 +125,15 @@ export default function PlayerProfilePage() {
           height: playerDataRaw.height || 0,
           foot: playerDataRaw.foot || 'Droitier',
           birthDate: playerDataRaw.birthDate,
-          tshirtSize: playerDataRaw.tshirtSize
+          tshirtSize: playerDataRaw.tshirtSize,
+          stats: playerDataRaw.stats || {
+            matchesPlayed: 0,
+            minutesPlayed: 0,
+            goals: 0,
+            assists: 0,
+            yellowCards: 0,
+            redCards: 0
+          }
         }
 
         // Récupérer le nom de l'équipe et l'entraîneur si pas déjà présent
