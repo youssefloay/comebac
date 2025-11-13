@@ -65,6 +65,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (user) {
         const profile = await loadUserProfile(user)
         
+        // Mettre à jour lastLogin immédiatement
+        updateLastLogin(user.email)
+        
         // Check if we need to redirect after profile loading
         const currentPath = window.location.pathname
         console.log('Current path:', currentPath, 'Profile exists:', !!profile)
@@ -117,6 +120,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe()
   }, [router])
 
+  // Mettre à jour lastLogin périodiquement (toutes les 5 minutes)
+  useEffect(() => {
+    if (!user?.email) return
+
+    const updateActivity = () => {
+      updateLastLogin(user.email)
+    }
+
+    // Mettre à jour toutes les 5 minutes
+    const interval = setInterval(updateActivity, 5 * 60 * 1000)
+
+    return () => clearInterval(interval)
+  }, [user])
+
+  const updateLastLogin = async (email: string | null) => {
+    if (!email) return
+
+    try {
+      const { collection, query, where, getDocs, updateDoc, doc, serverTimestamp } = await import('firebase/firestore')
+      const { db } = await import('@/lib/firebase')
+      
+      // Chercher dans playerAccounts
+      const playerQuery = query(collection(db, 'playerAccounts'), where('email', '==', email))
+      const playerSnap = await getDocs(playerQuery)
+      
+      if (!playerSnap.empty) {
+        await updateDoc(doc(db, 'playerAccounts', playerSnap.docs[0].id), {
+          lastLogin: serverTimestamp()
+        })
+      } else {
+        // Chercher dans coachAccounts
+        const coachQuery = query(collection(db, 'coachAccounts'), where('email', '==', email))
+        const coachSnap = await getDocs(coachQuery)
+        
+        if (!coachSnap.empty) {
+          await updateDoc(doc(db, 'coachAccounts', coachSnap.docs[0].id), {
+            lastLogin: serverTimestamp()
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error updating lastLogin:', error)
+    }
+  }
+
   const signInWithEmail = async (email: string, password: string) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
@@ -126,6 +174,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await signOut(auth) // Déconnecter l'utilisateur
         throw new Error("Veuillez vérifier votre email avant de vous connecter. Vérifiez votre boîte mail et cliquez sur le lien de vérification.")
       }
+
+      // Mettre à jour lastLogin
+      updateLastLogin(email)
     } catch (error: any) {
       console.error('Error signing in with email:', error)
       

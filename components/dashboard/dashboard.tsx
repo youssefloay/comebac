@@ -10,8 +10,9 @@ import MatchesTab from "./tabs/matches-tab"
 import ResultsTab from "./tabs/results-tab"
 import StatisticsTab from "./tabs/statistics-tab"
 import LineupsTab from "./tabs/lineups-tab"
+import ActivityTab from "./tabs/activity-tab"
 
-type TabType = "teams" | "players" | "matches" | "results" | "statistics" | "lineups" | "registrations" | "archives"
+type TabType = "teams" | "players" | "matches" | "results" | "statistics" | "lineups" | "registrations" | "archives" | "activity" | "accounts"
 
 export default function Dashboard({ user }: { user: any }) {
   const [activeTab, setActiveTab] = useState<TabType>("teams")
@@ -146,6 +147,7 @@ export default function Dashboard({ user }: { user: any }) {
     { id: "matches", label: "Matchs", icon: "📅" },
     { id: "results", label: "Résultats", icon: "📊" },
     { id: "statistics", label: "Statistiques", icon: "📈" },
+    { id: "activity", label: "Activité", icon: "🔔" },
     { id: "accounts", label: "Comptes", icon: "👤" },
     { id: "registrations", label: "Inscriptions", icon: "📝" },
     { id: "archives", label: "Archives", icon: "📦" },
@@ -340,6 +342,7 @@ export default function Dashboard({ user }: { user: any }) {
           {activeTab === "matches" && <MatchesTab />}
           {activeTab === "results" && <ResultsTab />}
           {activeTab === "statistics" && <StatisticsTab />}
+          {activeTab === "activity" && <ActivityTab />}
           {activeTab === "accounts" && (
             <div className="text-center py-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Gestion des Comptes</h2>
