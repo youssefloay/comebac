@@ -141,6 +141,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { collection, query, where, getDocs, updateDoc, doc, serverTimestamp } = await import('firebase/firestore')
       const { db } = await import('@/lib/firebase')
       
+      let updated = false
+      
       // Chercher dans playerAccounts
       const playerQuery = query(collection(db, 'playerAccounts'), where('email', '==', email))
       const playerSnap = await getDocs(playerQuery)
@@ -149,13 +151,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await updateDoc(doc(db, 'playerAccounts', playerSnap.docs[0].id), {
           lastLogin: serverTimestamp()
         })
-      } else {
-        // Chercher dans coachAccounts
+        updated = true
+      }
+      
+      // Chercher dans coachAccounts
+      if (!updated) {
         const coachQuery = query(collection(db, 'coachAccounts'), where('email', '==', email))
         const coachSnap = await getDocs(coachQuery)
         
         if (!coachSnap.empty) {
           await updateDoc(doc(db, 'coachAccounts', coachSnap.docs[0].id), {
+            lastLogin: serverTimestamp()
+          })
+          updated = true
+        }
+      }
+      
+      // Chercher dans users (pour admins et utilisateurs réguliers)
+      if (!updated) {
+        const usersQuery = query(collection(db, 'users'), where('email', '==', email))
+        const usersSnap = await getDocs(usersQuery)
+        
+        if (!usersSnap.empty) {
+          await updateDoc(doc(db, 'users', usersSnap.docs[0].id), {
+            lastLogin: serverTimestamp()
+          })
+          updated = true
+        }
+      }
+      
+      // Chercher dans userProfiles
+      if (!updated) {
+        const profilesQuery = query(collection(db, 'userProfiles'), where('email', '==', email))
+        const profilesSnap = await getDocs(profilesQuery)
+        
+        if (!profilesSnap.empty) {
+          await updateDoc(doc(db, 'userProfiles', profilesSnap.docs[0].id), {
             lastLogin: serverTimestamp()
           })
         }

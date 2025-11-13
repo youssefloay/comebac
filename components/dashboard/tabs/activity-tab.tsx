@@ -10,17 +10,19 @@ interface AccountActivity {
   email: string
   firstName?: string
   lastName?: string
-  type: 'player' | 'coach'
+  type: 'player' | 'coach' | 'user' | 'admin'
   teamName?: string
   lastLogin?: Date
   createdAt?: Date
   hasLoggedIn: boolean
+  emailVerified?: boolean
 }
 
 export default function ActivityTab() {
   const [activities, setActivities] = useState<AccountActivity[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const [typeFilter, setTypeFilter] = useState<'all' | 'player' | 'coach' | 'user' | 'admin'>('all')
 
   useEffect(() => {
     fetchActivities()
@@ -28,10 +30,12 @@ export default function ActivityTab() {
 
   const fetchActivities = async () => {
     try {
-      const [playersSnap, coachesSnap, teamsSnap] = await Promise.all([
+      const [playersSnap, coachesSnap, teamsSnap, usersSnap, userProfilesSnap] = await Promise.all([
         getDocs(collection(db, 'playerAccounts')),
         getDocs(collection(db, 'coachAccounts')),
-        getDocs(collection(db, 'teams'))
+        getDocs(collection(db, 'teams')),
+        getDocs(collection(db, 'users')),
+        getDocs(collection(db, 'userProfiles'))
       ])
 
       const teamsMap = new Map()
@@ -39,8 +43,12 @@ export default function ActivityTab() {
         teamsMap.set(doc.id, doc.data().name)
       })
 
+      // Créer un Set des emails déjà dans playerAccounts et coachAccounts
+      const accountEmails = new Set<string>()
+
       const playerActivities: AccountActivity[] = playersSnap.docs.map(doc => {
         const data = doc.data()
+        accountEmails.add(data.email)
         return {
           id: doc.id,
           email: data.email,
@@ -50,12 +58,14 @@ export default function ActivityTab() {
           teamName: teamsMap.get(data.teamId),
           lastLogin: data.lastLogin?.toDate(),
           createdAt: data.createdAt?.toDate(),
-          hasLoggedIn: !!data.lastLogin
+          hasLoggedIn: !!data.lastLogin,
+          emailVerified: true
         }
       })
 
       const coachActivities: AccountActivity[] = coachesSnap.docs.map(doc => {
         const data = doc.data()
+        accountEmails.add(data.email)
         return {
           id: doc.id,
           email: data.email,
@@ -65,11 +75,75 @@ export default function ActivityTab() {
           teamName: teamsMap.get(data.teamId),
           lastLogin: data.lastLogin?.toDate(),
           createdAt: data.createdAt?.toDate(),
-          hasLoggedIn: !!data.lastLogin
+          hasLoggedIn: !!data.lastLogin,
+          emailVerified: true
         }
       })
 
-      const allActivities = [...playerActivities, ...coachActivities].sort((a, b) => {
+      // Créer une map des userProfiles pour enrichir les données
+      const userProfilesMap = new Map()
+      userProfilesSnap.docs.forEach(doc => {
+        const data = doc.data()
+        if (data.email) {
+          userProfilesMap.set(data.email, {
+            fullName: data.fullName,
+            username: data.username,
+            role: data.role
+          })
+        }
+      })
+
+      // Ajouter les utilisateurs qui ne sont ni joueurs ni entraîneurs
+      const userActivities: AccountActivity[] = usersSnap.docs
+        .filter(doc => !accountEmails.has(doc.data().email))
+        .map(doc => {
+          const data = doc.data()
+          const profile = userProfilesMap.get(data.email)
+          const isAdmin = data.email === 'contact@comebac.com' || data.role === 'admin' || profile?.role === 'admin'
+          
+          // Utiliser fullName du profile si disponible, sinon displayName, sinon email
+          const fullName = profile?.fullName || data.displayName || data.email?.split('@')[0] || 'Utilisateur'
+          const nameParts = fullName.split(' ')
+          
+          return {
+            id: doc.id,
+            email: data.email,
+            firstName: nameParts[0] || data.email?.split('@')[0],
+            lastName: nameParts.slice(1).join(' ') || '',
+            type: isAdmin ? 'admin' as const : 'user' as const,
+            lastLogin: data.lastLogin?.toDate(),
+            createdAt: data.createdAt?.toDate(),
+            hasLoggedIn: !!data.lastLogin,
+            emailVerified: data.emailVerified
+          }
+        })
+
+      // Ajouter les userProfiles qui n'ont pas de compte users correspondant
+      const userProfileActivities: AccountActivity[] = userProfilesSnap.docs
+        .filter(doc => {
+          const email = doc.data().email
+          return email && !accountEmails.has(email) && !usersSnap.docs.some(u => u.data().email === email)
+        })
+        .map(doc => {
+          const data = doc.data()
+          const isAdmin = data.email === 'contact@comebac.com' || data.role === 'admin'
+          const fullName = data.fullName || data.email?.split('@')[0] || 'Utilisateur'
+          const nameParts = fullName.split(' ')
+          
+          return {
+            id: doc.id,
+            email: data.email,
+            firstName: nameParts[0] || data.email?.split('@')[0],
+            lastName: nameParts.slice(1).join(' ') || '',
+            type: isAdmin ? 'admin' as const : 'user' as const,
+            lastLogin: data.lastLogin?.toDate(),
+            createdAt: data.createdAt?.toDate(),
+            hasLoggedIn: !!data.lastLogin,
+            emailVerified: true
+          }
+        })
+
+      const allActivities = [...playerActivities, ...coachActivities, ...userActivities, ...userProfileActivities].sort((a, b) => {
         if (a.lastLogin && b.lastLogin) {
           return b.lastLogin.getTime() - a.lastLogin.getTime()
         }
@@ -87,8 +161,13 @@ export default function ActivityTab() {
   }
 
   const filteredActivities = activities.filter(activity => {
-    if (filter === 'active') return activity.hasLoggedIn
-    if (filter === 'inactive') return !activity.hasLoggedIn
+    // Filtre par statut de connexion
+    if (filter === 'active' && !activity.hasLoggedIn) return false
+    if (filter === 'inactive' && activity.hasLoggedIn) return false
+    
+    // Filtre par type
+    if (typeFilter !== 'all' && activity.type !== typeFilter) return false
+    
     return true
   })
 
@@ -97,7 +176,9 @@ export default function ActivityTab() {
     active: activities.filter(a => a.hasLoggedIn).length,
     inactive: activities.filter(a => !a.hasLoggedIn).length,
     players: activities.filter(a => a.type === 'player').length,
-    coaches: activities.filter(a => a.type === 'coach').length
+    coaches: activities.filter(a => a.type === 'coach').length,
+    users: activities.filter(a => a.type === 'user').length,
+    admins: activities.filter(a => a.type === 'admin').length
   }
 
   const formatDate = (date?: Date) => {
@@ -132,7 +213,7 @@ export default function ActivityTab() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
         <div className="bg-white rounded-xl p-6 border border-gray-200">
           <div className="flex items-center gap-3 mb-2">
             <User className="w-5 h-5 text-gray-600" />
@@ -172,40 +253,119 @@ export default function ActivityTab() {
           </div>
           <div className="text-3xl font-bold text-orange-700">{stats.coaches}</div>
         </div>
+
+        <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-xl">👤</span>
+            <span className="text-sm text-purple-700">Utilisateurs</span>
+          </div>
+          <div className="text-3xl font-bold text-purple-700">{stats.users}</div>
+        </div>
+
+        <div className="bg-yellow-50 rounded-xl p-6 border border-yellow-200">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-xl">⭐</span>
+            <span className="text-sm text-yellow-700">Admins</span>
+          </div>
+          <div className="text-3xl font-bold text-yellow-700">{stats.admins}</div>
+        </div>
       </div>
 
       {/* Filters */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => setFilter('all')}
-          className={`px-4 py-2 rounded-lg font-medium transition ${
-            filter === 'all'
-              ? 'bg-blue-600 text-white'
-              : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
-          }`}
-        >
-          Tous ({stats.total})
-        </button>
-        <button
-          onClick={() => setFilter('active')}
-          className={`px-4 py-2 rounded-lg font-medium transition ${
-            filter === 'active'
-              ? 'bg-green-600 text-white'
-              : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
-          }`}
-        >
-          Actifs ({stats.active})
-        </button>
-        <button
-          onClick={() => setFilter('inactive')}
-          className={`px-4 py-2 rounded-lg font-medium transition ${
-            filter === 'inactive'
-              ? 'bg-red-600 text-white'
-              : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
-          }`}
-        >
-          Inactifs ({stats.inactive})
-        </button>
+      <div className="space-y-4">
+        {/* Filtre par statut */}
+        <div>
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Statut de connexion</h3>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setFilter('all')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                filter === 'all'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              Tous ({stats.total})
+            </button>
+            <button
+              onClick={() => setFilter('active')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                filter === 'active'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              Actifs ({stats.active})
+            </button>
+            <button
+              onClick={() => setFilter('inactive')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                filter === 'inactive'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              Inactifs ({stats.inactive})
+            </button>
+          </div>
+        </div>
+
+        {/* Filtre par type */}
+        <div>
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Type de compte</h3>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setTypeFilter('all')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                typeFilter === 'all'
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              Tous ({stats.total})
+            </button>
+            <button
+              onClick={() => setTypeFilter('player')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                typeFilter === 'player'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              👥 Joueurs ({stats.players})
+            </button>
+            <button
+              onClick={() => setTypeFilter('coach')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                typeFilter === 'coach'
+                  ? 'bg-orange-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              🎯 Entraîneurs ({stats.coaches})
+            </button>
+            <button
+              onClick={() => setTypeFilter('user')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                typeFilter === 'user'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              👤 Utilisateurs ({stats.users})
+            </button>
+            <button
+              onClick={() => setTypeFilter('admin')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                typeFilter === 'admin'
+                  ? 'bg-yellow-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              ⭐ Admins ({stats.admins})
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Activities List */}
@@ -237,13 +397,21 @@ export default function ActivityTab() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
-                        activity.type === 'player' ? 'bg-blue-600' : 'bg-orange-600'
+                        activity.type === 'player' ? 'bg-blue-600' :
+                        activity.type === 'coach' ? 'bg-orange-600' :
+                        activity.type === 'admin' ? 'bg-yellow-600' :
+                        'bg-purple-600'
                       }`}>
-                        {activity.firstName?.[0]}{activity.lastName?.[0]}
+                        {activity.firstName?.[0] || '?'}{activity.lastName?.[0] || ''}
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-gray-900 flex items-center gap-2">
                           {activity.firstName} {activity.lastName}
+                          {activity.emailVerified === false && (
+                            <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">
+                              Email non vérifié
+                            </span>
+                          )}
                         </div>
                         <div className="text-sm text-gray-500 flex items-center gap-1">
                           <Mail className="w-3 h-3" />
@@ -254,11 +422,15 @@ export default function ActivityTab() {
                   </td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
-                      activity.type === 'player'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-orange-100 text-orange-700'
+                      activity.type === 'player' ? 'bg-blue-100 text-blue-700' :
+                      activity.type === 'coach' ? 'bg-orange-100 text-orange-700' :
+                      activity.type === 'admin' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-purple-100 text-purple-700'
                     }`}>
-                      {activity.type === 'player' ? '👥 Joueur' : '🎯 Entraîneur'}
+                      {activity.type === 'player' ? '👥 Joueur' : 
+                       activity.type === 'coach' ? '🎯 Entraîneur' :
+                       activity.type === 'admin' ? '⭐ Admin' :
+                       '👤 Utilisateur'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
