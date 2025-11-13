@@ -288,18 +288,6 @@ export default function TeamDetailPage() {
                   <p className="font-semibold text-gray-900 text-base sm:text-lg">
                     {team.coach.firstName} {team.coach.lastName}
                   </p>
-                  <div className="flex flex-wrap gap-3 mt-2 text-xs sm:text-sm text-gray-600">
-                    {team.coach.email && (
-                      <span className="flex items-center gap-1">
-                        📧 {team.coach.email}
-                      </span>
-                    )}
-                    {team.coach.phone && (
-                      <span className="flex items-center gap-1">
-                        📞 {team.coach.phone}
-                      </span>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>
