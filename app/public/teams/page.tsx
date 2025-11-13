@@ -116,9 +116,9 @@ export default function TeamsPage() {
                       <h2 className="text-xl font-bold text-white group-hover:scale-105 transition-transform">
                         {team.name}
                       </h2>
-                      {team.schoolName && (
+                      {(team.school || team.schoolName) && (
                         <p className="text-sm text-white/80 mt-1">
-                          {team.schoolName}
+                          {team.school || team.schoolName}
                         </p>
                       )}
                     </div>

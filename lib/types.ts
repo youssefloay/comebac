@@ -3,6 +3,8 @@ export interface Team {
   name: string
   logo: string
   color: string
+  school?: string // Nom de l'école/établissement
+  schoolName?: string // Alias pour school (pour compatibilité)
   coach?: {
     firstName: string
     lastName: string

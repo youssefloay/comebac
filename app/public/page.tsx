@@ -37,6 +37,8 @@ interface Team {
   logo?: string
   color?: string
   playerCount?: number
+  school?: string
+  schoolName?: string
 }
 
 interface Standing {
@@ -529,7 +531,9 @@ export default function PublicHome() {
                       name: team.name,
                       color: team.color,
                       playerCount: team.playerCount || 0,
-                      logo: team.logo
+                      logo: team.logo,
+                      school: team.school,
+                      schoolName: team.schoolName
                     }} 
                     index={index} 
                   />

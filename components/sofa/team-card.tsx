@@ -11,6 +11,8 @@ interface SofaTeamCardProps {
     color?: string
     playerCount: number
     logo?: string
+    school?: string
+    schoolName?: string
   }
   index: number
 }
@@ -32,10 +34,15 @@ export function SofaTeamCard({ team, index }: SofaTeamCardProps) {
             }}
           >
             <div className="absolute inset-0 bg-black/20"></div>
-            <div className="absolute bottom-3 left-4">
+            <div className="absolute bottom-3 left-4 right-4">
               <h3 className="text-lg font-bold text-white group-hover:scale-105 transition-transform">
                 {team.name}
               </h3>
+              {(team.school || team.schoolName) && (
+                <p className="text-xs text-white/90 mt-1 truncate">
+                  {team.school || team.schoolName}
+                </p>
+              )}
             </div>
             {team.logo && (
               <div className="absolute top-3 right-4">

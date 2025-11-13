@@ -5,6 +5,7 @@ import { Clock, MapPin, Calendar } from 'lucide-react'
 import { useState } from 'react'
 import { MatchDetailsPopup } from './match-details-popup'
 import { TeamLink } from '@/components/ui/team-link'
+import { getTeamColorStyle, getTeamTextColorStyle } from '@/lib/team-colors'
 
 interface SofaMatchCardProps {
   match: {
@@ -25,6 +26,12 @@ interface SofaMatchCardProps {
 
 export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false)
+  
+  // Générer les couleurs automatiquement pour chaque équipe
+  const teamAColors = getTeamColorStyle(match.teamAId, match.teamA, 'light')
+  const teamBColors = getTeamColorStyle(match.teamBId, match.teamB, 'light')
+  const teamATextColor = getTeamTextColorStyle(match.teamAId, match.teamA)
+  const teamBTextColor = getTeamTextColorStyle(match.teamBId, match.teamB)
 
   const getStatusBadge = () => {
     switch (match.status) {
@@ -85,20 +92,21 @@ export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
         <div className="block sm:hidden">
           <div className="space-y-3">
             {/* Home Team */}
-            <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg">
+            <div className="flex items-center justify-between p-3 rounded-lg" style={teamAColors}>
               <div className="flex-1 pr-3">
                 {match.teamAId ? (
                   <TeamLink 
                     teamId={match.teamAId} 
                     teamName={match.teamA}
-                    className="font-bold text-gray-900 text-sm leading-tight block break-words hyphens-auto hover:text-green-600"
+                    className="font-bold text-gray-900 text-sm leading-tight block break-words hyphens-auto"
+                    style={teamATextColor}
                   />
                 ) : (
                   <span className="font-bold text-gray-900 text-sm leading-tight block break-words hyphens-auto">{match.teamA}</span>
                 )}
               </div>
               {match.status === 'completed' || match.status === 'live' ? (
-                <div className="text-xl font-bold text-green-700 flex-shrink-0">
+                <div className="text-xl font-bold flex-shrink-0" style={teamATextColor}>
                   {match.scoreA}
                 </div>
               ) : null}
@@ -116,20 +124,21 @@ export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
             </div>
 
             {/* Away Team */}
-            <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
+            <div className="flex items-center justify-between p-3 rounded-lg" style={teamBColors}>
               <div className="flex-1 pr-3">
                 {match.teamBId ? (
                   <TeamLink 
                     teamId={match.teamBId} 
                     teamName={match.teamB}
-                    className="font-bold text-gray-900 text-sm leading-tight block break-words hyphens-auto hover:text-blue-600"
+                    className="font-bold text-gray-900 text-sm leading-tight block break-words hyphens-auto"
+                    style={teamBTextColor}
                   />
                 ) : (
                   <span className="font-bold text-gray-900 text-sm leading-tight block break-words hyphens-auto">{match.teamB}</span>
                 )}
               </div>
               {match.status === 'completed' || match.status === 'live' ? (
-                <div className="text-xl font-bold text-blue-700 flex-shrink-0">
+                <div className="text-xl font-bold flex-shrink-0" style={teamBTextColor}>
                   {match.scoreB}
                 </div>
               ) : null}
@@ -145,7 +154,8 @@ export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
               <TeamLink 
                 teamId={match.teamAId} 
                 teamName={match.teamA}
-                className="font-bold text-sm md:text-base text-gray-900 leading-tight block break-words hyphens-auto hover:text-green-600"
+                className="font-bold text-sm md:text-base text-gray-900 leading-tight block break-words hyphens-auto"
+                style={teamATextColor}
               />
             ) : (
               <span className="font-bold text-sm md:text-base text-gray-900 leading-tight block break-words hyphens-auto">{match.teamA}</span>
@@ -169,7 +179,8 @@ export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
               <TeamLink 
                 teamId={match.teamBId} 
                 teamName={match.teamB}
-                className="font-bold text-sm md:text-base text-gray-900 leading-tight block break-words hyphens-auto hover:text-blue-600"
+                className="font-bold text-sm md:text-base text-gray-900 leading-tight block break-words hyphens-auto"
+                style={teamBTextColor}
               />
             ) : (
               <span className="font-bold text-sm md:text-base text-gray-900 leading-tight block break-words hyphens-auto">{match.teamB}</span>

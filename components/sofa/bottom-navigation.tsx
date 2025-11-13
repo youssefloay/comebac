@@ -68,7 +68,7 @@ export function BottomNavigation() {
     <>
       {/* Bottom Navigation Bar - Improved */}
       <nav 
-        className="fixed bottom-0 left-0 right-0 z-40 bg-sofa-bg-card border-t border-sofa-border safe-area-pb"
+        className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#111827]/95 backdrop-blur-xl border-t border-sofa-border safe-area-pb shadow-[0_-4px_20px_rgba(0,0,0,0.08)]"
         role="navigation"
         aria-label="Navigation mobile principale"
       >

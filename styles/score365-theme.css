@@ -1,0 +1,453 @@
+/* Modern Minimalist Professional Theme */
+
+/* Light Mode (Default) */
+:root {
+  --score365-bg-primary: #fafbfc;
+  --score365-bg-secondary: #ffffff;
+  --score365-bg-tertiary: #f8f9fa;
+  --score365-bg-card: #ffffff;
+  --score365-bg-hover: #f5f6f8;
+  
+  --score365-text-primary: #0a0e27;
+  --score365-text-secondary: #6b7280;
+  --score365-text-muted: #9ca3af;
+  --score365-text-accent: #000000;
+  
+  --score365-border: #e5e7eb;
+  --score365-border-light: #f3f4f6;
+  
+  --score365-blue: #000000;
+  --score365-green: #10b981;
+  --score365-red: #ef4444;
+  --score365-orange: #f59e0b;
+  --score365-purple: #6366f1;
+  --score365-yellow: #eab308;
+  
+  --score365-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --score365-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --score365-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.06);
+  
+  --score365-radius: 16px;
+  --score365-radius-sm: 12px;
+  --score365-radius-lg: 24px;
+}
+
+/* Dark Mode */
+.dark {
+  --score365-bg-primary: #0a0e14;
+  --score365-bg-secondary: #111827;
+  --score365-bg-tertiary: #1f2937;
+  --score365-bg-card: #111827;
+  --score365-bg-hover: #1f2937;
+  
+  --score365-text-primary: #f9fafb;
+  --score365-text-secondary: #9ca3af;
+  --score365-text-muted: #6b7280;
+  --score365-text-accent: #ffffff;
+  
+  --score365-border: #1f2937;
+  --score365-border-light: #374151;
+  
+  --score365-blue: #ffffff;
+  --score365-green: #34d399;
+  --score365-red: #f87171;
+  --score365-orange: #fbbf24;
+  --score365-purple: #818cf8;
+  --score365-yellow: #fde047;
+  
+  --score365-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --score365-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --score365-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Global theme */
+.score365-theme {
+  background: var(--score365-bg-primary);
+  color: var(--score365-text-primary);
+  min-height: 100vh;
+  width: 100%;
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  font-feature-settings: "kern" 1, "liga" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Card components - Ultra minimal */
+.score365-card {
+  background: var(--score365-bg-card);
+  border: none;
+  border-radius: var(--score365-radius);
+  box-shadow: var(--score365-shadow);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.score365-card:hover {
+  box-shadow: var(--score365-shadow-hover);
+  transform: translateY(-1px);
+}
+
+/* Match card - Minimalist design */
+.score365-match-card {
+  background: var(--score365-bg-card);
+  border: none;
+  border-radius: var(--score365-radius);
+  padding: 32px 28px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--score365-shadow);
+}
+
+.score365-match-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background: transparent;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.score365-match-card:hover {
+  box-shadow: var(--score365-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.score365-match-card:hover::before {
+  background: var(--score365-text-primary);
+}
+
+/* Match card - Live status */
+.score365-match-card.live::before {
+  background: var(--score365-red);
+  width: 3px;
+}
+
+.score365-match-card.live {
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.1), var(--score365-shadow);
+}
+
+/* Match card - Completed */
+.score365-match-card.completed::before {
+  background: var(--score365-green);
+  width: 2px;
+}
+
+/* Match card - Upcoming */
+.score365-match-card.upcoming::before {
+  background: var(--score365-text-muted);
+  width: 1px;
+}
+
+/* Score display - Minimalist */
+.score365-score {
+  font-size: 3rem;
+  font-weight: 300;
+  color: var(--score365-text-primary);
+  text-align: center;
+  padding: 0;
+  background: transparent;
+  border: none;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.score365-score.live {
+  color: var(--score365-red);
+  font-weight: 400;
+  animation: subtle-pulse 3s ease-in-out infinite;
+}
+
+@keyframes subtle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+/* Team names - Clean typography */
+.score365-team-name {
+  font-weight: 500;
+  color: var(--score365-text-primary);
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+}
+
+.score365-team-name.large {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Status badges - Minimalist pills */
+.score365-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--score365-bg-tertiary);
+  color: var(--score365-text-secondary);
+  border: none;
+}
+
+.score365-badge-live {
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--score365-red);
+}
+
+.score365-badge-completed {
+  background: rgba(16, 185, 129, 0.08);
+  color: var(--score365-green);
+}
+
+.score365-badge-scheduled {
+  background: var(--score365-bg-tertiary);
+  color: var(--score365-text-muted);
+}
+
+/* Buttons - Minimalist */
+.score365-btn {
+  background: var(--score365-text-primary);
+  color: var(--score365-bg-card);
+  border: none;
+  border-radius: var(--score365-radius-sm);
+  padding: 12px 28px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: -0.01em;
+}
+
+.score365-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0.95;
+}
+
+.score365-btn:active {
+  transform: translateY(0);
+}
+
+.score365-btn-secondary {
+  background: transparent;
+  color: var(--score365-text-primary);
+  border: 1px solid var(--score365-border);
+}
+
+.score365-btn-secondary:hover {
+  background: var(--score365-bg-hover);
+  border-color: var(--score365-text-primary);
+}
+
+/* Table styles - Clean and minimal */
+.score365-table {
+  background: var(--score365-bg-card);
+  border-radius: var(--score365-radius);
+  overflow: hidden;
+  box-shadow: var(--score365-shadow);
+  width: 100%;
+  border: none;
+}
+
+.score365-table thead {
+  background: transparent;
+}
+
+.score365-table th {
+  color: var(--score365-text-muted);
+  font-weight: 500;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--score365-border);
+  text-align: left;
+}
+
+.score365-table td {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--score365-border);
+  color: var(--score365-text-primary);
+  font-weight: 400;
+}
+
+.score365-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.score365-table tbody tr:hover {
+  background: var(--score365-bg-hover);
+}
+
+.score365-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Stats cards - Minimalist */
+.score365-stat-card {
+  background: var(--score365-bg-card);
+  border: none;
+  border-radius: var(--score365-radius);
+  padding: 32px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--score365-shadow);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.score365-stat-card:hover {
+  box-shadow: var(--score365-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.score365-stat-number {
+  font-size: 3rem;
+  font-weight: 300;
+  color: var(--score365-text-primary);
+  margin-bottom: 8px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.score365-stat-label {
+  color: var(--score365-text-muted);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+/* Navigation - Minimalist */
+.score365-nav {
+  background: var(--score365-bg-card);
+  border-bottom: 1px solid var(--score365-border);
+  padding: 0;
+  box-shadow: none;
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.dark .score365-nav {
+  background: rgba(17, 24, 39, 0.8);
+}
+
+.score365-nav-item {
+  color: var(--score365-text-secondary);
+  padding: 16px 24px;
+  border-radius: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 400;
+  text-decoration: none;
+  position: relative;
+  display: inline-block;
+  letter-spacing: -0.01em;
+}
+
+.score365-nav-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--score365-text-primary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.score365-nav-item:hover,
+.score365-nav-item.active {
+  color: var(--score365-text-primary);
+  background: transparent;
+}
+
+.score365-nav-item:hover::after,
+.score365-nav-item.active::after {
+  width: 100%;
+}
+
+/* Header section - Minimalist */
+.score365-header {
+  background: transparent;
+  color: var(--score365-text-primary);
+  padding: 80px 0 60px;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--score365-border);
+}
+
+.score365-header h1 {
+  font-size: 3.5rem;
+  font-weight: 300;
+  margin-bottom: 12px;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.score365-header p {
+  font-size: 1.125rem;
+  color: var(--score365-text-secondary);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Utility classes for colors */
+.text-score365-blue { color: var(--score365-blue); }
+.text-score365-green { color: var(--score365-green); }
+.text-score365-red { color: var(--score365-red); }
+.text-score365-orange { color: var(--score365-orange); }
+.text-score365-purple { color: var(--score365-purple); }
+.text-score365-yellow { color: var(--score365-yellow); }
+.text-score365-text-primary { color: var(--score365-text-primary); }
+.text-score365-text-secondary { color: var(--score365-text-secondary); }
+.text-score365-text-muted { color: var(--score365-text-muted); }
+.text-score365-text-accent { color: var(--score365-text-accent); }
+
+.border-score365-border { border-color: var(--score365-border); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .score365-match-card {
+    padding: 24px 20px;
+  }
+  
+  .score365-score {
+    font-size: 2.5rem;
+  }
+  
+  .score365-stat-number {
+    font-size: 2.5rem;
+  }
+  
+  .score365-header h1 {
+    font-size: 2.5rem;
+  }
+  
+  .score365-header {
+    padding: 60px 0 40px;
+  }
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection */
+::selection {
+  background: rgba(0, 0, 0, 0.1);
+  color: var(--score365-text-primary);
+}
+
+.dark ::selection {
+  background: rgba(255, 255, 255, 0.2);
+}
