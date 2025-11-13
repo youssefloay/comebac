@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Users, UserCog, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { SearchBar, SearchResult } from '@/components/admin/search-bar'
 
 interface Coach {
   id: string
@@ -14,6 +15,10 @@ interface Coach {
   lastName: string
   email: string
   teamName: string
+  teamId?: string
+  uid?: string
+  createdAt?: any
+  lastLogin?: any
 }
 
 interface Player {
@@ -24,6 +29,10 @@ interface Player {
   teamName: string
   position: string
   jerseyNumber: number
+  teamId?: string
+  uid?: string
+  createdAt?: any
+  lastLogin?: any
 }
 
 export default function ImpersonatePage() {
@@ -31,8 +40,8 @@ export default function ImpersonatePage() {
   const [coaches, setCoaches] = useState<Coach[]>([])
   const [players, setPlayers] = useState<Player[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
   const [activeTab, setActiveTab] = useState<'coaches' | 'players'>('coaches')
+  const [searchData, setSearchData] = useState<SearchResult[]>([])
 
   useEffect(() => {
     loadData()
@@ -42,21 +51,112 @@ export default function ImpersonatePage() {
     try {
       // Charger les entraîneurs
       const coachesSnap = await getDocs(collection(db, 'coachAccounts'))
-      const coachesData = coachesSnap.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Coach[]
+      const coachesData = coachesSnap.docs.map(doc => {
+        const data = doc.data()
+        return {
+          id: doc.id,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          teamName: data.teamName,
+          teamId: data.teamId,
+          uid: data.uid,
+          createdAt: data.createdAt,
+          lastLogin: data.lastLogin
+        }
+      }) as Coach[]
       coachesData.sort((a, b) => a.lastName.localeCompare(b.lastName))
       setCoaches(coachesData)
 
       // Charger les joueurs
       const playersSnap = await getDocs(collection(db, 'playerAccounts'))
-      const playersData = playersSnap.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Player[]
+      const playersData = playersSnap.docs.map(doc => {
+        const data = doc.data()
+        return {
+          id: doc.id,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          teamName: data.teamName,
+          teamId: data.teamId,
+          position: data.position,
+          jerseyNumber: data.jerseyNumber,
+          uid: data.uid,
+          createdAt: data.createdAt,
+          lastLogin: data.lastLogin
+        }
+      }) as Player[]
       playersData.sort((a, b) => a.lastName.localeCompare(b.lastName))
       setPlayers(playersData)
+
+      // Charger les utilisateurs réguliers
+      const usersSnap = await getDocs(collection(db, 'users'))
+      const usersData = usersSnap.docs.map(doc => {
+        const data = doc.data()
+        const isAdmin = data.email === 'contact@comebac.com' || data.role === 'admin'
+        return {
+          id: doc.id,
+          type: isAdmin ? 'admin' as const : 'user' as const,
+          firstName: data.firstName || data.displayName?.split(' ')[0] || 'Utilisateur',
+          lastName: data.lastName || data.displayName?.split(' ')[1] || '',
+          email: data.email,
+          role: data.role,
+          teamName: data.teamName,
+          uid: data.uid || doc.id,
+          createdAt: data.createdAt,
+          lastLogin: data.lastLogin,
+          hasLoggedIn: !!data.lastLogin,
+          emailVerified: data.emailVerified
+        }
+      })
+
+      // Charger les profils utilisateurs
+      const profilesSnap = await getDocs(collection(db, 'userProfiles'))
+      const profilesData = profilesSnap.docs
+        .filter(doc => {
+          // Éviter les doublons avec users
+          const email = doc.data().email
+          return !usersData.some(u => u.email === email)
+        })
+        .map(doc => {
+          const data = doc.data()
+          const isAdmin = data.email === 'contact@comebac.com' || data.role === 'admin'
+          const fullName = data.fullName || data.email?.split('@')[0] || 'Utilisateur'
+          const nameParts = fullName.split(' ')
+          return {
+            id: doc.id,
+            type: isAdmin ? 'admin' as const : 'user' as const,
+            firstName: nameParts[0] || data.email?.split('@')[0] || 'Utilisateur',
+            lastName: nameParts.slice(1).join(' ') || '',
+            email: data.email,
+            role: data.role,
+            teamName: data.teamName,
+            uid: data.uid || doc.id,
+            createdAt: data.createdAt,
+            lastLogin: data.lastLogin,
+            hasLoggedIn: !!data.lastLogin,
+            emailVerified: true
+          }
+        })
+
+      // Combiner pour la recherche
+      const allData: SearchResult[] = [
+        ...coachesData.map(c => ({ 
+          ...c, 
+          type: 'coach' as const,
+          hasLoggedIn: !!c.lastLogin,
+          emailVerified: true
+        })),
+        ...playersData.map(p => ({ 
+          ...p, 
+          type: 'player' as const,
+          hasLoggedIn: !!p.lastLogin,
+          emailVerified: true
+        })),
+        ...usersData,
+        ...profilesData
+      ]
+      setSearchData(allData)
     } catch (error) {
       console.error('Erreur:', error)
     } finally {
@@ -78,17 +178,15 @@ export default function ImpersonatePage() {
     router.push('/player')
   }
 
-  const filteredCoaches = coaches.filter(coach =>
-    `${coach.firstName} ${coach.lastName} ${coach.email} ${coach.teamName}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  )
-
-  const filteredPlayers = players.filter(player =>
-    `${player.firstName} ${player.lastName} ${player.email} ${player.teamName}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  )
+  const handleSearchSelect = (result: SearchResult) => {
+    if (result.type === 'coach') {
+      handleImpersonateCoach(result as Coach)
+    } else if (result.type === 'player') {
+      handleImpersonatePlayer(result as Player)
+    } else {
+      alert('Impossible de se faire passer pour ce type d\'utilisateur')
+    }
+  }
 
   if (loading) {
     return (
@@ -144,27 +242,25 @@ export default function ImpersonatePage() {
           </button>
         </div>
 
-        {/* Search */}
+        {/* Search avec autocomplétion */}
         <div className="mb-6">
-          <input
-            type="text"
-            placeholder="Rechercher par nom, email ou équipe..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          <SearchBar
+            data={searchData}
+            onSelect={handleSearchSelect}
+            placeholder="Rechercher par nom, email, équipe ou position..."
           />
         </div>
 
         {/* Coaches List */}
         {activeTab === 'coaches' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredCoaches.length === 0 ? (
+            {coaches.length === 0 ? (
               <div className="col-span-full text-center py-12">
                 <UserCog className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500">Aucun entraîneur trouvé</p>
               </div>
             ) : (
-              filteredCoaches.map((coach) => (
+              coaches.map((coach) => (
                 <button
                   key={coach.id}
                   onClick={() => handleImpersonateCoach(coach)}
@@ -200,13 +296,13 @@ export default function ImpersonatePage() {
         {/* Players List */}
         {activeTab === 'players' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredPlayers.length === 0 ? (
+            {players.length === 0 ? (
               <div className="col-span-full text-center py-12">
                 <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500">Aucun joueur trouvé</p>
               </div>
             ) : (
-              filteredPlayers.map((player) => (
+              players.map((player) => (
                 <button
                   key={player.id}
                   onClick={() => handleImpersonatePlayer(player)}

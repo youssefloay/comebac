@@ -48,8 +48,9 @@ export async function sendEmail(data: EmailData) {
   }
 }
 
-export function generateWelcomeEmail(playerName: string, teamName: string, resetLink: string) {
+export function generateWelcomeEmail(playerName: string, teamName: string, resetLink: string, playerEmail: string) {
   return {
+    to: playerEmail,
     subject: `Bienvenue dans ComeBac League - Créez votre mot de passe`,
     html: `
       <!DOCTYPE html>

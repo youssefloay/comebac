@@ -174,14 +174,11 @@ export async function POST(request: Request) {
             const emailContent = generateWelcomeEmail(
               `${player.firstName} ${player.lastName}`,
               teamData.name,
-              resetLink
+              resetLink,
+              player.email
             )
             
-            const emailResult = await sendEmail({
-              to: player.email,
-              subject: emailContent.subject,
-              html: emailContent.html
-            })
+            const emailResult = await sendEmail(emailContent)
             
             if (emailResult.success) {
               console.log(`✅ Email envoyé au nouveau compte: ${player.email}`)

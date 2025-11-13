@@ -212,6 +212,285 @@ export default function MaintenanceTab() {
             )}
           </button>
         </div>
+
+        {/* Détecter les doublons */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-red-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">⚠️</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Détecter les doublons</h3>
+              <p className="text-xs text-gray-600">Emails multiples</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Trouve les emails utilisés dans plusieurs collections (joueurs, entraîneurs, users)
+          </p>
+          <button
+            onClick={() => window.location.href = '/admin/duplicates'}
+            className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium text-sm"
+          >
+            Voir les doublons
+          </button>
+        </div>
+
+        {/* Mettre à jour infos appareils */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-blue-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">📱</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Infos appareils</h3>
+              <p className="text-xs text-gray-600">Initialisation</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Initialise les informations d'appareil pour les comptes existants
+          </p>
+          <button
+            onClick={async () => {
+              if (!confirm('Initialiser les infos d\'appareil pour tous les comptes ?')) return
+              setLoading(true)
+              setMessage(null)
+              try {
+                const response = await fetch('/api/admin/update-device-info', { method: 'POST' })
+                const data = await response.json()
+                if (response.ok) {
+                  setMessage({ type: 'success', text: data.message })
+                } else {
+                  setMessage({ type: 'error', text: data.error })
+                }
+              } catch (error) {
+                setMessage({ type: 'error', text: 'Erreur de connexion' })
+              } finally {
+                setLoading(false)
+              }
+            }}
+            disabled={loading}
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition font-medium text-sm"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader className="w-4 h-4 animate-spin" />
+                Traitement...
+              </span>
+            ) : (
+              "Exécuter"
+            )}
+          </button>
+        </div>
+
+        {/* Synchroniser noms d'équipes */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-indigo-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">⚽</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Synchroniser équipes</h3>
+              <p className="text-xs text-gray-600">Noms partout</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Met à jour les noms d'équipes dans toutes les collections (joueurs, matchs, résultats)
+          </p>
+          <button
+            onClick={async () => {
+              if (!confirm('Synchroniser les noms d\'équipes partout ?')) return
+              setLoading(true)
+              setMessage(null)
+              try {
+                const response = await fetch('/api/admin/sync-team-names', { method: 'POST' })
+                const data = await response.json()
+                if (response.ok) {
+                  setMessage({ type: 'success', text: data.message })
+                } else {
+                  setMessage({ type: 'error', text: data.error })
+                }
+              } catch (error) {
+                setMessage({ type: 'error', text: 'Erreur de connexion' })
+              } finally {
+                setLoading(false)
+              }
+            }}
+            disabled={loading}
+            className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition font-medium text-sm"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader className="w-4 h-4 animate-spin" />
+                Traitement...
+              </span>
+            ) : (
+              "Exécuter"
+            )}
+          </button>
+        </div>
+
+        {/* Remplacer un email */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-pink-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">🔄</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Remplacer un email</h3>
+              <p className="text-xs text-gray-600">Partout</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Remplace un email dans toutes les collections
+          </p>
+          <button
+            onClick={async () => {
+              const oldEmail = prompt('Ancien email à remplacer:')
+              if (!oldEmail) return
+              
+              const newEmail = prompt('Nouveau email:')
+              if (!newEmail) return
+              
+              if (!confirm(`Remplacer "${oldEmail}" par "${newEmail}" partout ?`)) return
+              
+              setLoading(true)
+              setMessage(null)
+              try {
+                const response = await fetch('/api/admin/replace-email', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ oldEmail, newEmail })
+                })
+                const data = await response.json()
+                if (response.ok) {
+                  setMessage({ type: 'success', text: data.message })
+                } else {
+                  setMessage({ type: 'error', text: data.error })
+                }
+              } catch (error) {
+                setMessage({ type: 'error', text: 'Erreur de connexion' })
+              } finally {
+                setLoading(false)
+              }
+            }}
+            disabled={loading}
+            className="w-full px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 disabled:bg-gray-400 transition font-medium text-sm"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader className="w-4 h-4 animate-spin" />
+                Traitement...
+              </span>
+            ) : (
+              "Exécuter"
+            )}
+          </button>
+        </div>
+
+        {/* Corriger @gmaill.com */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-green-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">✉️</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Corriger @gmaill.com</h3>
+              <p className="text-xs text-gray-600">Double "l"</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Corrige les emails avec @gmaill.com (double l) en @gmail.com
+          </p>
+          <button
+            onClick={async () => {
+              if (!confirm('Corriger tous les emails @gmaill.com → @gmail.com ?')) return
+              setLoading(true)
+              setMessage(null)
+              try {
+                const response = await fetch('/api/admin/fix-gmaill', { method: 'POST' })
+                const data = await response.json()
+                if (response.ok) {
+                  setMessage({ type: 'success', text: data.message })
+                } else {
+                  setMessage({ type: 'error', text: data.error })
+                }
+              } catch (error) {
+                setMessage({ type: 'error', text: 'Erreur de connexion' })
+              } finally {
+                setLoading(false)
+              }
+            }}
+            disabled={loading}
+            className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition font-medium text-sm"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader className="w-4 h-4 animate-spin" />
+                Traitement...
+              </span>
+            ) : (
+              "Exécuter"
+            )}
+          </button>
+        </div>
+
+        {/* Mettre à jour email Firebase Auth */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-amber-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">🔐</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Mettre à jour Auth</h3>
+              <p className="text-xs text-gray-600">Firebase Auth uniquement</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Met à jour un email dans Firebase Auth seulement (si déjà changé dans Firestore)
+          </p>
+          <button
+            onClick={async () => {
+              const oldEmail = prompt('Ancien email dans Firebase Auth:')
+              if (!oldEmail) return
+              
+              const newEmail = prompt('Nouveau email:')
+              if (!newEmail) return
+              
+              if (!confirm(`Mettre à jour Firebase Auth: "${oldEmail}" → "${newEmail}" ?`)) return
+              
+              setLoading(true)
+              setMessage(null)
+              try {
+                const response = await fetch('/api/admin/update-auth-email', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ oldEmail, newEmail })
+                })
+                const data = await response.json()
+                if (response.ok) {
+                  setMessage({ type: 'success', text: data.message })
+                } else {
+                  setMessage({ type: 'error', text: data.error })
+                }
+              } catch (error) {
+                setMessage({ type: 'error', text: 'Erreur de connexion' })
+              } finally {
+                setLoading(false)
+              }
+            }}
+            disabled={loading}
+            className="w-full px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:bg-gray-400 transition font-medium text-sm"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader className="w-4 h-4 animate-spin" />
+                Traitement...
+              </span>
+            ) : (
+              "Exécuter"
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Avertissement */}

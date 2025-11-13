@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { db } from "@/lib/firebase"
 import { collection, getDocs, query, orderBy } from "firebase/firestore"
 import { CheckCircle, XCircle, Clock, User, Mail, Calendar } from "lucide-react"
+import { getDeviceIcon, getDeviceLabel } from "@/lib/device-info"
 
 interface AccountActivity {
   id: string
@@ -16,6 +17,10 @@ interface AccountActivity {
   createdAt?: Date
   hasLoggedIn: boolean
   emailVerified?: boolean
+  lastDevice?: string
+  lastOS?: string
+  lastBrowser?: string
+  lastIsPWA?: boolean
 }
 
 export default function ActivityTab() {
@@ -59,7 +64,11 @@ export default function ActivityTab() {
           lastLogin: data.lastLogin?.toDate(),
           createdAt: data.createdAt?.toDate(),
           hasLoggedIn: !!data.lastLogin,
-          emailVerified: true
+          emailVerified: true,
+          lastDevice: data.lastDevice,
+          lastOS: data.lastOS,
+          lastBrowser: data.lastBrowser,
+          lastIsPWA: data.lastIsPWA
         }
       })
 
@@ -76,7 +85,11 @@ export default function ActivityTab() {
           lastLogin: data.lastLogin?.toDate(),
           createdAt: data.createdAt?.toDate(),
           hasLoggedIn: !!data.lastLogin,
-          emailVerified: true
+          emailVerified: true,
+          lastDevice: data.lastDevice,
+          lastOS: data.lastOS,
+          lastBrowser: data.lastBrowser,
+          lastIsPWA: data.lastIsPWA
         }
       })
 
@@ -437,9 +450,19 @@ export default function ActivityTab() {
                     <span className="text-sm text-gray-900">{activity.teamName || '-'}</span>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Clock className="w-4 h-4" />
-                      {formatDate(activity.lastLogin)}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Clock className="w-4 h-4" />
+                        {formatDate(activity.lastLogin)}
+                      </div>
+                      {activity.lastOS && (
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-lg">{getDeviceIcon(activity.lastOS, activity.lastIsPWA || false)}</span>
+                          <span className={`font-medium ${activity.lastIsPWA ? 'text-green-700' : 'text-gray-600'}`}>
+                            {getDeviceLabel(activity.lastDevice || 'unknown', activity.lastOS, activity.lastBrowser || 'unknown', activity.lastIsPWA || false)}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4">

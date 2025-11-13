@@ -1,8 +1,7 @@
-import { NextResponse } from 'next/server'
-import { db } from '@/lib/firebase'
-import { collection, query, where, getDocs } from 'firebase/firestore'
-import { getAuth } from 'firebase-admin/auth'
+import { NextRequest, NextResponse } from 'next/server'
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
+import { getAuth } from 'firebase-admin/auth'
+import { getFirestore } from 'firebase-admin/firestore'
 import { sendEmail, generateWelcomeEmail } from '@/lib/email-service'
 
 // Initialize Firebase Admin
@@ -16,81 +15,83 @@ if (!getApps().length) {
   })
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const { teamId } = await request.json()
 
     if (!teamId) {
-      return NextResponse.json({ 
-        error: 'teamId requis' 
-      }, { status: 400 })
+      return NextResponse.json(
+        { error: 'ID de l\'équipe requis' },
+        { status: 400 }
+      )
     }
 
     const auth = getAuth()
-    const sentEmails: string[] = []
-    const errors: string[] = []
+    const db = getFirestore()
 
-    // Récupérer les joueurs de l'équipe
-    const playersQuery = query(
-      collection(db, 'playerAccounts'),
-      where('teamId', '==', teamId)
-    )
-    const playersSnap = await getDocs(playersQuery)
-
-    if (playersSnap.empty) {
-      return NextResponse.json({ 
-        error: 'Aucun joueur trouvé pour cette équipe' 
-      }, { status: 404 })
+    // Récupérer l'équipe
+    const teamDoc = await db.collection('teams').doc(teamId).get()
+    if (!teamDoc.exists) {
+      return NextResponse.json(
+        { error: 'Équipe non trouvée' },
+        { status: 404 }
+      )
     }
 
-    // Récupérer les infos de l'équipe
-    const teamsSnap = await getDocs(collection(db, 'teams'))
-    const team = teamsSnap.docs.find(doc => doc.id === teamId)
-    const teamName = team?.data().name || 'Équipe'
+    const teamData = teamDoc.data()
+    const teamName = teamData?.name || 'Équipe'
 
-    for (const playerDoc of playersSnap.docs) {
-      const player = playerDoc.data()
-      
+    // Récupérer tous les comptes joueurs de cette équipe
+    const playerAccountsSnapshot = await db
+      .collection('playerAccounts')
+      .where('teamId', '==', teamId)
+      .get()
+
+    if (playerAccountsSnapshot.empty) {
+      return NextResponse.json(
+        { error: 'Aucun compte joueur trouvé pour cette équipe' },
+        { status: 404 }
+      )
+    }
+
+    const results = []
+    const errors = []
+
+    // Envoyer un email à chaque joueur
+    for (const doc of playerAccountsSnapshot.docs) {
+      const player = doc.data()
+      const playerEmail = player.email
+      const playerName = `${player.firstName} ${player.lastName}`
+
       try {
-        // Générer un nouveau lien de réinitialisation
-        const resetLink = await auth.generatePasswordResetLink(player.email)
+        // Générer le lien de réinitialisation
+        const resetLink = await auth.generatePasswordResetLink(playerEmail)
 
         // Envoyer l'email
-        const emailContent = generateWelcomeEmail(
-          `${player.firstName} ${player.lastName}`,
-          teamName,
-          resetLink
-        )
-        
-        const emailResult = await sendEmail({
-          to: player.email,
-          subject: emailContent.subject,
-          html: emailContent.html
-        })
-        
+        const emailResult = await sendEmail(generateWelcomeEmail(playerName, teamName, resetLink, playerEmail))
+
         if (emailResult.success) {
-          console.log(`✅ Email renvoyé à ${player.email}`)
-          sentEmails.push(player.email)
+          results.push({ email: playerEmail, name: playerName, success: true })
         } else {
-          console.error(`❌ Échec d'envoi pour ${player.email}`)
-          errors.push(`${player.email}: Échec d'envoi`)
+          errors.push({ email: playerEmail, name: playerName, error: 'Échec envoi email' })
         }
       } catch (error: any) {
-        console.error(`Erreur pour ${player.email}:`, error)
-        errors.push(`${player.email}: ${error.message}`)
+        console.error(`Erreur pour ${playerEmail}:`, error)
+        errors.push({ email: playerEmail, name: playerName, error: error.message })
       }
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      message: `${sentEmails.length} email(s) renvoyé(s)`,
-      sentEmails,
-      errors: errors.length > 0 ? errors : undefined
+      message: `${results.length} email(s) envoyé(s) avec succès${errors.length > 0 ? `, ${errors.length} erreur(s)` : ''}`,
+      results,
+      errors
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erreur lors du renvoi des emails:', error)
-    return NextResponse.json({ 
-      error: 'Erreur lors du renvoi des emails' 
-    }, { status: 500 })
+    return NextResponse.json(
+      { error: error.message || 'Erreur serveur' },
+      { status: 500 }
+    )
   }
 }

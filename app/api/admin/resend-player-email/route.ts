@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendEmail, generateWelcomeEmail } from '@/lib/email-service'
-import { getAuth } from 'firebase-admin/auth'
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
+import { getAuth } from 'firebase-admin/auth'
+import { sendEmail, generateWelcomeEmail } from '@/lib/email-service'
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -27,45 +27,27 @@ export async function POST(request: NextRequest) {
 
     const auth = getAuth()
 
-    // Vérifier si l'utilisateur existe
-    try {
-      await auth.getUserByEmail(playerEmail)
-      
-      // Générer un nouveau lien de réinitialisation
-      const resetLink = await auth.generatePasswordResetLink(playerEmail)
-      
-      // Envoyer l'email
-      const emailContent = generateWelcomeEmail(playerName, teamName, resetLink)
-      const emailResult = await sendEmail({
-        to: playerEmail,
-        subject: emailContent.subject,
-        html: emailContent.html
-      })
+    // Générer le lien de réinitialisation de mot de passe
+    const resetLink = await auth.generatePasswordResetLink(playerEmail)
 
-      if (emailResult.success) {
-        return NextResponse.json({
-          success: true,
-          message: `Email renvoyé à ${playerName}`
-        })
-      } else {
-        return NextResponse.json(
-          { error: 'Erreur lors de l\'envoi de l\'email' },
-          { status: 500 }
-        )
-      }
-    } catch (error: any) {
-      if (error.code === 'auth/user-not-found') {
-        return NextResponse.json(
-          { error: 'Utilisateur non trouvé' },
-          { status: 404 }
-        )
-      }
-      throw error
+    // Envoyer l'email
+    const emailResult = await sendEmail(generateWelcomeEmail(playerName, teamName, resetLink, playerEmail))
+
+    if (emailResult.success) {
+      return NextResponse.json({
+        success: true,
+        message: `Email envoyé à ${playerName} (${playerEmail})`
+      })
+    } else {
+      return NextResponse.json(
+        { error: 'Erreur lors de l\'envoi de l\'email' },
+        { status: 500 }
+      )
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erreur lors du renvoi de l\'email:', error)
     return NextResponse.json(
-      { error: 'Erreur lors du renvoi de l\'email' },
+      { error: error.message || 'Erreur serveur' },
       { status: 500 }
     )
   }

@@ -140,6 +140,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { collection, query, where, getDocs, updateDoc, doc, serverTimestamp } = await import('firebase/firestore')
       const { db } = await import('@/lib/firebase')
+      const { getDeviceInfo } = await import('@/lib/device-info')
+      
+      const deviceInfo = getDeviceInfo()
       
       let updated = false
       
@@ -149,7 +152,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (!playerSnap.empty) {
         await updateDoc(doc(db, 'playerAccounts', playerSnap.docs[0].id), {
-          lastLogin: serverTimestamp()
+          lastLogin: serverTimestamp(),
+          lastDevice: deviceInfo.device,
+          lastOS: deviceInfo.os,
+          lastBrowser: deviceInfo.browser,
+          lastIsPWA: deviceInfo.isPWA
         })
         updated = true
       }
@@ -161,7 +168,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (!coachSnap.empty) {
           await updateDoc(doc(db, 'coachAccounts', coachSnap.docs[0].id), {
-            lastLogin: serverTimestamp()
+            lastLogin: serverTimestamp(),
+            lastDevice: deviceInfo.device,
+            lastOS: deviceInfo.os,
+            lastBrowser: deviceInfo.browser,
+            lastIsPWA: deviceInfo.isPWA
           })
           updated = true
         }
@@ -174,7 +185,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (!usersSnap.empty) {
           await updateDoc(doc(db, 'users', usersSnap.docs[0].id), {
-            lastLogin: serverTimestamp()
+            lastLogin: serverTimestamp(),
+            lastDevice: deviceInfo.device,
+            lastOS: deviceInfo.os,
+            lastBrowser: deviceInfo.browser,
+            lastIsPWA: deviceInfo.isPWA
           })
           updated = true
         }
@@ -187,7 +202,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (!profilesSnap.empty) {
           await updateDoc(doc(db, 'userProfiles', profilesSnap.docs[0].id), {
-            lastLogin: serverTimestamp()
+            lastLogin: serverTimestamp(),
+            lastDevice: deviceInfo.device,
+            lastOS: deviceInfo.os,
+            lastBrowser: deviceInfo.browser,
+            lastIsPWA: deviceInfo.isPWA
           })
         }
       }

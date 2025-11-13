@@ -14,21 +14,17 @@ export async function POST(request: Request) {
     console.log('🧪 Test d\'envoi d\'email joueur...')
     console.log('Destinataire:', email)
 
-    // Générer le contenu de l'email
-    const emailContent = generateWelcomeEmail({
-      firstName: firstName || 'Test',
-      lastName: lastName || 'Joueur',
-      email: email,
-      password: password || 'TestPassword123',
-      teamName: teamName || 'Équipe Test'
-    })
+    // Générer le contenu de l'email avec un lien de test
+    const testResetLink = 'https://example.com/reset-password?token=test123'
+    const emailContent = generateWelcomeEmail(
+      `${firstName || 'Test'} ${lastName || 'Joueur'}`,
+      teamName || 'Équipe Test',
+      testResetLink,
+      email
+    )
 
     // Envoyer l'email
-    const result = await sendEmail({
-      to: email,
-      subject: emailContent.subject,
-      html: emailContent.html
-    })
+    const result = await sendEmail(emailContent)
 
     return NextResponse.json({
       success: result.success,
