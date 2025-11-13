@@ -32,16 +32,32 @@ export default function CoachStatsPage() {
       if (!user?.email) return
 
       try {
-        // Récupérer l'ID de l'équipe du coach
-        const coachQuery = query(
-          collection(db, 'coachAccounts'),
-          where('email', '==', user.email)
-        )
-        const coachSnap = await getDocs(coachQuery)
+        let tid = ''
+        
+        // Vérifier si on est en mode impersonation
+        const impersonateCoachId = sessionStorage.getItem('impersonateCoachId')
+        
+        if (impersonateCoachId) {
+          // Mode impersonation: charger les données du coach spécifique
+          const coachDoc = await getDoc(doc(db, 'coachAccounts', impersonateCoachId))
+          if (coachDoc.exists()) {
+            tid = coachDoc.data().teamId
+          }
+        } else {
+          // Utilisateur normal: chercher par email
+          const coachQuery = query(
+            collection(db, 'coachAccounts'),
+            where('email', '==', user.email)
+          )
+          const coachSnap = await getDocs(coachQuery)
 
-        if (!coachSnap.empty) {
-          const coachData = coachSnap.docs[0].data()
-          const tid = coachData.teamId
+          if (!coachSnap.empty) {
+            const coachData = coachSnap.docs[0].data()
+            tid = coachData.teamId
+          }
+        }
+
+        if (tid) {
 
           // Charger les joueurs avec leurs stats
           const playersQuery = query(

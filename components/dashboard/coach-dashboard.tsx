@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { collection, query, where, getDocs, doc, getDoc, orderBy, limit } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Trophy, Users, Calendar, TrendingUp, Clipboard, BarChart3, Shield, Target, AlertCircle, Plus } from 'lucide-react'
@@ -61,8 +61,27 @@ export function CoachDashboard() {
       try {
         let teamId = ''
         
-        // Si c'est un admin, utiliser des données de démo
-        if (isAdmin) {
+        // Vérifier si on est en mode impersonation
+        const impersonateCoachId = sessionStorage.getItem('impersonateCoachId')
+        
+        if (impersonateCoachId) {
+          // Mode impersonation: charger les données du coach spécifique
+          const coachDoc = await getDoc(doc(db, 'coachAccounts', impersonateCoachId))
+          
+          if (coachDoc.exists()) {
+            const data = coachDoc.data()
+            const coach = {
+              id: coachDoc.id,
+              firstName: data.firstName,
+              lastName: data.lastName,
+              teamId: data.teamId,
+              teamName: data.teamName
+            }
+            setCoachData(coach)
+            teamId = data.teamId
+          }
+        } else if (isAdmin) {
+          // Admin sans impersonation: données de démo
           setCoachData({
             id: 'admin',
             firstName: 'Admin',
@@ -72,7 +91,7 @@ export function CoachDashboard() {
           })
           teamId = 'demo'
         } else {
-          // Chercher dans coachAccounts
+          // Utilisateur normal: chercher par email
           const coachAccountsQuery = query(
             collection(db, 'coachAccounts'),
             where('email', '==', user.email)
@@ -95,7 +114,7 @@ export function CoachDashboard() {
           }
         }
 
-        if (teamId) {
+        if (teamId && teamId !== 'demo') {
           // Charger les données de l'équipe
           const teamDoc = await getDoc(doc(db, 'teams', teamId))
           if (teamDoc.exists()) {
@@ -129,9 +148,7 @@ export function CoachDashboard() {
           const upcomingQuery = query(
             collection(db, 'matches'),
             where('teams', 'array-contains', teamId),
-            where('status', '==', 'upcoming'),
-            orderBy('date', 'asc'),
-            limit(3)
+            where('status', '==', 'upcoming')
           )
           const upcomingSnap = await getDocs(upcomingQuery)
           const upcoming = upcomingSnap.docs.map(doc => ({
@@ -139,15 +156,15 @@ export function CoachDashboard() {
             ...doc.data(),
             date: doc.data().date?.toDate() || new Date()
           })) as Match[]
-          setUpcomingMatches(upcoming)
+          // Trier par date croissante et limiter à 3
+          upcoming.sort((a, b) => a.date.getTime() - b.date.getTime())
+          setUpcomingMatches(upcoming.slice(0, 3))
 
           // Charger les matchs récents
           const recentQuery = query(
             collection(db, 'matches'),
             where('teams', 'array-contains', teamId),
-            where('status', '==', 'finished'),
-            orderBy('date', 'desc'),
-            limit(3)
+            where('status', '==', 'finished')
           )
           const recentSnap = await getDocs(recentQuery)
           const recent = recentSnap.docs.map(doc => ({
@@ -155,7 +172,9 @@ export function CoachDashboard() {
             ...doc.data(),
             date: doc.data().date?.toDate() || new Date()
           })) as Match[]
-          setRecentMatches(recent)
+          // Trier par date décroissante et limiter à 3
+          recent.sort((a, b) => b.date.getTime() - a.date.getTime())
+          setRecentMatches(recent.slice(0, 3))
 
           // Calculer le classement (simplifié)
           const allTeamsSnap = await getDocs(collection(db, 'teams'))
@@ -501,39 +520,7 @@ export function CoachDashboard() {
           </Link>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Activité Récente</h3>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <Clipboard className="w-5 h-5 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Composition mise à jour</p>
-                <p className="text-xs text-gray-600">Il y a 2 heures</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <Trophy className="w-5 h-5 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Match gagné 3-1</p>
-                <p className="text-xs text-gray-600">Hier</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                <Users className="w-5 h-5 text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Nouveau joueur ajouté</p>
-                <p className="text-xs text-gray-600">Il y a 3 jours</p>
-              </div>
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
   )

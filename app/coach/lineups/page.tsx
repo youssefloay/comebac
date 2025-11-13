@@ -62,9 +62,20 @@ export default function CoachLineupsPage() {
     try {
       let tid = ''
       
-      if (isAdmin) {
+      // Vérifier si on est en mode impersonation
+      const impersonateCoachId = sessionStorage.getItem('impersonateCoachId')
+      
+      if (impersonateCoachId) {
+        // Mode impersonation: charger les données du coach spécifique
+        const coachDoc = await getDoc(doc(db, 'coachAccounts', impersonateCoachId))
+        if (coachDoc.exists()) {
+          tid = coachDoc.data().teamId
+        }
+      } else if (isAdmin) {
+        // Admin sans impersonation: équipe de démo
         tid = 'demo'
       } else {
+        // Utilisateur normal: chercher par email
         const coachQuery = query(
           collection(db, 'coachAccounts'),
           where('email', '==', user.email)
@@ -75,7 +86,7 @@ export default function CoachLineupsPage() {
         }
       }
 
-      if (tid) {
+      if (tid && tid !== 'demo') {
         setTeamId(tid)
 
         // Charger la couleur de l'équipe

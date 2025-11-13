@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Calendar, Trophy, Clock, MapPin } from 'lucide-react'
@@ -29,23 +29,38 @@ export default function CoachMatchesPage() {
       if (!user?.email) return
 
       try {
-        // Récupérer l'ID de l'équipe du coach
-        const coachQuery = query(
-          collection(db, 'coachAccounts'),
-          where('email', '==', user.email)
-        )
-        const coachSnap = await getDocs(coachQuery)
+        let tid = ''
+        
+        // Vérifier si on est en mode impersonation
+        const impersonateCoachId = sessionStorage.getItem('impersonateCoachId')
+        
+        if (impersonateCoachId) {
+          // Mode impersonation: charger les données du coach spécifique
+          const coachDoc = await getDoc(doc(db, 'coachAccounts', impersonateCoachId))
+          if (coachDoc.exists()) {
+            tid = coachDoc.data().teamId
+          }
+        } else {
+          // Utilisateur normal: chercher par email
+          const coachQuery = query(
+            collection(db, 'coachAccounts'),
+            where('email', '==', user.email)
+          )
+          const coachSnap = await getDocs(coachQuery)
 
-        if (!coachSnap.empty) {
-          const coachData = coachSnap.docs[0].data()
-          const tid = coachData.teamId
+          if (!coachSnap.empty) {
+            const coachData = coachSnap.docs[0].data()
+            tid = coachData.teamId
+          }
+        }
+
+        if (tid) {
           setTeamId(tid)
 
           // Charger les matchs de l'équipe
           const matchesQuery = query(
             collection(db, 'matches'),
-            where('teams', 'array-contains', tid),
-            orderBy('date', 'desc')
+            where('teams', 'array-contains', tid)
           )
           const matchesSnap = await getDocs(matchesQuery)
 
@@ -54,6 +69,9 @@ export default function CoachMatchesPage() {
             ...doc.data(),
             date: doc.data().date?.toDate() || new Date()
           })) as Match[]
+
+          // Trier par date décroissante (plus récent en premier)
+          matchesData.sort((a, b) => b.date.getTime() - a.date.getTime())
 
           setMatches(matchesData)
         }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Users, Mail, Phone, Calendar, Ruler, Shield, Target, TrendingUp, Award, BarChart3 } from 'lucide-react'
@@ -44,11 +44,20 @@ export default function CoachTeamPage() {
       try {
         let tid = ''
         
-        // Si admin, utiliser une équipe de démo
-        if (isAdmin) {
+        // Vérifier si on est en mode impersonation
+        const impersonateCoachId = sessionStorage.getItem('impersonateCoachId')
+        
+        if (impersonateCoachId) {
+          // Mode impersonation: charger les données du coach spécifique
+          const coachDoc = await getDoc(doc(db, 'coachAccounts', impersonateCoachId))
+          if (coachDoc.exists()) {
+            tid = coachDoc.data().teamId
+          }
+        } else if (isAdmin) {
+          // Admin sans impersonation: équipe de démo
           tid = 'demo'
         } else {
-          // Récupérer l'ID de l'équipe du coach
+          // Utilisateur normal: chercher par email
           const coachQuery = query(
             collection(db, 'coachAccounts'),
             where('email', '==', user.email)
@@ -61,7 +70,7 @@ export default function CoachTeamPage() {
           }
         }
 
-        if (tid) {
+        if (tid && tid !== 'demo') {
           setTeamId(tid)
 
           // Charger les joueurs de l'équipe
