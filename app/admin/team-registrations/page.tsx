@@ -533,53 +533,36 @@ export default function TeamRegistrationsPage() {
       // 3.5. Créer le compte entraîneur si présent
       if (registration.coach && registration.coach.email) {
         try {
-          // Créer un "joueur" spécial pour l'entraîneur
-          await addDoc(collection(db, 'players'), {
-            name: `${registration.coach.firstName} ${registration.coach.lastName}`,
-            number: 0, // Numéro 0 pour l'entraîneur
-            position: 'Entraîneur',
-            teamId: teamRef.id,
-            nationality: 'Égypte',
-            isCoach: true, // Flag spécial pour identifier l'entraîneur
+          // Créer le compte entraîneur dans coachAccounts
+          await addDoc(collection(db, 'coachAccounts'), {
             email: registration.coach.email,
-            phone: registration.coach.phone,
             firstName: registration.coach.firstName,
             lastName: registration.coach.lastName,
+            phone: registration.coach.phone,
             birthDate: registration.coach.birthDate || '',
-            overall: 0,
-            seasonStats: {
-              goals: 0,
-              assists: 0,
-              matches: 0,
-              yellowCards: 0,
-              redCards: 0
-            },
+            teamId: teamRef.id,
+            teamName: registration.teamName,
+            photo: '',
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
           })
 
-          // Créer le compte pour l'entraîneur
-          const coachAccountResponse = await fetch('/api/admin/create-player-accounts', {
+          // Créer le compte Firebase Auth et envoyer l'email
+          const coachAccountResponse = await fetch('/api/admin/create-coach-account', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              teamId: teamRef.id,
-              players: [{
-                firstName: registration.coach.firstName,
-                lastName: registration.coach.lastName,
-                email: registration.coach.email,
-                phone: registration.coach.phone,
-                position: 'Entraîneur',
-                jerseyNumber: 0,
-                height: 0,
-                foot: 'Droitier',
-                grade: registration.teamGrade
-              }]
+              email: registration.coach.email,
+              firstName: registration.coach.firstName,
+              lastName: registration.coach.lastName,
+              teamName: registration.teamName
             })
           })
 
           if (coachAccountResponse.ok) {
             console.log('✅ Compte entraîneur créé avec succès')
+          } else {
+            console.error('❌ Erreur lors de la création du compte entraîneur')
           }
         } catch (coachError) {
           console.error('Erreur lors de la création du compte entraîneur:', coachError)

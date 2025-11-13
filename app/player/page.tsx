@@ -9,13 +9,20 @@ import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 
 export default function PlayerPage() {
-  const { user, userProfile, loading: authLoading } = useAuth()
+  const { user, isAdmin, loading: authLoading } = useAuth()
   const router = useRouter()
   const [isPlayer, setIsPlayer] = useState<boolean | null>(null)
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
     const checkPlayerStatus = async () => {
+      // Si admin en mode impersonation, considérer comme joueur
+      if (isAdmin && sessionStorage.getItem('impersonatePlayerId')) {
+        setIsPlayer(true)
+        setChecking(false)
+        return
+      }
+
       if (!user?.email) {
         setChecking(false)
         return
@@ -41,20 +48,21 @@ export default function PlayerPage() {
     if (!authLoading) {
       checkPlayerStatus()
     }
-  }, [user, authLoading])
+  }, [user, authLoading, isAdmin])
 
   useEffect(() => {
     if (!authLoading && !checking) {
       if (!user) {
         router.push('/login')
-      } else if (userProfile?.role === 'admin') {
+      } else if (isAdmin && !sessionStorage.getItem('impersonatePlayerId')) {
+        // Rediriger vers admin seulement si pas en mode impersonation
         router.push('/admin')
-      } else if (isPlayer === false) {
-        // Pas un joueur, rediriger vers public
+      } else if (isPlayer === false && !isAdmin) {
+        // Pas un joueur, rediriger vers public (sauf si admin en impersonation)
         router.push('/public')
       }
     }
-  }, [user, userProfile, authLoading, checking, isPlayer, router])
+  }, [user, isAdmin, authLoading, checking, isPlayer, router])
 
   if (authLoading || checking) {
     return (

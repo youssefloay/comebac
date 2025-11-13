@@ -9,112 +9,117 @@ import { db } from '@/lib/firebase'
 import { 
   User, 
   Trophy, 
-  Award, 
+  Users, 
   Bell, 
   LogOut, 
   Menu, 
   X,
   CheckCircle,
-  Users,
-  Home
+  Home,
+  Clipboard,
+  BarChart3,
+  Calendar
 } from 'lucide-react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 
-interface PlayerData {
+interface CoachData {
   id: string
   firstName: string
   lastName: string
-  nickname?: string
-  position: string
-  jerseyNumber: number
   teamId: string
   teamName?: string
   photo?: string
 }
 
-export default function PlayerLayout({ children }: { children: React.ReactNode }) {
+export default function CoachLayout({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, loading, logout } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
-  const [playerData, setPlayerData] = useState<PlayerData | null>(null)
-  const [loadingPlayer, setLoadingPlayer] = useState(true)
+  const [coachData, setCoachData] = useState<CoachData | null>(null)
+  const [loadingCoach, setLoadingCoach] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     if (!loading) {
       if (!user) {
         router.push('/login')
-      } else if (isAdmin && !sessionStorage.getItem('impersonatePlayerId')) {
-        // Rediriger vers admin seulement si pas en mode impersonation
-        router.push('/admin')
       }
+      // Les admins peuvent accéder à l'espace coach
     }
-  }, [user, isAdmin, loading, router])
+  }, [user, loading, router])
 
   useEffect(() => {
-    const loadPlayerData = async () => {
+    const loadCoachData = async () => {
       if (!user?.email && !isAdmin) return
 
       try {
         // Vérifier si on est en mode impersonation
-        const impersonatePlayerId = sessionStorage.getItem('impersonatePlayerId')
+        const impersonateCoachId = sessionStorage.getItem('impersonateCoachId')
         
-        if (isAdmin && impersonatePlayerId) {
-          // Charger les données du joueur impersonné
-          const playerDocRef = doc(db, 'playerAccounts', impersonatePlayerId)
-          const playerDocSnap = await getDoc(playerDocRef)
-          if (playerDocSnap.exists()) {
-            const data = playerDocSnap.data()
-            setPlayerData({
-              id: playerDocSnap.id,
+        if (isAdmin && impersonateCoachId) {
+          // Charger les données du coach impersonné
+          const coachDocRef = doc(db, 'coachAccounts', impersonateCoachId)
+          const coachDocSnap = await getDoc(coachDocRef)
+          if (coachDocSnap.exists()) {
+            const data = coachDocSnap.data()
+            setCoachData({
+              id: coachDocSnap.id,
               firstName: data.firstName,
               lastName: data.lastName,
-              nickname: data.nickname,
-              position: data.position,
-              jerseyNumber: data.jerseyNumber,
               teamId: data.teamId,
               teamName: data.teamName,
               photo: data.photo
             })
           }
-          setLoadingPlayer(false)
+          setLoadingCoach(false)
           return
         }
 
-        const playerAccountsQuery = query(
-          collection(db, 'playerAccounts'),
-          where('email', '==', user?.email || '')
-        )
-        const playerAccountsSnap = await getDocs(playerAccountsQuery)
+        // Si c'est un admin sans impersonation, utiliser des données de démo
+        if (isAdmin) {
+          setCoachData({
+            id: 'admin',
+            firstName: 'Admin',
+            lastName: 'Comebac',
+            teamId: 'demo',
+            teamName: 'Équipe Demo',
+            photo: ''
+          })
+          setLoadingCoach(false)
+          return
+        }
 
-        if (!playerAccountsSnap.empty) {
-          const playerDoc = playerAccountsSnap.docs[0]
-          const data = playerDoc.data()
+        const coachAccountsQuery = query(
+          collection(db, 'coachAccounts'),
+          where('email', '==', user.email)
+        )
+        const coachAccountsSnap = await getDocs(coachAccountsQuery)
+
+        if (!coachAccountsSnap.empty) {
+          const coachDoc = coachAccountsSnap.docs[0]
+          const data = coachDoc.data()
           
-          setPlayerData({
-            id: playerDoc.id,
+          setCoachData({
+            id: coachDoc.id,
             firstName: data.firstName,
             lastName: data.lastName,
-            nickname: data.nickname,
-            position: data.position,
-            jerseyNumber: data.jerseyNumber,
             teamId: data.teamId,
             teamName: data.teamName,
             photo: data.photo
           })
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des données joueur:', error)
+        console.error('Erreur lors du chargement des données entraîneur:', error)
       } finally {
-        setLoadingPlayer(false)
+        setLoadingCoach(false)
       }
     }
 
-    loadPlayerData()
+    loadCoachData()
   }, [user, isAdmin])
 
-  if (loading || loadingPlayer) {
+  if (loading || loadingCoach) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <LoadingSpinner size="lg" />
@@ -122,17 +127,17 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
     )
   }
 
-  if (!user || !playerData) {
+  if (!user || !coachData) {
     return null
   }
 
   const menuItems = [
-    { href: '/player', icon: Home, label: 'Tableau de bord' },
-    { href: '/player/team', icon: Users, label: 'Mon Équipe' },
-    { href: '/player/profile', icon: User, label: 'Mon Profil' },
-    { href: '/player/matches', icon: Trophy, label: 'Mes Matchs' },
-    { href: '/player/badges', icon: Award, label: 'Mes Badges' },
-    { href: '/player/notifications', icon: Bell, label: 'Notifications' },
+    { href: '/coach', icon: Home, label: 'Tableau de bord' },
+    { href: '/coach/team', icon: Users, label: 'Mon Équipe' },
+    { href: '/coach/lineups', icon: Clipboard, label: 'Compositions' },
+    { href: '/coach/matches', icon: Calendar, label: 'Matchs' },
+    { href: '/coach/stats', icon: BarChart3, label: 'Statistiques' },
+    { href: '/coach/notifications', icon: Bell, label: 'Notifications' },
   ]
 
   return (
@@ -192,40 +197,40 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
                   <X className="w-5 h-5 text-gray-700" />
                 </button>
 
-                {/* Player Info */}
+                {/* Coach Info */}
                 <div className="mb-6 pt-2">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="relative">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-green-600 flex items-center justify-center text-white text-xl font-bold">
-                        {playerData.photo ? (
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-600 to-red-600 flex items-center justify-center text-white text-xl font-bold">
+                        {coachData.photo ? (
                           <img 
-                            src={playerData.photo} 
-                            alt={`${playerData.firstName} ${playerData.lastName}`}
+                            src={coachData.photo} 
+                            alt={`${coachData.firstName} ${coachData.lastName}`}
                             className="w-full h-full rounded-full object-cover"
                           />
                         ) : (
-                          `${playerData.firstName[0]}${playerData.lastName[0]}`
+                          `${coachData.firstName[0]}${coachData.lastName[0]}`
                         )}
                       </div>
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-xs border-2 border-white">
-                        {playerData.jerseyNumber}
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-orange-600 rounded-full flex items-center justify-center text-white text-xs border-2 border-white">
+                        <Trophy className="w-3 h-3" />
                       </div>
                     </div>
                     <div className="flex-1">
                       <h3 className="font-bold text-gray-900">
-                        {playerData.firstName} {playerData.lastName}
+                        {coachData.firstName} {coachData.lastName}
                       </h3>
-                      <p className="text-sm text-gray-600">{playerData.position}</p>
+                      <p className="text-sm text-gray-600">Entraîneur</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-medium text-green-700">Joueur vérifié</span>
+                  <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg">
+                    <CheckCircle className="w-4 h-4 text-orange-600" />
+                    <span className="text-sm font-medium text-orange-700">Entraîneur vérifié</span>
                   </div>
-                  {playerData.teamName && (
+                  {coachData.teamName && (
                     <div className="mt-2 flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
                       <Users className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-700">{playerData.teamName}</span>
+                      <span className="text-sm font-medium text-blue-700">{coachData.teamName}</span>
                     </div>
                   )}
                 </div>
@@ -268,12 +273,12 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
                 </div>
 
                 {/* Exit Impersonation Button (if admin) */}
-                {isAdmin && sessionStorage.getItem('impersonatePlayerId') && (
+                {isAdmin && sessionStorage.getItem('impersonateCoachId') && (
                   <div className="mb-4">
                     <button
                       onClick={() => {
-                        sessionStorage.removeItem('impersonatePlayerId')
-                        sessionStorage.removeItem('impersonatePlayerName')
+                        sessionStorage.removeItem('impersonateCoachId')
+                        sessionStorage.removeItem('impersonateCoachName')
                         window.location.href = '/admin/impersonate'
                       }}
                       className="flex items-center gap-3 w-full px-4 py-3 bg-yellow-100 text-yellow-800 hover:bg-yellow-200 rounded-lg transition font-medium"
@@ -306,40 +311,40 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
       {/* Desktop Sidebar */}
       <div className="hidden lg:block fixed top-0 left-0 bottom-0 w-80 bg-white border-r border-gray-200 overflow-y-auto">
         <div className="p-6">
-          {/* Player Info */}
+          {/* Coach Info */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
               <div className="relative">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-600 to-green-600 flex items-center justify-center text-white text-2xl font-bold">
-                  {playerData.photo ? (
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-600 to-red-600 flex items-center justify-center text-white text-2xl font-bold">
+                  {coachData.photo ? (
                     <img 
-                      src={playerData.photo} 
-                      alt={`${playerData.firstName} ${playerData.lastName}`}
+                      src={coachData.photo} 
+                      alt={`${coachData.firstName} ${coachData.lastName}`}
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
-                    `${playerData.firstName[0]}${playerData.lastName[0]}`
+                    `${coachData.firstName[0]}${coachData.lastName[0]}`
                   )}
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm border-2 border-white">
-                  {playerData.jerseyNumber}
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-orange-600 rounded-full flex items-center justify-center text-white border-2 border-white">
+                  <Trophy className="w-4 h-4" />
                 </div>
               </div>
               <div className="flex-1">
                 <h3 className="text-lg font-bold text-gray-900">
-                  {playerData.firstName} {playerData.lastName}
+                  {coachData.firstName} {coachData.lastName}
                 </h3>
-                <p className="text-sm text-gray-600">{playerData.position}</p>
+                <p className="text-sm text-gray-600">Entraîneur</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg mb-2">
-              <CheckCircle className="w-4 h-4 text-green-600" />
-              <span className="text-sm font-medium text-green-700">Joueur vérifié</span>
+            <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg mb-2">
+              <CheckCircle className="w-4 h-4 text-orange-600" />
+              <span className="text-sm font-medium text-orange-700">Entraîneur vérifié</span>
             </div>
-            {playerData.teamName && (
+            {coachData.teamName && (
               <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
                 <Users className="w-4 h-4 text-blue-600" />
-                <span className="text-sm font-medium text-blue-700">{playerData.teamName}</span>
+                <span className="text-sm font-medium text-blue-700">{coachData.teamName}</span>
               </div>
             )}
           </div>
@@ -378,12 +383,12 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
           </div>
 
           {/* Exit Impersonation Button (if admin) */}
-          {isAdmin && sessionStorage.getItem('impersonatePlayerId') && (
+          {isAdmin && sessionStorage.getItem('impersonateCoachId') && (
             <div className="mb-4">
               <button
                 onClick={() => {
-                  sessionStorage.removeItem('impersonatePlayerId')
-                  sessionStorage.removeItem('impersonatePlayerName')
+                  sessionStorage.removeItem('impersonateCoachId')
+                  sessionStorage.removeItem('impersonateCoachName')
                   window.location.href = '/admin/impersonate'
                 }}
                 className="flex items-center gap-3 w-full px-4 py-3 bg-yellow-100 text-yellow-800 hover:bg-yellow-200 rounded-lg transition font-medium"

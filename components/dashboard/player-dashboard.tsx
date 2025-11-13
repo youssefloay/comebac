@@ -33,16 +33,72 @@ interface TeamData {
 }
 
 export function PlayerDashboard() {
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const [playerData, setPlayerData] = useState<PlayerData | null>(null)
   const [teamData, setTeamData] = useState<TeamData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const loadPlayerData = async () => {
-      if (!user?.email) return
-
       try {
+        // Vérifier si on est en mode impersonation
+        const impersonatePlayerId = sessionStorage.getItem('impersonatePlayerId')
+        
+        if (isAdmin && impersonatePlayerId) {
+          // Charger les données du joueur impersonné
+          const playerDocRef = doc(db, 'playerAccounts', impersonatePlayerId)
+          const playerDocSnap = await getDoc(playerDocRef)
+          
+          if (playerDocSnap.exists()) {
+            const data = playerDocSnap.data()
+            const player = {
+              id: playerDocSnap.id,
+              firstName: data.firstName,
+              lastName: data.lastName,
+              nickname: data.nickname,
+              position: data.position,
+              jerseyNumber: data.jerseyNumber,
+              teamId: data.teamId,
+              teamName: data.teamName,
+              stats: data.stats || {
+                matchesPlayed: 0,
+                goals: 0,
+                assists: 0,
+                yellowCards: 0,
+                redCards: 0
+              }
+            }
+            setPlayerData(player)
+
+            // Charger les données de l'équipe
+            if (data.teamId) {
+              const teamDoc = await getDoc(doc(db, 'teams', data.teamId))
+              if (teamDoc.exists()) {
+                const teamInfo = teamDoc.data()
+                
+                const teamPlayersQuery = query(
+                  collection(db, 'playerAccounts'),
+                  where('teamId', '==', data.teamId)
+                )
+                const teamPlayersSnap = await getDocs(teamPlayersQuery)
+                
+                setTeamData({
+                  name: teamInfo.name,
+                  logo: teamInfo.logo,
+                  players: teamPlayersSnap.size
+                })
+              }
+            }
+            setLoading(false)
+            return
+          }
+        }
+
+        if (!user?.email) {
+          setLoading(false)
+          return
+        }
+
         // Chercher dans playerAccounts
         const playerAccountsQuery = query(
           collection(db, 'playerAccounts'),
@@ -102,7 +158,7 @@ export function PlayerDashboard() {
     }
 
     loadPlayerData()
-  }, [user])
+  }, [user, isAdmin])
 
   if (loading) {
     return (

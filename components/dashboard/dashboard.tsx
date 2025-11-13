@@ -235,6 +235,13 @@ export default function Dashboard({ user }: { user: any }) {
 
         <div className="p-4 border-t border-gray-200 space-y-2">
           <button
+            onClick={() => window.location.href = '/admin/impersonate'}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white hover:bg-purple-700 rounded-lg transition text-sm font-medium"
+          >
+            <span>👤</span>
+            {sidebarOpen && <span>Se faire passer pour...</span>}
+          </button>
+          <button
             onClick={handleGoToRegistrations}
             className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition text-sm font-medium"
           >

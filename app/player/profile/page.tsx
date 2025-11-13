@@ -46,31 +46,55 @@ interface CoachData {
 }
 
 export default function PlayerProfilePage() {
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const [playerData, setPlayerData] = useState<PlayerData | null>(null)
   const [coachData, setCoachData] = useState<CoachData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const loadPlayerData = async () => {
-      if (!user?.email) return
-
       try {
-        // Trouver le joueur par email dans playerAccounts
-        const playerAccountsQuery = query(
-          collection(db, 'playerAccounts'),
-          where('email', '==', user.email)
-        )
-        const playerAccountsSnap = await getDocs(playerAccountsQuery)
+        let playerDoc
+        let playerDataRaw
 
-        if (playerAccountsSnap.empty) {
-          console.log('Aucun joueur trouvé pour cet email')
-          setLoading(false)
-          return
+        // Vérifier si on est en mode impersonation
+        const impersonatePlayerId = sessionStorage.getItem('impersonatePlayerId')
+        
+        if (isAdmin && impersonatePlayerId) {
+          // Charger les données du joueur impersonné
+          const playerDocRef = doc(db, 'playerAccounts', impersonatePlayerId)
+          const playerDocSnap = await getDoc(playerDocRef)
+          
+          if (!playerDocSnap.exists()) {
+            console.log('Joueur impersonné non trouvé')
+            setLoading(false)
+            return
+          }
+          
+          playerDoc = playerDocSnap
+          playerDataRaw = playerDocSnap.data()
+        } else {
+          if (!user?.email) {
+            setLoading(false)
+            return
+          }
+
+          // Trouver le joueur par email dans playerAccounts
+          const playerAccountsQuery = query(
+            collection(db, 'playerAccounts'),
+            where('email', '==', user.email)
+          )
+          const playerAccountsSnap = await getDocs(playerAccountsQuery)
+
+          if (playerAccountsSnap.empty) {
+            console.log('Aucun joueur trouvé pour cet email')
+            setLoading(false)
+            return
+          }
+
+          playerDoc = playerAccountsSnap.docs[0]
+          playerDataRaw = playerDoc.data()
         }
-
-        const playerDoc = playerAccountsSnap.docs[0]
-        const playerDataRaw = playerDoc.data()
         
         const player: PlayerData = {
           id: playerDoc.id,
@@ -114,7 +138,7 @@ export default function PlayerProfilePage() {
     }
 
     loadPlayerData()
-  }, [user])
+  }, [user, isAdmin])
 
   if (loading) {
     return (

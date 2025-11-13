@@ -6,6 +6,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Calendar, Trophy, Clock } from 'lucide-react'
+import Link from 'next/link'
 
 interface Match {
   id: string
@@ -124,7 +125,11 @@ export default function PlayerMatchesPage() {
           ) : (
             <div className="space-y-4">
               {upcomingMatches.map((match) => (
-                <div key={match.id} className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-md transition">
+                <Link
+                  key={match.id}
+                  href={`/player/matches/${match.id}`}
+                  className="block bg-white p-6 rounded-lg border border-gray-200 hover:shadow-md transition cursor-pointer"
+                >
                   <div className="flex items-center justify-between mb-4">
                     <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
                       Journée {match.round}
@@ -151,7 +156,12 @@ export default function PlayerMatchesPage() {
                       {match.awayTeam}
                     </div>
                   </div>
-                </div>
+                  <div className="mt-3 text-center">
+                    <span className="text-xs text-blue-600 font-medium">
+                      Voir les détails →
+                    </span>
+                  </div>
+                </Link>
               ))}
             </div>
           )}
@@ -172,7 +182,11 @@ export default function PlayerMatchesPage() {
           ) : (
             <div className="space-y-4">
               {completedMatches.map((match) => (
-                <div key={match.id} className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-md transition">
+                <Link
+                  key={match.id}
+                  href={`/player/matches/${match.id}`}
+                  className="block bg-white p-6 rounded-lg border border-gray-200 hover:shadow-md transition cursor-pointer"
+                >
                   <div className="flex items-center justify-between mb-4">
                     <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
                       Journée {match.round}
@@ -204,7 +218,12 @@ export default function PlayerMatchesPage() {
                       {match.awayTeam}
                     </div>
                   </div>
-                </div>
+                  <div className="mt-3 text-center">
+                    <span className="text-xs text-blue-600 font-medium">
+                      Voir les détails →
+                    </span>
+                  </div>
+                </Link>
               ))}
             </div>
           )}
