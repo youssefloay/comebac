@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useRouter } from 'next/navigation'
-import { collection, query, where, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp, orderBy } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, getDoc, updateDoc, addDoc, deleteDoc, serverTimestamp, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { Check, X, Eye, Users, Clock, CheckCircle, XCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -333,26 +333,65 @@ export default function TeamRegistrationsPage() {
               }
             } else {
               // Mettre à jour l'entraîneur existant
-              await updateDoc(doc(db, 'players', coachPlayerExists.id), {
-                name: `${editedRegistration.coach.firstName} ${editedRegistration.coach.lastName}`,
-                email: editedRegistration.coach.email,
-                phone: editedRegistration.coach.phone,
-                firstName: editedRegistration.coach.firstName,
-                lastName: editedRegistration.coach.lastName,
-                birthDate: editedRegistration.coach.birthDate || '',
-                updatedAt: serverTimestamp()
-              })
+              try {
+                // Vérifier que le document existe toujours
+                const coachDocRef = doc(db, 'players', coachPlayerExists.id)
+                const coachDocSnap = await getDoc(coachDocRef)
+                
+                if (coachDocSnap.exists()) {
+                  await updateDoc(coachDocRef, {
+                    name: `${editedRegistration.coach.firstName} ${editedRegistration.coach.lastName}`,
+                    email: editedRegistration.coach.email,
+                    phone: editedRegistration.coach.phone,
+                    firstName: editedRegistration.coach.firstName,
+                    lastName: editedRegistration.coach.lastName,
+                    birthDate: editedRegistration.coach.birthDate || '',
+                    updatedAt: serverTimestamp()
+                  })
+                } else {
+                  // Le document n'existe plus, le recréer
+                  await addDoc(collection(db, 'players'), {
+                    name: `${editedRegistration.coach.firstName} ${editedRegistration.coach.lastName}`,
+                    number: 0,
+                    position: 'Entraîneur',
+                    teamId: teamDoc.id,
+                    nationality: 'Égypte',
+                    isCoach: true,
+                    email: editedRegistration.coach.email,
+                    phone: editedRegistration.coach.phone,
+                    firstName: editedRegistration.coach.firstName,
+                    lastName: editedRegistration.coach.lastName,
+                    birthDate: editedRegistration.coach.birthDate || '',
+                    overall: 0,
+                    seasonStats: {
+                      goals: 0,
+                      assists: 0,
+                      matches: 0,
+                      yellowCards: 0,
+                      redCards: 0
+                    },
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                  })
+                }
+              } catch (updateError) {
+                console.error('Erreur lors de la mise à jour de l\'entraîneur:', updateError)
+              }
 
               // Mettre à jour le compte
               const coachAccount = existingAccounts.find(acc => acc.data().email === editedRegistration.coach!.email)
               if (coachAccount) {
-                await updateDoc(doc(db, 'playerAccounts', coachAccount.id), {
-                  firstName: editedRegistration.coach.firstName,
-                  lastName: editedRegistration.coach.lastName,
-                  email: editedRegistration.coach.email,
-                  phone: editedRegistration.coach.phone,
-                  birthDate: editedRegistration.coach.birthDate || ''
-                })
+                try {
+                  await updateDoc(doc(db, 'playerAccounts', coachAccount.id), {
+                    firstName: editedRegistration.coach.firstName,
+                    lastName: editedRegistration.coach.lastName,
+                    email: editedRegistration.coach.email,
+                    phone: editedRegistration.coach.phone,
+                    birthDate: editedRegistration.coach.birthDate || ''
+                  })
+                } catch (accountError) {
+                  console.error('Erreur lors de la mise à jour du compte:', accountError)
+                }
               }
             }
           }
