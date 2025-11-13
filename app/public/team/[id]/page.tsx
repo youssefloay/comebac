@@ -239,7 +239,10 @@ export default function TeamDetailPage() {
           >
             <div className="absolute inset-0 bg-black/20"></div>
             <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6">
-              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{team.name}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">{team.name}</h1>
+              {team.schoolName && (
+                <p className="text-sm sm:text-base text-white/80 mb-2">{team.schoolName}</p>
+              )}
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-white/90">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 sm:w-5 sm:h-5" />

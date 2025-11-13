@@ -116,6 +116,11 @@ export default function TeamsPage() {
                       <h2 className="text-xl font-bold text-white group-hover:scale-105 transition-transform">
                         {team.name}
                       </h2>
+                      {team.schoolName && (
+                        <p className="text-sm text-white/80 mt-1">
+                          {team.schoolName}
+                        </p>
+                      )}
                     </div>
                     <div className="absolute top-4 right-6">
                       <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
