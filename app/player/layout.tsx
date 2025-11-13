@@ -16,7 +16,8 @@ import {
   X,
   CheckCircle,
   Users,
-  Home
+  Home,
+  BarChart3
 } from 'lucide-react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -129,6 +130,7 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
   const menuItems = [
     { href: '/player', icon: Home, label: 'Tableau de bord' },
     { href: '/player/team', icon: Users, label: 'Mon Équipe' },
+    { href: '/player/ranking', icon: BarChart3, label: 'Classement' },
     { href: '/player/profile', icon: User, label: 'Mon Profil' },
     { href: '/player/matches', icon: Trophy, label: 'Mes Matchs' },
     { href: '/player/badges', icon: Award, label: 'Mes Badges' },

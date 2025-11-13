@@ -92,7 +92,7 @@ export default function CoachLayout({ children }: { children: React.ReactNode })
 
         const coachAccountsQuery = query(
           collection(db, 'coachAccounts'),
-          where('email', '==', user.email)
+          where('email', '==', user?.email || '')
         )
         const coachAccountsSnap = await getDocs(coachAccountsQuery)
 
@@ -134,6 +134,7 @@ export default function CoachLayout({ children }: { children: React.ReactNode })
   const menuItems = [
     { href: '/coach', icon: Home, label: 'Tableau de bord' },
     { href: '/coach/team', icon: Users, label: 'Mon Équipe' },
+    { href: '/coach/ranking', icon: Trophy, label: 'Classement' },
     { href: '/coach/lineups', icon: Clipboard, label: 'Compositions' },
     { href: '/coach/matches', icon: Calendar, label: 'Matchs' },
     { href: '/coach/stats', icon: BarChart3, label: 'Statistiques' },
