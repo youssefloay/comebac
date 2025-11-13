@@ -93,7 +93,33 @@ export async function POST() {
       }
     }
 
-    // 4. Capitaliser les inscriptions (teamRegistrations)
+    // 4. Capitaliser les joueurs (players collection)
+    const playersCollectionSnap = await getDocs(collection(db, 'players'))
+    for (const playerDoc of playersCollectionSnap.docs) {
+      const data = playerDoc.data()
+      const updateData: any = {}
+      
+      if (data.firstName) {
+        updateData.firstName = capitalizeWords(data.firstName)
+      }
+      if (data.lastName) {
+        updateData.lastName = capitalizeWords(data.lastName)
+      }
+      if (data.name) {
+        updateData.name = capitalizeWords(data.name)
+      }
+      if (data.teamName) {
+        updateData.teamName = capitalizeWords(data.teamName)
+      }
+      
+      if (Object.keys(updateData).length > 0) {
+        await updateDoc(doc(db, 'players', playerDoc.id), updateData)
+        updatedCount++
+        updates.push(`Joueur (players): ${data.name || data.firstName + ' ' + data.lastName}`)
+      }
+    }
+
+    // 5. Capitaliser les inscriptions (teamRegistrations)
     const registrationsSnap = await getDocs(collection(db, 'teamRegistrations'))
     for (const regDoc of registrationsSnap.docs) {
       const data = regDoc.data()
