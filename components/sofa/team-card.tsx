@@ -10,6 +10,7 @@ interface SofaTeamCardProps {
     name: string
     color?: string
     playerCount: number
+    logo?: string
   }
   index: number
 }
@@ -36,11 +37,17 @@ export function SofaTeamCard({ team, index }: SofaTeamCardProps) {
                 {team.name}
               </h3>
             </div>
-            <div className="absolute top-3 right-4">
-              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                <span className="text-lg">⚽</span>
+            {team.logo && (
+              <div className="absolute top-3 right-4">
+                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
+                  <img 
+                    src={team.logo} 
+                    alt={team.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Team Info */}
