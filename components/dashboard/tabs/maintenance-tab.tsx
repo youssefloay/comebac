@@ -596,6 +596,70 @@ export default function MaintenanceTab() {
             )}
           </button>
         </div>
+
+        {/* Envoyer emails aux comptes jamais connectés */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-emerald-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">📬</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Emails jamais connectés</h3>
+              <p className="text-xs text-gray-600">Rappel d'activation</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Envoie un email de rappel à tous les comptes qui ne se sont jamais connectés
+          </p>
+          <button
+            onClick={async () => {
+              if (!confirm(
+                '📧 Envoyer des emails de rappel\n\n' +
+                'Cette action va envoyer un email à tous les comptes (joueurs et coaches) qui ne se sont jamais connectés.\n\n' +
+                'L\'email contiendra:\n' +
+                '• Un lien pour créer leur mot de passe\n' +
+                '• Les informations de contact (email, WhatsApp, Instagram)\n\n' +
+                'Continuer?'
+              )) return
+              
+              setLoading(true)
+              setMessage(null)
+              try {
+                const response = await fetch('/api/admin/send-never-logged-in-emails', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ dryRun: false })
+                })
+                const data = await response.json()
+                if (response.ok) {
+                  const sent = data.results.filter((r: any) => r.status === 'sent').length
+                  const failed = data.results.filter((r: any) => r.status === 'failed').length
+                  setMessage({ 
+                    type: 'success', 
+                    text: `✅ ${sent} email(s) envoyé(s) sur ${data.totalFound} compte(s) jamais connecté(s)${failed > 0 ? ` (${failed} échec(s))` : ''}`
+                  })
+                } else {
+                  setMessage({ type: 'error', text: data.error })
+                }
+              } catch (error) {
+                setMessage({ type: 'error', text: 'Erreur de connexion' })
+              } finally {
+                setLoading(false)
+              }
+            }}
+            disabled={loading}
+            className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition font-medium text-sm"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader className="w-4 h-4 animate-spin" />
+                Envoi en cours...
+              </span>
+            ) : (
+              "Envoyer"
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Avertissement */}
