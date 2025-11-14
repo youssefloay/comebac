@@ -108,6 +108,23 @@ export function getDeviceLabel(device: string, os: string, browser: string, isPW
     return `${os} (PWA)`
   }
   
+  // Améliorer l'affichage pour iOS
+  if (os === 'iOS') {
+    if (device === 'tablet') {
+      return `iPad - ${browser}`
+    }
+    return `iPhone - ${browser}`
+  }
+  
+  // Améliorer l'affichage pour Android
+  if (os === 'Android') {
+    if (device === 'tablet') {
+      return `Tablette Android - ${browser}`
+    }
+    return `Mobile Android - ${browser}`
+  }
+  
+  // Pour les autres OS
   const deviceType = device === 'mobile' ? 'Mobile' : device === 'tablet' ? 'Tablette' : 'Ordinateur'
   return `${deviceType} ${os} - ${browser}`
 }
