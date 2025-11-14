@@ -480,7 +480,7 @@ export default function RegisterTeamPage() {
                   type="text"
                   value={teamName}
                   onChange={(e) => setTeamName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400 text-gray-900"
                   placeholder="Ex: Les Aigles"
                   required
                 />
@@ -493,7 +493,7 @@ export default function RegisterTeamPage() {
                 <select
                   value={schoolName}
                   onChange={(e) => setSchoolName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   required
                 >
                   <option value="">Sélectionnez votre école</option>
@@ -518,7 +518,7 @@ export default function RegisterTeamPage() {
                     type="text"
                     value={customSchool}
                     onChange={(e) => setCustomSchool(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400 text-gray-900"
                     placeholder="Entrez le nom de votre école"
                     required
                   />
@@ -532,7 +532,7 @@ export default function RegisterTeamPage() {
                 <select
                   value={teamGrade}
                   onChange={(e) => updateTeamGrade(e.target.value as '1ère' | 'Terminale' | 'Autre')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   required
                 >
                   <option value="1ère">1ère</option>
@@ -550,7 +550,7 @@ export default function RegisterTeamPage() {
                       type="text"
                       value={customGrade}
                       onChange={(e) => setCustomGrade(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400 text-gray-900"
                       placeholder="Précisez la classe (ex: 2nde, 3ème...)"
                       required
                     />
@@ -584,7 +584,7 @@ export default function RegisterTeamPage() {
                   type="text"
                   value={captainFirstName}
                   onChange={(e) => updateCaptainFirstName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   required
                 />
               </div>
@@ -597,7 +597,7 @@ export default function RegisterTeamPage() {
                   type="text"
                   value={captainLastName}
                   onChange={(e) => updateCaptainLastName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   required
                 />
               </div>
@@ -633,7 +633,7 @@ export default function RegisterTeamPage() {
                   type="tel"
                   value={captainPhone}
                   onChange={(e) => updateCaptainPhone(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   required
                 />
               </div>
@@ -681,7 +681,7 @@ export default function RegisterTeamPage() {
                       type="text"
                       value={coachFirstName}
                       onChange={(e) => setCoachFirstName(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                       required={hasCoach}
                     />
                   </div>
@@ -694,7 +694,7 @@ export default function RegisterTeamPage() {
                       type="text"
                       value={coachLastName}
                       onChange={(e) => setCoachLastName(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                       required={hasCoach}
                     />
                   </div>
@@ -707,7 +707,7 @@ export default function RegisterTeamPage() {
                       type="date"
                       value={coachBirthDate}
                       onChange={(e) => setCoachBirthDate(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                     />
                   </div>
                   
@@ -742,7 +742,7 @@ export default function RegisterTeamPage() {
                       type="tel"
                       value={coachPhone}
                       onChange={(e) => setCoachPhone(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                       placeholder="+20 123 456 7890"
                     />
                   </div>
@@ -807,9 +807,8 @@ export default function RegisterTeamPage() {
                         type="text"
                         value={player.firstName}
                         onChange={(e) => updatePlayer(player.id, 'firstName', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        required
-                      />
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                     
                     </div>
 
                     <div>
@@ -820,7 +819,7 @@ export default function RegisterTeamPage() {
                         type="text"
                         value={player.lastName}
                         onChange={(e) => updatePlayer(player.id, 'lastName', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                         required
                       />
                     </div>
@@ -833,7 +832,7 @@ export default function RegisterTeamPage() {
                         type="text"
                         value={player.nickname}
                         onChange={(e) => updatePlayer(player.id, 'nickname', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400 text-gray-900"
                         placeholder="Ex: CR7, Messi..."
                         maxLength={15}
                       />
@@ -878,7 +877,7 @@ export default function RegisterTeamPage() {
                         type="tel"
                         value={player.phone}
                         onChange={(e) => updatePlayer(player.id, 'phone', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400 text-gray-900"
                         placeholder="+20 123 456 7890"
                         required
                       />
@@ -892,7 +891,7 @@ export default function RegisterTeamPage() {
                         type="date"
                         value={player.birthDate}
                         onChange={(e) => updatePlayer(player.id, 'birthDate', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                         required
                       />
                       {player.birthDate && (
@@ -910,7 +909,7 @@ export default function RegisterTeamPage() {
                         type="number"
                         value={player.height}
                         onChange={(e) => updatePlayer(player.id, 'height', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                         min="100"
                         max="250"
                         required
@@ -924,7 +923,7 @@ export default function RegisterTeamPage() {
                       <select
                         value={player.tshirtSize}
                         onChange={(e) => updatePlayer(player.id, 'tshirtSize', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                         required
                       >
                         <option value="XS">XS</option>
@@ -943,7 +942,7 @@ export default function RegisterTeamPage() {
                       <select
                         value={player.position}
                         onChange={(e) => updatePlayer(player.id, 'position', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                         required
                       >
                         <option value="">Sélectionner...</option>
@@ -961,7 +960,7 @@ export default function RegisterTeamPage() {
                       <select
                         value={player.foot}
                         onChange={(e) => updatePlayer(player.id, 'foot', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                         required
                       >
                         <option value="">Sélectionner...</option>
@@ -979,7 +978,7 @@ export default function RegisterTeamPage() {
                         type="number"
                         value={player.jerseyNumber}
                         onChange={(e) => updatePlayer(player.id, 'jerseyNumber', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                         min="1"
                         max="99"
                         required
