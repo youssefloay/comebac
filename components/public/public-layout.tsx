@@ -7,6 +7,9 @@ import { BottomNavigation } from '@/components/sofa/bottom-navigation'
 import { UserMenuFAB } from '@/components/sofa/user-menu-fab'
 import { SimpleLogo } from '@/components/ui/logo'
 import { NotificationDropdown } from '@/components/notifications/notification-dropdown'
+import { NotificationPromptPopup } from '@/components/notifications/notification-prompt-popup'
+import { FantasyButton } from '@/components/fantasy/fantasy-button'
+import { PageTracker } from '@/components/analytics/page-tracker'
 import { useAuth } from '@/lib/auth-context'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { InstallPrompt } from '@/components/pwa/InstallPrompt'
@@ -72,6 +75,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             {/* Notification Dropdown */}
             <NotificationDropdown />
             
+            {/* Fantasy Button */}
+            <FantasyButton href="/public/fantasy" page="header" />
+            
             {/* Theme Toggle */}
             <button
               onClick={() => {
@@ -112,6 +118,12 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       
       {/* PWA Install Prompt */}
       <InstallPrompt />
+      
+      {/* Notification Prompt Popup */}
+      <NotificationPromptPopup />
+      
+      {/* Page Analytics Tracker */}
+      <PageTracker />
     </div>
   )
 }

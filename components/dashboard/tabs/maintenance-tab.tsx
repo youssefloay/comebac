@@ -781,6 +781,28 @@ export default function MaintenanceTab() {
             )}
           </button>
         </div>
+
+        {/* Statistiques d'utilisation */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-purple-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">📊</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Stats d'utilisation</h3>
+              <p className="text-xs text-gray-600">Notifications & Fantasy</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Voir qui a activé les notifications et qui clique sur Fantasy
+          </p>
+          <button
+            onClick={() => window.location.href = '/admin/stats'}
+            className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium text-sm"
+          >
+            Voir les statistiques
+          </button>
+        </div>
       </div>
 
       {/* Avertissement */}

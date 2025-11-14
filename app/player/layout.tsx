@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
+import { PageTracker } from '@/components/analytics/page-tracker'
 
 interface PlayerData {
   id: string
@@ -132,6 +133,7 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
     { href: '/player/team', icon: Users, label: 'Mon Équipe' },
     { href: '/player/ranking', icon: BarChart3, label: 'Classement' },
     { href: '/player/profile', icon: User, label: 'Mon Profil' },
+    { href: '/player/fantasy', icon: Trophy, label: 'Fantasy Stats' },
     { href: '/player/matches', icon: Trophy, label: 'Mes Matchs' },
     { href: '/player/badges', icon: Award, label: 'Mes Badges' },
     { href: '/player/notifications', icon: Bell, label: 'Notifications' },
@@ -413,6 +415,9 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
       <div className="lg:ml-80 pb-20 lg:pb-0">
         {children}
       </div>
+      
+      {/* Page Analytics Tracker */}
+      <PageTracker />
     </div>
   )
 }

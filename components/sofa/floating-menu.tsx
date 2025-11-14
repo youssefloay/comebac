@@ -24,7 +24,7 @@ const navigationItems = [
   { href: "/public/ranking", label: "Classement", icon: Trophy, color: "#f59e0b" },
   { href: "/public/statistics", label: "Statistiques", icon: BarChart3, color: "#8b5cf6" },
   { href: "/public/teams", label: "Équipes", icon: Users, color: "#ef4444" },
-  { href: "/public/players", label: "Cartes FIFA 🎮", icon: "🎮", color: "#f97316" },
+  { href: "/public/fantasy", label: "Fantasy ✨", icon: "✨", color: "#a855f7" },
 ];
 
 export function FloatingMenu() {
