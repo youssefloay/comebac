@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Bell, Sparkles, TrendingUp, Users, CheckCircle, XCircle, Trophy } from "lucide-react"
+import { Bell, Sparkles, TrendingUp, Users, CheckCircle, XCircle, Trophy, X } from "lucide-react"
 import Link from "next/link"
 
 export default function AdminStatsPage() {
@@ -10,6 +10,8 @@ export default function AdminStatsPage() {
   const [pageStats, setPageStats] = useState<any>(null)
   const [generalStats, setGeneralStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [selectedTeam, setSelectedTeam] = useState<any>(null)
+  const [showTeamModal, setShowTeamModal] = useState(false)
 
   useEffect(() => {
     loadStats()
@@ -172,7 +174,7 @@ export default function AdminStatsPage() {
             </div>
 
             {/* Teams Details */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
               <h3 className="font-bold text-gray-900 mb-4">📋 Détails des équipes</h3>
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -183,6 +185,7 @@ export default function AdminStatsPage() {
                       <th className="text-center py-3 px-4 font-semibold text-gray-700">Matchs</th>
                       <th className="text-center py-3 px-4 font-semibold text-gray-700">Coach</th>
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Capitaine</th>
+                      <th className="text-center py-3 px-4 font-semibold text-gray-700">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -199,10 +202,160 @@ export default function AdminStatsPage() {
                           )}
                         </td>
                         <td className="py-3 px-4 text-gray-600">{team.captain}</td>
+                        <td className="py-3 px-4 text-center">
+                          <button
+                            onClick={() => {
+                              setSelectedTeam(team)
+                              setShowTeamModal(true)
+                            }}
+                            className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+                          >
+                            Voir détails →
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+
+            {/* All Players List */}
+            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+              <h3 className="font-bold text-gray-900 mb-4">👥 Tous les joueurs ({generalStats.allPlayers.length})</h3>
+              <div className="max-h-96 overflow-y-auto">
+                <div className="space-y-2">
+                  {generalStats.allPlayers.map((player: any) => (
+                    <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center font-bold text-blue-600">
+                          {player.number}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-gray-900">{player.name}</p>
+                            {player.isCaptain && <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">👑 Capitaine</span>}
+                            {player.isActingCoach && <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">🏆 Coach intérimaire</span>}
+                          </div>
+                          <p className="text-xs text-gray-500">{player.email} • {player.teamName} • {player.position}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        {player.hasAccount ? (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">✅ Compte créé</span>
+                        ) : (
+                          <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">❌ Pas de compte</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* All Coaches List */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="font-bold text-gray-900 mb-4">🏆 Tous les coaches ({generalStats.allCoaches.length})</h3>
+              <div className="space-y-2">
+                {generalStats.allCoaches.length > 0 ? (
+                  generalStats.allCoaches.map((coach: any) => (
+                    <div key={coach.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                          <Users className="w-5 h-5 text-orange-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{coach.name}</p>
+                          <p className="text-xs text-gray-500">{coach.email} • {coach.teamName}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-center py-4">Aucun coach enregistré</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Team Details Modal */}
+        {showTeamModal && selectedTeam && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowTeamModal(false)}>
+            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">{selectedTeam.name}</h2>
+                    <p className="text-gray-600">{selectedTeam.schoolName} • {selectedTeam.teamGrade}</p>
+                  </div>
+                  <button
+                    onClick={() => setShowTeamModal(false)}
+                    className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition"
+                  >
+                    <X className="w-5 h-5 text-gray-600" />
+                  </button>
+                </div>
+
+                {/* Team Stats */}
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="bg-blue-50 p-4 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-blue-600">{selectedTeam.playersCount}</p>
+                    <p className="text-sm text-gray-600">Joueurs</p>
+                  </div>
+                  <div className="bg-purple-50 p-4 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-purple-600">{selectedTeam.matchesCount}</p>
+                    <p className="text-sm text-gray-600">Matchs</p>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-green-600">{selectedTeam.hasCoach ? '✅' : '⚠️'}</p>
+                    <p className="text-sm text-gray-600">Coach</p>
+                  </div>
+                </div>
+
+                {/* Coach Info */}
+                {selectedTeam.coach && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                    <h3 className="font-bold text-gray-900 mb-2">🏆 Coach</h3>
+                    <p className="text-gray-900 font-medium">{selectedTeam.coach.name}</p>
+                    <p className="text-sm text-gray-600">{selectedTeam.coach.email}</p>
+                  </div>
+                )}
+
+                {/* Captain Info */}
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                  <h3 className="font-bold text-gray-900 mb-2">👑 Capitaine</h3>
+                  <p className="text-gray-900 font-medium">{selectedTeam.captain}</p>
+                  <p className="text-sm text-gray-600">{selectedTeam.captainEmail}</p>
+                </div>
+
+                {/* Players List */}
+                <div>
+                  <h3 className="font-bold text-gray-900 mb-3">👥 Joueurs ({selectedTeam.players.length})</h3>
+                  <div className="space-y-2">
+                    {selectedTeam.players.map((player: any) => (
+                      <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center font-bold text-blue-600 text-sm">
+                            {player.number}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-gray-900">{player.name}</p>
+                              {player.isCaptain && <span className="text-xs">👑</span>}
+                            </div>
+                            <p className="text-xs text-gray-500">{player.position} • {player.email}</p>
+                          </div>
+                        </div>
+                        {player.hasAccount ? (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">✅</span>
+                        ) : (
+                          <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">❌</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

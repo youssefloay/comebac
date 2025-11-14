@@ -55,21 +55,69 @@ export async function GET() {
     const captains = players.filter(p => p.isCaptain).length
     const actingCoaches = playerAccounts.filter(p => p.isActingCoach).length
 
-    // Statistiques par équipe
+    // Statistiques par équipe avec détails
     const teamStats = teams.map(team => {
       const teamPlayers = players.filter(p => p.teamId === team.id)
+      const teamPlayerAccounts = playerAccounts.filter(p => p.teamId === team.id)
       const teamMatches = matches.filter(m => 
         m.homeTeamId === team.id || m.awayTeamId === team.id
       )
       const teamCoach = coachAccounts.find(c => c.teamId === team.id)
+      const captain = teamPlayers.find(p => p.isCaptain)
 
       return {
         id: team.id,
         name: team.name,
+        schoolName: team.schoolName,
+        teamGrade: team.teamGrade,
         playersCount: teamPlayers.length,
         matchesCount: teamMatches.length,
         hasCoach: !!teamCoach,
-        captain: teamPlayers.find(p => p.isCaptain)?.name || 'N/A'
+        captain: captain?.name || 'N/A',
+        captainEmail: captain?.email || 'N/A',
+        coach: teamCoach ? {
+          name: `${teamCoach.firstName} ${teamCoach.lastName}`,
+          email: teamCoach.email
+        } : null,
+        players: teamPlayers.map(p => ({
+          id: p.id,
+          name: p.name,
+          email: p.email,
+          position: p.position,
+          number: p.number,
+          isCaptain: p.isCaptain,
+          hasAccount: teamPlayerAccounts.some(pa => pa.email === p.email)
+        }))
+      }
+    })
+
+    // Liste complète des joueurs avec leurs comptes
+    const allPlayersWithAccounts = players.map(p => {
+      const account = playerAccounts.find(pa => pa.email === p.email)
+      const team = teams.find(t => t.id === p.teamId)
+      return {
+        id: p.id,
+        name: p.name,
+        email: p.email,
+        position: p.position,
+        number: p.number,
+        teamId: p.teamId,
+        teamName: team?.name || 'N/A',
+        isCaptain: p.isCaptain,
+        hasAccount: !!account,
+        isActingCoach: account?.isActingCoach || false
+      }
+    })
+
+    // Liste complète des coaches
+    const allCoaches = coachAccounts.map(c => {
+      const team = teams.find(t => t.id === c.teamId)
+      return {
+        id: c.id,
+        name: `${c.firstName} ${c.lastName}`,
+        email: c.email,
+        teamId: c.teamId,
+        teamName: team?.name || 'N/A'
       }
     })
 
@@ -108,7 +156,9 @@ export async function GET() {
           neverLoggedIn: totalAuthUsers - usersWithLastSignIn
         }
       },
-      teamStats
+      teamStats,
+      allPlayers: allPlayersWithAccounts,
+      allCoaches
     })
   } catch (error: any) {
     console.error('Erreur:', error)
