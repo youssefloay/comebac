@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { db } from "@/lib/firebase"
 import { collection, getDocs, query, orderBy } from "firebase/firestore"
-import { CheckCircle, XCircle, Clock, User, Mail, Calendar } from "lucide-react"
+import { CheckCircle, XCircle, Clock, User, Mail, Calendar, Info, X as CloseIcon } from "lucide-react"
 import { getDeviceIcon, getDeviceLabel } from "@/lib/device-info"
 
 interface AccountActivity {
@@ -21,6 +21,14 @@ interface AccountActivity {
   lastOS?: string
   lastBrowser?: string
   lastIsPWA?: boolean
+  lastScreenResolution?: string
+  lastViewportSize?: string
+  lastLanguage?: string
+  lastTimezone?: string
+  lastConnectionType?: string
+  lastDownlink?: number
+  deviceMemory?: number
+  hardwareConcurrency?: number
 }
 
 export default function ActivityTab() {
@@ -28,6 +36,7 @@ export default function ActivityTab() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [typeFilter, setTypeFilter] = useState<'all' | 'player' | 'coach' | 'user' | 'admin'>('all')
+  const [selectedActivity, setSelectedActivity] = useState<AccountActivity | null>(null)
 
   useEffect(() => {
     fetchActivities()
@@ -402,6 +411,9 @@ export default function ActivityTab() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Statut
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -478,6 +490,17 @@ export default function ActivityTab() {
                       </span>
                     )}
                   </td>
+                  <td className="px-6 py-4">
+                    {activity.hasLoggedIn && (
+                      <button
+                        onClick={() => setSelectedActivity(activity)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition"
+                      >
+                        <Info className="w-3 h-3" />
+                        Détails
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -489,6 +512,161 @@ export default function ActivityTab() {
         <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
           <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-600">Aucun compte trouvé avec ce filtre</p>
+        </div>
+      )}
+
+      {/* Modal de détails */}
+      {selectedActivity && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setSelectedActivity(null)}>
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
+              <h3 className="text-xl font-bold text-gray-900">Détails de connexion</h3>
+              <button onClick={() => setSelectedActivity(null)} className="p-2 hover:bg-gray-100 rounded-lg transition">
+                <CloseIcon className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Informations utilisateur */}
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3">👤 Utilisateur</h4>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Nom:</span>
+                    <span className="font-medium text-gray-900">{selectedActivity.firstName} {selectedActivity.lastName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Email:</span>
+                    <span className="font-medium text-gray-900">{selectedActivity.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Type:</span>
+                    <span className="font-medium text-gray-900">{selectedActivity.type}</span>
+                  </div>
+                  {selectedActivity.teamName && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Équipe:</span>
+                      <span className="font-medium text-gray-900">{selectedActivity.teamName}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Appareil */}
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3">📱 Appareil</h4>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Type:</span>
+                    <span className="font-medium text-gray-900">{selectedActivity.lastDevice || 'Inconnu'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">OS:</span>
+                    <span className="font-medium text-gray-900">{selectedActivity.lastOS || 'Inconnu'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Navigateur:</span>
+                    <span className="font-medium text-gray-900">{selectedActivity.lastBrowser || 'Inconnu'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">PWA:</span>
+                    <span className="font-medium text-gray-900">{selectedActivity.lastIsPWA ? 'Oui ✅' : 'Non'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Écran */}
+              {(selectedActivity as any).lastScreenResolution && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-3">🖥️ Écran</h4>
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Résolution:</span>
+                      <span className="font-medium text-gray-900">{(selectedActivity as any).lastScreenResolution}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Fenêtre:</span>
+                      <span className="font-medium text-gray-900">{(selectedActivity as any).lastViewportSize}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Localisation */}
+              {(selectedActivity as any).lastLanguage && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-3">🌍 Localisation</h4>
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Langue:</span>
+                      <span className="font-medium text-gray-900">{(selectedActivity as any).lastLanguage}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Timezone:</span>
+                      <span className="font-medium text-gray-900">{(selectedActivity as any).lastTimezone}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Connexion */}
+              {(selectedActivity as any).lastConnectionType && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-3">📡 Connexion</h4>
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Type:</span>
+                      <span className="font-medium text-gray-900">{(selectedActivity as any).lastConnectionType}</span>
+                    </div>
+                    {(selectedActivity as any).lastDownlink && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Vitesse:</span>
+                        <span className="font-medium text-gray-900">{(selectedActivity as any).lastDownlink} Mbps</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Performance */}
+              {((selectedActivity as any).deviceMemory || (selectedActivity as any).hardwareConcurrency) && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-3">⚡ Performance</h4>
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                    {(selectedActivity as any).deviceMemory && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Mémoire:</span>
+                        <span className="font-medium text-gray-900">{(selectedActivity as any).deviceMemory} GB</span>
+                      </div>
+                    )}
+                    {(selectedActivity as any).hardwareConcurrency && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">CPU Cores:</span>
+                        <span className="font-medium text-gray-900">{(selectedActivity as any).hardwareConcurrency}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Date de connexion */}
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3">🕐 Connexion</h4>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Dernière connexion:</span>
+                    <span className="font-medium text-gray-900">{formatDate(selectedActivity.lastLogin)}</span>
+                  </div>
+                  {selectedActivity.createdAt && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Compte créé:</span>
+                      <span className="font-medium text-gray-900">{formatDate(selectedActivity.createdAt)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

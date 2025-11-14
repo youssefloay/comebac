@@ -1,43 +1,109 @@
 "use client"
 
 import { Bell, CheckCircle, AlertCircle, Info, Trophy } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+interface Notification {
+  id: string
+  type: string
+  title: string
+  message: string
+  created_at: string
+  read: boolean
+}
 
 export default function CoachNotificationsPage() {
-  // Mock notifications - à remplacer par de vraies données
-  const notifications = [
-    {
-      id: 1,
-      type: 'success',
-      title: 'Match gagné!',
-      message: 'Votre équipe a remporté le match 3-1',
-      time: 'Il y a 2 heures',
-      read: false
-    },
-    {
-      id: 2,
-      type: 'info',
-      title: 'Nouveau match programmé',
-      message: 'Match contre Les Aigles le 15 décembre',
-      time: 'Il y a 5 heures',
-      read: false
-    },
-    {
-      id: 3,
-      type: 'warning',
-      title: 'Joueur blessé',
-      message: 'Ahmed Mohamed est indisponible pour le prochain match',
-      time: 'Hier',
-      read: true
-    },
-    {
-      id: 4,
-      type: 'success',
-      title: 'Composition validée',
-      message: 'Votre composition pour le match de samedi a été validée',
-      time: 'Il y a 2 jours',
-      read: true
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [loading, setLoading] = useState(true)
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default')
+  const [showPermissionBanner, setShowPermissionBanner] = useState(false)
+
+  useEffect(() => {
+    fetchNotifications()
+    checkNotificationPermission()
+  }, [])
+
+  const checkNotificationPermission = () => {
+    if ('Notification' in window) {
+      setNotificationPermission(Notification.permission)
+      if (Notification.permission === 'default') {
+        setShowPermissionBanner(true)
+      }
     }
-  ]
+  }
+
+  const requestNotificationPermission = async () => {
+    if ('Notification' in window) {
+      const permission = await Notification.requestPermission()
+      setNotificationPermission(permission)
+      setShowPermissionBanner(false)
+      
+      if (permission === 'granted') {
+        // Optionnel : envoyer le statut au serveur
+        console.log('Notifications activées')
+      }
+    }
+  }
+
+  const fetchNotifications = async () => {
+    try {
+      const { auth } = await import('@/lib/firebase')
+      const currentUser = auth.currentUser
+      
+      if (!currentUser) {
+        setLoading(false)
+        return
+      }
+
+      const response = await fetch(`/api/notifications?userId=${currentUser.uid}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setNotifications(data.notifications)
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des notifications:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const markAsRead = async (notificationId: string) => {
+    try {
+      const { auth } = await import('@/lib/firebase')
+      const currentUser = auth.currentUser
+      
+      if (!currentUser) return
+
+      const response = await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notificationId, userId: currentUser.uid })
+      })
+
+      if (response.ok) {
+        setNotifications(notifications.map(n => 
+          n.id === notificationId ? { ...n, read: true } : n
+        ))
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour:', error)
+    }
+  }
+
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInMs = now.getTime() - date.getTime()
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60))
+    const diffInDays = Math.floor(diffInHours / 24)
+
+    if (diffInHours < 1) return 'À l\'instant'
+    if (diffInHours < 24) return `Il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`
+    if (diffInDays === 1) return 'Hier'
+    if (diffInDays < 7) return `Il y a ${diffInDays} jours`
+    return date.toLocaleDateString('fr-FR')
+  }
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -65,6 +131,17 @@ export default function CoachNotificationsPage() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
@@ -79,6 +156,49 @@ export default function CoachNotificationsPage() {
           </p>
         </div>
 
+        {/* Permission Banner */}
+        {showPermissionBanner && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-6 shadow-md">
+            <div className="flex items-start gap-4">
+              <Bell className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+              <div className="flex-1">
+                <h3 className="font-bold text-gray-900 mb-2">
+                  Activer les notifications
+                </h3>
+                <p className="text-gray-700 mb-4">
+                  Recevez des alertes en temps réel pour les matchs, compositions et actualités de votre équipe.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={requestNotificationPermission}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    Activer les notifications
+                  </button>
+                  <button
+                    onClick={() => setShowPermissionBanner(false)}
+                    className="px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-100 transition-colors border border-gray-300"
+                  >
+                    Plus tard
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Notification Status */}
+        {notificationPermission === 'denied' && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+              <p className="text-red-800 text-sm">
+                Les notifications sont bloquées. Activez-les dans les paramètres de votre navigateur.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Notifications List */}
         <div className="space-y-4">
           {notifications.map((notification) => (
@@ -86,7 +206,8 @@ export default function CoachNotificationsPage() {
               key={notification.id}
               className={`p-6 rounded-lg shadow-md border ${getBgColor(notification.type)} ${
                 !notification.read ? 'border-l-4' : ''
-              }`}
+              } cursor-pointer hover:shadow-lg transition-shadow`}
+              onClick={() => !notification.read && markAsRead(notification.id)}
             >
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0 mt-1">
@@ -100,7 +221,7 @@ export default function CoachNotificationsPage() {
                     )}
                   </div>
                   <p className="text-gray-700 mb-2">{notification.message}</p>
-                  <p className="text-sm text-gray-500">{notification.time}</p>
+                  <p className="text-sm text-gray-500">{getTimeAgo(notification.created_at)}</p>
                 </div>
               </div>
             </div>

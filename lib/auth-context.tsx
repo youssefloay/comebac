@@ -16,6 +16,9 @@ import { auth } from './firebase'
 import { useRouter } from 'next/navigation'
 import { getUserProfile } from './db'
 import type { UserProfile } from './types'
+import { serverTimestamp } from 'firebase/firestore'
+import { doc } from 'firebase/firestore'
+import { setDoc } from 'firebase/firestore'
 
 interface AuthContextType {
   user: User | null
@@ -23,7 +26,7 @@ interface AuthContextType {
   loading: boolean
   needsProfileCompletion: boolean
   signInWithEmail: (email: string, password: string) => Promise<void>
-  signUpWithEmail: (email: string, password: string) => Promise<void>
+  signUpWithEmail: (email: string, password: string, phone?: string) => Promise<void>
   signInWithGoogle: () => Promise<void>
   logout: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -156,7 +159,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           lastDevice: deviceInfo.device,
           lastOS: deviceInfo.os,
           lastBrowser: deviceInfo.browser,
-          lastIsPWA: deviceInfo.isPWA
+          lastIsPWA: deviceInfo.isPWA,
+          lastScreenResolution: deviceInfo.screenResolution,
+          lastViewportSize: deviceInfo.viewportSize,
+          lastLanguage: deviceInfo.language,
+          lastTimezone: deviceInfo.timezone,
+          lastConnectionType: deviceInfo.connectionType,
+          lastDownlink: deviceInfo.downlink,
+          deviceMemory: deviceInfo.deviceMemory,
+          hardwareConcurrency: deviceInfo.hardwareConcurrency
         })
         updated = true
       }
@@ -172,7 +183,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             lastDevice: deviceInfo.device,
             lastOS: deviceInfo.os,
             lastBrowser: deviceInfo.browser,
-            lastIsPWA: deviceInfo.isPWA
+            lastIsPWA: deviceInfo.isPWA,
+            lastScreenResolution: deviceInfo.screenResolution,
+            lastViewportSize: deviceInfo.viewportSize,
+            lastLanguage: deviceInfo.language,
+            lastTimezone: deviceInfo.timezone,
+            lastConnectionType: deviceInfo.connectionType,
+            lastDownlink: deviceInfo.downlink,
+            deviceMemory: deviceInfo.deviceMemory,
+            hardwareConcurrency: deviceInfo.hardwareConcurrency
           })
           updated = true
         }
@@ -189,7 +208,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             lastDevice: deviceInfo.device,
             lastOS: deviceInfo.os,
             lastBrowser: deviceInfo.browser,
-            lastIsPWA: deviceInfo.isPWA
+            lastIsPWA: deviceInfo.isPWA,
+            lastScreenResolution: deviceInfo.screenResolution,
+            lastViewportSize: deviceInfo.viewportSize,
+            lastLanguage: deviceInfo.language,
+            lastTimezone: deviceInfo.timezone,
+            lastConnectionType: deviceInfo.connectionType,
+            lastDownlink: deviceInfo.downlink,
+            deviceMemory: deviceInfo.deviceMemory,
+            hardwareConcurrency: deviceInfo.hardwareConcurrency
           })
           updated = true
         }
@@ -206,7 +233,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             lastDevice: deviceInfo.device,
             lastOS: deviceInfo.os,
             lastBrowser: deviceInfo.browser,
-            lastIsPWA: deviceInfo.isPWA
+            lastIsPWA: deviceInfo.isPWA,
+            lastScreenResolution: deviceInfo.screenResolution,
+            lastViewportSize: deviceInfo.viewportSize,
+            lastLanguage: deviceInfo.language,
+            lastTimezone: deviceInfo.timezone,
+            lastConnectionType: deviceInfo.connectionType,
+            lastDownlink: deviceInfo.downlink,
+            deviceMemory: deviceInfo.deviceMemory,
+            hardwareConcurrency: deviceInfo.hardwareConcurrency
           })
         }
       }
@@ -245,9 +280,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const signUpWithEmail = async (email: string, password: string) => {
+  const signUpWithEmail = async (email: string, password: string, phone?: string) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      
+      // Créer le document utilisateur dans Firestore avec le téléphone
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        email: email,
+        phone: phone || '',
+        role: 'user',
+        createdAt: serverTimestamp(),
+        emailVerified: false
+      })
       
       // Envoyer l'email de vérification
       await sendEmailVerification(userCredential.user)

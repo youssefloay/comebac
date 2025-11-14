@@ -434,6 +434,111 @@ export default function MaintenanceTab() {
           </button>
         </div>
 
+        {/* Définir les capitaines depuis inscriptions */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-yellow-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">👑</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Définir capitaines</h3>
+              <p className="text-xs text-gray-600">Depuis inscriptions</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Définit les capitaines selon les informations du formulaire d'inscription
+          </p>
+          <button
+            onClick={async () => {
+              if (!confirm('Définir les capitaines depuis les inscriptions validées ?')) return
+              setLoading(true)
+              setMessage(null)
+              try {
+                const response = await fetch('/api/admin/set-captains-from-registration', { method: 'POST' })
+                const data = await response.json()
+                if (response.ok) {
+                  setMessage({ type: 'success', text: data.message })
+                } else {
+                  setMessage({ type: 'error', text: data.error })
+                }
+              } catch (error) {
+                setMessage({ type: 'error', text: 'Erreur de connexion' })
+              } finally {
+                setLoading(false)
+              }
+            }}
+            disabled={loading}
+            className="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:bg-gray-400 transition font-medium text-sm"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader className="w-4 h-4 animate-spin" />
+                Traitement...
+              </span>
+            ) : (
+              "Exécuter"
+            )}
+          </button>
+        </div>
+
+        {/* Mettre à jour nom d'équipe dans inscriptions */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-cyan-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">📋</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Nom équipe inscription</h3>
+              <p className="text-xs text-gray-600">teamRegistrations</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Met à jour le nom d'une équipe dans les inscriptions validées
+          </p>
+          <button
+            onClick={async () => {
+              const oldName = prompt('Ancien nom de l\'équipe:')
+              if (!oldName) return
+              
+              const newName = prompt('Nouveau nom de l\'équipe:')
+              if (!newName) return
+              
+              if (!confirm(`Mettre à jour "${oldName}" → "${newName}" dans les inscriptions ?`)) return
+              
+              setLoading(true)
+              setMessage(null)
+              try {
+                const response = await fetch('/api/admin/update-team-name-in-registration', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ oldName, newName })
+                })
+                const data = await response.json()
+                if (response.ok) {
+                  setMessage({ type: 'success', text: data.message })
+                } else {
+                  setMessage({ type: 'error', text: data.error })
+                }
+              } catch (error) {
+                setMessage({ type: 'error', text: 'Erreur de connexion' })
+              } finally {
+                setLoading(false)
+              }
+            }}
+            disabled={loading}
+            className="w-full px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 disabled:bg-gray-400 transition font-medium text-sm"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader className="w-4 h-4 animate-spin" />
+                Traitement...
+              </span>
+            ) : (
+              "Exécuter"
+            )}
+          </button>
+        </div>
+
         {/* Mettre à jour email Firebase Auth */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-amber-300 transition-colors">
           <div className="flex items-center gap-3 mb-4">

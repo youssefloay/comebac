@@ -52,12 +52,41 @@ export function getDeviceInfo() {
                 (window.navigator as any).standalone === true ||
                 document.referrer.includes('android-app://')
 
+  // Informations supplémentaires
+  const screenResolution = `${window.screen.width}x${window.screen.height}`
+  const viewportSize = `${window.innerWidth}x${window.innerHeight}`
+  const language = navigator.language || (navigator as any).userLanguage
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const cookiesEnabled = navigator.cookieEnabled
+  const onlineStatus = navigator.onLine
+  
+  // Type de connexion (si disponible)
+  const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection
+  const connectionType = connection?.effectiveType || 'unknown'
+  const downlink = connection?.downlink || null
+  
+  // Mémoire de l'appareil (si disponible)
+  const deviceMemory = (navigator as any).deviceMemory || null
+  
+  // Nombre de coeurs CPU (si disponible)
+  const hardwareConcurrency = navigator.hardwareConcurrency || null
+
   return {
     device,
     os,
     browser,
     isPWA,
-    userAgent: navigator.userAgent
+    userAgent: navigator.userAgent,
+    screenResolution,
+    viewportSize,
+    language,
+    timezone,
+    cookiesEnabled,
+    onlineStatus,
+    connectionType,
+    downlink,
+    deviceMemory,
+    hardwareConcurrency
   }
 }
 

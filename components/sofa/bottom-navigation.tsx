@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
+import { NotificationBell } from "@/components/notifications/notification-bell"
 import {
   Home,
   Trophy,
@@ -16,7 +17,8 @@ import {
   LogOut,
   Settings,
   User,
-  Gamepad2
+  Gamepad2,
+  Bell
 } from "lucide-react"
 
 // Onglets principaux (toujours visibles)

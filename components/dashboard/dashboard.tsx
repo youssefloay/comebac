@@ -12,6 +12,7 @@ import StatisticsTab from "./tabs/statistics-tab"
 import LineupsTab from "./tabs/lineups-tab"
 import ActivityTab from "./tabs/activity-tab"
 import MaintenanceTab from "./tabs/maintenance-tab"
+import AccountsTab from "./tabs/accounts-tab"
 
 type TabType = "teams" | "players" | "matches" | "results" | "statistics" | "lineups" | "registrations" | "archives" | "activity" | "accounts" | "maintenance"
 
@@ -316,18 +317,7 @@ export default function Dashboard({ user }: { user: any }) {
           {activeTab === "statistics" && <StatisticsTab />}
           {activeTab === "activity" && <ActivityTab />}
           {activeTab === "maintenance" && <MaintenanceTab />}
-          {activeTab === "accounts" && (
-            <div className="text-center py-12">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Gestion des Comptes</h2>
-              <p className="text-gray-600 mb-6">Gérez les rôles et les équipes des utilisateurs</p>
-              <button
-                onClick={() => window.location.href = '/admin/accounts'}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
-              >
-                👤 Gérer les comptes
-              </button>
-            </div>
-          )}
+          {activeTab === "accounts" && <AccountsTab />}
           {activeTab === "registrations" && (
             <div className="text-center py-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Inscriptions d'Équipes</h2>

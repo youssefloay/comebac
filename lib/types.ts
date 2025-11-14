@@ -109,6 +109,7 @@ export interface UserProfile {
   email: string
   username: string
   fullName: string
+  phone: string
   createdAt: Date
   updatedAt: Date
 }

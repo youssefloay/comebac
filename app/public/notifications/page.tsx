@@ -12,7 +12,7 @@ interface Notification {
   read: boolean
 }
 
-export default function PlayerNotificationsPage() {
+export default function PublicNotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default')
@@ -151,7 +151,7 @@ export default function PlayerNotificationsPage() {
             Notifications
           </h1>
           <p className="text-gray-600">
-            Restez informé des dernières actualités de votre équipe
+            Restez informé des dernières actualités de la ligue
           </p>
         </div>
 
@@ -165,7 +165,7 @@ export default function PlayerNotificationsPage() {
                   Activer les notifications
                 </h3>
                 <p className="text-gray-700 mb-4">
-                  Recevez des alertes en temps réel pour les matchs, compositions et actualités de votre équipe.
+                  Recevez des alertes en temps réel pour les matchs, résultats et actualités de la ligue.
                 </p>
                 <div className="flex gap-3">
                   <button

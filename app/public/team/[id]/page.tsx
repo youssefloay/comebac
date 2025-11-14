@@ -424,6 +424,11 @@ export default function TeamDetailPage() {
                                   </span>
                                 )}
                               </h3>
+                              {(player as any).nickname && (
+                                <p className="text-xs text-gray-500 italic truncate">
+                                  "{(player as any).nickname}"
+                                </p>
+                              )}
                               <p className={`text-sm ${getPositionColor(player.position || '')} truncate`}>
                                 {player.position || 'Position non définie'}
                               </p>

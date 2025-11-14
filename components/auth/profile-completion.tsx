@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { User, AtSign, Check, AlertCircle } from 'lucide-react'
+import { User, AtSign, Check, AlertCircle, Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -19,6 +19,7 @@ interface ProfileCompletionProps {
 export function ProfileCompletion({ user, onComplete }: ProfileCompletionProps) {
   const [username, setUsername] = useState('')
   const [fullName, setFullName] = useState(user.displayName || '')
+  const [phone, setPhone] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [usernameChecking, setUsernameChecking] = useState(false)
@@ -58,7 +59,7 @@ export function ProfileCompletion({ user, onComplete }: ProfileCompletionProps) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!username || !fullName) {
+    if (!username || !fullName || !phone) {
       setError('Veuillez remplir tous les champs')
       return
     }
@@ -82,6 +83,7 @@ export function ProfileCompletion({ user, onComplete }: ProfileCompletionProps) 
         email: user.email || '',
         username,
         fullName,
+        phone,
       })
       
       onComplete()
@@ -201,9 +203,28 @@ export function ProfileCompletion({ user, onComplete }: ProfileCompletionProps) 
                 </div>
               </div>
 
+              {/* Phone */}
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
+                  Numéro de téléphone
+                </Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="+20 123 456 7890"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+              </div>
+
               <Button
                 type="submit"
-                disabled={isLoading || !usernameAvailable || !username || !fullName}
+                disabled={isLoading || !usernameAvailable || !username || !fullName || !phone}
                 className="w-full h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium rounded-lg transition-all duration-200"
               >
                 {isLoading ? (

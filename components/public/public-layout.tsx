@@ -1,10 +1,12 @@
 "use client"
 
 import type React from "react"
+import Link from 'next/link'
 import { SofaNavigation } from '@/components/sofa/navigation'
 import { BottomNavigation } from '@/components/sofa/bottom-navigation'
 import { UserMenuFAB } from '@/components/sofa/user-menu-fab'
 import { SimpleLogo } from '@/components/ui/logo'
+import { NotificationDropdown } from '@/components/notifications/notification-dropdown'
 import { useAuth } from '@/lib/auth-context'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { InstallPrompt } from '@/components/pwa/InstallPrompt'
@@ -45,8 +47,17 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       </div>
       
       {/* Mobile Header - Simplified */}
-      <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-30">
-        <div className="flex items-center justify-center">
+      <div className="md:hidden px-4 py-3 shadow-sm" style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid #e5e7eb'
+      }}>
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <SimpleLogo 
               className="w-8 h-8 object-contain rounded"
@@ -56,9 +67,37 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               <h1 className="text-lg font-bold text-gray-900">ComeBac League</h1>
             </div>
           </div>
+          
+          <div className="flex items-center gap-2">
+            {/* Notification Dropdown */}
+            <NotificationDropdown />
+            
+            {/* Theme Toggle */}
+            <button
+              onClick={() => {
+                const html = document.documentElement
+                const isDark = html.classList.contains('dark')
+                if (isDark) {
+                  html.classList.remove('dark')
+                  localStorage.setItem('theme', 'light')
+                } else {
+                  html.classList.add('dark')
+                  localStorage.setItem('theme', 'dark')
+                }
+              }}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
+      {/* Spacer for fixed headers */}
+      <div className="h-16"></div>
+      
       <main className="min-h-screen pb-20 md:pb-0 w-full overflow-x-hidden">
         {children}
       </main>

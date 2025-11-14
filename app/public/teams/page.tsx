@@ -37,6 +37,10 @@ export default function TeamsPage() {
         // Group players by team
         const teamsWithPlayers = teamsData.map(team => {
           const teamPlayers = allPlayers.filter(player => player.teamId === team.id)
+          // Log pour debug
+          if (teamPlayers.length > 0) {
+            console.log(`Équipe ${team.name}:`, teamPlayers.map(p => ({ name: p.name, isCaptain: (p as any).isCaptain })))
+          }
           return {
             ...team,
             players: teamPlayers,
@@ -168,10 +172,20 @@ export default function TeamsPage() {
                                 <span className="text-sofa-text-primary font-medium">
                                   {player.name}
                                 </span>
+                                {(player as any).isCaptain && (
+                                  <span className="inline-flex items-center justify-center w-5 h-5 bg-yellow-500 text-white text-xs font-bold rounded-full" title="Capitaine">
+                                    C
+                                  </span>
+                                )}
                                 <span className="text-xs text-sofa-text-accent font-bold">
                                   #{player.number}
                                 </span>
                               </div>
+                              {(player as any).nickname && (
+                                <div className="text-xs text-sofa-text-muted italic">
+                                  "{(player as any).nickname}"
+                                </div>
+                              )}
                               <div className="text-xs text-sofa-text-muted">
                                 {player.position}
                               </div>
