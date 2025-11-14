@@ -7,6 +7,7 @@ import { db } from "@/lib/firebase"
 import { collection, getDocs, query, where } from "firebase/firestore"
 import type { Team, Player } from "@/lib/types"
 import { Users, MapPin, Trophy, Target } from "lucide-react"
+import { FavoriteButton } from "@/components/favorites/favorite-button"
 
 interface TeamWithPlayers extends Team {
   players: Player[]
@@ -107,28 +108,25 @@ export default function TeamsPage() {
               transition={{ delay: index * 0.1 }}
             >
               <Link href={`/public/team/${team.id}`}>
-                <div className="sofa-card cursor-pointer group">
-                  {/* Team Header */}
+                <div className="sofa-card cursor-pointer group relative">
+                  {/* Favorite Button - Outside card */}
+                  <div className="absolute -top-2 -right-2 z-20" onClick={(e) => e.preventDefault()}>
+                    <FavoriteButton teamId={team.id} teamName={team.name} size="sm" />
+                  </div>
+
+                  {/* Team Header - Compact horizontal layout */}
                   <div 
-                    className="h-24 relative overflow-hidden"
+                    className="h-20 sm:h-24 relative overflow-hidden flex items-center px-4 sm:px-6 gap-3 sm:gap-4"
                     style={{ 
                       background: `linear-gradient(135deg, ${team.color || '#00d4aa'} 0%, ${team.color || '#00d4aa'}dd 100%)` 
                     }}
                   >
                     <div className="absolute inset-0 bg-black/20"></div>
-                    <div className="absolute bottom-4 left-6">
-                      <h2 className="text-xl font-bold text-white group-hover:scale-105 transition-transform">
-                        {team.name}
-                      </h2>
-                      {(team.school || team.schoolName) && (
-                        <p className="text-sm text-white/80 mt-1">
-                          {team.school || team.schoolName}
-                        </p>
-                      )}
-                    </div>
+                    
+                    {/* Logo */}
                     {team.logo && (
-                      <div className="absolute top-4 right-6">
-                        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
+                      <div className="relative z-10 flex-shrink-0">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
                           <img 
                             src={team.logo} 
                             alt={team.name}
@@ -137,6 +135,18 @@ export default function TeamsPage() {
                         </div>
                       </div>
                     )}
+                    
+                    {/* Team Info */}
+                    <div className="relative z-10 flex-1 min-w-0 pr-8">
+                      <h2 className="text-lg sm:text-xl font-bold text-white group-hover:scale-105 transition-transform truncate">
+                        {team.name}
+                      </h2>
+                      {(team.school || team.schoolName) && (
+                        <p className="text-xs sm:text-sm text-white/80 truncate">
+                          {team.school || team.schoolName}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   {/* Team Stats */}

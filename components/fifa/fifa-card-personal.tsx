@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import type { Player, Team } from "@/lib/types"
+import { FavoriteButton } from "@/components/favorites/favorite-button"
 
 interface FifaCardPersonalProps {
   player: Player
@@ -37,6 +38,11 @@ export function FifaCardPersonal({
         </svg>
 
         <div className="fifa-card-inner">
+          {/* Favorite Button */}
+          <div className="absolute top-4 left-4 z-20" onClick={(e) => e.preventDefault()}>
+            <FavoriteButton playerId={player.id} playerName={player.name} type="player" size="sm" />
+          </div>
+          
           {/* Top Section */}
           <div className="fifa-card-top">
             <div className="fifa-info">
