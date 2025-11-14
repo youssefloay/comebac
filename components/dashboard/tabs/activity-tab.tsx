@@ -136,7 +136,17 @@ export default function ActivityTab() {
             lastLogin: data.lastLogin?.toDate(),
             createdAt: data.createdAt?.toDate(),
             hasLoggedIn: !!data.lastLogin,
-            emailVerified: data.emailVerified
+            emailVerified: data.emailVerified,
+            lastDevice: data.lastDevice,
+            lastOS: data.lastOS,
+            lastBrowser: data.lastBrowser,
+            lastIsPWA: data.lastIsPWA,
+            lastScreenWidth: data.lastScreenWidth,
+            lastScreenHeight: data.lastScreenHeight,
+            lastConnectionType: data.lastConnectionType,
+            lastDownlink: data.lastDownlink,
+            deviceMemory: data.deviceMemory,
+            hardwareConcurrency: data.hardwareConcurrency
           }
         })
 
@@ -161,7 +171,17 @@ export default function ActivityTab() {
             lastLogin: data.lastLogin?.toDate(),
             createdAt: data.createdAt?.toDate(),
             hasLoggedIn: !!data.lastLogin,
-            emailVerified: true
+            emailVerified: true,
+            lastDevice: data.lastDevice,
+            lastOS: data.lastOS,
+            lastBrowser: data.lastBrowser,
+            lastIsPWA: data.lastIsPWA,
+            lastScreenWidth: data.lastScreenWidth,
+            lastScreenHeight: data.lastScreenHeight,
+            lastConnectionType: data.lastConnectionType,
+            lastDownlink: data.lastDownlink,
+            deviceMemory: data.deviceMemory,
+            hardwareConcurrency: data.hardwareConcurrency
           }
         })
 
