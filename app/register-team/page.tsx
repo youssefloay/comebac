@@ -275,12 +275,16 @@ export default function RegisterTeamPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    console.log('🚀 Début de la soumission du formulaire')
+    
     const validationError = validateForm()
     if (validationError) {
+      console.log('❌ Erreur de validation:', validationError)
       setError(validationError)
       return
     }
 
+    console.log('✅ Validation réussie, envoi en cours...')
     setLoading(true)
     setError('')
 
@@ -329,7 +333,9 @@ export default function RegisterTeamPage() {
         }
       }
       
-      await addDoc(collection(db, 'teamRegistrations'), registrationData)
+      console.log('📝 Données à envoyer:', registrationData)
+      const docRef = await addDoc(collection(db, 'teamRegistrations'), registrationData)
+      console.log('✅ Document créé avec ID:', docRef.id)
 
       // Envoyer une notification à l'admin
       try {
@@ -349,11 +355,14 @@ export default function RegisterTeamPage() {
         // On continue même si la notification échoue
       }
 
+      console.log('🎉 Inscription réussie!')
       setSuccess(true)
       
-    } catch (err) {
-      console.error('Erreur lors de l\'inscription:', err)
-      setError('Une erreur est survenue. Veuillez réessayer.')
+    } catch (err: any) {
+      console.error('❌ Erreur lors de l\'inscription:', err)
+      console.error('❌ Message d\'erreur:', err.message)
+      console.error('❌ Stack:', err.stack)
+      setError(`Une erreur est survenue: ${err.message || 'Veuillez réessayer.'}`)
     } finally {
       setLoading(false)
     }
