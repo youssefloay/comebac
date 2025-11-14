@@ -1,13 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Bell, Sparkles, TrendingUp, Users, CheckCircle, XCircle } from "lucide-react"
+import { Bell, Sparkles, TrendingUp, Users, CheckCircle, XCircle, Trophy } from "lucide-react"
 import Link from "next/link"
 
 export default function AdminStatsPage() {
   const [notificationStats, setNotificationStats] = useState<any>(null)
   const [fantasyStats, setFantasyStats] = useState<any>(null)
   const [pageStats, setPageStats] = useState<any>(null)
+  const [generalStats, setGeneralStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -16,10 +17,11 @@ export default function AdminStatsPage() {
 
   const loadStats = async () => {
     try {
-      const [notifRes, fantasyRes, pageRes] = await Promise.all([
+      const [notifRes, fantasyRes, pageRes, generalRes] = await Promise.all([
         fetch('/api/admin/notification-stats'),
         fetch('/api/admin/fantasy-stats'),
-        fetch('/api/admin/page-analytics')
+        fetch('/api/admin/page-analytics'),
+        fetch('/api/admin/general-stats')
       ])
 
       if (notifRes.ok) {
@@ -35,6 +37,11 @@ export default function AdminStatsPage() {
       if (pageRes.ok) {
         const data = await pageRes.json()
         setPageStats(data)
+      }
+
+      if (generalRes.ok) {
+        const data = await generalRes.json()
+        setGeneralStats(data)
       }
     } catch (error) {
       console.error('Erreur chargement stats:', error)
@@ -70,8 +77,136 @@ export default function AdminStatsPage() {
             ← Retour Admin
           </Link>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">📊 Statistiques</h1>
-          <p className="text-gray-600">Suivi des interactions utilisateurs</p>
+          <p className="text-gray-600">Vue d'ensemble de la plateforme</p>
         </div>
+
+        {/* General Stats - Overview */}
+        {generalStats && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">📈 Vue d'ensemble</h2>
+            
+            {/* Main Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              {/* Teams */}
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <Users className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <span className="text-3xl font-bold text-blue-600">{generalStats.stats.teams.total}</span>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Équipes</h3>
+                <div className="space-y-1 text-sm">
+                  <p className="text-gray-600">✅ Avec coach: {generalStats.stats.teams.withCoach}</p>
+                  <p className="text-gray-600">⚠️ Sans coach: {generalStats.stats.teams.withoutCoach}</p>
+                </div>
+              </div>
+
+              {/* Players */}
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                    <Users className="w-6 h-6 text-green-600" />
+                  </div>
+                  <span className="text-3xl font-bold text-green-600">{generalStats.stats.players.total}</span>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Joueurs</h3>
+                <div className="space-y-1 text-sm">
+                  <p className="text-gray-600">👑 Capitaines: {generalStats.stats.players.captains}</p>
+                  <p className="text-gray-600">🏆 Coaches intérimaires: {generalStats.stats.players.actingCoaches}</p>
+                </div>
+              </div>
+
+              {/* Matches */}
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                    <Trophy className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <span className="text-3xl font-bold text-purple-600">{generalStats.stats.matches.total}</span>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Matchs</h3>
+                <div className="space-y-1 text-sm">
+                  <p className="text-gray-600">✅ Joués: {generalStats.stats.matches.played}</p>
+                  <p className="text-gray-600">📅 À venir: {generalStats.stats.matches.upcoming}</p>
+                </div>
+              </div>
+
+              {/* Registrations */}
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <span className="text-3xl font-bold text-orange-600">{generalStats.stats.registrations.total}</span>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Inscriptions</h3>
+                <div className="space-y-1 text-sm">
+                  <p className="text-gray-600">⏳ En attente: {generalStats.stats.registrations.pending}</p>
+                  <p className="text-gray-600">✅ Approuvées: {generalStats.stats.registrations.approved}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Auth Stats */}
+            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+              <h3 className="font-bold text-gray-900 mb-4">🔐 Comptes utilisateurs</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <p className="text-2xl font-bold text-blue-600">{generalStats.stats.auth.totalUsers}</p>
+                  <p className="text-sm text-gray-600">Total comptes</p>
+                </div>
+                <div className="text-center p-4 bg-green-50 rounded-lg">
+                  <p className="text-2xl font-bold text-green-600">{generalStats.stats.auth.verified}</p>
+                  <p className="text-sm text-gray-600">Emails vérifiés</p>
+                </div>
+                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                  <p className="text-2xl font-bold text-purple-600">{generalStats.stats.auth.withLastSignIn}</p>
+                  <p className="text-sm text-gray-600">Connectés au moins 1x</p>
+                </div>
+                <div className="text-center p-4 bg-orange-50 rounded-lg">
+                  <p className="text-2xl font-bold text-orange-600">{generalStats.stats.auth.neverLoggedIn}</p>
+                  <p className="text-sm text-gray-600">Jamais connectés</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Teams Details */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="font-bold text-gray-900 mb-4">📋 Détails des équipes</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Équipe</th>
+                      <th className="text-center py-3 px-4 font-semibold text-gray-700">Joueurs</th>
+                      <th className="text-center py-3 px-4 font-semibold text-gray-700">Matchs</th>
+                      <th className="text-center py-3 px-4 font-semibold text-gray-700">Coach</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Capitaine</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {generalStats.teamStats.map((team: any) => (
+                      <tr key={team.id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-4 font-medium text-gray-900">{team.name}</td>
+                        <td className="py-3 px-4 text-center text-gray-600">{team.playersCount}</td>
+                        <td className="py-3 px-4 text-center text-gray-600">{team.matchesCount}</td>
+                        <td className="py-3 px-4 text-center">
+                          {team.hasCoach ? (
+                            <span className="text-green-600">✅</span>
+                          ) : (
+                            <span className="text-orange-600">⚠️</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-gray-600">{team.captain}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Notifications Stats */}
         {notificationStats && (
