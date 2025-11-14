@@ -1,11 +1,33 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Loader, Wrench, CheckCircle, AlertCircle } from "lucide-react"
+
+interface Team {
+  id: string
+  name: string
+}
 
 export default function MaintenanceTab() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [teams, setTeams] = useState<Team[]>([])
+
+  useEffect(() => {
+    loadTeams()
+  }, [])
+
+  const loadTeams = async () => {
+    try {
+      const response = await fetch('/api/admin/teams')
+      if (response.ok) {
+        const data = await response.json()
+        setTeams(data)
+      }
+    } catch (error) {
+      console.error('Erreur chargement équipes:', error)
+    }
+  }
 
   const handleCapitalizeData = async () => {
     if (!confirm(
@@ -31,6 +53,75 @@ export default function MaintenanceTab() {
       }
     } catch (error) {
       setMessage({ type: "error", text: "Erreur de connexion" })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeleteTeam = async () => {
+    if (teams.length === 0) {
+      alert('Aucune équipe disponible')
+      return
+    }
+
+    const teamList = teams.map((t, i) => `${i + 1}. ${t.name}`).join('\n')
+    const teamIndex = prompt(`Sélectionnez l'équipe à supprimer:\n\n${teamList}\n\nEntrez le numéro:`)
+    
+    if (!teamIndex) return
+    
+    const index = parseInt(teamIndex) - 1
+    if (index < 0 || index >= teams.length) {
+      alert('Numéro invalide')
+      return
+    }
+
+    const selectedTeam = teams[index]
+
+    if (!confirm(
+      `⚠️ SUPPRIMER COMPLÈTEMENT "${selectedTeam.name}"?\n\n` +
+      `Cela supprimera DÉFINITIVEMENT:\n` +
+      `✅ Tous les joueurs\n` +
+      `✅ Tous les coaches\n` +
+      `✅ Tous les comptes Firebase Auth\n` +
+      `✅ Tous les matchs\n` +
+      `✅ Toutes les statistiques\n` +
+      `✅ Tous les résultats\n` +
+      `✅ Toutes les compositions\n` +
+      `✅ Tous les favoris\n\n` +
+      `Cette action est IRRÉVERSIBLE!`
+    )) {
+      return
+    }
+
+    const confirmation = prompt(`Tapez "SUPPRIMER" en majuscules pour confirmer:`)
+    if (confirmation !== 'SUPPRIMER') {
+      alert('Suppression annulée')
+      return
+    }
+
+    setLoading(true)
+    setMessage(null)
+    try {
+      const response = await fetch('/api/admin/delete-team-complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teamId: selectedTeam.id, teamName: selectedTeam.name })
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok) {
+        const report = data.report
+        let msg = `✅ Équipe "${selectedTeam.name}" supprimée!\n`
+        msg += `${report.players.length} joueur(s), ${report.coaches.length} coach(es), `
+        msg += `${report.firebaseAccounts.length} compte(s) Firebase supprimés`
+        setMessage({ type: 'success', text: msg })
+        await loadTeams()
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Erreur lors de la suppression' })
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Erreur de connexion' })
     } finally {
       setLoading(false)
     }
@@ -657,6 +748,36 @@ export default function MaintenanceTab() {
               </span>
             ) : (
               "Envoyer"
+            )}
+          </button>
+        </div>
+
+        {/* Supprimer une équipe complètement */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-red-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">🗑️</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Supprimer une équipe</h3>
+              <p className="text-xs text-gray-600">Suppression complète</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Supprime complètement une équipe avec tous ses joueurs, coaches et comptes Firebase
+          </p>
+          <button
+            onClick={handleDeleteTeam}
+            disabled={loading || teams.length === 0}
+            className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 transition font-medium text-sm"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader className="w-4 h-4 animate-spin" />
+                Suppression...
+              </span>
+            ) : (
+              "Supprimer"
             )}
           </button>
         </div>

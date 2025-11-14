@@ -12,7 +12,8 @@
     "update-stats": "npx tsx scripts/update-team-stats.ts",
     "debug-matches": "npx tsx scripts/debug-matches.ts",
     "generate-icons": "node scripts/generate-icons.js",
-    "send-never-logged-in-emails": "npx tsx scripts/send-never-logged-in-emails.ts"
+    "send-never-logged-in-emails": "npx tsx scripts/send-never-logged-in-emails.ts",
+    "delete-team": "npx tsx scripts/delete-team.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

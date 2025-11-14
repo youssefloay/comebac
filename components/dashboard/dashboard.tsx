@@ -129,10 +129,10 @@ export default function Dashboard({ user }: { user: any }) {
     { id: "results", label: "Résultats", icon: "📊" },
     { id: "statistics", label: "Statistiques", icon: "📈" },
     { id: "activity", label: "Activité", icon: "🔔" },
-    { id: "maintenance", label: "Réparations", icon: "🔧" },
     { id: "accounts", label: "Comptes", icon: "👤" },
     { id: "registrations", label: "Inscriptions", icon: "📝" },
     { id: "archives", label: "Archives", icon: "📦" },
+    { id: "maintenance", label: "Réparations", icon: "🔧" },
   ]
 
   const handleGoToRegistrations = () => {

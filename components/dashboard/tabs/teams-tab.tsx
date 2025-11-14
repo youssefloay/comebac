@@ -166,21 +166,55 @@ export default function TeamsTab() {
   }
 
   const handleDelete = async (id: string, teamName: string) => {
-    if (confirm(`⚠️ ATTENTION: Supprimer l'équipe "${teamName}"?\n\nCela supprimera également:\n- Tous les joueurs de l'équipe\n- Tous les matchs de l'équipe\n- Toutes les statistiques\n- Tous les résultats\n\nCette action est IRRÉVERSIBLE!`)) {
+    if (confirm(`⚠️ ATTENTION: Supprimer COMPLÈTEMENT l'équipe "${teamName}"?\n\nCela supprimera DÉFINITIVEMENT:\n- ✅ Tous les joueurs de l'équipe\n- ✅ Tous les coaches de l'équipe\n- ✅ Tous les comptes Firebase Auth (joueurs + coaches)\n- ✅ Tous les matchs de l'équipe\n- ✅ Toutes les statistiques\n- ✅ Tous les résultats\n- ✅ Toutes les compositions\n- ✅ Tous les favoris\n\nCette action est IRRÉVERSIBLE!\n\nTapez "SUPPRIMER" pour confirmer`)) {
+      const confirmation = prompt('Tapez "SUPPRIMER" en majuscules pour confirmer:')
+      if (confirmation !== 'SUPPRIMER') {
+        alert('Suppression annulée')
+        return
+      }
+
       try {
         setError(null)
-        const response = await fetch(`/api/admin/teams?id=${id}`, {
-          method: 'DELETE'
+        setLoading(true)
+        
+        const response = await fetch('/api/admin/delete-team-complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ teamId: id, teamName })
         })
-        if (!response.ok) throw new Error('Failed to delete team')
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to delete team')
+        }
         
         const result = await response.json()
-        setSuccess(`Équipe supprimée avec succès! (${result.deleted.players} joueurs, ${result.deleted.matches} matchs, ${result.deleted.statistics} stats supprimés)`)
+        const report = result.report
+        
+        let successMessage = `✅ Équipe "${teamName}" supprimée complètement!\n\n`
+        successMessage += `📊 Résumé:\n`
+        successMessage += `- ${report.players.length} joueur(s)\n`
+        successMessage += `- ${report.coaches.length} coach(es)\n`
+        successMessage += `- ${report.firebaseAccounts.length} compte(s) Firebase\n`
+        successMessage += `- ${report.statistics} statistique(s)\n`
+        successMessage += `- ${report.matches} match(s)\n`
+        successMessage += `- ${report.results} résultat(s)\n`
+        successMessage += `- ${report.lineups} composition(s)\n`
+        successMessage += `- ${report.favorites} favori(s)\n`
+        
+        if (report.errors.length > 0) {
+          successMessage += `\n⚠️ ${report.errors.length} erreur(s) rencontrée(s)`
+        }
+        
+        alert(successMessage)
+        setSuccess(`Équipe "${teamName}" supprimée complètement`)
         await loadTeams()
         setTimeout(() => setSuccess(null), 5000)
-      } catch (err) {
-        setError("Erreur lors de la suppression de l'équipe")
+      } catch (err: any) {
+        setError(`Erreur lors de la suppression: ${err.message}`)
         console.error("Error deleting team:", err)
+      } finally {
+        setLoading(false)
       }
     }
   }
