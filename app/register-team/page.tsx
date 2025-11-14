@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
@@ -40,6 +40,14 @@ const CAIRO_FRENCH_SCHOOLS = [
 ]
 
 export default function RegisterTeamPage() {
+  // Force light mode for this page
+  useEffect(() => {
+    document.documentElement.classList.remove('dark')
+    return () => {
+      // Cleanup: restore dark mode if it was set before
+    }
+  }, [])
+
   const [teamName, setTeamName] = useState('')
   const [schoolName, setSchoolName] = useState('')
   const [customSchool, setCustomSchool] = useState('')
@@ -352,7 +360,7 @@ export default function RegisterTeamPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-8 light">
       {/* Header with Logo */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 mb-6">
         <div className="flex items-center justify-between">
