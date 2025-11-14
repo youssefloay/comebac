@@ -17,11 +17,13 @@ import {
   CheckCircle,
   Users,
   Home,
-  BarChart3
+  BarChart3,
+  Clipboard
 } from 'lucide-react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PageTracker } from '@/components/analytics/page-tracker'
+import { useActingCoach } from '@/lib/use-acting-coach'
 
 interface PlayerData {
   id: string
@@ -42,6 +44,9 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
   const [playerData, setPlayerData] = useState<PlayerData | null>(null)
   const [loadingPlayer, setLoadingPlayer] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  
+  // Vérifier si le joueur est coach intérimaire
+  const actingCoachStatus = useActingCoach(user?.email || null, playerData?.teamId || null)
 
   useEffect(() => {
     if (!loading) {
@@ -138,13 +143,21 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
     { href: '/player/badges', icon: Award, label: 'Mes Badges' },
     { href: '/player/notifications', icon: Bell, label: 'Notifications' },
   ]
+  
+  // Ajouter l'accès coach si le joueur est coach intérimaire
+  const allMenuItems = actingCoachStatus.isActingCoach 
+    ? [
+        ...menuItems,
+        { href: '/coach/lineups', icon: Clipboard, label: '⚽ Compositions (Coach)', isCoachItem: true }
+      ]
+    : menuItems
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile Bottom Navigation */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-[#111827]/95 backdrop-blur-xl border-t border-gray-200 dark:border-gray-700 z-40 safe-area-bottom shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
         <div className="flex items-center justify-around px-2 py-3">
-          {menuItems.slice(0, 4).map((item) => {
+          {allMenuItems.slice(0, 4).map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
             return (
@@ -236,9 +249,10 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
 
                 {/* All Menu Items */}
                 <nav className="space-y-1 mb-4">
-                  {menuItems.map((item) => {
+                  {allMenuItems.map((item: any) => {
                     const Icon = item.icon
                     const isActive = pathname === item.href
+                    const isCoachItem = item.isCoachItem || false
                     return (
                       <Link
                         key={item.href}
@@ -246,8 +260,12 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
                         onClick={() => setMobileMenuOpen(false)}
                         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
                           isActive
-                            ? 'bg-blue-600 text-white'
-                            : 'text-gray-700 hover:bg-gray-100'
+                            ? isCoachItem 
+                              ? 'bg-orange-600 text-white'
+                              : 'bg-blue-600 text-white'
+                            : isCoachItem
+                              ? 'text-orange-700 bg-orange-50 hover:bg-orange-100'
+                              : 'text-gray-700 hover:bg-gray-100'
                         }`}
                       >
                         <Icon className="w-5 h-5" />
@@ -256,6 +274,19 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
                     )
                   })}
                 </nav>
+                
+                {/* Acting Coach Badge */}
+                {actingCoachStatus.isActingCoach && (
+                  <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Clipboard className="w-4 h-4 text-orange-600" />
+                      <span className="text-sm font-bold text-orange-900">Coach Intérimaire</span>
+                    </div>
+                    <p className="text-xs text-orange-700">
+                      En tant que capitaine, vous avez accès aux fonctions de coach jusqu'à ce qu'un coach soit assigné.
+                    </p>
+                  </div>
+                )}
 
                 <div className="my-4 border-t border-gray-200"></div>
 
@@ -350,17 +381,22 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
 
           {/* Menu Items */}
           <nav className="space-y-1 mb-6">
-            {menuItems.map((item) => {
+            {allMenuItems.map((item: any) => {
               const Icon = item.icon
               const isActive = pathname === item.href
+              const isCoachItem = item.isCoachItem || false
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
                     isActive
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? isCoachItem 
+                        ? 'bg-orange-600 text-white'
+                        : 'bg-blue-600 text-white'
+                      : isCoachItem
+                        ? 'text-orange-700 bg-orange-50 hover:bg-orange-100'
+                        : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -369,6 +405,19 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
               )
             })}
           </nav>
+          
+          {/* Acting Coach Badge */}
+          {actingCoachStatus.isActingCoach && (
+            <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Clipboard className="w-5 h-5 text-orange-600" />
+                <span className="text-sm font-bold text-orange-900">Coach Intérimaire</span>
+              </div>
+              <p className="text-xs text-orange-700 leading-relaxed">
+                En tant que capitaine, vous avez accès aux fonctions de coach jusqu'à ce qu'un coach soit assigné à votre équipe.
+              </p>
+            </div>
+          )}
 
           {/* Toggle Button */}
           <div className="mb-6">

@@ -13,7 +13,12 @@
     "debug-matches": "npx tsx scripts/debug-matches.ts",
     "generate-icons": "node scripts/generate-icons.js",
     "send-never-logged-in-emails": "npx tsx scripts/send-never-logged-in-emails.ts",
-    "delete-team": "npx tsx scripts/delete-team.ts"
+    "delete-team": "npx tsx scripts/delete-team.ts",
+    "register-icons-team": "npx tsx scripts/register-icons-team.ts",
+    "check-icons-registration": "npx tsx scripts/check-icons-registration.ts",
+    "resend-icons-emails": "npx tsx scripts/resend-icons-emails.ts",
+    "delete-test-notifications": "npx tsx scripts/delete-test-notifications.ts",
+    "update-acting-coach-status": "npx tsx scripts/update-acting-coach-status.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -50,6 +55,7 @@
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
     "date-fns": "4.1.0",
+    "dotenv": "^17.2.3",
     "embla-carousel-react": "8.5.1",
     "firebase": "^12.4.0",
     "firebase-admin": "^13.6.0",

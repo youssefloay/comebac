@@ -80,7 +80,67 @@ export default function RegisterTeamPage() {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
+  // Charger les données sauvegardées au montage
+  useEffect(() => {
+    const savedData = localStorage.getItem('teamRegistrationDraft')
+    if (savedData) {
+      try {
+        const data = JSON.parse(savedData)
+        setTeamName(data.teamName || '')
+        setSchoolName(data.schoolName || '')
+        setCustomSchool(data.customSchool || '')
+        setTeamGrade(data.teamGrade || '1ère')
+        setCustomGrade(data.customGrade || '')
+        setCaptainFirstName(data.captainFirstName || '')
+        setCaptainLastName(data.captainLastName || '')
+        setCaptainEmail(data.captainEmail || '')
+        setCaptainPhone(data.captainPhone || '')
+        setHasCoach(data.hasCoach || false)
+        setCoachFirstName(data.coachFirstName || '')
+        setCoachLastName(data.coachLastName || '')
+        setCoachBirthDate(data.coachBirthDate || '')
+        setCoachEmail(data.coachEmail || '')
+        setCoachPhone(data.coachPhone || '')
+        if (data.players && data.players.length > 0) {
+          setPlayers(data.players)
+        }
+        console.log('✅ Données récupérées du brouillon')
+      } catch (e) {
+        console.error('Erreur chargement brouillon:', e)
+      }
+    }
+  }, [])
+
+  // Sauvegarder automatiquement toutes les 2 secondes
+  useEffect(() => {
+    const saveTimer = setTimeout(() => {
+      const draftData = {
+        teamName,
+        schoolName,
+        customSchool,
+        teamGrade,
+        customGrade,
+        captainFirstName,
+        captainLastName,
+        captainEmail,
+        captainPhone,
+        hasCoach,
+        coachFirstName,
+        coachLastName,
+        coachBirthDate,
+        coachEmail,
+        coachPhone,
+        players
+      }
+      localStorage.setItem('teamRegistrationDraft', JSON.stringify(draftData))
+    }, 2000)
+
+    return () => clearTimeout(saveTimer)
+  }, [teamName, schoolName, customSchool, teamGrade, customGrade, captainFirstName, captainLastName, captainEmail, captainPhone, hasCoach, coachFirstName, coachLastName, coachBirthDate, coachEmail, coachPhone, players])
+
   const resetForm = () => {
+    // Supprimer le brouillon
+    localStorage.removeItem('teamRegistrationDraft')
     setTeamName('')
     setSchoolName('')
     setCustomSchool('')
@@ -356,6 +416,8 @@ export default function RegisterTeamPage() {
       }
 
       console.log('🎉 Inscription réussie!')
+      // Supprimer le brouillon après succès
+      localStorage.removeItem('teamRegistrationDraft')
       setSuccess(true)
       
     } catch (err: any) {
@@ -394,6 +456,9 @@ export default function RegisterTeamPage() {
           </h1>
           <p className="text-gray-600">
             Inscrivez votre équipe à la ComeBac League (sans compte requis)
+          </p>
+          <p className="text-xs text-green-600 mt-2">
+            💾 Vos données sont sauvegardées automatiquement
           </p>
         </motion.div>
 
