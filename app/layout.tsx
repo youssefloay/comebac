@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { AuthProvider } from "@/lib/auth-context"
 import { ThemeProvider } from "@/lib/theme-context"
+import { QueryProvider } from "@/lib/query-provider"
 import { RegisterSW } from "@/components/pwa/RegisterSW"
 import { InstallPrompt } from "@/components/pwa/InstallPrompt"
 import "./globals.css"
@@ -108,10 +109,12 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} font-sans antialiased`}>
         <ThemeProvider>
-          <AuthProvider>
-            {children}
-            <InstallPrompt />
-          </AuthProvider>
+          <QueryProvider>
+            <AuthProvider>
+              {children}
+              <InstallPrompt />
+            </AuthProvider>
+          </QueryProvider>
         </ThemeProvider>
         <RegisterSW />
         <Analytics />

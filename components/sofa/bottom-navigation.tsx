@@ -18,7 +18,8 @@ import {
   Settings,
   User,
   Gamepad2,
-  Bell
+  Bell,
+  Sparkles
 } from "lucide-react"
 
 // Onglets principaux (toujours visibles)
@@ -26,11 +27,12 @@ const mainTabs = [
   { href: "/public", label: "Accueil", icon: Home },
   { href: "/public/matches", label: "Matchs", icon: Calendar },
   { href: "/public/ranking", label: "Classement", icon: Trophy },
-  { href: "/public/statistics", label: "Stats", icon: BarChart3 },
+  { href: "/public/fantasy", label: "Fantasy", icon: Sparkles },
 ]
 
 // Onglets secondaires (dans le menu "Plus")
 const secondaryTabs = [
+  { href: "/public/statistics", label: "Statistiques", icon: BarChart3 },
   { href: "/public/teams", label: "Équipes", icon: Users },
   { href: "/public/players", label: "Cartes FIFA", icon: Gamepad2 },
 ]
