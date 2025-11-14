@@ -610,7 +610,7 @@ export default function RegisterTeamPage() {
                   type="email"
                   value={captainEmail}
                   onChange={(e) => updateCaptainEmail(e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent text-gray-900 ${
                     captainEmail && !isEmailValid(captainEmail)
                       ? 'border-red-500 focus:ring-red-500 bg-red-50'
                       : 'border-gray-300 focus:ring-blue-500'
@@ -719,7 +719,7 @@ export default function RegisterTeamPage() {
                       type="email"
                       value={coachEmail}
                       onChange={(e) => setCoachEmail(e.target.value)}
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent text-gray-900 ${
                         coachEmail && !isEmailValid(coachEmail)
                           ? 'border-red-500 focus:ring-red-500 bg-red-50'
                           : 'border-gray-300 focus:ring-blue-500'
@@ -848,7 +848,7 @@ export default function RegisterTeamPage() {
                         type="email"
                         value={player.email}
                         onChange={(e) => updatePlayer(player.id, 'email', e.target.value)}
-                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:border-transparent placeholder:text-gray-400 ${
+                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:border-transparent placeholder:text-gray-400 text-gray-900 ${
                           player.email && (!isEmailValid(player.email) || isEmailDuplicate(player.email, player.id))
                             ? 'border-red-500 focus:ring-red-500 bg-red-50'
                             : 'border-gray-300 focus:ring-blue-500'
