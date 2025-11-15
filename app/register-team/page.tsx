@@ -48,6 +48,7 @@ export default function RegisterTeamPage() {
     }
   }, [])
 
+  const [registrationMode, setRegistrationMode] = useState<'choice' | 'complete' | 'collaborative'>('choice')
   const [teamName, setTeamName] = useState('')
   const [schoolName, setSchoolName] = useState('')
   const [customSchool, setCustomSchool] = useState('')

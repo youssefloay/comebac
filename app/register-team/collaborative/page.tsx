@@ -94,12 +94,29 @@ export default function CollaborativeRegistrationPage() {
         registrationMode: 'collaborative',
         inviteToken: token,
         minPlayers: 7,
-        maxPlayers: 15,
+        maxPlayers: 10,
         submittedAt: serverTimestamp(),
         createdAt: serverTimestamp()
       }
 
       const docRef = await addDoc(collection(db, 'teamRegistrations'), registrationData)
+
+      // Envoyer l'email au capitaine
+      try {
+        await fetch('/api/send-captain-invite-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            captainEmail: captainEmail.trim().toLowerCase(),
+            captainName: `${captainFirstName.trim()} ${captainLastName.trim()}`,
+            teamName: teamName.trim(),
+            token
+          })
+        })
+      } catch (emailError) {
+        console.error('Erreur envoi email:', emailError)
+        // Continue même si l'email échoue
+      }
 
       // Rediriger vers la page de statut
       router.push(`/team-registration/${token}/status`)
