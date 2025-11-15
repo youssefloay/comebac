@@ -64,19 +64,19 @@ export default function ManagePage() {
         <TabNavigation tabs={tabs} activeTab={activeTab} onChange={(id) => setActiveTab(id as TabType)} />
 
         {activeTab === 'teams' && data && (
-          <TeamsTab teams={data.teamStats} />
+          <TeamsTab teams={data.teamStats} onUseFullVersion={() => window.location.href = '/admin/manage-old'} />
         )}
 
         {activeTab === 'players' && data && (
-          <PlayersTab players={data.allPlayers} />
+          <PlayersTab players={data.allPlayers} onUseFullVersion={() => window.location.href = '/admin/manage-old'} />
         )}
 
         {activeTab === 'coaches' && data && (
-          <CoachesTab coaches={data.allCoaches} />
+          <CoachesTab coaches={data.allCoaches} onUseFullVersion={() => window.location.href = '/admin/manage-old'} />
         )}
 
         {activeTab === 'accounts' && (
-          <AccountsTab />
+          <AccountsTab onUseFullVersion={() => window.location.href = '/admin/manage-old'} />
         )}
       </div>
     </AdminLayout>
@@ -84,7 +84,7 @@ export default function ManagePage() {
 }
 
 // Teams Tab
-function TeamsTab({ teams }: { teams: any[] }) {
+function TeamsTab({ teams, onUseFullVersion }: { teams: any[], onUseFullVersion: () => void }) {
   const columns = [
     { key: 'name', label: 'Équipe' },
     { key: 'schoolName', label: 'École' },
@@ -112,8 +112,11 @@ function TeamsTab({ teams }: { teams: any[] }) {
           <h2 className="text-xl font-bold text-gray-900">Équipes ({teams.length})</h2>
           <p className="text-sm text-gray-600">Gérer toutes les équipes</p>
         </div>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-          + Nouvelle équipe
+        <button 
+          onClick={onUseFullVersion}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+        >
+          🔧 Version complète
         </button>
       </div>
       <DataTable 
@@ -127,7 +130,7 @@ function TeamsTab({ teams }: { teams: any[] }) {
 }
 
 // Players Tab
-function PlayersTab({ players }: { players: any[] }) {
+function PlayersTab({ players, onUseFullVersion }: { players: any[], onUseFullVersion: () => void }) {
   const columns = [
     { 
       key: 'number', 
@@ -167,8 +170,11 @@ function PlayersTab({ players }: { players: any[] }) {
           <h2 className="text-xl font-bold text-gray-900">Joueurs ({players.length})</h2>
           <p className="text-sm text-gray-600">Gérer tous les joueurs</p>
         </div>
-        <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-          + Nouveau joueur
+        <button 
+          onClick={onUseFullVersion}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+        >
+          🔧 Version complète
         </button>
       </div>
       <DataTable 
@@ -181,7 +187,7 @@ function PlayersTab({ players }: { players: any[] }) {
 }
 
 // Coaches Tab
-function CoachesTab({ coaches }: { coaches: any[] }) {
+function CoachesTab({ coaches, onUseFullVersion }: { coaches: any[], onUseFullVersion: () => void }) {
   const columns = [
     { key: 'name', label: 'Nom' },
     { key: 'email', label: 'Email' },
@@ -195,8 +201,11 @@ function CoachesTab({ coaches }: { coaches: any[] }) {
           <h2 className="text-xl font-bold text-gray-900">Coaches ({coaches.length})</h2>
           <p className="text-sm text-gray-600">Gérer tous les coaches</p>
         </div>
-        <button className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition">
-          + Nouveau coach
+        <button 
+          onClick={onUseFullVersion}
+          className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+        >
+          🔧 Version complète
         </button>
       </div>
       {coaches.length > 0 ? (
@@ -217,7 +226,7 @@ function CoachesTab({ coaches }: { coaches: any[] }) {
 }
 
 // Accounts Tab
-function AccountsTab() {
+function AccountsTab({ onUseFullVersion }: { onUseFullVersion: () => void }) {
   return (
     <div>
       <div className="mb-4">
@@ -226,10 +235,13 @@ function AccountsTab() {
       </div>
       <div className="bg-white rounded-lg shadow p-8 text-center">
         <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500 mb-4">Section en cours de développement</p>
-        <a href="/admin/accounts" className="text-blue-600 hover:text-blue-700 font-medium">
-          Accéder à l'ancienne page comptes →
-        </a>
+        <p className="text-gray-500 mb-4">Gestion complète des comptes</p>
+        <button 
+          onClick={onUseFullVersion}
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition"
+        >
+          🔧 Accéder à la gestion complète
+        </button>
       </div>
     </div>
   )

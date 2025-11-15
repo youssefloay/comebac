@@ -95,16 +95,24 @@ function ArchivesTab() {
           <h2 className="text-xl font-bold text-gray-900">Archives</h2>
           <p className="text-sm text-gray-600">Gérer les archives des saisons passées</p>
         </div>
-        <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-          🏁 Terminer la saison
-        </button>
       </div>
       <div className="bg-white rounded-lg shadow p-8 text-center">
         <Archive className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500 mb-4">Fonctionnalité en cours de migration</p>
-        <a href="/admin/archives" className="text-blue-600 hover:text-blue-700 font-medium">
-          Accéder aux archives →
-        </a>
+        <p className="text-gray-500 mb-4">Gestion complète des archives</p>
+        <div className="flex gap-4 justify-center">
+          <button 
+            onClick={() => window.location.href = '/admin/archives'}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition"
+          >
+            📦 Voir les archives
+          </button>
+          <button 
+            onClick={() => window.location.href = '/admin/tools-old'}
+            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition"
+          >
+            🏁 Terminer la saison
+          </button>
+        </div>
       </div>
     </div>
   )

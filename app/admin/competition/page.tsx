@@ -46,24 +46,19 @@ function MatchesTab() {
           <h2 className="text-xl font-bold text-gray-900">Matchs</h2>
           <p className="text-sm text-gray-600">Gérer le calendrier des matchs</p>
         </div>
-        <div className="flex gap-2">
-          <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
-            🎲 Générer matchs
-          </button>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-            + Nouveau match
-          </button>
-        </div>
       </div>
       <div className="bg-white rounded-lg shadow p-8 text-center">
         <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500 mb-4">Fonctionnalité en cours de migration</p>
+        <p className="text-gray-500 mb-4">Gestion complète des matchs</p>
         <p className="text-sm text-gray-400 mb-4">
-          Utilisez l'ancien dashboard pour gérer les matchs
+          Créer, modifier, générer des matchs
         </p>
-        <a href="/admin" className="text-blue-600 hover:text-blue-700 font-medium">
-          Accéder à l'ancien dashboard →
-        </a>
+        <button 
+          onClick={() => window.location.href = '/admin/competition-old'}
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition"
+        >
+          🔧 Accéder à la gestion complète
+        </button>
       </div>
     </div>
   )
@@ -78,10 +73,13 @@ function ResultsTab() {
       </div>
       <div className="bg-white rounded-lg shadow p-8 text-center">
         <Award className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500 mb-4">Fonctionnalité en cours de migration</p>
-        <a href="/admin" className="text-blue-600 hover:text-blue-700 font-medium">
-          Accéder à l'ancien dashboard →
-        </a>
+        <p className="text-gray-500 mb-4">Gestion complète des résultats</p>
+        <button 
+          onClick={() => window.location.href = '/admin/competition-old'}
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition"
+        >
+          🔧 Accéder à la gestion complète
+        </button>
       </div>
     </div>
   )
@@ -96,10 +94,13 @@ function LineupsTab() {
       </div>
       <div className="bg-white rounded-lg shadow p-8 text-center">
         <ClipboardList className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500 mb-4">Fonctionnalité en cours de migration</p>
-        <a href="/admin" className="text-blue-600 hover:text-blue-700 font-medium">
-          Accéder à l'ancien dashboard →
-        </a>
+        <p className="text-gray-500 mb-4">Gestion complète des compositions</p>
+        <button 
+          onClick={() => window.location.href = '/admin/competition-old'}
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition"
+        >
+          🔧 Accéder à la gestion complète
+        </button>
       </div>
     </div>
   )
