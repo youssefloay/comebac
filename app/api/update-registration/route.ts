@@ -13,20 +13,19 @@ export async function POST(request: Request) {
     // Chercher l'inscription avec ce token
     const registrationsSnap = await adminDb.collection('teamRegistrations')
       .where('updateToken', '==', token)
-      .where('updateTokenUsed', '==', false)
       .limit(1)
       .get()
 
     if (registrationsSnap.empty) {
-      return NextResponse.json({ error: 'Lien invalide ou déjà utilisé' }, { status: 404 })
+      return NextResponse.json({ error: 'Lien invalide' }, { status: 404 })
     }
 
     const doc = registrationsSnap.docs[0]
     const data = doc.data()
 
-    // Vérifier si le token est expiré
-    if (data.updateTokenExpiresAt && data.updateTokenExpiresAt.toDate() < new Date()) {
-      return NextResponse.json({ error: 'Lien expiré' }, { status: 410 })
+    // Vérifier si le token est actif
+    if (data.updateTokenActive === false) {
+      return NextResponse.json({ error: 'Lien désactivé par l\'administrateur' }, { status: 403 })
     }
 
     // Calculer l'âge pour chaque joueur
@@ -53,9 +52,8 @@ export async function POST(request: Request) {
         height: parseFloat(p.height) || 0,
         jerseyNumber: parseInt(p.jerseyNumber) || 0
       })),
-      updateTokenUsed: true,
-      updatedAt: Timestamp.now(),
-      updatedBy: 'captain',
+      lastUpdatedAt: Timestamp.now(),
+      lastUpdatedBy: 'captain',
       needsAdminValidation: true // Flag pour que l'admin valide les modifications
     })
 

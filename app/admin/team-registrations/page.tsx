@@ -727,9 +727,32 @@ export default function TeamRegistrationsPage() {
         const data = await res.json()
         // Copier le lien dans le presse-papier
         await navigator.clipboard.writeText(data.updateLink)
-        alert(`✅ Lien copié dans le presse-papier!\n\n${data.updateLink}\n\n📧 Envoyez ce lien au capitaine (${registration.captain.email}) pour qu'il puisse mettre à jour toutes les informations de l'équipe.\n\n⏰ Le lien expire dans 7 jours.`)
+        alert(`✅ Lien copié dans le presse-papier!\n\n${data.updateLink}\n\n📧 Envoyez ce lien au capitaine (${registration.captain.email}) pour qu'il puisse mettre à jour toutes les informations de l'équipe.\n\n♾️ Le lien n'expire jamais et peut être utilisé plusieurs fois.\n🔒 Vous pouvez le désactiver manuellement à tout moment.`)
+        loadRegistrations() // Recharger pour voir le statut du lien
       } else {
         alert('❌ Erreur lors de la génération du lien')
+      }
+    } catch (error) {
+      console.error('Erreur:', error)
+      alert('❌ Erreur de connexion')
+    }
+  }
+
+  const disableUpdateLink = async (registration: Registration) => {
+    if (!confirm(`Désactiver le lien de mise à jour pour "${registration.teamName}"?\n\nLe capitaine ne pourra plus modifier les informations.`)) return
+
+    try {
+      const res = await fetch('/api/admin/generate-update-link', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ registrationId: registration.id })
+      })
+
+      if (res.ok) {
+        alert('✅ Lien désactivé avec succès')
+        loadRegistrations()
+      } else {
+        alert('❌ Erreur lors de la désactivation du lien')
       }
     } catch (error) {
       console.error('Erreur:', error)
@@ -923,6 +946,23 @@ export default function TeamRegistrationsPage() {
                   </p>
                   <p className="text-xs text-gray-600">{registration.captain.email}</p>
                   <p className="text-xs text-gray-600">{registration.captain.phone}</p>
+                  
+                  {(registration as any).updateToken && (registration as any).updateTokenActive && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                        🔗 Lien actif
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          disableUpdateLink(registration)
+                        }}
+                        className="text-xs text-red-600 hover:text-red-700 underline"
+                      >
+                        Désactiver
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <p className="text-xs text-gray-500 mb-4">
