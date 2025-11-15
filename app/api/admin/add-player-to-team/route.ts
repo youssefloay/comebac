@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
         })
 
         // Envoyer email coach
-        await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/admin/create-coach-account`, {
+        const coachResponse = await fetch(`${request.nextUrl.origin}/api/admin/create-coach-account`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -82,6 +82,12 @@ export async function POST(request: NextRequest) {
             teamName: teamData.name
           })
         })
+        
+        if (!coachResponse.ok) {
+          const error = await coachResponse.json()
+          console.error('Erreur création compte coach:', error)
+          throw new Error(`Erreur création compte coach: ${error.error}`)
+        }
       }
     } else {
       // Créer compte joueur
@@ -92,7 +98,7 @@ export async function POST(request: NextRequest) {
       const playerSnap = await getDocs(playerQuery)
 
       if (playerSnap.empty) {
-        await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/admin/create-player-accounts`, {
+        const playerResponse = await fetch(`${request.nextUrl.origin}/api/admin/create-player-accounts`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -100,6 +106,12 @@ export async function POST(request: NextRequest) {
             players: [player]
           })
         })
+        
+        if (!playerResponse.ok) {
+          const error = await playerResponse.json()
+          console.error('Erreur création compte joueur:', error)
+          throw new Error(`Erreur création compte joueur: ${error.error}`)
+        }
       }
     }
 

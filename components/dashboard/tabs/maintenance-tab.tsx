@@ -143,6 +143,32 @@ export default function MaintenanceTab() {
     }
   }
 
+  const handleCreateMissingAccounts = async () => {
+    if (!confirm(
+      "👥 Créer les comptes manquants\n\n" +
+      "Cette action va créer des comptes pour tous les joueurs qui sont dans l'équipe mais n'ont pas encore de compte.\n\n" +
+      "Continuer?"
+    )) {
+      return
+    }
+
+    setLoading(true)
+    setMessage(null)
+    try {
+      const response = await fetch("/api/admin/create-missing-accounts", { method: "POST" })
+      const data = await response.json()
+      if (response.ok) {
+        setMessage({ type: "success", text: data.message })
+      } else {
+        setMessage({ type: "error", text: data.error || "Erreur lors de la création des comptes" })
+      }
+    } catch (error) {
+      setMessage({ type: "error", text: "Erreur de connexion" })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleFixEmails = async () => {
     if (!confirm(
       "📧 Corriger les emails\n\n" +
@@ -256,6 +282,36 @@ export default function MaintenanceTab() {
               </span>
             ) : (
               "Exécuter"
+            )}
+          </button>
+        </div>
+
+        {/* Créer comptes manquants */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-blue-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">👥</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Créer comptes manquants</h3>
+              <p className="text-xs text-gray-600">Joueurs sans compte</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Crée les comptes pour les joueurs qui sont dans une équipe mais n'ont pas encore de compte
+          </p>
+          <button
+            onClick={handleCreateMissingAccounts}
+            disabled={loading}
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition font-medium text-sm"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader className="w-4 h-4 animate-spin" />
+                Traitement...
+              </span>
+            ) : (
+              "Créer les comptes"
             )}
           </button>
         </div>
