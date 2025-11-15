@@ -152,7 +152,7 @@ export default function CollaborativeRegistrationPage() {
 
       // Envoyer l'email au capitaine avec les liens
       try {
-        await fetch('/api/send-captain-invite-email', {
+        const emailResponse = await fetch('/api/send-captain-invite-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -163,6 +163,14 @@ export default function CollaborativeRegistrationPage() {
             hasCoach: hasCoach
           })
         })
+        
+        if (!emailResponse.ok) {
+          const errorData = await emailResponse.json()
+          console.error('Erreur envoi email:', errorData)
+          // Continue quand même mais log l'erreur
+        } else {
+          console.log('✅ Email envoyé avec succès au capitaine')
+        }
       } catch (emailError) {
         console.error('Erreur envoi email capitaine:', emailError)
         // Continue même si l'email échoue
