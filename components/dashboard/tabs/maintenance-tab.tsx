@@ -12,6 +12,22 @@ export default function MaintenanceTab() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [teams, setTeams] = useState<Team[]>([])
+  const [showAddPlayerModal, setShowAddPlayerModal] = useState(false)
+  const [selectedTeamId, setSelectedTeamId] = useState('')
+  const [isCoach, setIsCoach] = useState(false)
+  const [playerData, setPlayerData] = useState({
+    firstName: '',
+    lastName: '',
+    nickname: '',
+    email: '',
+    phone: '',
+    birthDate: '',
+    height: '',
+    tshirtSize: 'M',
+    position: '',
+    foot: '',
+    jerseyNumber: ''
+  })
 
   useEffect(() => {
     loadTeams()
@@ -825,6 +841,28 @@ export default function MaintenanceTab() {
             Voir les templates
           </button>
         </div>
+
+        {/* Ajouter un joueur/coach */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-green-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">➕</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Ajouter joueur/coach</h3>
+              <p className="text-xs text-gray-600">À une équipe validée</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Ajouter un joueur ou entraîneur à une équipe déjà validée
+          </p>
+          <button
+            onClick={() => setShowAddPlayerModal(true)}
+            className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm"
+          >
+            Ajouter
+          </button>
+        </div>
       </div>
 
       {/* Avertissement */}
@@ -839,6 +877,244 @@ export default function MaintenanceTab() {
           </div>
         </div>
       </div>
+
+      {/* Modal Ajouter joueur/coach */}
+      {showAddPlayerModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowAddPlayerModal(false)}>
+          <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-2xl font-bold mb-4">Ajouter un {isCoach ? 'entraîneur' : 'joueur'}</h2>
+            
+            {/* Type */}
+            <div className="mb-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={isCoach}
+                  onChange={(e) => setIsCoach(e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm font-medium">C'est un entraîneur</span>
+              </label>
+            </div>
+
+            {/* Équipe */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Équipe *</label>
+              <select
+                value={selectedTeamId}
+                onChange={(e) => setSelectedTeamId(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg"
+                required
+              >
+                <option value="">Sélectionner une équipe</option>
+                {teams.map(team => (
+                  <option key={team.id} value={team.id}>{team.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Formulaire */}
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Prénom *</label>
+                <input
+                  type="text"
+                  value={playerData.firstName}
+                  onChange={(e) => setPlayerData({...playerData, firstName: e.target.value})}
+                  className="w-full px-4 py-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Nom *</label>
+                <input
+                  type="text"
+                  value={playerData.lastName}
+                  onChange={(e) => setPlayerData({...playerData, lastName: e.target.value})}
+                  className="w-full px-4 py-2 border rounded-lg"
+                  required
+                />
+              </div>
+              {!isCoach && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">Surnom</label>
+                  <input
+                    type="text"
+                    value={playerData.nickname}
+                    onChange={(e) => setPlayerData({...playerData, nickname: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg"
+                    maxLength={15}
+                  />
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium mb-2">Email *</label>
+                <input
+                  type="email"
+                  value={playerData.email}
+                  onChange={(e) => setPlayerData({...playerData, email: e.target.value})}
+                  className="w-full px-4 py-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Téléphone *</label>
+                <input
+                  type="tel"
+                  value={playerData.phone}
+                  onChange={(e) => setPlayerData({...playerData, phone: e.target.value})}
+                  className="w-full px-4 py-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Date de naissance</label>
+                <input
+                  type="date"
+                  value={playerData.birthDate}
+                  onChange={(e) => setPlayerData({...playerData, birthDate: e.target.value})}
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
+              </div>
+              {!isCoach && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Taille (cm)</label>
+                    <input
+                      type="number"
+                      value={playerData.height}
+                      onChange={(e) => setPlayerData({...playerData, height: e.target.value})}
+                      className="w-full px-4 py-2 border rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Taille T-shirt</label>
+                    <select
+                      value={playerData.tshirtSize}
+                      onChange={(e) => setPlayerData({...playerData, tshirtSize: e.target.value})}
+                      className="w-full px-4 py-2 border rounded-lg"
+                    >
+                      <option value="XS">XS</option>
+                      <option value="S">S</option>
+                      <option value="M">M</option>
+                      <option value="L">L</option>
+                      <option value="XL">XL</option>
+                      <option value="XXL">XXL</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Position *</label>
+                    <select
+                      value={playerData.position}
+                      onChange={(e) => setPlayerData({...playerData, position: e.target.value})}
+                      className="w-full px-4 py-2 border rounded-lg"
+                      required
+                    >
+                      <option value="">Sélectionner...</option>
+                      <option value="Gardien">Gardien</option>
+                      <option value="Défenseur">Défenseur</option>
+                      <option value="Milieu">Milieu</option>
+                      <option value="Attaquant">Attaquant</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Pied *</label>
+                    <select
+                      value={playerData.foot}
+                      onChange={(e) => setPlayerData({...playerData, foot: e.target.value})}
+                      className="w-full px-4 py-2 border rounded-lg"
+                      required
+                    >
+                      <option value="">Sélectionner...</option>
+                      <option value="Droitier">Droitier</option>
+                      <option value="Gaucher">Gaucher</option>
+                      <option value="Ambidextre">Ambidextre</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">N° Maillot *</label>
+                    <input
+                      type="number"
+                      value={playerData.jerseyNumber}
+                      onChange={(e) => setPlayerData({...playerData, jerseyNumber: e.target.value})}
+                      className="w-full px-4 py-2 border rounded-lg"
+                      min="1"
+                      max="99"
+                      required
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Boutons */}
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowAddPlayerModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={async () => {
+                  if (!selectedTeamId || !playerData.firstName || !playerData.lastName || !playerData.email || !playerData.phone) {
+                    alert('Veuillez remplir tous les champs obligatoires')
+                    return
+                  }
+                  if (!isCoach && (!playerData.position || !playerData.foot || !playerData.jerseyNumber)) {
+                    alert('Veuillez remplir tous les champs obligatoires du joueur')
+                    return
+                  }
+                  
+                  setLoading(true)
+                  try {
+                    const response = await fetch('/api/admin/add-player-to-team', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        teamId: selectedTeamId,
+                        player: playerData,
+                        isCoach
+                      })
+                    })
+                    
+                    const data = await response.json()
+                    if (response.ok) {
+                      setMessage({ type: 'success', text: data.message })
+                      setShowAddPlayerModal(false)
+                      setPlayerData({
+                        firstName: '',
+                        lastName: '',
+                        nickname: '',
+                        email: '',
+                        phone: '',
+                        birthDate: '',
+                        height: '',
+                        tshirtSize: 'M',
+                        position: '',
+                        foot: '',
+                        jerseyNumber: ''
+                      })
+                      setSelectedTeamId('')
+                      setIsCoach(false)
+                    } else {
+                      setMessage({ type: 'error', text: data.error })
+                    }
+                  } catch (error) {
+                    setMessage({ type: 'error', text: 'Erreur lors de l\'ajout' })
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+              >
+                {loading ? 'Ajout en cours...' : 'Ajouter'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
