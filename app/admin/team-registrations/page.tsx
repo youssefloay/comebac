@@ -6,7 +6,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useRouter } from 'next/navigation'
 import { collection, query, where, getDocs, doc, getDoc, updateDoc, addDoc, deleteDoc, serverTimestamp, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { Check, X, Eye, Users, Clock, CheckCircle, XCircle } from 'lucide-react'
+import { Check, X, Eye, Users, Clock, CheckCircle, XCircle, Link } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { capitalizeWords } from '@/lib/text-utils'
 
@@ -715,6 +715,28 @@ export default function TeamRegistrationsPage() {
     }
   }
 
+  const generateUpdateLink = async (registration: Registration) => {
+    try {
+      const res = await fetch('/api/admin/generate-update-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ registrationId: registration.id })
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        // Copier le lien dans le presse-papier
+        await navigator.clipboard.writeText(data.updateLink)
+        alert(`✅ Lien copié dans le presse-papier!\n\n${data.updateLink}\n\n📧 Envoyez ce lien au capitaine (${registration.captain.email}) pour qu'il puisse mettre à jour toutes les informations de l'équipe.\n\n⏰ Le lien expire dans 7 jours.`)
+      } else {
+        alert('❌ Erreur lors de la génération du lien')
+      }
+    } catch (error) {
+      console.error('Erreur:', error)
+      alert('❌ Erreur de connexion')
+    }
+  }
+
   const deleteRegistration = async (registration: Registration) => {
     if (!confirm(`Supprimer définitivement l'inscription de "${registration.teamName}" ?`)) return
 
@@ -918,6 +940,13 @@ export default function TeamRegistrationsPage() {
                   
                   {registration.status === 'pending' && (
                     <>
+                      <button
+                        onClick={() => generateUpdateLink(registration)}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                        title="Générer un lien pour que le capitaine mette à jour les infos"
+                      >
+                        <Link className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={() => approveRegistration(registration)}
                         disabled={processing}
