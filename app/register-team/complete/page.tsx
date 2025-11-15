@@ -52,7 +52,7 @@ export default function RegisterTeamModePage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Link href="/register-team/complete">
+            <Link href="/register-team">
               <div className="group relative bg-white rounded-2xl border-2 border-gray-200 hover:border-blue-500 transition-all duration-300 overflow-hidden cursor-pointer h-full">
                 {/* Badge */}
                 <div className="absolute top-4 right-4 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">
