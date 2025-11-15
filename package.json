@@ -19,7 +19,8 @@
     "resend-icons-emails": "npx tsx scripts/resend-icons-emails.ts",
     "delete-test-notifications": "npx tsx scripts/delete-test-notifications.ts",
     "update-acting-coach-status": "npx tsx scripts/update-acting-coach-status.ts",
-    "register-se7en-team": "npx tsx scripts/register-se7en-team.ts"
+    "register-se7en-team": "npx tsx scripts/register-se7en-team.ts",
+    "update-se7en-team": "npx tsx scripts/update-se7en-team.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
