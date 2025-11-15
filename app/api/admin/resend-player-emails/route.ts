@@ -5,6 +5,8 @@ import { generateWelcomeEmail, sendEmail } from '@/lib/email-service'
 export async function POST(request: NextRequest) {
   try {
     const { teamId } = await request.json()
+    
+    console.log('📧 Renvoi des emails pour teamId:', teamId)
 
     if (!teamId) {
       return NextResponse.json(
@@ -24,6 +26,8 @@ export async function POST(request: NextRequest) {
 
     const teamData = teamDoc.data()
     const teamName = teamData?.name || 'votre équipe'
+    
+    console.log('✅ Équipe trouvée:', teamName)
 
     // Récupérer tous les joueurs de l'équipe
     const playersSnapshot = await adminDb
@@ -32,11 +36,14 @@ export async function POST(request: NextRequest) {
       .get()
 
     if (playersSnapshot.empty) {
+      console.log('❌ Aucun joueur trouvé')
       return NextResponse.json(
         { error: 'Aucun joueur trouvé pour cette équipe' },
         { status: 404 }
       )
     }
+    
+    console.log(`📊 ${playersSnapshot.size} joueur(s) trouvé(s)`)
 
     const results = []
     let sentCount = 0
@@ -92,6 +99,8 @@ export async function POST(request: NextRequest) {
         )
 
         const emailResult = await sendEmail(emailData)
+        
+        console.log(`📧 Email pour ${playerName} (${playerEmail}):`, emailResult.success ? '✅ Envoyé' : '❌ Erreur')
 
         if (emailResult.success) {
           sentCount++
@@ -102,6 +111,7 @@ export async function POST(request: NextRequest) {
           })
         } else {
           errorCount++
+          console.error(`❌ Erreur email ${playerEmail}:`, emailResult.error)
           results.push({
             player: playerName,
             email: playerEmail,

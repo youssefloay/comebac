@@ -33,6 +33,8 @@ export async function sendEmail(data: EmailData) {
     }
 
     // Envoyer l'email avec Resend
+    console.log('📤 Envoi email à:', data.to, '| Sujet:', data.subject)
+    
     const result = await resend.emails.send({
       from: process.env.EMAIL_FROM || 'ComeBac League <onboarding@resend.dev>',
       to: data.to,
@@ -40,11 +42,13 @@ export async function sendEmail(data: EmailData) {
       html: data.html
     })
 
-    console.log('✅ Email envoyé avec succès à', data.to)
+    console.log('✅ Email envoyé avec succès à', data.to, '| ID:', result.data?.id)
     return { success: true, data: result }
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Erreur lors de l\'envoi de l\'email:', error)
-    return { success: false, error }
+    console.error('❌ Message d\'erreur:', error.message)
+    console.error('❌ Détails:', JSON.stringify(error, null, 2))
+    return { success: false, error: error.message || error }
   }
 }
 
