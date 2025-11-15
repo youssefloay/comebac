@@ -138,7 +138,7 @@ export default function JoinTeamPage() {
         position,
         jerseyNumber: jerseyNumber.trim(),
         grade: grade || registration.teamGrade,
-        joinedAt: serverTimestamp()
+        joinedAt: new Date().toISOString()
       }
 
       await updateDoc(doc(db, 'teamRegistrations', registration.id), {
