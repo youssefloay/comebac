@@ -180,7 +180,13 @@ export default function UpdateRegistrationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-8 light">
+      <style jsx global>{`
+        input, select, textarea {
+          color: #111827 !important;
+          background-color: white !important;
+        }
+      `}</style>
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="text-center mb-8">
@@ -215,7 +221,7 @@ export default function UpdateRegistrationPage() {
                   type="text"
                   value={registration?.teamName || ''}
                   onChange={(e) => setRegistration(registration ? {...registration, teamName: e.target.value} : null)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                   required
                 />
               </div>
