@@ -137,6 +137,36 @@ export async function POST(request: NextRequest) {
     }
     updates.push({ collection: 'results', count: resultUpdates })
 
+    // Mettre à jour teamRegistrations
+    const registrationsSnap = await getDocs(collection(db, 'teamRegistrations'))
+    let registrationUpdates = 0
+    for (const regDoc of registrationsSnap.docs) {
+      const data = regDoc.data()
+      
+      // Trouver l'équipe correspondante par nom
+      let teamId: string | null = null
+      for (const [id, name] of teamsMap.entries()) {
+        if (data.teamName === name) {
+          teamId = id
+          break
+        }
+      }
+      
+      // Si on a trouvé l'équipe et qu'elle a un nouveau nom
+      if (teamId && teamsMap.has(teamId)) {
+        const correctName = teamsMap.get(teamId)!
+        if (data.teamName !== correctName) {
+          await updateDoc(doc(db, 'teamRegistrations', regDoc.id), {
+            teamName: correctName
+          })
+          console.log(`✅ Registration: "${data.teamName}" → "${correctName}"`)
+          registrationUpdates++
+          updated++
+        }
+      }
+    }
+    updates.push({ collection: 'teamRegistrations', count: registrationUpdates })
+
     return NextResponse.json({
       success: true,
       message: `✅ ${updated} document(s) mis à jour avec les noms d'équipes corrects`,
