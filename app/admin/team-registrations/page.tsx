@@ -791,12 +791,14 @@ export default function TeamRegistrationsPage() {
     return null
   }
 
-  const filteredRegistrations = registrations.filter(reg => 
-    filter === 'all' ? true : reg.status === filter
-  )
+  const filteredRegistrations = registrations.filter(reg => {
+    if (filter === 'all') return true
+    if (filter === 'pending') return reg.status === 'pending' || reg.status === 'pending_players' || reg.status === 'pending_validation'
+    return reg.status === filter
+  })
 
   const stats = {
-    pending: registrations.filter(r => r.status === 'pending').length,
+    pending: registrations.filter(r => r.status === 'pending' || r.status === 'pending_players' || r.status === 'pending_validation').length,
     approved: registrations.filter(r => r.status === 'approved').length,
     rejected: registrations.filter(r => r.status === 'rejected').length
   }
