@@ -268,6 +268,21 @@ export default function TeamRegistrationsPage() {
 
             if (existingAccount) {
               await updateDoc(doc(db, 'playerAccounts', existingAccount.id), accountData)
+            } else {
+              // Créer le nouveau compte joueur et envoyer l'email
+              try {
+                await fetch('/api/admin/create-player-accounts', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    teamId: teamDoc.id,
+                    players: [player]
+                  })
+                })
+                console.log(`✅ Compte créé et email envoyé pour ${player.firstName} ${player.lastName}`)
+              } catch (error) {
+                console.error(`❌ Erreur création compte pour ${player.firstName}:`, error)
+              }
             }
           }
 
