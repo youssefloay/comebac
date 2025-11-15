@@ -21,7 +21,6 @@ interface Player {
   position: 'Gardien' | 'Défenseur' | 'Milieu' | 'Attaquant'
   foot: 'Droitier' | 'Gaucher' | 'Ambidextre'
   jerseyNumber: string
-  grade: string
 }
 
 const CAIRO_FRENCH_SCHOOLS = [
@@ -69,13 +68,13 @@ export default function RegisterTeamPage() {
   const [coachPhone, setCoachPhone] = useState('')
   
   const [players, setPlayers] = useState<Player[]>([
-    { id: '1', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-    { id: '2', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-    { id: '3', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-    { id: '4', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-    { id: '5', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-    { id: '6', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-    { id: '7', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' }
+    { id: '1', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '' },
+    { id: '2', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '' },
+    { id: '3', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '' },
+    { id: '4', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '' },
+    { id: '5', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '' },
+    { id: '6', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '' },
+    { id: '7', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '' }
   ])
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -158,13 +157,13 @@ export default function RegisterTeamPage() {
     setCoachEmail('')
     setCoachPhone('')
     setPlayers([
-      { id: '1', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-      { id: '2', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-      { id: '3', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-      { id: '4', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-      { id: '5', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-      { id: '6', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' },
-      { id: '7', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '', grade: '1ère' }
+      { id: '1', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '' },
+      { id: '2', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '' },
+      { id: '3', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '' },
+      { id: '4', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '' },
+      { id: '5', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '' },
+      { id: '6', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '' },
+      { id: '7', firstName: '', lastName: '', nickname: '', email: '', phone: '', birthDate: '', height: '', tshirtSize: 'M', position: '' as any, foot: '' as any, jerseyNumber: '' }
     ])
     setSuccess(false)
   }
@@ -212,8 +211,7 @@ export default function RegisterTeamPage() {
         tshirtSize: 'M',
         position: '' as any,
         foot: '' as any,
-        jerseyNumber: '',
-        grade: teamGrade
+        jerseyNumber: ''
       }])
     }
   }
@@ -231,12 +229,9 @@ export default function RegisterTeamPage() {
     return age
   }
 
-  // Mettre à jour la classe de tous les joueurs quand la classe de l'équipe change
+  // Mettre à jour la classe de l'équipe
   const updateTeamGrade = (grade: '1ère' | 'Terminale' | 'Autre') => {
     setTeamGrade(grade)
-    if (grade !== 'Autre') {
-      setPlayers(prev => prev.map(p => ({ ...p, grade })))
-    }
   }
 
   const removePlayer = (id: string) => {
@@ -365,17 +360,16 @@ export default function RegisterTeamPage() {
           return {
             firstName: p.firstName,
             lastName: p.lastName,
-            nickname: p.nickname || '',
+            nickname: p.nickname,
             email: p.email,
             phone: p.phone,
-            birthDate: p.birthDate || '',
+            birthDate: p.birthDate,
             ...(age > 0 && { age }), // N'inclure age que s'il est valide
             height: parseFloat(p.height) || 0,
             tshirtSize: p.tshirtSize,
             position: p.position,
             foot: p.foot,
-            jerseyNumber: parseInt(p.jerseyNumber) || 0,
-            grade: p.grade
+            jerseyNumber: parseInt(p.jerseyNumber) || 0
           }
         }),
         status: 'pending',
@@ -902,7 +896,7 @@ export default function RegisterTeamPage() {
 
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">
-                        Surnom sur T-shirt
+                        Surnom sur T-shirt *
                       </label>
                       <input
                         type="text"
@@ -911,8 +905,9 @@ export default function RegisterTeamPage() {
                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400 text-gray-900"
                         placeholder="Ex: CR7, Messi..."
                         maxLength={15}
+                        required
                       />
-                      <p className="text-xs text-gray-500 mt-1">Optionnel - Max 15 caractères</p>
+                      <p className="text-xs text-gray-500 mt-1">Max 15 caractères</p>
                     </div>
 
                     <div>

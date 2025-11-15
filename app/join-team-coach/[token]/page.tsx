@@ -2,26 +2,27 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { collection, query, where, getDocs, doc, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { Users, Loader, Check, ArrowLeft } from 'lucide-react'
+import { Users, Loader, Check } from 'lucide-react'
 import Link from 'next/link'
 import { SimpleLogo } from '@/components/ui/logo'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 
 interface TeamRegistration {
   id: string
   teamName: string
   schoolName: string
   teamGrade: string
-  players: any[]
-  maxPlayers: number
+  coach?: {
+    email?: string
+    name?: string
+  }
   status: string
 }
 
-export default function JoinTeamPage() {
+export default function JoinTeamCoachPage() {
   const params = useParams()
-  const router = useRouter()
   const token = params.token as string
   
   const [registration, setRegistration] = useState<TeamRegistration | null>(null)
@@ -33,15 +34,9 @@ export default function JoinTeamPage() {
   // Form fields
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
-  const [nickname, setNickname] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [birthDate, setBirthDate] = useState('')
-  const [height, setHeight] = useState('')
-  const [tshirtSize, setTshirtSize] = useState<'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL'>('M')
-  const [position, setPosition] = useState<'Gardien' | 'Défenseur' | 'Milieu' | 'Attaquant' | ''>('')
-  const [foot, setFoot] = useState<'Droitier' | 'Gaucher' | 'Ambidextre' | ''>('')
-  const [jerseyNumber, setJerseyNumber] = useState('')
 
   // Force light mode
   useEffect(() => {
@@ -67,14 +62,16 @@ export default function JoinTeamPage() {
         const docData = snapshot.docs[0]
         const data = { id: docData.id, ...docData.data() } as TeamRegistration
 
-        if (data.status !== 'pending_players') {
-          setError('Cette équipe n\'accepte plus de nouveaux joueurs')
+        // Check if team has coach option enabled
+        if (!(data as any).hasCoach) {
+          setError('Cette équipe n\'a pas d\'entraîneur')
           setLoading(false)
           return
         }
 
-        if (data.players.length >= data.maxPlayers) {
-          setError('L\'équipe est complète')
+        // Check if coach already registered
+        if (data.coach && (data.coach as any).firstName) {
+          setError('L\'entraîneur a déjà complété son inscription')
           setLoading(false)
           return
         }
@@ -109,50 +106,23 @@ export default function JoinTeamPage() {
       if (!phone.trim()) {
         throw new Error('Le téléphone est requis')
       }
-      if (!position) {
-        throw new Error('La position est requise')
-      }
-      if (!jerseyNumber.trim()) {
-        throw new Error('Le numéro de maillot est requis')
+      if (!birthDate) {
+        throw new Error('La date de naissance est requise')
       }
 
-      // Check if email already exists
-      const emailExists = registration.players.some(
-        p => p.email.toLowerCase() === email.trim().toLowerCase()
-      )
-      if (emailExists) {
-        throw new Error('Cet email est déjà utilisé par un autre joueur')
-      }
-
-      // Check if jersey number already exists
-      const numberExists = registration.players.some(
-        p => p.jerseyNumber === jerseyNumber.trim()
-      )
-      if (numberExists) {
-        throw new Error('Ce numéro de maillot est déjà pris')
-      }
-
-      // Add player
-      const playerData = {
+      // Update coach info
+      const coachData = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        nickname: nickname.trim(),
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
         birthDate: birthDate,
-        height: height,
-        tshirtSize: tshirtSize,
-        position,
-        foot,
-        jerseyNumber: jerseyNumber.trim(),
-        joinedAt: new Date().toISOString()
+        completedAt: new Date().toISOString()
       }
 
       await updateDoc(doc(db, 'teamRegistrations', registration.id), {
-        players: arrayUnion(playerData)
+        coach: coachData
       })
-
-      // TODO: Create Firebase Auth account and send email
 
       setSuccess(true)
       
@@ -201,7 +171,7 @@ export default function JoinTeamPage() {
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-3">Inscription réussie!</h2>
           <p className="text-gray-600 mb-2">
-            Bienvenue dans l'équipe <strong>{registration?.teamName}</strong>!
+            Vous êtes maintenant entraîneur de l'équipe <strong>{registration?.teamName}</strong>!
           </p>
           <p className="text-sm text-gray-500 mb-8">
             Vous recevrez bientôt un email pour créer votre mot de passe et accéder à votre compte.
@@ -241,16 +211,13 @@ export default function JoinTeamPage() {
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-semibold mb-4">
               <Users className="w-4 h-4" />
-              Rejoindre une équipe
+              Inscription Entraîneur
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-3">
               {registration?.teamName}
             </h1>
             <p className="text-gray-600">
               {registration?.schoolName} • {registration?.teamGrade}
-            </p>
-            <p className="text-sm text-gray-500 mt-2">
-              {registration?.players.length}/{registration?.maxPlayers} joueurs inscrits
             </p>
           </div>
 
@@ -318,22 +285,6 @@ export default function JoinTeamPage() {
                   />
                 </div>
 
-                {/* Nickname */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Surnom sur T-shirt *
-                  </label>
-                  <input
-                    type="text"
-                    maxLength={15}
-                    value={nickname}
-                    onChange={(e) => setNickname(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="Max 15 caractères"
-                    required
-                  />
-                </div>
-
                 {/* Birth Date */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -344,97 +295,6 @@ export default function JoinTeamPage() {
                     value={birthDate}
                     onChange={(e) => setBirthDate(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                {/* Height */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Taille (cm) *
-                  </label>
-                  <input
-                    type="number"
-                    min="140"
-                    max="220"
-                    value={height}
-                    onChange={(e) => setHeight(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="175"
-                    required
-                  />
-                </div>
-
-                {/* T-shirt Size */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Taille T-shirt *
-                  </label>
-                  <select
-                    value={tshirtSize}
-                    onChange={(e) => setTshirtSize(e.target.value as any)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="XS">XS</option>
-                    <option value="S">S</option>
-                    <option value="M">M</option>
-                    <option value="L">L</option>
-                    <option value="XL">XL</option>
-                    <option value="XXL">XXL</option>
-                  </select>
-                </div>
-
-                {/* Position */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Position *
-                  </label>
-                  <select
-                    value={position}
-                    onChange={(e) => setPosition(e.target.value as any)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="">Sélectionnez une position</option>
-                    <option value="Gardien">Gardien</option>
-                    <option value="Défenseur">Défenseur</option>
-                    <option value="Milieu">Milieu</option>
-                    <option value="Attaquant">Attaquant</option>
-                  </select>
-                </div>
-
-                {/* Foot */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Pied *
-                  </label>
-                  <select
-                    value={foot}
-                    onChange={(e) => setFoot(e.target.value as any)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="">Sélectionnez...</option>
-                    <option value="Droitier">Droitier</option>
-                    <option value="Gaucher">Gaucher</option>
-                    <option value="Ambidextre">Ambidextre</option>
-                  </select>
-                </div>
-
-                {/* Jersey Number */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    N° Maillot *
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="99"
-                    value={jerseyNumber}
-                    onChange={(e) => setJerseyNumber(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="10"
                     required
                   />
                 </div>
@@ -462,7 +322,7 @@ export default function JoinTeamPage() {
               ) : (
                 <>
                   <Check className="w-5 h-5" />
-                  Rejoindre l'équipe
+                  Compléter mon inscription
                 </>
               )}
             </button>

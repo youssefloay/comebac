@@ -3,7 +3,7 @@ import { sendEmail } from '@/lib/email-service'
 
 export async function POST(request: NextRequest) {
   try {
-    const { captainEmail, captainName, teamName, token } = await request.json()
+    const { captainEmail, captainName, teamName, token, hasCoach } = await request.json()
 
     if (!captainEmail || !captainName || !teamName || !token) {
       return NextResponse.json(
@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const inviteLink = `${appUrl}/join-team/${token}`
+    const coachLink = `${appUrl}/join-team-coach/${token}`
     const statusLink = `${appUrl}/team-registration/${token}/status`
 
     const html = `
@@ -165,6 +166,14 @@ export async function POST(request: NextRequest) {
               <a href="${inviteLink}">${inviteLink}</a>
             </div>
             <p style="font-size: 13px; color: #6b7280;">Copiez et partagez ce lien avec vos joueurs</p>
+
+            ${hasCoach ? `
+            <p style="margin-top: 24px;"><strong>👨‍🏫 Lien d'inscription pour votre entraîneur:</strong></p>
+            <div class="link-box">
+              <a href="${coachLink}">${coachLink}</a>
+            </div>
+            <p style="font-size: 13px; color: #6b7280;">Partagez ce lien avec votre entraîneur pour qu'il complète son inscription</p>
+            ` : ''}
 
             <p style="margin-top: 24px;"><strong>📊 Lien de suivi de votre équipe:</strong></p>
             <div class="link-box">

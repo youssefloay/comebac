@@ -130,6 +130,43 @@ export default function TeamStatusPage() {
     }
   }
 
+  const handleDeleteRegistration = async () => {
+    if (!registration) return
+
+    const confirmMessage = `⚠️ ATTENTION ⚠️\n\nÊtes-vous sûr de vouloir supprimer complètement l'inscription de l'équipe "${registration.teamName}" ?\n\nCette action est IRRÉVERSIBLE et supprimera:\n- Toutes les informations de l'équipe\n- Tous les joueurs inscrits\n- Tous les liens d'invitation\n\nTapez "SUPPRIMER" pour confirmer.`
+    
+    const userInput = prompt(confirmMessage)
+    
+    if (userInput !== 'SUPPRIMER') {
+      if (userInput !== null) {
+        alert('❌ Suppression annulée - vous devez taper exactement "SUPPRIMER"')
+      }
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const response = await fetch('/api/admin/delete-team-complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          registrationId: (registration as any).id
+        })
+      })
+
+      if (response.ok) {
+        alert('✅ Inscription supprimée avec succès!')
+        window.location.href = '/register-team-new'
+      } else {
+        throw new Error('Erreur lors de la suppression')
+      }
+    } catch (err) {
+      console.error('Erreur:', err)
+      alert('❌ Erreur lors de la suppression')
+      setSubmitting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center">
@@ -202,11 +239,32 @@ export default function TeamStatusPage() {
 
           {/* Team Info */}
           <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">{registration.teamName}</h1>
-            <p className="text-gray-600">{registration.schoolName} • {registration.teamGrade}</p>
-            <p className="text-sm text-gray-500 mt-2">
-              Capitaine: {registration.captain.firstName} {registration.captain.lastName}
-            </p>
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex-1">
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">{registration.teamName}</h1>
+                <p className="text-gray-600">{registration.schoolName} • {registration.teamGrade}</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Capitaine: {registration.captain.firstName} {registration.captain.lastName}
+                </p>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <Link
+                  href={`/update-registration/${token}`}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+                >
+                  ✏️ Modifier
+                </Link>
+                <button
+                  onClick={handleDeleteRegistration}
+                  disabled={submitting}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-medium disabled:opacity-50"
+                >
+                  🗑️ Supprimer
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Progress */}

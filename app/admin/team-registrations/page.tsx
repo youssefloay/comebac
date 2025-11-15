@@ -45,7 +45,7 @@ interface Registration {
     phone: string
   }
   players: Player[]
-  status: 'pending' | 'approved' | 'rejected'
+  status: 'pending' | 'approved' | 'rejected' | 'pending_players' | 'pending_validation'
   submittedAt: any
   processedAt?: any
   processedBy?: string
@@ -1613,7 +1613,7 @@ export default function TeamRegistrationsPage() {
                       </button>
                     </>
                   )}
-                  {selectedRegistration.status === 'approved' && !editMode && (
+                  {(selectedRegistration.status === 'approved' || selectedRegistration.status === 'pending' || selectedRegistration.status === 'pending_players' || selectedRegistration.status === 'pending_validation') && !editMode && (
                     <>
                       <button
                         onClick={startEdit}
@@ -1623,13 +1623,15 @@ export default function TeamRegistrationsPage() {
                         <Eye className="w-5 h-5" />
                         Modifier
                       </button>
-                      <button
-                        onClick={() => resendEmails(selectedRegistration)}
-                        disabled={processing}
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition font-medium"
-                      >
-                        📧 Renvoyer tous les emails
-                      </button>
+                      {selectedRegistration.status === 'approved' && (
+                        <button
+                          onClick={() => resendEmails(selectedRegistration)}
+                          disabled={processing}
+                          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition font-medium"
+                        >
+                          📧 Renvoyer tous les emails
+                        </button>
+                      )}
                       <button
                         onClick={() => deleteRegistration(selectedRegistration)}
                         disabled={processing}

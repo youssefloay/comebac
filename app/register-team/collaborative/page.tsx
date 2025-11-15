@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { Users, ArrowLeft, Loader, Check } from 'lucide-react'
@@ -40,8 +40,18 @@ export default function CollaborativeRegistrationPage() {
   
   const [captainFirstName, setCaptainFirstName] = useState('')
   const [captainLastName, setCaptainLastName] = useState('')
+  const [captainNickname, setCaptainNickname] = useState('')
   const [captainEmail, setCaptainEmail] = useState('')
   const [captainPhone, setCaptainPhone] = useState('')
+  const [captainBirthDate, setCaptainBirthDate] = useState('')
+  const [captainHeight, setCaptainHeight] = useState('')
+  const [captainTshirtSize, setCaptainTshirtSize] = useState<'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL'>('M')
+  const [captainPosition, setCaptainPosition] = useState<'Gardien' | 'Défenseur' | 'Milieu' | 'Attaquant' | ''>('')
+  const [captainFoot, setCaptainFoot] = useState<'Droitier' | 'Gaucher' | 'Ambidextre' | ''>('')
+  const [captainJerseyNumber, setCaptainJerseyNumber] = useState('')
+  
+  // Coach option
+  const [hasCoach, setHasCoach] = useState(false)
   
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -71,6 +81,24 @@ export default function CollaborativeRegistrationPage() {
       if (!captainPhone.trim()) {
         throw new Error('Le téléphone du capitaine est requis')
       }
+      if (!captainNickname.trim()) {
+        throw new Error('Le surnom sur T-shirt est requis')
+      }
+      if (!captainBirthDate) {
+        throw new Error('La date de naissance est requise')
+      }
+      if (!captainHeight) {
+        throw new Error('La taille est requise')
+      }
+      if (!captainPosition) {
+        throw new Error('La position est requise')
+      }
+      if (!captainFoot) {
+        throw new Error('Le pied est requis')
+      }
+      if (!captainJerseyNumber) {
+        throw new Error('Le numéro de maillot est requis')
+      }
 
       // Générer un token unique
       const token = Math.random().toString(36).substring(2) + Date.now().toString(36)
@@ -79,17 +107,38 @@ export default function CollaborativeRegistrationPage() {
       const finalSchoolName = schoolName === 'Autre' ? customSchool : schoolName
       const finalGrade = teamGrade === 'Autre' ? customGrade : teamGrade
 
-      const registrationData = {
+      const registrationData: any = {
         teamName: teamName.trim(),
         schoolName: finalSchoolName.trim(),
         teamGrade: finalGrade,
         captain: {
           firstName: captainFirstName.trim(),
           lastName: captainLastName.trim(),
+          nickname: captainNickname.trim(),
           email: captainEmail.trim().toLowerCase(),
-          phone: captainPhone.trim()
+          phone: captainPhone.trim(),
+          birthDate: captainBirthDate,
+          height: captainHeight,
+          tshirtSize: captainTshirtSize,
+          position: captainPosition,
+          foot: captainFoot,
+          jerseyNumber: captainJerseyNumber.trim()
         },
-        players: [],
+        players: [{
+          firstName: captainFirstName.trim(),
+          lastName: captainLastName.trim(),
+          nickname: captainNickname.trim(),
+          email: captainEmail.trim().toLowerCase(),
+          phone: captainPhone.trim(),
+          birthDate: captainBirthDate,
+          height: parseFloat(captainHeight),
+          tshirtSize: captainTshirtSize,
+          position: captainPosition,
+          foot: captainFoot,
+          jerseyNumber: parseInt(captainJerseyNumber),
+          isCaptain: true
+        }],
+        hasCoach: hasCoach,
         status: 'pending_players',
         registrationMode: 'collaborative',
         inviteToken: token,
@@ -101,7 +150,7 @@ export default function CollaborativeRegistrationPage() {
 
       const docRef = await addDoc(collection(db, 'teamRegistrations'), registrationData)
 
-      // Envoyer l'email au capitaine
+      // Envoyer l'email au capitaine avec les liens
       try {
         await fetch('/api/send-captain-invite-email', {
           method: 'POST',
@@ -110,11 +159,12 @@ export default function CollaborativeRegistrationPage() {
             captainEmail: captainEmail.trim().toLowerCase(),
             captainName: `${captainFirstName.trim()} ${captainLastName.trim()}`,
             teamName: teamName.trim(),
-            token
+            token,
+            hasCoach: hasCoach
           })
         })
       } catch (emailError) {
-        console.error('Erreur envoi email:', emailError)
+        console.error('Erreur envoi email capitaine:', emailError)
         // Continue même si l'email échoue
       }
 
@@ -254,6 +304,27 @@ export default function CollaborativeRegistrationPage() {
               </div>
             </div>
 
+            {/* Coach Option */}
+            <div>
+              <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div>
+                  <h3 className="font-semibold text-gray-900">Avez-vous un entraîneur ?</h3>
+                  <p className="text-sm text-gray-600">Vous recevrez un lien supplémentaire à lui partager</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setHasCoach(!hasCoach)}
+                  className={`px-4 py-2 rounded-lg transition font-medium ${
+                    hasCoach 
+                      ? 'bg-green-600 text-white' 
+                      : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  {hasCoach ? 'Oui ✓' : 'Non'}
+                </button>
+              </div>
+            </div>
+
             {/* Captain Info */}
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Vos informations (Capitaine)</h2>
@@ -288,6 +359,21 @@ export default function CollaborativeRegistrationPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Surnom sur T-shirt *
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={15}
+                    value={captainNickname}
+                    onChange={(e) => setCaptainNickname(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Max 15 caractères"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Email *
                   </label>
                   <input
@@ -310,6 +396,105 @@ export default function CollaborativeRegistrationPage() {
                     onChange={(e) => setCaptainPhone(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="+20 123 456 7890"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Date de naissance *
+                  </label>
+                  <input
+                    type="date"
+                    value={captainBirthDate}
+                    onChange={(e) => setCaptainBirthDate(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Taille (cm) *
+                  </label>
+                  <input
+                    type="number"
+                    min="140"
+                    max="220"
+                    value={captainHeight}
+                    onChange={(e) => setCaptainHeight(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="175"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Taille T-shirt *
+                  </label>
+                  <select
+                    value={captainTshirtSize}
+                    onChange={(e) => setCaptainTshirtSize(e.target.value as any)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="XS">XS</option>
+                    <option value="S">S</option>
+                    <option value="M">M</option>
+                    <option value="L">L</option>
+                    <option value="XL">XL</option>
+                    <option value="XXL">XXL</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Position *
+                  </label>
+                  <select
+                    value={captainPosition}
+                    onChange={(e) => setCaptainPosition(e.target.value as any)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Sélectionner...</option>
+                    <option value="Gardien">Gardien</option>
+                    <option value="Défenseur">Défenseur</option>
+                    <option value="Milieu">Milieu</option>
+                    <option value="Attaquant">Attaquant</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Pied *
+                  </label>
+                  <select
+                    value={captainFoot}
+                    onChange={(e) => setCaptainFoot(e.target.value as any)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Sélectionner...</option>
+                    <option value="Droitier">Droitier</option>
+                    <option value="Gaucher">Gaucher</option>
+                    <option value="Ambidextre">Ambidextre</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    N° Maillot *
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="99"
+                    value={captainJerseyNumber}
+                    onChange={(e) => setCaptainJerseyNumber(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="10"
                     required
                   />
                 </div>
