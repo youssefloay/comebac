@@ -803,6 +803,28 @@ export default function MaintenanceTab() {
             Voir les statistiques
           </button>
         </div>
+
+        {/* Prévisualiser les emails */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-sky-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-sky-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">📬</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Prévisualiser emails</h3>
+              <p className="text-xs text-gray-600">Templates</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Voir les templates d'emails envoyés aux joueurs et coaches
+          </p>
+          <button
+            onClick={() => window.location.href = '/admin/email-preview'}
+            className="w-full px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition font-medium text-sm"
+          >
+            Voir les templates
+          </button>
+        </div>
       </div>
 
       {/* Avertissement */}

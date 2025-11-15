@@ -7,132 +7,183 @@ export default function EmailPreviewPage() {
   
   const isCoach = userType === 'coach'
   const name = isCoach ? "Marie Martin" : "Jean Dupont"
+  const email = isCoach ? "marie.martin@example.com" : "jean.dupont@example.com"
   const teamName = isCoach ? "Les Lions" : "Les Aigles"
   const resetLink = "#"
+  const appUrl = "https://www.comebac.com"
 
   const emailHtml = `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
           line-height: 1.6;
-          color: #333;
-          max-width: 600px;
-          margin: 0 auto;
+          color: #1f2937;
+          background-color: #f9fafb;
           padding: 20px;
         }
+        .container {
+          max-width: 560px;
+          margin: 0 auto;
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
         .header {
-          background: linear-gradient(135deg, ${isCoach ? '#F97316 0%, #DC2626' : '#10b981 0%, #3b82f6'} 100%);
-          color: white;
-          padding: 30px;
-          border-radius: 10px 10px 0 0;
+          background: linear-gradient(135deg, ${isCoach ? '#f97316 0%, #dc2626' : '#3b82f6 0%, #10b981'} 100%);
+          padding: 32px 24px;
           text-align: center;
         }
+        .logo {
+          width: 64px;
+          height: 64px;
+          margin: 0 auto 16px;
+          background: white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 32px;
+        }
+        .header h1 {
+          color: white;
+          font-size: 24px;
+          font-weight: 600;
+          margin: 0;
+        }
         .content {
-          background: #f9fafb;
-          padding: 30px;
-          border-radius: 0 0 10px 10px;
+          padding: 32px 24px;
+        }
+        .content p {
+          color: #4b5563;
+          margin-bottom: 16px;
+          font-size: 15px;
+        }
+        .button-container {
+          text-align: center;
+          margin: 24px 0;
         }
         .button {
           display: inline-block;
-          background: linear-gradient(135deg, ${isCoach ? '#F97316 0%, #DC2626' : '#10b981 0%, #3b82f6'} 100%);
-          color: white;
-          padding: 15px 30px;
+          background: linear-gradient(135deg, ${isCoach ? '#f97316 0%, #dc2626' : '#3b82f6 0%, #10b981'} 100%);
+          color: white !important;
+          padding: 14px 32px;
           text-decoration: none;
           border-radius: 8px;
-          font-weight: bold;
+          font-weight: 600;
+          font-size: 15px;
+        }
+        .alert {
+          background: #fef3c7;
+          border-left: 3px solid #f59e0b;
+          padding: 14px;
+          border-radius: 6px;
           margin: 20px 0;
         }
-        .info-box {
-          background: white;
-          border-left: 4px solid ${isCoach ? '#F97316' : '#10b981'};
-          padding: 15px;
+        .alert p {
+          color: #92400e;
+          margin: 0;
+          font-size: 14px;
+        }
+        .info {
+          background: ${isCoach ? '#fff7ed' : '#eff6ff'};
+          border-left: 3px solid ${isCoach ? '#f97316' : '#3b82f6'};
+          padding: 14px;
+          border-radius: 6px;
           margin: 20px 0;
-          border-radius: 4px;
+        }
+        .info p {
+          color: ${isCoach ? '#9a3412' : '#1e40af'};
+          margin: 0;
+          font-size: 14px;
+        }
+        .info a {
+          color: ${isCoach ? '#ea580c' : '#2563eb'};
+          text-decoration: underline;
         }
         .footer {
+          background: #f9fafb;
+          padding: 24px;
           text-align: center;
-          margin-top: 30px;
-          padding-top: 20px;
           border-top: 1px solid #e5e7eb;
+        }
+        .footer p {
           color: #6b7280;
-          font-size: 14px;
+          font-size: 13px;
+          margin: 6px 0;
+        }
+        .contact {
+          margin-top: 16px;
+          padding-top: 16px;
+          border-top: 1px solid #e5e7eb;
+        }
+        .contact p {
+          font-size: 13px;
+          margin: 4px 0;
+        }
+        .contact a {
+          color: ${isCoach ? '#ea580c' : '#2563eb'};
+          text-decoration: none;
         }
       </style>
     </head>
     <body>
-      <div class="header">
-        <h1 style="margin: 0; font-size: 28px;">${isCoach ? '🏆 Rappel Coach' : '⚽ Rappel Joueur'}</h1>
-        <p style="margin: 10px 0 0 0; opacity: 0.9;">ComeBac League</p>
-      </div>
-      
-      <div class="content">
-        <h2 style="color: ${isCoach ? '#F97316' : '#10b981'}; margin-top: 0;">Bonjour ${name},</h2>
-        
-        <p>Nous avons remarqué que vous n'avez pas encore activé votre compte <strong>${teamName}</strong> sur ComeBac League.</p>
-        
-        <div class="info-box">
-          <p style="margin: 0;"><strong>⚠️ Votre compte est prêt !</strong> Il ne vous reste plus qu'à créer votre mot de passe pour y accéder.</p>
+      <div class="container">
+        <div class="header">
+          <div class="logo">${isCoach ? '🏆' : '⚽'}</div>
+          <h1>Bienvenue dans ComeBac League</h1>
         </div>
         
-        <p><strong>Pour activer votre compte :</strong></p>
-        <ol>
-          <li>Cliquez sur le bouton ci-dessous</li>
-          <li>Créez votre mot de passe</li>
-          <li>Connectez-vous et profitez de toutes les fonctionnalités</li>
-        </ol>
-        
-        <div style="text-align: center;">
-          <a href="${resetLink}" class="button">
-            🔐 Activer mon compte
-          </a>
+        <div class="content">
+          <p>Bonjour <strong>${name}</strong>,</p>
+          
+          <p>Votre équipe <strong>${teamName}</strong> a été validée. Créez votre mot de passe pour accéder à votre espace ${isCoach ? 'coach' : 'joueur'}:</p>
+          
+          <div class="button-container">
+            <a href="${resetLink}" class="button">Créer mon mot de passe</a>
+          </div>
+          
+          <div class="alert">
+            <p><strong>⏰ Ce lien expire dans 1 heure</strong></p>
+          </div>
+          
+          <div class="info">
+            <p><strong>Lien expiré?</strong></p>
+            <p style="margin-top: 8px;">
+              1. Allez sur <a href="${appUrl}/login">${appUrl}/login</a><br>
+              2. Entrez votre email: <strong>${email}</strong><br>
+              3. Cliquez sur "Mot de passe oublié"
+            </p>
+          </div>
+          
+          ${isCoach ? `
+          <p><strong>Vos fonctionnalités:</strong></p>
+          <p style="font-size: 14px; color: #6b7280;">
+            • Gérer les statuts des joueurs<br>
+            • Créer les compositions officielles<br>
+            • Consulter les statistiques<br>
+            • Voir le calendrier des matchs
+          </p>
+          ` : ''}
+          
+          <div class="contact">
+            <p style="color: #4b5563; font-weight: 600;">Besoin d'aide?</p>
+            <p>📧 <a href="mailto:contact@comebac.com">contact@comebac.com</a></p>
+            <p>📱 <a href="https://wa.me/33634051384">WhatsApp: +33 6 34 05 13 84</a></p>
+            <p>📷 <a href="https://instagram.com/comebac.league">Instagram: @comebac.league</a></p>
+          </div>
         </div>
         
-        ${isCoach ? `
-        <p><strong>En tant qu'entraîneur, vous pourrez :</strong></p>
-        <ul>
-          <li>✅ Gérer les statuts de vos joueurs</li>
-          <li>✅ Créer et valider les compositions</li>
-          <li>✅ Consulter les statistiques de votre équipe</li>
-          <li>✅ Voir le calendrier des matchs</li>
-        </ul>
-        ` : `
-        <p><strong>En tant que joueur, vous pourrez :</strong></p>
-        <ul>
-          <li>📊 Consulter vos statistiques personnelles</li>
-          <li>🏆 Voir vos matchs à venir et passés</li>
-          <li>🎖️ Débloquer des badges</li>
-          <li>📱 Recevoir des notifications</li>
-        </ul>
-        `}
-        
-        <div class="info-box">
-          <p style="margin: 0;"><strong>⏰ Ce lien est valable pendant 1 heure.</strong> Si vous ne l'utilisez pas maintenant, vous pourrez toujours utiliser "Mot de passe oublié" sur la page de connexion.</p>
+        <div class="footer">
+          <p><strong>ComeBac League</strong></p>
+          <p>Championnat de Football Scolaire</p>
         </div>
-        
-        <div class="info-box" style="border-left-color: #3b82f6;">
-          <p style="margin: 0 0 10px 0;"><strong>💬 Besoin d'aide ?</strong></p>
-          <p style="margin: 5px 0;">📧 Email : <a href="mailto:contact@comebac.com" style="color: #3b82f6;">contact@comebac.com</a></p>
-          <p style="margin: 5px 0;">📱 WhatsApp : <a href="https://wa.me/33634051384" style="color: #25D366;">+33 6 34 05 13 84</a></p>
-          <p style="margin: 5px 0;">📸 Instagram : <a href="https://www.instagram.com/comebac.league/" style="color: #E4405F;">@comebac.league</a></p>
-        </div>
-        
-        <p>Si vous avez des questions, n'hésitez pas à contacter l'administration.</p>
-        
-        <p style="margin-top: 30px;">
-          Sportivement,<br>
-          <strong>L'équipe ComeBac League</strong>
-        </p>
-      </div>
-      
-      <div class="footer">
-        <p>ComeBac League - Ligue de Football Scolaire</p>
-        <p style="font-size: 12px; color: #9ca3af;">
-          Si vous n'avez pas demandé ce compte, ignorez cet email.
-        </p>
       </div>
     </body>
     </html>
@@ -142,37 +193,48 @@ export default function EmailPreviewPage() {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h1 className="text-3xl font-bold mb-4">📧 Prévisualisation Email - Comptes Jamais Connectés</h1>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold">📧 Templates d'Emails</h1>
+            <button
+              onClick={() => window.history.back()}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
+            >
+              ← Retour
+            </button>
+          </div>
           
           <div className="flex gap-4 mb-6">
             <button
               onClick={() => setUserType('player')}
-              className={`px-6 py-3 rounded-lg font-medium transition ${
+              className={`flex-1 px-6 py-3 rounded-lg font-medium transition ${
                 userType === 'player'
-                  ? 'bg-green-600 text-white'
+                  ? 'bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
-              ⚽ Version Joueur
+              ⚽ Email Joueur
             </button>
             <button
               onClick={() => setUserType('coach')}
-              className={`px-6 py-3 rounded-lg font-medium transition ${
+              className={`flex-1 px-6 py-3 rounded-lg font-medium transition ${
                 userType === 'coach'
-                  ? 'bg-orange-600 text-white'
+                  ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
-              🏆 Version Coach
+              🏆 Email Coach
             </button>
           </div>
 
           <div className="bg-gray-100 p-4 rounded-lg">
             <p className="text-sm text-gray-600 mb-2">
-              <strong>Destinataire :</strong> {isCoach ? 'Entraîneurs' : 'Joueurs'} qui ne se sont jamais connectés
+              <strong>Objet:</strong> Bienvenue dans ComeBac League
+            </p>
+            <p className="text-sm text-gray-600 mb-2">
+              <strong>Destinataire:</strong> {isCoach ? 'Entraîneurs' : 'Joueurs'} lors de la validation de l'équipe
             </p>
             <p className="text-sm text-gray-600">
-              <strong>Objet :</strong> {isCoach ? '🏆' : '⚽'} Activez votre compte ComeBac League
+              <strong>Expéditeur:</strong> ComeBac League &lt;noreply@comebac.com&gt;
             </p>
           </div>
         </div>
@@ -185,12 +247,14 @@ export default function EmailPreviewPage() {
         </div>
 
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="font-bold text-blue-900 mb-2">ℹ️ Informations</h3>
+          <h3 className="font-bold text-blue-900 mb-2">ℹ️ Caractéristiques</h3>
           <ul className="text-sm text-blue-800 space-y-1">
-            <li>• Le lien d'activation est généré automatiquement par Firebase</li>
-            <li>• Le lien expire après 1 heure</li>
-            <li>• Les informations de contact sont incluses pour faciliter le support</li>
-            <li>• Le design s'adapte selon le type de compte (joueur/coach)</li>
+            <li>✅ Design moderne et épuré</li>
+            <li>✅ Lien d'activation valable 1 heure</li>
+            <li>✅ Instructions claires si le lien expire</li>
+            <li>✅ Informations de contact (Email, WhatsApp, Instagram)</li>
+            <li>✅ Responsive et compatible tous appareils</li>
+            <li>✅ Couleurs adaptées selon le type (joueur/coach)</li>
           </ul>
         </div>
       </div>
