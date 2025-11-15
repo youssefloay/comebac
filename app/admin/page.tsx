@@ -55,5 +55,14 @@ export default function AdminPage() {
     )
   }
 
-  return <Dashboard user={user} />
+  // Rediriger vers le nouveau dashboard
+  if (typeof window !== 'undefined') {
+    window.location.href = '/admin/dashboard'
+  }
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <LoadingSpinner size="lg" />
+    </div>
+  )
 }
