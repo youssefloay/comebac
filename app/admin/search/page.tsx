@@ -125,6 +125,10 @@ export default function AdminSearchPage() {
     setSelectedResult(result)
   }
 
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedData, setEditedData] = useState<Partial<SearchResult>>({})
+  const [isSaving, setIsSaving] = useState(false)
+
   const handleImpersonate = () => {
     if (!selectedResult) return
 
@@ -138,6 +142,54 @@ export default function AdminSearchPage() {
       router.push('/player')
     } else {
       alert('Impossible de se faire passer pour ce type d\'utilisateur')
+    }
+  }
+
+  const handleEdit = () => {
+    if (!selectedResult) return
+    setEditedData({ ...selectedResult })
+    setIsEditing(true)
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+    setEditedData({})
+  }
+
+  const handleSaveEdit = async () => {
+    if (!selectedResult || !editedData) return
+
+    setIsSaving(true)
+    try {
+      const response = await fetch('/api/admin/update-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accountId: selectedResult.id,
+          accountType: selectedResult.type,
+          uid: selectedResult.uid,
+          teamId: selectedResult.teamId,
+          updates: editedData
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        alert('✅ Compte mis à jour avec succès dans toutes les collections!')
+        setIsEditing(false)
+        // Recharger les données
+        await loadData()
+        // Mettre à jour le résultat sélectionné
+        setSelectedResult({ ...selectedResult, ...editedData })
+      } else {
+        alert(`❌ Erreur: ${data.error}`)
+      }
+    } catch (error) {
+      console.error('Erreur:', error)
+      alert('❌ Erreur lors de la mise à jour')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -194,72 +246,219 @@ export default function AdminSearchPage() {
                     ? 'bg-gradient-to-br from-purple-600 to-pink-600'
                     : 'bg-gradient-to-br from-gray-600 to-gray-800'
                 }`}>
-                  {selectedResult.firstName[0]}{selectedResult.lastName[0]}
+                  {(isEditing ? editedData.firstName?.[0] : selectedResult.firstName[0])}
+                  {(isEditing ? editedData.lastName?.[0] : selectedResult.lastName[0])}
                 </div>
-                {selectedResult.type === 'player' && selectedResult.jerseyNumber && (
+                {selectedResult.type === 'player' && (isEditing ? editedData.jerseyNumber : selectedResult.jerseyNumber) && (
                   <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm border-2 border-white">
-                    {selectedResult.jerseyNumber}
+                    {isEditing ? editedData.jerseyNumber : selectedResult.jerseyNumber}
                   </div>
                 )}
               </div>
 
               {/* Info */}
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    {selectedResult.firstName} {selectedResult.lastName}
-                  </h2>
-                  {selectedResult.type === 'coach' ? (
-                    <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium flex items-center gap-1">
-                      <UserCog className="w-4 h-4" />
-                      Entraîneur
-                    </span>
-                  ) : selectedResult.type === 'player' ? (
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      Joueur
-                    </span>
-                  ) : selectedResult.type === 'admin' ? (
-                    <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium flex items-center gap-1">
-                      <UserCog className="w-4 h-4" />
-                      Administrateur
-                    </span>
-                  ) : (
-                    <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      Utilisateur
-                    </span>
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-3">
+                    {!isEditing ? (
+                      <h2 className="text-2xl font-bold text-gray-900">
+                        {selectedResult.firstName} {selectedResult.lastName}
+                      </h2>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={editedData.firstName || ''}
+                          onChange={(e) => setEditedData({ ...editedData, firstName: e.target.value })}
+                          className="px-3 py-2 border border-gray-300 rounded-lg text-xl font-bold"
+                          placeholder="Prénom"
+                        />
+                        <input
+                          type="text"
+                          value={editedData.lastName || ''}
+                          onChange={(e) => setEditedData({ ...editedData, lastName: e.target.value })}
+                          className="px-3 py-2 border border-gray-300 rounded-lg text-xl font-bold"
+                          placeholder="Nom"
+                        />
+                      </div>
+                    )}
+                    {selectedResult.type === 'coach' ? (
+                      <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium flex items-center gap-1">
+                        <UserCog className="w-4 h-4" />
+                        Entraîneur
+                      </span>
+                    ) : selectedResult.type === 'player' ? (
+                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        Joueur
+                      </span>
+                    ) : selectedResult.type === 'admin' ? (
+                      <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium flex items-center gap-1">
+                        <UserCog className="w-4 h-4" />
+                        Administrateur
+                      </span>
+                    ) : (
+                      <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        Utilisateur
+                      </span>
+                    )}
+                  </div>
+                  
+                  {!isEditing && (
+                    <button
+                      onClick={handleEdit}
+                      className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition font-medium"
+                    >
+                      ✏️ Modifier
+                    </button>
                   )}
                 </div>
 
-                <div className="space-y-2 mb-4">
-                  <p className="text-gray-600">
-                    <span className="font-medium">Email:</span> {selectedResult.email}
-                  </p>
-                  {selectedResult.teamName && (
-                    <p className="text-gray-600">
-                      <span className="font-medium">Équipe:</span> {selectedResult.teamName}
-                    </p>
+                <div className="space-y-3 mb-4">
+                  {/* Email */}
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-gray-700 w-32">Email:</span>
+                    {!isEditing ? (
+                      <span className="text-gray-900">{selectedResult.email}</span>
+                    ) : (
+                      <input
+                        type="email"
+                        value={editedData.email || ''}
+                        onChange={(e) => setEditedData({ ...editedData, email: e.target.value })}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="Email"
+                      />
+                    )}
+                  </div>
+
+                  {/* Équipe */}
+                  {(selectedResult.teamName || isEditing) && (
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-700 w-32">Équipe:</span>
+                      {!isEditing ? (
+                        <span className="text-gray-900">{selectedResult.teamName}</span>
+                      ) : (
+                        <input
+                          type="text"
+                          value={editedData.teamName || ''}
+                          onChange={(e) => setEditedData({ ...editedData, teamName: e.target.value })}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                          placeholder="Nom de l'équipe"
+                        />
+                      )}
+                    </div>
                   )}
-                  {selectedResult.position && (
-                    <p className="text-gray-600">
-                      <span className="font-medium">Position:</span> {selectedResult.position}
-                    </p>
+
+                  {/* Position (joueurs uniquement) */}
+                  {selectedResult.type === 'player' && (
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-700 w-32">Position:</span>
+                      {!isEditing ? (
+                        <span className="text-gray-900">{selectedResult.position || 'Non définie'}</span>
+                      ) : (
+                        <select
+                          value={editedData.position || ''}
+                          onChange={(e) => setEditedData({ ...editedData, position: e.target.value })}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                        >
+                          <option value="">Sélectionner une position</option>
+                          <option value="Gardien">Gardien</option>
+                          <option value="Défenseur">Défenseur</option>
+                          <option value="Milieu">Milieu</option>
+                          <option value="Attaquant">Attaquant</option>
+                        </select>
+                      )}
+                    </div>
                   )}
+
+                  {/* Numéro de maillot (joueurs uniquement) */}
+                  {selectedResult.type === 'player' && (
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-700 w-32">N° Maillot:</span>
+                      {!isEditing ? (
+                        <span className="text-gray-900">{selectedResult.jerseyNumber || 'Non défini'}</span>
+                      ) : (
+                        <input
+                          type="number"
+                          min="1"
+                          max="99"
+                          value={editedData.jerseyNumber || ''}
+                          onChange={(e) => setEditedData({ ...editedData, jerseyNumber: parseInt(e.target.value) || undefined })}
+                          className="w-24 px-3 py-2 border border-gray-300 rounded-lg"
+                          placeholder="N°"
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Rôle (utilisateurs) */}
                   {selectedResult.role && (
-                    <p className="text-gray-600">
-                      <span className="font-medium">Rôle:</span> {selectedResult.role}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-700 w-32">Rôle:</span>
+                      {!isEditing ? (
+                        <span className="text-gray-900">{selectedResult.role}</span>
+                      ) : (
+                        <input
+                          type="text"
+                          value={editedData.role || ''}
+                          onChange={(e) => setEditedData({ ...editedData, role: e.target.value })}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                          placeholder="Rôle"
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* UID */}
+                  {selectedResult.uid && (
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-700 w-32">UID:</span>
+                      <span className="text-gray-600 font-mono text-sm">{selectedResult.uid}</span>
+                    </div>
                   )}
                 </div>
 
-                {(selectedResult.type === 'coach' || selectedResult.type === 'player') && (
-                  <button
-                    onClick={handleImpersonate}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
-                  >
-                    Se faire passer pour {selectedResult.firstName}
-                  </button>
+                {/* Boutons d'action */}
+                <div className="flex gap-3">
+                  {!isEditing ? (
+                    <>
+                      {(selectedResult.type === 'coach' || selectedResult.type === 'player') && (
+                        <button
+                          onClick={handleImpersonate}
+                          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                        >
+                          👤 Se faire passer pour {selectedResult.firstName}
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={handleSaveEdit}
+                        disabled={isSaving}
+                        className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium disabled:bg-gray-400"
+                      >
+                        {isSaving ? '⏳ Enregistrement...' : '✅ Enregistrer'}
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        disabled={isSaving}
+                        className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium disabled:bg-gray-400"
+                      >
+                        ❌ Annuler
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Avertissement lors de l'édition */}
+                {isEditing && (
+                  <div className="mt-4 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-lg">
+                    <p className="text-sm text-yellow-800 font-medium">
+                      ⚠️ <strong>Attention:</strong> Les modifications seront appliquées dans TOUTES les collections de la base de données (coachAccounts, playerAccounts, users, userProfiles, teams, lineups, etc.)
+                    </p>
+                  </div>
                 )}
               </div>
             </div>

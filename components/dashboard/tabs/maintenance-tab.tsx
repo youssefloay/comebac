@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Loader, Wrench, CheckCircle, AlertCircle } from "lucide-react"
+import CustomNotificationModal from "@/components/admin/CustomNotificationModal"
 
 interface Team {
   id: string
@@ -16,6 +17,7 @@ export default function MaintenanceTab() {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [teams, setTeams] = useState<Team[]>([])
   const [showAddPlayerModal, setShowAddPlayerModal] = useState(false)
+  const [showNotificationModal, setShowNotificationModal] = useState(false)
   const [selectedTeamId, setSelectedTeamId] = useState('')
   const [isCoach, setIsCoach] = useState(false)
   const [playerData, setPlayerData] = useState({
@@ -981,6 +983,50 @@ export default function MaintenanceTab() {
             Ajouter
           </button>
         </div>
+
+        {/* Envoyer notification personnalisée */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-blue-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">📢</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Notification personnalisée</h3>
+              <p className="text-xs text-gray-600">Avec suivi de lecture</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Envoyer une notification à tous, joueurs, coaches ou une équipe spécifique avec suivi
+          </p>
+          <button
+            onClick={() => setShowNotificationModal(true)}
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm"
+          >
+            Envoyer
+          </button>
+        </div>
+
+        {/* Voir statistiques notifications */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-indigo-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">📊</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Suivi notifications</h3>
+              <p className="text-xs text-gray-600">Qui a lu quoi</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Voir qui a lu les notifications, taux de lecture, statistiques détaillées
+          </p>
+          <button
+            onClick={() => window.location.href = '/admin/notification-tracking'}
+            className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium text-sm"
+          >
+            Voir les stats
+          </button>
+        </div>
       </div>
 
       {/* Avertissement */}
@@ -995,6 +1041,13 @@ export default function MaintenanceTab() {
           </div>
         </div>
       </div>
+
+      {/* Modal Notification personnalisée */}
+      <CustomNotificationModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        teams={teams}
+      />
 
       {/* Modal Ajouter joueur/coach */}
       {showAddPlayerModal && (
