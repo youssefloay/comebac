@@ -27,6 +27,7 @@ try {
   throw error;
 }
 
+export { app };
 export const auth = getAuth(app);
 
 let db: Firestore;
