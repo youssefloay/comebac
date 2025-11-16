@@ -31,6 +31,13 @@ interface Registration {
     email: string
     phone: string
   }
+  coach?: {
+    firstName: string
+    lastName: string
+    email: string
+    phone: string
+    birthDate: string
+  }
   players: Player[]
 }
 
@@ -282,6 +289,115 @@ export default function UpdateRegistrationPage() {
                   onChange={(e) => setRegistration(registration ? {...registration, captain: {...registration.captain, phone: e.target.value}} : null)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Coach Info (Optional) */}
+          <div className="bg-white p-6 rounded-lg shadow-md border-2 border-blue-200">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Entraîneur (Optionnel)</h2>
+              <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">
+                Recommandé
+              </span>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Si votre équipe a un entraîneur, renseignez ses informations pour qu'il puisse accéder à l'application.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Prénom</label>
+                <input
+                  type="text"
+                  value={registration?.coach?.firstName || ''}
+                  onChange={(e) => setRegistration(registration ? {
+                    ...registration, 
+                    coach: {
+                      firstName: e.target.value,
+                      lastName: registration.coach?.lastName || '',
+                      email: registration.coach?.email || '',
+                      phone: registration.coach?.phone || '',
+                      birthDate: registration.coach?.birthDate || ''
+                    }
+                  } : null)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Prénom de l'entraîneur"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Nom</label>
+                <input
+                  type="text"
+                  value={registration?.coach?.lastName || ''}
+                  onChange={(e) => setRegistration(registration ? {
+                    ...registration, 
+                    coach: {
+                      firstName: registration.coach?.firstName || '',
+                      lastName: e.target.value,
+                      email: registration.coach?.email || '',
+                      phone: registration.coach?.phone || '',
+                      birthDate: registration.coach?.birthDate || ''
+                    }
+                  } : null)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Nom de l'entraîneur"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <input
+                  type="email"
+                  value={registration?.coach?.email || ''}
+                  onChange={(e) => setRegistration(registration ? {
+                    ...registration, 
+                    coach: {
+                      firstName: registration.coach?.firstName || '',
+                      lastName: registration.coach?.lastName || '',
+                      email: e.target.value,
+                      phone: registration.coach?.phone || '',
+                      birthDate: registration.coach?.birthDate || ''
+                    }
+                  } : null)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="email@example.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>
+                <input
+                  type="tel"
+                  value={registration?.coach?.phone || ''}
+                  onChange={(e) => setRegistration(registration ? {
+                    ...registration, 
+                    coach: {
+                      firstName: registration.coach?.firstName || '',
+                      lastName: registration.coach?.lastName || '',
+                      email: registration.coach?.email || '',
+                      phone: e.target.value,
+                      birthDate: registration.coach?.birthDate || ''
+                    }
+                  } : null)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="01234567890"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Date de naissance</label>
+                <input
+                  type="date"
+                  value={registration?.coach?.birthDate || ''}
+                  onChange={(e) => setRegistration(registration ? {
+                    ...registration, 
+                    coach: {
+                      firstName: registration.coach?.firstName || '',
+                      lastName: registration.coach?.lastName || '',
+                      email: registration.coach?.email || '',
+                      phone: registration.coach?.phone || '',
+                      birthDate: e.target.value
+                    }
+                  } : null)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>

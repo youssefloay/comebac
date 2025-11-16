@@ -2,15 +2,119 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
 import { generateWelcomeEmail, sendEmail } from '@/lib/email-service'
 
+async function sendEmailsToSpecificPlayers(emails: string[]) {
+  const results = []
+  let sentCount = 0
+  let errorCount = 0
+
+  for (const email of emails) {
+    try {
+      // Trouver le joueur
+      const playersSnap = await adminDb.collection('players')
+        .where('email', '==', email)
+        .get()
+      
+      if (playersSnap.empty) {
+        results.push({
+          email,
+          status: 'error',
+          error: 'Joueur non trouvé'
+        })
+        errorCount++
+        continue
+      }
+
+      const player = playersSnap.docs[0].data()
+      const playerName = `${player.firstName} ${player.lastName}`
+      
+      // Trouver l'équipe
+      let teamName = 'votre équipe'
+      const teamDoc = await adminDb.collection('teams').doc(player.teamId).get()
+      if (teamDoc.exists) {
+        teamName = teamDoc.data()?.name || teamName
+      } else {
+        const regDoc = await adminDb.collection('teamRegistrations').doc(player.teamId).get()
+        if (regDoc.exists) {
+          teamName = regDoc.data()?.teamName || teamName
+        }
+      }
+
+      // Vérifier le compte Firebase
+      let firebaseUser
+      try {
+        firebaseUser = await adminAuth.getUserByEmail(email)
+      } catch (error: any) {
+        if (error.code === 'auth/user-not-found') {
+          results.push({
+            email,
+            player: playerName,
+            status: 'error',
+            error: 'Compte Firebase non trouvé'
+          })
+          errorCount++
+          continue
+        }
+        throw error
+      }
+
+      // Générer le lien de réinitialisation
+      const resetLink = await adminAuth.generatePasswordResetLink(email)
+
+      // Envoyer l'email
+      const emailData = generateWelcomeEmail(playerName, teamName, resetLink, email)
+      const emailResult = await sendEmail(emailData)
+
+      if (emailResult.success) {
+        sentCount++
+        results.push({
+          email,
+          player: playerName,
+          status: 'sent'
+        })
+      } else {
+        errorCount++
+        results.push({
+          email,
+          player: playerName,
+          status: 'error',
+          error: emailResult.error
+        })
+      }
+    } catch (error: any) {
+      errorCount++
+      results.push({
+        email,
+        status: 'error',
+        error: error.message
+      })
+    }
+  }
+
+  return NextResponse.json({
+    success: true,
+    message: `✅ ${sentCount} email(s) envoyé(s)${errorCount > 0 ? `, ${errorCount} erreur(s)` : ''}`,
+    sentCount,
+    errorCount,
+    results
+  })
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { teamId } = await request.json()
+    const { teamId, emails } = await request.json()
     
+    // Mode 1: Envoyer à des emails spécifiques
+    if (emails && Array.isArray(emails) && emails.length > 0) {
+      console.log('📧 Renvoi des emails pour:', emails)
+      return await sendEmailsToSpecificPlayers(emails)
+    }
+    
+    // Mode 2: Envoyer à toute une équipe
     console.log('📧 Renvoi des emails pour teamId:', teamId)
 
     if (!teamId) {
       return NextResponse.json(
-        { error: 'teamId requis' },
+        { error: 'teamId ou emails requis' },
         { status: 400 }
       )
     }

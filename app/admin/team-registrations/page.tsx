@@ -947,11 +947,11 @@ export default function TeamRegistrationsPage() {
                     </p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    registration.status === 'pending' ? 'bg-orange-100 text-orange-800' :
+                    registration.status === 'pending' || registration.status === 'pending_players' || registration.status === 'pending_validation' ? 'bg-orange-100 text-orange-800' :
                     registration.status === 'approved' ? 'bg-green-100 text-green-800' :
                     'bg-red-100 text-red-800'
                   }`}>
-                    {registration.status === 'pending' ? 'En attente' :
+                    {registration.status === 'pending' || registration.status === 'pending_players' || registration.status === 'pending_validation' ? 'En attente' :
                      registration.status === 'approved' ? 'Approuvée' : 'Rejetée'}
                   </span>
                 </div>
@@ -995,7 +995,7 @@ export default function TeamRegistrationsPage() {
                     Détails
                   </button>
                   
-                  {registration.status === 'pending' && (
+                  {(registration.status === 'pending' || registration.status === 'pending_players' || registration.status === 'pending_validation') && (
                     <>
                       <button
                         onClick={() => generateUpdateLink(registration)}
@@ -1008,6 +1008,7 @@ export default function TeamRegistrationsPage() {
                         onClick={() => approveRegistration(registration)}
                         disabled={processing}
                         className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition"
+                        title="Approuver l'équipe"
                       >
                         <Check className="w-4 h-4" />
                       </button>
@@ -1015,6 +1016,7 @@ export default function TeamRegistrationsPage() {
                         onClick={() => rejectRegistration(registration)}
                         disabled={processing}
                         className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 transition"
+                        title="Rejeter l'équipe"
                       >
                         <X className="w-4 h-4" />
                       </button>

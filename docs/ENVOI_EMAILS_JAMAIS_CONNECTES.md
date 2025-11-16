@@ -1,4 +1,4 @@
-# 📧 Envoi d'emails aux comptes jamais connectés
+no# 📧 Envoi d'emails aux comptes jamais connectés
 
 Ce guide explique comment envoyer des emails de rappel aux utilisateurs qui n'ont jamais activé leur compte.
 

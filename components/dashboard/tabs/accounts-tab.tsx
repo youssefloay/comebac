@@ -1,354 +1,264 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { collection, getDocs } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { Loader, Users, Mail, Phone, Shield, User, Send, Edit, Save, X } from "lucide-react"
+import { useState, useEffect } from 'react'
+import { Search, Filter, Loader, RefreshCw } from 'lucide-react'
 
-interface Account {
-  id: string
-  type: 'player' | 'coach' | 'admin'
-  firstName: string
-  lastName: string
+interface UserAccount {
+  uid: string
   email: string
-  phone?: string
-  teamName?: string
-  teamId?: string
-  position?: string
-  jerseyNumber?: number
+  name: string
+  type: string
+  role: string
+  teamId: string | null
+  teamName: string
+  emailVerified: boolean
+  disabled: boolean
+  createdAt: string
+  lastSignIn: string | null
+  neverLoggedIn: boolean
+  photoURL: string | null
+}
+
+interface Stats {
+  total: number
+  players: number
+  coaches: number
+  admins: number
+  unknown: number
+  neverLoggedIn: number
+  verified: number
+  disabled: number
 }
 
 export default function AccountsTab() {
-  const [accounts, setAccounts] = useState<Account[]>([])
+  const [accounts, setAccounts] = useState<UserAccount[]>([])
+  const [filteredAccounts, setFilteredAccounts] = useState<UserAccount[]>([])
+  const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'player' | 'coach' | 'admin'>('all')
   const [searchTerm, setSearchTerm] = useState('')
-  const [sendingEmail, setSendingEmail] = useState<string | null>(null)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [editingAccount, setEditingAccount] = useState<string | null>(null)
-  const [editedPhone, setEditedPhone] = useState('')
-  const [saving, setSaving] = useState(false)
+  const [filter, setFilter] = useState<'all' | 'neverLoggedIn' | 'players' | 'coaches' | 'unknown'>('all')
 
   useEffect(() => {
     loadAccounts()
   }, [])
 
+  useEffect(() => {
+    applyFilters()
+  }, [accounts, searchTerm, filter])
+
   const loadAccounts = async () => {
+    setLoading(true)
     try {
-      const allAccounts: Account[] = []
-
-      // Charger les joueurs
-      const playersSnap = await getDocs(collection(db, 'playerAccounts'))
-      playersSnap.forEach(doc => {
-        const data = doc.data()
-        allAccounts.push({
-          id: doc.id,
-          type: 'player',
-          firstName: data.firstName || '',
-          lastName: data.lastName || '',
-          email: data.email || '',
-          phone: data.phone || '',
-          teamName: data.teamName || '',
-          teamId: data.teamId || '',
-          position: data.position || '',
-          jerseyNumber: data.jerseyNumber || 0
-        })
-      })
-
-      // Charger les entraîneurs
-      const coachesSnap = await getDocs(collection(db, 'coachAccounts'))
-      coachesSnap.forEach(doc => {
-        const data = doc.data()
-        allAccounts.push({
-          id: doc.id,
-          type: 'coach',
-          firstName: data.firstName || '',
-          lastName: data.lastName || '',
-          email: data.email || '',
-          phone: data.phone || '',
-          teamName: data.teamName || '',
-          teamId: data.teamId || ''
-        })
-      })
-
-      // Charger les admins
-      const adminsSnap = await getDocs(collection(db, 'users'))
-      adminsSnap.forEach(doc => {
-        const data = doc.data()
-        if (data.role === 'admin') {
-          allAccounts.push({
-            id: doc.id,
-            type: 'admin',
-            firstName: data.firstName || '',
-            lastName: data.lastName || data.displayName?.split(' ')[0] || '',
-            email: data.email || '',
-            phone: data.phone || ''
-          })
-        }
-      })
-
-      setAccounts(allAccounts)
+      const res = await fetch('/api/admin/user-accounts')
+      if (res.ok) {
+        const data = await res.json()
+        setAccounts(data.accounts)
+        setStats(data.stats)
+      }
     } catch (error) {
-      console.error('Erreur lors du chargement des comptes:', error)
+      console.error('Erreur:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const filteredAccounts = accounts.filter(account => {
+  const applyFilters = () => {
+    let filtered = accounts
+
     // Filtre par type
-    if (filter !== 'all' && account.type !== filter) return false
+    if (filter === 'neverLoggedIn') {
+      filtered = filtered.filter(a => a.neverLoggedIn)
+    } else if (filter === 'players') {
+      filtered = filtered.filter(a => a.type === 'player')
+    } else if (filter === 'coaches') {
+      filtered = filtered.filter(a => a.type === 'coach')
+    } else if (filter === 'unknown') {
+      filtered = filtered.filter(a => a.type === 'unknown')
+    }
 
     // Filtre par recherche
     if (searchTerm) {
-      const search = searchTerm.toLowerCase()
-      return (
-        account.firstName.toLowerCase().includes(search) ||
-        account.lastName.toLowerCase().includes(search) ||
-        account.email.toLowerCase().includes(search) ||
-        account.teamName?.toLowerCase().includes(search)
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter(a => 
+        a.name.toLowerCase().includes(term) ||
+        a.email.toLowerCase().includes(term) ||
+        a.teamName.toLowerCase().includes(term)
       )
     }
 
-    return true
-  })
-
-  const stats = {
-    total: accounts.length,
-    players: accounts.filter(a => a.type === 'player').length,
-    coaches: accounts.filter(a => a.type === 'coach').length,
-    admins: accounts.filter(a => a.type === 'admin').length
+    setFilteredAccounts(filtered)
   }
 
-  const sendPasswordResetEmail = async (account: Account) => {
-    if (!confirm(`Envoyer un email de réinitialisation de mot de passe à ${account.firstName} ${account.lastName} (${account.email}) ?`)) {
-      return
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'Jamais'
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
+    
+    if (diffDays === 0) return 'Aujourd\'hui'
+    if (diffDays === 1) return 'Hier'
+    if (diffDays < 7) return `Il y a ${diffDays}j`
+    if (diffDays < 30) return `Il y a ${Math.floor(diffDays / 7)}sem`
+    return `Il y a ${Math.floor(diffDays / 30)}mois`
+  }
+
+  const getRoleBadgeColor = (role: string) => {
+    const colors: any = {
+      'Joueur': 'bg-blue-100 text-blue-700',
+      'Joueur / Capitaine': 'bg-yellow-100 text-yellow-700',
+      'Joueur / Coach intérimaire': 'bg-orange-100 text-orange-700',
+      'Coach': 'bg-green-100 text-green-700',
+      'Admin': 'bg-purple-100 text-purple-700',
+      'Utilisateur': 'bg-gray-100 text-gray-700'
     }
-
-    setSendingEmail(account.id)
-    setMessage(null)
-
-    try {
-      // Utiliser l'API appropriée selon le type de compte
-      const apiUrl = account.type === 'coach' 
-        ? '/api/admin/resend-coach-email' 
-        : '/api/admin/resend-player-email'
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: account.email,
-          firstName: account.firstName,
-          lastName: account.lastName,
-          teamName: account.teamName || 'ComeBac League',
-          // Pour l'API player (rétrocompatibilité)
-          playerEmail: account.email,
-          playerName: `${account.firstName} ${account.lastName}`
-        })
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setMessage({ 
-          type: 'success', 
-          text: `Email envoyé à ${account.firstName} ${account.lastName}` 
-        })
-      } else {
-        setMessage({ 
-          type: 'error', 
-          text: data.error || 'Erreur lors de l\'envoi' 
-        })
-      }
-    } catch (error) {
-      console.error('Erreur:', error)
-      setMessage({ 
-        type: 'error', 
-        text: 'Erreur de connexion' 
-      })
-    } finally {
-      setSendingEmail(null)
-      // Masquer le message après 5 secondes
-      setTimeout(() => setMessage(null), 5000)
-    }
-  }
-
-  const startEdit = (account: Account) => {
-    setEditingAccount(account.id)
-    setEditedPhone(account.phone || '')
-  }
-
-  const cancelEdit = () => {
-    setEditingAccount(null)
-    setEditedPhone('')
-  }
-
-  const savePhone = async (account: Account) => {
-    setSaving(true)
-    setMessage(null)
-
-    try {
-      const response = await fetch('/api/admin/update-phone', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          accountId: account.id,
-          accountType: account.type,
-          phone: editedPhone,
-          email: account.email
-        })
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setMessage({ 
-          type: 'success', 
-          text: `Téléphone mis à jour pour ${account.firstName} ${account.lastName}` 
-        })
-        // Mettre à jour localement
-        setAccounts(accounts.map(a => 
-          a.id === account.id ? { ...a, phone: editedPhone } : a
-        ))
-        setEditingAccount(null)
-      } else {
-        setMessage({ 
-          type: 'error', 
-          text: data.error || 'Erreur lors de la mise à jour' 
-        })
-      }
-    } catch (error) {
-      console.error('Erreur:', error)
-      setMessage({ 
-        type: 'error', 
-        text: 'Erreur de connexion' 
-      })
-    } finally {
-      setSaving(false)
-      setTimeout(() => setMessage(null), 5000)
-    }
+    return colors[role] || 'bg-gray-100 text-gray-700'
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader className="w-8 h-8 animate-spin text-blue-600" />
+        <div className="text-center">
+          <Loader className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Chargement des comptes...</p>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Gestion des Comptes</h2>
-        <p className="text-gray-600">Tous les comptes utilisateurs (joueurs, entraîneurs, admins)</p>
+      {/* Header */}
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Gestion des Comptes</h2>
+          <p className="text-gray-600 mt-1">Tous les comptes utilisateurs (joueurs, entraîneurs, admins)</p>
+        </div>
+        <button
+          onClick={loadAccounts}
+          disabled={loading}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          Actualiser
+        </button>
       </div>
 
-      {/* Message */}
-      {message && (
-        <div className={`p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-800'
-        }`}>
-          {message.text}
+      {/* Statistiques */}
+      {stats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+          <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
+            <div className="text-xs text-gray-600">Total</div>
+          </div>
+          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200 shadow-sm">
+            <div className="text-2xl font-bold text-blue-600">{stats.players}</div>
+            <div className="text-xs text-blue-700">Joueurs</div>
+          </div>
+          <div className="bg-green-50 rounded-lg p-4 border border-green-200 shadow-sm">
+            <div className="text-2xl font-bold text-green-600">{stats.coaches}</div>
+            <div className="text-xs text-green-700">Coaches</div>
+          </div>
+          <div className="bg-purple-50 rounded-lg p-4 border border-purple-200 shadow-sm">
+            <div className="text-2xl font-bold text-purple-600">{stats.admins}</div>
+            <div className="text-xs text-purple-700">Admins</div>
+          </div>
+          <div className="bg-red-50 rounded-lg p-4 border border-red-200 shadow-sm">
+            <div className="text-2xl font-bold text-red-600">{stats.neverLoggedIn}</div>
+            <div className="text-xs text-red-700">Jamais connectés</div>
+          </div>
+          <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200 shadow-sm">
+            <div className="text-2xl font-bold text-emerald-600">{stats.verified}</div>
+            <div className="text-xs text-emerald-700">Vérifiés</div>
+          </div>
+          <div className="bg-amber-50 rounded-lg p-4 border border-amber-200 shadow-sm">
+            <div className="text-2xl font-bold text-amber-600">{stats.unknown}</div>
+            <div className="text-xs text-amber-700">Inconnus</div>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 shadow-sm">
+            <div className="text-2xl font-bold text-gray-600">{stats.disabled}</div>
+            <div className="text-xs text-gray-700">Désactivés</div>
+          </div>
         </div>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
-            </div>
-            <Users className="w-12 h-12 text-gray-400 opacity-20" />
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Joueurs</p>
-              <p className="text-3xl font-bold text-green-600">{stats.players}</p>
-            </div>
-            <User className="w-12 h-12 text-green-600 opacity-20" />
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Entraîneurs</p>
-              <p className="text-3xl font-bold text-blue-600">{stats.coaches}</p>
-            </div>
-            <User className="w-12 h-12 text-blue-600 opacity-20" />
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Admins</p>
-              <p className="text-3xl font-bold text-purple-600">{stats.admins}</p>
-            </div>
-            <Shield className="w-12 h-12 text-purple-600 opacity-20" />
-          </div>
-        </div>
-      </div>
-
       {/* Filtres et recherche */}
-      <div className="bg-white p-4 rounded-lg border border-gray-200">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div className="flex flex-col md:flex-row gap-4">
-          {/* Filtres par type */}
-          <div className="flex gap-2">
+          {/* Recherche */}
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Rechercher par nom, email ou équipe..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Filtres */}
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                filter === 'all' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                filter === 'all' 
+                  ? 'bg-gray-900 text-white' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Tous ({stats.total})
+              Tous ({accounts.length})
             </button>
             <button
-              onClick={() => setFilter('player')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                filter === 'player' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              onClick={() => setFilter('neverLoggedIn')}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                filter === 'neverLoggedIn' 
+                  ? 'bg-red-600 text-white' 
+                  : 'bg-red-50 text-red-700 hover:bg-red-100'
               }`}
             >
-              Joueurs ({stats.players})
+              ❌ Jamais connectés ({stats?.neverLoggedIn || 0})
             </button>
             <button
-              onClick={() => setFilter('coach')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                filter === 'coach' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              onClick={() => setFilter('players')}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                filter === 'players' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
               }`}
             >
-              Entraîneurs ({stats.coaches})
+              👥 Joueurs ({stats?.players || 0})
             </button>
             <button
-              onClick={() => setFilter('admin')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                filter === 'admin' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              onClick={() => setFilter('coaches')}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                filter === 'coaches' 
+                  ? 'bg-green-600 text-white' 
+                  : 'bg-green-50 text-green-700 hover:bg-green-100'
               }`}
             >
-              Admins ({stats.admins})
+              🏆 Coaches ({stats?.coaches || 0})
+            </button>
+            <button
+              onClick={() => setFilter('unknown')}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                filter === 'unknown' 
+                  ? 'bg-amber-600 text-white' 
+                  : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+              }`}
+            >
+              ⚠️ Inconnus ({stats?.unknown || 0})
             </button>
           </div>
-
-          {/* Recherche */}
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Rechercher par nom, email, équipe..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
         </div>
       </div>
 
-      {/* Liste des comptes */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      {/* Tableau des comptes */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Type
@@ -360,10 +270,10 @@ export default function AccountsTab() {
                   Email
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Téléphone
+                  Équipe
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Équipe
+                  Téléphone
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Détails
@@ -377,108 +287,42 @@ export default function AccountsTab() {
               {filteredAccounts.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                    Aucun compte trouvé
+                    <Filter className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-lg font-medium">Aucun compte trouvé</p>
+                    <p className="text-sm">Essayez de modifier vos filtres</p>
                   </td>
                 </tr>
               ) : (
                 filteredAccounts.map((account) => (
-                  <tr key={account.id} className="hover:bg-gray-50 transition">
+                  <tr key={account.uid} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        account.type === 'player' ? 'bg-green-100 text-green-800' :
-                        account.type === 'coach' ? 'bg-blue-100 text-blue-800' :
-                        'bg-purple-100 text-purple-800'
-                      }`}>
-                        {account.type === 'player' ? '⚽ Joueur' :
-                         account.type === 'coach' ? '👔 Entraîneur' :
-                         '🛡️ Admin'}
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleBadgeColor(account.role)}`}>
+                        {account.role}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {account.firstName} {account.lastName}
-                      </div>
+                      <div className="text-sm font-medium text-gray-900">{account.name}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Mail className="w-4 h-4" />
-                        {account.email}
-                      </div>
+                      <div className="text-sm text-gray-500">{account.email}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {editingAccount === account.id ? (
-                        <input
-                          type="tel"
-                          value={editedPhone}
-                          onChange={(e) => setEditedPhone(e.target.value)}
-                          placeholder="Numéro de téléphone"
-                          className="px-2 py-1 border border-blue-300 rounded text-sm w-full"
-                        />
-                      ) : account.phone ? (
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Phone className="w-4 h-4" />
-                          {account.phone}
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-400 italic">Non renseigné</span>
-                      )}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {account.teamName}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {account.teamName && (
-                        <div className="text-sm text-gray-900">
-                          {account.teamName}
-                        </div>
-                      )}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      -
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {account.type === 'player' && account.position && (
-                        <span>{account.position} #{account.jerseyNumber}</span>
-                      )}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      -
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {editingAccount === account.id ? (
-                          <>
-                            <button
-                              onClick={() => savePhone(account)}
-                              disabled={saving}
-                              className="inline-flex items-center gap-1 px-2 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition"
-                              title="Sauvegarder"
-                            >
-                              <Save className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={cancelEdit}
-                              disabled={saving}
-                              className="inline-flex items-center gap-1 px-2 py-1.5 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 disabled:bg-gray-400 transition"
-                              title="Annuler"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => startEdit(account)}
-                              className="inline-flex items-center gap-1 px-2 py-1.5 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 transition"
-                              title="Modifier le téléphone"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => sendPasswordResetEmail(account)}
-                              disabled={sendingEmail === account.id}
-                              className="inline-flex items-center gap-1 px-2 py-1.5 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-700 disabled:bg-gray-400 transition font-medium border border-orange-700"
-                              title="Réinitialiser le mot de passe"
-                            >
-                              {sendingEmail === account.id ? (
-                                <Loader className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <Send className="w-4 h-4" />
-                              )}
-                            </button>
-                          </>
-                        )}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <div className="flex gap-2">
+                        <button className="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
+                          📝
+                        </button>
+                        <button className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                          🗑️
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -489,9 +333,9 @@ export default function AccountsTab() {
         </div>
       </div>
 
-      {/* Résumé */}
-      <div className="text-sm text-gray-600 text-center">
-        Affichage de {filteredAccounts.length} compte(s) sur {stats.total} au total
+      {/* Footer avec nombre de résultats */}
+      <div className="text-center text-sm text-gray-600">
+        Affichage de {filteredAccounts.length} compte(s) sur {accounts.length}
       </div>
     </div>
   )
