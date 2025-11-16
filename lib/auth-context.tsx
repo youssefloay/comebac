@@ -110,9 +110,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserProfile(null)
         setNeedsProfileCompletion(false)
         
-        // User is not logged in - redirect to login for all pages except login, root, and register-team
+        // User is not logged in - redirect to login for all pages except public routes
         const currentPath = window.location.pathname
-        if (currentPath !== '/login' && currentPath !== '/' && currentPath !== '/register-team') {
+        const publicRoutes = [
+          '/login',
+          '/',
+          '/register-team',
+          '/register-team-new',
+          '/register-team/collaborative',
+          '/update-registration',
+          '/team-registration',
+          '/join-team',
+          '/join-team-coach'
+        ]
+        
+        const isPublicRoute = publicRoutes.some(route => currentPath.startsWith(route))
+        
+        if (!isPublicRoute) {
           router.push('/login')
         }
       }

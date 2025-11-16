@@ -492,6 +492,59 @@ export default function MaintenanceTab() {
           </button>
         </div>
 
+        {/* Nettoyer doublons users */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-orange-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">🧹</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Nettoyer doublons users</h3>
+              <p className="text-xs text-gray-600">Users basiques</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Supprime les comptes "users" basiques si l'email existe déjà en tant que joueur ou coach
+          </p>
+          <button
+            onClick={async () => {
+              if (!confirm(
+                '🧹 Nettoyer les doublons users\n\n' +
+                'Cette action va supprimer les comptes dans la collection "users" ' +
+                'si le même email existe déjà dans "playerAccounts" ou "coachAccounts".\n\n' +
+                'Continuer?'
+              )) return
+              
+              setLoading(true)
+              setMessage(null)
+              try {
+                const response = await fetch('/api/admin/clean-duplicate-users', { method: 'POST' })
+                const data = await response.json()
+                if (response.ok) {
+                  setMessage({ type: 'success', text: data.message })
+                } else {
+                  setMessage({ type: 'error', text: data.error })
+                }
+              } catch (error) {
+                setMessage({ type: 'error', text: 'Erreur de connexion' })
+              } finally {
+                setLoading(false)
+              }
+            }}
+            disabled={loading}
+            className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-400 transition font-medium text-sm"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader className="w-4 h-4 animate-spin" />
+                Traitement...
+              </span>
+            ) : (
+              "Nettoyer"
+            )}
+          </button>
+        </div>
+
         {/* Remplacer un email */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-pink-300 transition-colors">
           <div className="flex items-center gap-3 mb-4">
