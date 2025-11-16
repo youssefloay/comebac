@@ -57,7 +57,7 @@ export function generateWelcomeEmail(playerName: string, teamName: string, reset
   
   return {
     to: playerEmail,
-    subject: `Bienvenue dans ComeBac League`,
+    subject: `⚽ Bienvenue dans ComeBac League - Activez votre compte`,
     html: `
       <!DOCTYPE html>
       <html>
@@ -153,6 +153,27 @@ export function generateWelcomeEmail(playerName: string, teamName: string, reset
             color: #2563eb;
             text-decoration: underline;
           }
+          .features {
+            background: #f0fdf4;
+            border-left: 3px solid #10b981;
+            padding: 16px;
+            border-radius: 6px;
+            margin: 20px 0;
+          }
+          .features h3 {
+            color: #065f46;
+            font-size: 15px;
+            margin: 0 0 12px 0;
+          }
+          .features ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #047857;
+          }
+          .features li {
+            margin: 6px 0;
+            font-size: 14px;
+          }
           .footer {
             background: #f9fafb;
             padding: 24px;
@@ -189,36 +210,59 @@ export function generateWelcomeEmail(playerName: string, teamName: string, reset
           <div class="content">
             <p>Bonjour <strong>${playerName}</strong>,</p>
             
-            <p>Votre équipe <strong>${teamName}</strong> a été validée. Créez votre mot de passe pour accéder à votre espace joueur:</p>
+            <p>Félicitations ! Ton compte joueur a été créé pour l'équipe <strong>${teamName}</strong>.</p>
+            
+            <p>Pour accéder à ton espace joueur et profiter de toutes les fonctionnalités, clique sur le bouton ci-dessous pour créer ton mot de passe :</p>
             
             <div class="button-container">
-              <a href="${resetLink}" class="button">Créer mon mot de passe</a>
+              <a href="${resetLink}" class="button">🔐 Créer mon mot de passe</a>
             </div>
             
             <div class="alert">
               <p><strong>⏰ Ce lien expire dans 1 heure</strong></p>
             </div>
             
+            <div class="features">
+              <h3>🎯 Ce que tu pourras faire :</h3>
+              <ul>
+                <li>📊 Consulter tes statistiques personnelles (buts, passes, cartons...)</li>
+                <li>🏆 Voir le classement de ton équipe et les résultats</li>
+                <li>📅 Consulter le calendrier des matchs à venir</li>
+                <li>🎖️ Débloquer des badges et suivre ta progression</li>
+                <li>📱 Recevoir des notifications pour tes matchs</li>
+                <li>⚽ Accéder à ta carte de joueur personnalisée</li>
+              </ul>
+            </div>
+            
             <div class="info">
-              <p><strong>Lien expiré?</strong></p>
+              <p><strong>Lien expiré ?</strong></p>
               <p style="margin-top: 8px;">
-                1. Allez sur <a href="${appUrl}/login">${appUrl}/login</a><br>
-                2. Entrez votre email: <strong>${playerEmail}</strong><br>
-                3. Cliquez sur "Mot de passe oublié"
+                Pas de panique ! Tu peux toujours créer ton mot de passe :<br><br>
+                1. Va sur <a href="${appUrl}/login">${appUrl}/login</a><br>
+                2. Entre ton email : <strong>${playerEmail}</strong><br>
+                3. Clique sur "Mot de passe oublié"
               </p>
             </div>
             
             <div class="contact">
-              <p style="color: #4b5563; font-weight: 600;">Besoin d'aide?</p>
-              <p>📧 <a href="mailto:contact@comebac.com">contact@comebac.com</a></p>
-              <p>📱 <a href="https://wa.me/33634051384">WhatsApp: +33 6 34 05 13 84</a></p>
-              <p>📷 <a href="https://instagram.com/comebac.league">Instagram: @comebac.league</a></p>
+              <p style="color: #4b5563; font-weight: 600;">💬 Besoin d'aide ?</p>
+              <p>📧 Email : <a href="mailto:contact@comebac.com">contact@comebac.com</a></p>
+              <p>📱 WhatsApp : <a href="https://wa.me/33634051384">+33 6 34 05 13 84</a></p>
+              <p>📷 Instagram : <a href="https://instagram.com/comebac.league">@comebac.league</a></p>
             </div>
+            
+            <p style="margin-top: 24px; color: #4b5563;">
+              Sportivement,<br>
+              <strong>L'équipe ComeBac League</strong>
+            </p>
           </div>
           
           <div class="footer">
             <p><strong>ComeBac League</strong></p>
             <p>Championnat de Football Scolaire</p>
+            <p style="font-size: 12px; color: #9ca3af; margin-top: 8px;">
+              Si tu n'as pas demandé ce compte, ignore cet email.
+            </p>
           </div>
         </div>
       </body>
@@ -338,6 +382,27 @@ export async function sendCoachWelcomeEmail({
           color: #ea580c;
           text-decoration: underline;
         }
+        .features {
+          background: #fef2f2;
+          border-left: 3px solid #dc2626;
+          padding: 16px;
+          border-radius: 6px;
+          margin: 20px 0;
+        }
+        .features h3 {
+          color: #991b1b;
+          font-size: 15px;
+          margin: 0 0 12px 0;
+        }
+        .features ul {
+          margin: 0;
+          padding-left: 20px;
+          color: #b91c1c;
+        }
+        .features li {
+          margin: 6px 0;
+          font-size: 14px;
+        }
         .footer {
           background: #f9fafb;
           padding: 24px;
@@ -374,44 +439,60 @@ export async function sendCoachWelcomeEmail({
         <div class="content">
           <p>Bonjour <strong>${firstName} ${lastName}</strong>,</p>
           
-          <p>Votre équipe <strong>${teamName}</strong> a été validée. Créez votre mot de passe pour accéder à votre espace coach:</p>
+          <p>Félicitations ! Votre compte coach a été créé pour l'équipe <strong>${teamName}</strong>.</p>
+          
+          <p>Pour accéder à votre espace coach et gérer votre équipe, cliquez sur le bouton ci-dessous pour créer votre mot de passe :</p>
           
           <div class="button-container">
-            <a href="${resetLink}" class="button">Créer mon mot de passe</a>
+            <a href="${resetLink}" class="button">🔐 Créer mon mot de passe</a>
           </div>
           
           <div class="alert">
             <p><strong>⏰ Ce lien expire dans 1 heure</strong></p>
           </div>
           
+          <div class="features">
+            <h3>🎯 Vos fonctionnalités coach :</h3>
+            <ul>
+              <li>✅ Gérer les statuts de vos joueurs (présent, absent, blessé)</li>
+              <li>✅ Créer et valider les compositions d'équipe</li>
+              <li>📊 Consulter les statistiques détaillées de votre équipe</li>
+              <li>📅 Voir le calendrier complet des matchs</li>
+              <li>🏆 Suivre le classement et les résultats</li>
+              <li>📱 Recevoir des notifications importantes</li>
+              <li>👥 Gérer votre effectif et les informations des joueurs</li>
+            </ul>
+          </div>
+          
           <div class="info">
-            <p><strong>Lien expiré?</strong></p>
+            <p><strong>Lien expiré ?</strong></p>
             <p style="margin-top: 8px;">
+              Pas de problème ! Vous pouvez toujours créer votre mot de passe :<br><br>
               1. Allez sur <a href="${appUrl}/login">${appUrl}/login</a><br>
-              2. Entrez votre email: <strong>${email}</strong><br>
+              2. Entrez votre email : <strong>${email}</strong><br>
               3. Cliquez sur "Mot de passe oublié"
             </p>
           </div>
           
-          <p><strong>Vos fonctionnalités:</strong></p>
-          <p style="font-size: 14px; color: #6b7280;">
-            • Gérer les statuts des joueurs<br>
-            • Créer les compositions officielles<br>
-            • Consulter les statistiques<br>
-            • Voir le calendrier des matchs
-          </p>
-          
           <div class="contact">
-            <p style="color: #4b5563; font-weight: 600;">Besoin d'aide?</p>
-            <p>📧 <a href="mailto:contact@comebac.com">contact@comebac.com</a></p>
-            <p>📱 <a href="https://wa.me/33634051384">WhatsApp: +33 6 34 05 13 84</a></p>
-            <p>📷 <a href="https://instagram.com/comebac.league">Instagram: @comebac.league</a></p>
+            <p style="color: #4b5563; font-weight: 600;">💬 Besoin d'aide ?</p>
+            <p>📧 Email : <a href="mailto:contact@comebac.com">contact@comebac.com</a></p>
+            <p>📱 WhatsApp : <a href="https://wa.me/33634051384">+33 6 34 05 13 84</a></p>
+            <p>📷 Instagram : <a href="https://instagram.com/comebac.league">@comebac.league</a></p>
           </div>
+          
+          <p style="margin-top: 24px; color: #4b5563;">
+            Sportivement,<br>
+            <strong>L'équipe ComeBac League</strong>
+          </p>
         </div>
         
         <div class="footer">
           <p><strong>ComeBac League</strong></p>
           <p>Championnat de Football Scolaire</p>
+          <p style="font-size: 12px; color: #9ca3af; margin-top: 8px;">
+            Si vous n'avez pas demandé ce compte, ignorez cet email.
+          </p>
         </div>
       </div>
     </body>
@@ -420,7 +501,7 @@ export async function sendCoachWelcomeEmail({
 
   return sendEmail({
     to: email,
-    subject: `Bienvenue Coach - ComeBac League`,
+    subject: `🏆 Bienvenue Coach - Activez votre compte ComeBac League`,
     html
   })
 }
