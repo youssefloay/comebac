@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import { getPasswordResetActionCodeSettings } from '@/lib/password-reset'
 
 export async function POST(request: NextRequest) {
   try {
@@ -101,7 +102,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Générer lien de réinitialisation
-          const resetLink = await adminAuth.generatePasswordResetLink(player.email)
+          const resetLink = await adminAuth.generatePasswordResetLink(player.email, getPasswordResetActionCodeSettings(player.email))
 
           // Envoyer email
           await sendEmail({
@@ -185,7 +186,7 @@ export async function POST(request: NextRequest) {
           })
 
           // Générer lien de réinitialisation
-          const resetLink = await adminAuth.generatePasswordResetLink(player.email)
+          const resetLink = await adminAuth.generatePasswordResetLink(player.email, getPasswordResetActionCodeSettings(player.email))
 
           // Envoyer email
           await sendEmail({

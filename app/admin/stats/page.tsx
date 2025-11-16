@@ -20,7 +20,7 @@ export default function AdminStatsPage() {
   const loadStats = async () => {
     try {
       const [notifRes, fantasyRes, pageRes, generalRes] = await Promise.all([
-        fetch('/api/admin/notification-stats'),
+        fetch('/api/admin/notification-stats?type=permissions'),
         fetch('/api/admin/fantasy-stats'),
         fetch('/api/admin/page-analytics'),
         fetch('/api/admin/general-stats')

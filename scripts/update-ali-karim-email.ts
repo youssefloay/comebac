@@ -4,6 +4,7 @@
  */
 
 import { adminAuth, adminDb } from '../lib/firebase-admin'
+import { getPasswordResetActionCodeSettings } from '../lib/password-reset'
 
 async function updateAliKarimEmail() {
   const oldEmail = 'eliali@gmail.com'
@@ -124,7 +125,7 @@ async function updateAliKarimEmail() {
 
     // 6. Envoyer un email au nouveau email
     console.log('\n6️⃣ Envoi de l\'email d\'activation...')
-    const resetLink = await adminAuth.generatePasswordResetLink(newEmail)
+    const resetLink = await adminAuth.generatePasswordResetLink(newEmail, getPasswordResetActionCodeSettings(newEmail))
     
     console.log('   ✅ Lien généré:', resetLink)
     console.log('\n📧 Pour envoyer l\'email, utilisez l\'API ou le bouton dans l\'interface admin')

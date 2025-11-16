@@ -13,6 +13,7 @@ import {
   sendPasswordResetEmail
 } from 'firebase/auth'
 import { auth } from './firebase'
+import { getPasswordResetActionCodeSettings } from '@/lib/password-reset'
 import { useRouter } from 'next/navigation'
 import { getUserProfile } from './db'
 import type { UserProfile } from './types'
@@ -379,7 +380,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resetPassword = async (email: string) => {
     try {
-      await sendPasswordResetEmail(auth, email)
+      await sendPasswordResetEmail(auth, email, getPasswordResetActionCodeSettings(email))
       console.log('Email de réinitialisation envoyé à:', email)
     } catch (error) {
       console.error('Error sending password reset email:', error)

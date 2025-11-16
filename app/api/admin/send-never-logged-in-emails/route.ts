@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
 import { sendEmail } from '@/lib/email-service'
+import { getPasswordResetActionCodeSettings } from '@/lib/password-reset'
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
         const fullName = `${firstName} ${lastName}`.trim()
 
         // Générer un lien de réinitialisation de mot de passe
-        const resetLink = await adminAuth.generatePasswordResetLink(user.email!)
+        const resetLink = await adminAuth.generatePasswordResetLink(user.email!, getPasswordResetActionCodeSettings(user.email || undefined))
 
         if (dryRun) {
           results.push({

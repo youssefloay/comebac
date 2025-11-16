@@ -53,7 +53,9 @@ export async function sendEmail(data: EmailData) {
 }
 
 export function generateWelcomeEmail(playerName: string, teamName: string, resetLink: string, playerEmail: string) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.comebac.com'
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.comebac.com').replace(/\/$/, '')
+  const assetBaseUrl = (process.env.NEXT_PUBLIC_EMAIL_ASSET_URL || 'https://www.comebac.com').replace(/\/$/, '')
+  const logoUrl = `${assetBaseUrl}/comebac.png`
   
   return {
     to: playerEmail,
@@ -87,15 +89,20 @@ export function generateWelcomeEmail(playerName: string, teamName: string, reset
             text-align: center;
           }
           .logo {
-            width: 64px;
-            height: 64px;
+            width: 80px;
+            height: 80px;
             margin: 0 auto 16px;
             background: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
+            padding: 8px;
+          }
+          .logo img {
+            width: 100%;
+            height: auto;
+            display: block;
           }
           .header h1 {
             color: white;
@@ -203,7 +210,9 @@ export function generateWelcomeEmail(playerName: string, teamName: string, reset
       <body>
         <div class="container">
           <div class="header">
-            <div class="logo">⚽</div>
+            <div class="logo">
+              <img src="${logoUrl}" alt="ComeBac League" />
+            </div>
             <h1>Bienvenue dans ComeBac League</h1>
           </div>
           
@@ -285,7 +294,9 @@ export async function sendCoachWelcomeEmail({
   teamName: string
   resetLink: string
 }) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.comebac.com'
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.comebac.com').replace(/\/$/, '')
+  const assetBaseUrl = (process.env.NEXT_PUBLIC_EMAIL_ASSET_URL || 'https://www.comebac.com').replace(/\/$/, '')
+  const logoUrl = `${assetBaseUrl}/comebac.png`
   
   const html = `
     <!DOCTYPE html>
@@ -316,15 +327,20 @@ export async function sendCoachWelcomeEmail({
           text-align: center;
         }
         .logo {
-          width: 64px;
-          height: 64px;
+          width: 80px;
+          height: 80px;
           margin: 0 auto 16px;
           background: white;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 32px;
+          padding: 8px;
+        }
+        .logo img {
+          width: 100%;
+          height: auto;
+          display: block;
         }
         .header h1 {
           color: white;
@@ -432,7 +448,9 @@ export async function sendCoachWelcomeEmail({
     <body>
       <div class="container">
         <div class="header">
-          <div class="logo">🏆</div>
+          <div class="logo">
+            <img src="${logoUrl}" alt="ComeBac League" />
+          </div>
           <h1>Bienvenue Coach</h1>
         </div>
         

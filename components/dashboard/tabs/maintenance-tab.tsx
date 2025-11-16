@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Loader, Wrench, CheckCircle, AlertCircle } from "lucide-react"
 import CustomNotificationModal from "@/components/admin/CustomNotificationModal"
 
@@ -13,6 +14,7 @@ interface Team {
 }
 
 export default function MaintenanceTab() {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [teams, setTeams] = useState<Team[]>([])
@@ -321,6 +323,28 @@ export default function MaintenanceTab() {
             ) : (
               "Créer les comptes"
             )}
+          </button>
+        </div>
+
+        {/* Comptes par équipe */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-indigo-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">📋</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Comptes par équipe</h3>
+              <p className="text-xs text-gray-600">Connexion & activations</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Liste les joueurs connectés, jamais connectés ou sans compte pour chaque équipe
+          </p>
+          <button
+            onClick={() => router.push('/admin/team-accounts')}
+            className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium text-sm"
+          >
+            Ouvrir la page
           </button>
         </div>
 

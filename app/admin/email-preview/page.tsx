@@ -11,6 +11,8 @@ export default function EmailPreviewPage() {
   const teamName = isCoach ? "Les Lions" : "Les Aigles"
   const resetLink = "#"
   const appUrl = "https://www.comebac.com"
+  const assetBaseUrl = (process.env.NEXT_PUBLIC_EMAIL_ASSET_URL || "https://www.comebac.com").replace(/\/$/, "")
+  const logoUrl = `${assetBaseUrl}/comebac.png`
 
   const emailHtml = `
     <!DOCTYPE html>
@@ -41,15 +43,20 @@ export default function EmailPreviewPage() {
           text-align: center;
         }
         .logo {
-          width: 64px;
-          height: 64px;
+          width: 80px;
+          height: 80px;
           margin: 0 auto 16px;
           background: white;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 32px;
+          padding: 8px;
+        }
+        .logo img {
+          width: 100%;
+          height: auto;
+          display: block;
         }
         .header h1 {
           color: white;
@@ -136,7 +143,9 @@ export default function EmailPreviewPage() {
     <body>
       <div class="container">
         <div class="header">
-          <div class="logo">${isCoach ? '🏆' : '⚽'}</div>
+          <div class="logo">
+            <img src="${logoUrl}" alt="ComeBac League" />
+          </div>
           <h1>Bienvenue dans ComeBac League</h1>
         </div>
         

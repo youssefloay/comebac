@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 import { getAuth } from 'firebase-admin/auth'
 import { generateWelcomeEmail, sendEmail } from '@/lib/email-service'
+import { getPasswordResetActionCodeSettings } from '@/lib/password-reset'
 
 export async function POST(request: NextRequest) {
   try {
@@ -152,7 +153,7 @@ export async function POST(request: NextRequest) {
     // 7. Envoyer l'email
     console.log('📧 Envoi de l\'email...')
     try {
-      const resetLink = await auth.generatePasswordResetLink(email)
+      const resetLink = await auth.generatePasswordResetLink(email, getPasswordResetActionCodeSettings(email))
       const emailData = generateWelcomeEmail(
         `${playerData.firstName} ${playerData.lastName}`,
         finalTeamName,

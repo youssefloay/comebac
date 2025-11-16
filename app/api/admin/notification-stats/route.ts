@@ -5,8 +5,48 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const notificationId = searchParams.get('id')
+    const type = searchParams.get('type') // 'custom' ou 'permissions'
 
-    // Si un ID est fourni, retourner les détails d'une notification
+    // Stats des permissions de notifications (pour /admin/stats)
+    if (type === 'permissions') {
+      const permissionsSnap = await adminDb.collection('notificationPermissions').get()
+      
+      const stats = {
+        totalRequests: permissionsSnap.size,
+        granted: 0,
+        denied: 0
+      }
+      
+      const usersWithNotifications: any[] = []
+      
+      permissionsSnap.docs.forEach(doc => {
+        const data = doc.data()
+        if (data.permission === 'granted') {
+          stats.granted++
+          usersWithNotifications.push({
+            email: data.userId,
+            type: data.userType || 'unknown',
+            timestamp: data.timestamp?.toDate?.()?.toISOString() || new Date().toISOString()
+          })
+        } else if (data.permission === 'denied') {
+          stats.denied++
+        }
+      })
+      
+      const conversionRate = stats.totalRequests > 0 
+        ? `${Math.round((stats.granted / stats.totalRequests) * 100)}%`
+        : '0%'
+      
+      return NextResponse.json({
+        stats: {
+          ...stats,
+          conversionRate
+        },
+        usersWithNotifications
+      })
+    }
+
+    // Si un ID est fourni, retourner les détails d'une notification custom
     if (notificationId) {
       const notifDoc = await adminDb.collection('customNotifications').doc(notificationId).get()
       

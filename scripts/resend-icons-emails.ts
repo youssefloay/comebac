@@ -13,6 +13,7 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
 import { sendEmail, generateWelcomeEmail } from '../lib/email-service'
+import { getPasswordResetActionCodeSettings } from '../lib/password-reset'
 import * as readline from 'readline'
 
 // Charger les variables d'environnement
@@ -124,7 +125,7 @@ async function main() {
     for (const player of playersToEmail) {
       try {
         // Générer un nouveau lien de réinitialisation
-        const resetLink = await auth.generatePasswordResetLink(player.email)
+        const resetLink = await auth.generatePasswordResetLink(player.email, getPasswordResetActionCodeSettings(player.email))
         
         // Envoyer l'email
         const emailContent = generateWelcomeEmail(

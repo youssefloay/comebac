@@ -4,6 +4,7 @@ import { initializeApp, getApps, cert } from 'firebase-admin/app'
 import { db } from '@/lib/firebase'
 import { doc, deleteDoc } from 'firebase/firestore'
 import { sendEmail } from '@/lib/email-service'
+import { getPasswordResetActionCodeSettings } from '@/lib/password-reset'
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
 
     if (action === 'resetPassword') {
       // Générer un lien de réinitialisation de mot de passe
-      const resetLink = await auth.generatePasswordResetLink(email)
+      const resetLink = await auth.generatePasswordResetLink(email, getPasswordResetActionCodeSettings(email))
 
       // Envoyer l'email (seulement si l'email est contact@comebac.com en mode test)
       const canSendEmail = email === 'contact@comebac.com' || process.env.NODE_ENV === 'production'

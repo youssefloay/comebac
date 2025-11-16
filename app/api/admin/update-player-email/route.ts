@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
 import { generateWelcomeEmail, sendEmail } from '@/lib/email-service'
+import { getPasswordResetActionCodeSettings } from '@/lib/password-reset'
 
 export async function POST(request: NextRequest) {
   try {
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
     console.log(`✅ ${registrationsUpdated} inscription(s) mise(s) à jour`)
 
     // 5. Générer un lien et envoyer l'email
-    const resetLink = await adminAuth.generatePasswordResetLink(newEmail)
+    const resetLink = await adminAuth.generatePasswordResetLink(newEmail, getPasswordResetActionCodeSettings(newEmail))
     
     const emailData = generateWelcomeEmail(
       playerName || 'Joueur',

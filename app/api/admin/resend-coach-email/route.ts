@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import { sendCoachWelcomeEmail } from '@/lib/email-service'
+import { getPasswordResetActionCodeSettings } from '@/lib/password-reset'
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
     const auth = getAuth()
 
     // Générer le lien de réinitialisation de mot de passe
-    const resetLink = await auth.generatePasswordResetLink(email)
+    const resetLink = await auth.generatePasswordResetLink(email, getPasswordResetActionCodeSettings(email))
 
     // Envoyer l'email pour entraîneur
     const emailResult = await sendCoachWelcomeEmail({
