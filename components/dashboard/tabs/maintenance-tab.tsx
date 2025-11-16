@@ -6,6 +6,9 @@ import { Loader, Wrench, CheckCircle, AlertCircle } from "lucide-react"
 interface Team {
   id: string
   name: string
+  schoolName?: string
+  teamGrade?: string
+  school?: string
 }
 
 export default function MaintenanceTab() {
@@ -32,6 +35,9 @@ export default function MaintenanceTab() {
   useEffect(() => {
     loadTeams()
   }, [])
+
+  // Récupérer l'équipe sélectionnée
+  const selectedTeam = selectedTeamId ? teams.find(t => t.id === selectedTeamId) : null
 
   const loadTeams = async () => {
     try {
@@ -1024,6 +1030,25 @@ export default function MaintenanceTab() {
                 ))}
               </select>
             </div>
+
+            {/* Infos de l'équipe sélectionnée */}
+            {selectedTeam && (
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h3 className="font-semibold text-blue-900 mb-2">📋 Informations de l'équipe</h3>
+                <div className="space-y-1 text-sm">
+                  <p><span className="font-medium">Équipe:</span> {selectedTeam.name}</p>
+                  {(selectedTeam.schoolName || selectedTeam.school) && (
+                    <p><span className="font-medium">École:</span> {selectedTeam.schoolName || selectedTeam.school}</p>
+                  )}
+                  {selectedTeam.teamGrade && (
+                    <p><span className="font-medium">Classe:</span> {selectedTeam.teamGrade}</p>
+                  )}
+                </div>
+                <p className="text-xs text-blue-700 mt-2">
+                  ℹ️ Le joueur/coach sera ajouté à cette équipe avec ces informations communes
+                </p>
+              </div>
+            )}
 
             {/* Formulaire */}
             <div className="grid grid-cols-2 gap-4 mb-4">

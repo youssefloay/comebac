@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     const teamData = teamDoc.data()
 
-    // 1. Ajouter dans la collection players
+    // 1. Ajouter dans la collection players avec les infos de l'équipe
     await addDoc(collection(db, 'players'), {
       name: `${player.firstName} ${player.lastName}`,
       number: isCoach ? 0 : player.jerseyNumber,
@@ -36,6 +36,9 @@ export async function POST(request: NextRequest) {
       height: player.height || 0,
       tshirtSize: player.tshirtSize || 'M',
       strongFoot: player.foot === 'Droitier' ? 'Droit' : player.foot === 'Gaucher' ? 'Gauche' : 'Ambidextre',
+      // Auto-remplir les infos communes de l'équipe
+      school: teamData.schoolName || teamData.school || '',
+      grade: teamData.teamGrade || '',
       overall: isCoach ? 0 : 75,
       seasonStats: {
         goals: 0,
@@ -66,27 +69,63 @@ export async function POST(request: NextRequest) {
           birthDate: player.birthDate || '',
           teamId: teamId,
           teamName: teamData.name,
+          // Auto-remplir les infos communes de l'équipe
+          schoolName: teamData.schoolName || teamData.school || '',
+          grade: teamData.teamGrade || '',
           photo: '',
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         })
 
-        // Envoyer email coach
-        const coachResponse = await fetch(`${request.nextUrl.origin}/api/admin/create-coach-account`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: player.email,
-            firstName: player.firstName,
-            lastName: player.lastName,
-            teamName: teamData.name
+        console.log('✅ Coach account créé, envoi email...')
+
+        // Envoyer email coach via l'API générique
+        try {
+          const { adminAuth } = await import('@/lib/firebase-admin')
+          const { sendEmail } = await import('@/lib/email-service')
+          
+          // Créer compte Firebase Auth
+          let userRecord
+          try {
+            userRecord = await adminAuth.getUserByEmail(player.email)
+          } catch (error: any) {
+            if (error.code === 'auth/user-not-found') {
+              userRecord = await adminAuth.createUser({
+                email: player.email,
+                password: Math.random().toString(36).slice(-12) + 'Aa1!',
+                displayName: `${player.firstName} ${player.lastName}`
+              })
+            } else {
+              throw error
+            }
+          }
+
+          // Générer lien de réinitialisation
+          const resetLink = await adminAuth.generatePasswordResetLink(player.email)
+
+          // Envoyer email
+          await sendEmail({
+            to: player.email,
+            subject: '🏆 Bienvenue Coach sur ComeBac League!',
+            html: `
+              <!DOCTYPE html>
+              <html>
+              <body style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2>Bienvenue ${player.firstName}!</h2>
+                <p>Votre compte coach a été créé pour l'équipe <strong>${teamData.name}</strong>.</p>
+                <p>Cliquez sur le lien ci-dessous pour créer votre mot de passe:</p>
+                <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background: #F97316; color: white; text-decoration: none; border-radius: 8px; margin: 20px 0;">
+                  Créer mon mot de passe
+                </a>
+                <p style="color: #666; font-size: 14px;">Ce lien expire dans 1 heure.</p>
+              </body>
+              </html>
+            `
           })
-        })
-        
-        if (!coachResponse.ok) {
-          const error = await coachResponse.json()
-          console.error('Erreur création compte coach:', error)
-          throw new Error(`Erreur création compte coach: ${error.error}`)
+          
+          console.log('✅ Email coach envoyé')
+        } catch (emailError) {
+          console.error('❌ Erreur envoi email coach:', emailError)
         }
       }
     } else {
@@ -98,19 +137,80 @@ export async function POST(request: NextRequest) {
       const playerSnap = await getDocs(playerQuery)
 
       if (playerSnap.empty) {
-        const playerResponse = await fetch(`${request.nextUrl.origin}/api/admin/create-player-accounts`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            teamId: teamId,
-            players: [player]
-          })
-        })
+        console.log('✅ Création compte joueur et envoi email...')
         
-        if (!playerResponse.ok) {
-          const error = await playerResponse.json()
-          console.error('Erreur création compte joueur:', error)
-          throw new Error(`Erreur création compte joueur: ${error.error}`)
+        try {
+          const { adminAuth } = await import('@/lib/firebase-admin')
+          const { adminDb } = await import('@/lib/firebase-admin')
+          const { sendEmail } = await import('@/lib/email-service')
+          
+          // Créer compte Firebase Auth
+          let userRecord
+          try {
+            userRecord = await adminAuth.getUserByEmail(player.email)
+          } catch (error: any) {
+            if (error.code === 'auth/user-not-found') {
+              userRecord = await adminAuth.createUser({
+                email: player.email,
+                password: Math.random().toString(36).slice(-12) + 'Aa1!',
+                displayName: `${player.firstName} ${player.lastName}`
+              })
+            } else {
+              throw error
+            }
+          }
+
+          // Créer dans playerAccounts avec les infos de l'équipe
+          await adminDb.collection('playerAccounts').doc(userRecord.uid).set({
+            uid: userRecord.uid,
+            email: player.email,
+            firstName: player.firstName,
+            lastName: player.lastName,
+            nickname: player.nickname || '',
+            phone: player.phone || '',
+            position: player.position,
+            jerseyNumber: player.jerseyNumber,
+            teamId: teamId,
+            teamName: teamData.name,
+            // Auto-remplir les infos communes de l'équipe
+            schoolName: teamData.schoolName || teamData.school || '',
+            grade: teamData.teamGrade || '',
+            birthDate: player.birthDate || '',
+            height: player.height || 0,
+            tshirtSize: player.tshirtSize || 'M',
+            foot: player.foot,
+            role: 'player',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          })
+
+          // Générer lien de réinitialisation
+          const resetLink = await adminAuth.generatePasswordResetLink(player.email)
+
+          // Envoyer email
+          await sendEmail({
+            to: player.email,
+            subject: '🎉 Bienvenue sur ComeBac League!',
+            html: `
+              <!DOCTYPE html>
+              <html>
+              <body style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2>Bienvenue ${player.firstName}!</h2>
+                <p>Ton compte joueur a été créé pour l'équipe <strong>${teamData.name}</strong>.</p>
+                <p>Clique sur le lien ci-dessous pour créer ton mot de passe:</p>
+                <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background: #10b981; color: white; text-decoration: none; border-radius: 8px; margin: 20px 0;">
+                  Créer mon mot de passe
+                </a>
+                <p style="color: #666; font-size: 14px;">Ce lien expire dans 1 heure.</p>
+              </body>
+              </html>
+            `
+          })
+          
+          console.log('✅ Email joueur envoyé')
+        } catch (emailError) {
+          console.error('❌ Erreur création compte joueur:', emailError)
+          throw emailError
         }
       }
     }
