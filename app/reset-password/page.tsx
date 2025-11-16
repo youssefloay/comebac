@@ -1,14 +1,12 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { auth } from '@/lib/firebase'
 import { verifyPasswordResetCode, confirmPasswordReset } from 'firebase/auth'
 import { CheckCircle2, LockKeyhole, Loader2 } from 'lucide-react'
 
 export default function ResetPasswordPage() {
-  const searchParams = useSearchParams()
   const [status, setStatus] = useState<'checking' | 'ready' | 'success' | 'error'>('checking')
   const [email, setEmail] = useState('')
   const [oobCode, setOobCode] = useState<string | null>(null)
@@ -18,6 +16,8 @@ export default function ResetPasswordPage() {
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    const searchParams = new URLSearchParams(window.location.search)
     const code = searchParams.get('oobCode')
     if (!code) {
       setError('Lien invalide. Veuillez demander un nouveau mail de réinitialisation.')
