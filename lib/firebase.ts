@@ -36,10 +36,11 @@ try {
   db = getFirestore(app);
   console.log('Using existing Firestore instance');
 } catch (error) {
-  // Si ça échoue, initialiser avec le cache persistant
+  // Si ça échoue, initialiser avec le cache persistant et ignorer les undefined
   try {
     db = initializeFirestore(app, {
-      localCache: persistentLocalCache()
+      localCache: persistentLocalCache(),
+      ignoreUndefinedProperties: true
     });
     console.log('Firestore initialized successfully with persistent cache');
   } catch (initError) {

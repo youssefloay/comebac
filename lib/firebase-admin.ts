@@ -15,3 +15,8 @@ if (!getApps().length) {
 
 export const adminAuth = getAuth()
 export const adminDb = getFirestore()
+
+// Configurer Firestore pour ignorer les propriétés undefined
+adminDb.settings({
+  ignoreUndefinedProperties: true
+})
