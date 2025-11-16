@@ -46,6 +46,8 @@ interface Registration {
   }
   players: Player[]
   status: 'pending' | 'approved' | 'rejected' | 'pending_players' | 'pending_validation'
+  registrationMode?: 'collaborative' | 'complete'
+  inviteToken?: string
   submittedAt: any
   processedAt?: any
   processedBy?: string
@@ -461,9 +463,13 @@ export default function TeamRegistrationsPage() {
   }
 
   const removePlayer = (index: number) => {
-    if (!editedRegistration || editedRegistration.players.length <= 7) {
-      alert('Une équipe doit avoir au minimum 7 joueurs')
-      return
+    if (!editedRegistration) return
+    
+    // Permettre de descendre jusqu'à 6 joueurs minimum
+    if (editedRegistration.players.length <= 6) {
+      if (!confirm('⚠️ L\'équipe aura moins de 7 joueurs. Continuer quand même ?')) {
+        return
+      }
     }
     
     const newPlayers = editedRegistration.players.filter((_, i) => i !== index)
@@ -543,7 +549,15 @@ export default function TeamRegistrationsPage() {
   }
 
   const approveRegistration = async (registration: Registration) => {
-    if (!confirm(`Approuver l'équipe "${registration.teamName}" ?\n\nCela va créer automatiquement des comptes joueurs et envoyer des emails pour créer leur mot de passe.`)) return
+    // Vérifier le nombre de joueurs
+    const playerCount = registration.players.length
+    let confirmMessage = `Approuver l'équipe "${registration.teamName}" avec ${playerCount} joueur(s) ?\n\nCela va créer automatiquement des comptes joueurs et envoyer des emails pour créer leur mot de passe.`
+    
+    if (playerCount < 7) {
+      confirmMessage = `⚠️ ATTENTION: L'équipe "${registration.teamName}" n'a que ${playerCount} joueur(s) (minimum recommandé: 7).\n\nVoulez-vous quand même approuver cette équipe ?\n\nDes comptes seront créés et des emails envoyés.`
+    }
+    
+    if (!confirm(confirmMessage)) return
 
     setProcessing(true)
     setMessage(null)
@@ -963,6 +977,23 @@ export default function TeamRegistrationsPage() {
                   </p>
                   <p className="text-xs text-gray-600">{registration.captain.email}</p>
                   <p className="text-xs text-gray-600">{registration.captain.phone}</p>
+                  
+                  {/* Lien collaboratif */}
+                  {registration.registrationMode === 'collaborative' && registration.inviteToken && (
+                    <div className="mt-2">
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation()
+                          const link = `${window.location.origin}/team-registration/${registration.inviteToken}/status`
+                          await navigator.clipboard.writeText(link)
+                          alert(`✅ Lien collaboratif copié!\n\n${link}`)
+                        }}
+                        className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full hover:bg-green-200 transition"
+                      >
+                        🔗 Copier lien collaboratif
+                      </button>
+                    </div>
+                  )}
                   
                   {(registration as any).updateToken && (registration as any).updateTokenActive && (
                     <div className="mt-2 flex items-center gap-2">
