@@ -23,33 +23,27 @@ export async function POST(request: NextRequest) {
         let userType = 'unknown'
         let teamName = 'votre équipe'
 
-        // Chercher dans les joueurs
-        const playerDoc = await adminDb.collection('players').doc(user.uid).get()
-        if (playerDoc.exists) {
-          userData = playerDoc.data()
+        // Chercher dans playerAccounts
+        const playerAccountsQuery = await adminDb.collection('playerAccounts')
+          .where('email', '==', user.email)
+          .limit(1)
+          .get()
+        
+        if (!playerAccountsQuery.empty) {
+          userData = playerAccountsQuery.docs[0].data()
           userType = 'player'
-          
-          // Récupérer le nom de l'équipe
-          if (userData?.teamId) {
-            const teamDoc = await adminDb.collection('teams').doc(userData.teamId).get()
-            if (teamDoc.exists) {
-              teamName = teamDoc.data()?.name || teamName
-            }
-          }
+          teamName = userData?.teamName || teamName
         } else {
-          // Chercher dans les coaches
-          const coachDoc = await adminDb.collection('coaches').doc(user.uid).get()
-          if (coachDoc.exists) {
-            userData = coachDoc.data()
+          // Chercher dans coachAccounts
+          const coachAccountsQuery = await adminDb.collection('coachAccounts')
+            .where('email', '==', user.email)
+            .limit(1)
+            .get()
+          
+          if (!coachAccountsQuery.empty) {
+            userData = coachAccountsQuery.docs[0].data()
             userType = 'coach'
-            
-            // Récupérer le nom de l'équipe
-            if (userData?.teamId) {
-              const teamDoc = await adminDb.collection('teams').doc(userData.teamId).get()
-              if (teamDoc.exists) {
-                teamName = teamDoc.data()?.name || teamName
-              }
-            }
+            teamName = userData?.teamName || teamName
           }
         }
 

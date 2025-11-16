@@ -775,40 +775,43 @@ export default function MaintenanceTab() {
             Envoie un email de rappel à tous les comptes qui ne se sont jamais connectés
           </p>
           <button
-            onClick={async () => {
-              if (!confirm(
-                '📧 Envoyer des emails de rappel\n\n' +
-                'Cette action va envoyer un email à tous les comptes (joueurs et coaches) qui ne se sont jamais connectés.\n\n' +
-                'L\'email contiendra:\n' +
-                '• Un lien pour créer leur mot de passe\n' +
-                '• Les informations de contact (email, WhatsApp, Instagram)\n\n' +
-                'Continuer?'
-              )) return
-              
-              setLoading(true)
-              setMessage(null)
-              try {
-                const response = await fetch('/api/admin/send-never-logged-in-emails', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ dryRun: false })
-                })
-                const data = await response.json()
-                if (response.ok) {
-                  const sent = data.results.filter((r: any) => r.status === 'sent').length
-                  const failed = data.results.filter((r: any) => r.status === 'failed').length
-                  setMessage({ 
-                    type: 'success', 
-                    text: `✅ ${sent} email(s) envoyé(s) sur ${data.totalFound} compte(s) jamais connecté(s)${failed > 0 ? ` (${failed} échec(s))` : ''}`
+            onClick={() => {
+              // Utiliser setTimeout pour éviter de bloquer l'UI
+              setTimeout(async () => {
+                if (!confirm(
+                  '📧 Envoyer des emails de rappel\n\n' +
+                  'Cette action va envoyer un email à tous les comptes (joueurs et coaches) qui ne se sont jamais connectés.\n\n' +
+                  'L\'email contiendra:\n' +
+                  '• Un lien pour créer leur mot de passe\n' +
+                  '• Les informations de contact (email, WhatsApp, Instagram)\n\n' +
+                  'Continuer?'
+                )) return
+                
+                setLoading(true)
+                setMessage(null)
+                try {
+                  const response = await fetch('/api/admin/send-never-logged-in-emails', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dryRun: false })
                   })
-                } else {
-                  setMessage({ type: 'error', text: data.error })
+                  const data = await response.json()
+                  if (response.ok) {
+                    const sent = data.results.filter((r: any) => r.status === 'sent').length
+                    const failed = data.results.filter((r: any) => r.status === 'failed').length
+                    setMessage({ 
+                      type: 'success', 
+                      text: `✅ ${sent} email(s) envoyé(s) sur ${data.totalFound} compte(s) jamais connecté(s)${failed > 0 ? ` (${failed} échec(s))` : ''}`
+                    })
+                  } else {
+                    setMessage({ type: 'error', text: data.error })
+                  }
+                } catch (error) {
+                  setMessage({ type: 'error', text: 'Erreur de connexion' })
+                } finally {
+                  setLoading(false)
                 }
-              } catch (error) {
-                setMessage({ type: 'error', text: 'Erreur de connexion' })
-              } finally {
-                setLoading(false)
-              }
+              }, 0)
             }}
             disabled={loading}
             className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition font-medium text-sm"
