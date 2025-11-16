@@ -70,14 +70,26 @@ export default function NotificationTrackingPage() {
 
   const formatDate = (timestamp: any) => {
     if (!timestamp) return 'N/A'
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
-    return new Intl.DateTimeFormat('fr-FR', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date)
+    
+    try {
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
+      
+      // Vérifier si la date est valide
+      if (isNaN(date.getTime())) {
+        return 'Date invalide'
+      }
+      
+      return new Intl.DateTimeFormat('fr-FR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date)
+    } catch (error) {
+      console.error('Erreur formatage date:', error, timestamp)
+      return 'Date invalide'
+    }
   }
 
   const getPriorityColor = (priority: string) => {
