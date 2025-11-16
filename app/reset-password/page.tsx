@@ -35,7 +35,7 @@ export default function ResetPasswordPage() {
         setError('Ce lien a expiré ou a déjà été utilisé. Merci de recommencer la procédure depuis l\'application.')
         setStatus('error')
       })
-  }, [searchParams])
+  }, [])
 
   const passwordsMatch = password === confirmPassword
   const isPasswordStrong = password.length >= 8
