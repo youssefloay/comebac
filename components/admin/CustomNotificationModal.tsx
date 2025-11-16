@@ -200,7 +200,7 @@ export default function CustomNotificationModal({ isOpen, onClose, teams }: Cust
               >
                 <Users className="w-5 h-5 text-blue-600 mb-2" />
                 <div className="font-medium">Tout le monde</div>
-                <div className="text-xs text-gray-600">Joueurs + Coaches</div>
+                <div className="text-xs text-gray-600">Tous les comptes</div>
               </button>
 
               <button
@@ -227,6 +227,19 @@ export default function CustomNotificationModal({ isOpen, onClose, teams }: Cust
                 <Shield className="w-5 h-5 text-orange-600 mb-2" />
                 <div className="font-medium">Tous les coaches</div>
                 <div className="text-xs text-gray-600">Uniquement coaches</div>
+              </button>
+
+              <button
+                onClick={() => setFormData({ ...formData, targetType: 'users' })}
+                className={`p-4 border-2 rounded-lg text-left transition ${
+                  formData.targetType === 'users'
+                    ? 'border-cyan-500 bg-cyan-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <User className="w-5 h-5 text-cyan-600 mb-2" />
+                <div className="font-medium">Utilisateurs basiques</div>
+                <div className="text-xs text-gray-600">Collection users</div>
               </button>
 
               <button

@@ -94,6 +94,7 @@ export default function NotificationTrackingPage() {
       case 'all': return 'Tout le monde'
       case 'players': return 'Joueurs'
       case 'coaches': return 'Coaches'
+      case 'users': return 'Utilisateurs'
       case 'team': return 'Une équipe'
       case 'specific': return 'Spécifique'
       default: return type
@@ -288,9 +289,13 @@ export default function NotificationTrackingPage() {
                         </div>
                         <div className="text-right">
                           <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            recipient.type === 'coach' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
+                            recipient.type === 'coach' ? 'bg-orange-100 text-orange-800' : 
+                            recipient.type === 'player' ? 'bg-blue-100 text-blue-800' :
+                            'bg-gray-100 text-gray-800'
                           }`}>
-                            {recipient.type === 'coach' ? '🏆 Coach' : '⚽ Joueur'}
+                            {recipient.type === 'coach' ? '🏆 Coach' : 
+                             recipient.type === 'player' ? '⚽ Joueur' : 
+                             '👤 User'}
                           </span>
                           {recipient.teamName && (
                             <p className="text-xs text-gray-500 mt-1">{recipient.teamName}</p>

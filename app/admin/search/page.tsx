@@ -456,7 +456,47 @@ export default function AdminSearchPage() {
                 {isEditing && (
                   <div className="mt-4 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-lg">
                     <p className="text-sm text-yellow-800 font-medium">
-                      ⚠️ <strong>Attention:</strong> Les modifications seront appliquées dans TOUTES les collections de la base de données (coachAccounts, playerAccounts, users, userProfiles, teams, lineups, etc.)
+                      ⚠️ <strong>Attention:</strong> Les modifications seront appliquées dans TOUTES les collections de la base de données (coachAccounts, playerAccounts, users, userProfiles, teams, lineups, results, statistics, etc.)
+                    </p>
+                  </div>
+                )}
+
+                {/* Informations de synchronisation */}
+                {!isEditing && (
+                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800 font-medium mb-2">
+                      🔄 <strong>Synchronisation automatique:</strong>
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                        {selectedResult.type === 'coach' ? 'coachAccounts' : selectedResult.type === 'player' ? 'playerAccounts' : 'users'}
+                      </span>
+                      {selectedResult.uid && (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                          userProfiles
+                        </span>
+                      )}
+                      {selectedResult.teamId && (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                          teams
+                        </span>
+                      )}
+                      {selectedResult.type === 'player' && (
+                        <>
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                            lineups
+                          </span>
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                            statistics
+                          </span>
+                        </>
+                      )}
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                        results
+                      </span>
+                    </div>
+                    <p className="text-xs text-blue-700 mt-2">
+                      Toute modification sera propagée automatiquement dans ces collections
                     </p>
                   </div>
                 )}
@@ -473,7 +513,7 @@ export default function AdminSearchPage() {
               <div>
                 <p className="text-sm text-gray-600">Entraîneurs</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {searchData.filter(d => d.type === 'coach').length}
+                  {searchData.filter((d: SearchResult) => d.type === 'coach').length}
                 </p>
               </div>
             </div>
@@ -484,7 +524,7 @@ export default function AdminSearchPage() {
               <div>
                 <p className="text-sm text-gray-600">Joueurs</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {searchData.filter(d => d.type === 'player').length}
+                  {searchData.filter((d: SearchResult) => d.type === 'player').length}
                 </p>
               </div>
             </div>
@@ -495,7 +535,7 @@ export default function AdminSearchPage() {
               <div>
                 <p className="text-sm text-gray-600">Admins</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {searchData.filter(d => d.type === 'admin').length}
+                  {searchData.filter((d: SearchResult) => d.type === 'admin').length}
                 </p>
               </div>
             </div>
@@ -506,7 +546,7 @@ export default function AdminSearchPage() {
               <div>
                 <p className="text-sm text-gray-600">Utilisateurs</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {searchData.filter(d => d.type === 'user').length}
+                  {searchData.filter((d: SearchResult) => d.type === 'user').length}
                 </p>
               </div>
             </div>

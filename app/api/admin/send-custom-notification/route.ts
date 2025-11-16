@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const { 
       title, 
       message, 
-      targetType, // 'all', 'players', 'coaches', 'team', 'specific'
+      targetType, // 'all', 'players', 'coaches', 'users', 'team', 'specific'
       teamId,
       specificEmails,
       priority, // 'low', 'normal', 'high'
@@ -51,6 +51,21 @@ export async function POST(request: NextRequest) {
             name: `${data.firstName} ${data.lastName}`,
             type: 'coach',
             teamName: data.teamName
+          })
+        }
+      })
+    }
+
+    if (targetType === 'all' || targetType === 'users') {
+      const usersSnap = await adminDb.collection('users').get()
+      usersSnap.docs.forEach(doc => {
+        const data = doc.data()
+        if (data.email) {
+          recipients.push({
+            email: data.email,
+            name: data.displayName || data.name || data.email,
+            type: 'user',
+            teamName: undefined
           })
         }
       })
@@ -122,6 +137,23 @@ export async function POST(request: NextRequest) {
             name: `${data.firstName} ${data.lastName}`,
             type: 'coach',
             teamName: data.teamName
+          })
+          continue
+        }
+
+        // Chercher dans users
+        const userSnap = await adminDb.collection('users')
+          .where('email', '==', email)
+          .limit(1)
+          .get()
+        
+        if (!userSnap.empty) {
+          const data = userSnap.docs[0].data()
+          recipients.push({
+            email: data.email,
+            name: data.displayName || data.name || data.email,
+            type: 'user',
+            teamName: undefined
           })
         }
       }
