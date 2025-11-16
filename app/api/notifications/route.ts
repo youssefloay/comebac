@@ -77,7 +77,35 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    await notificationRef.update({ read: true })
+    await notificationRef.update({ read: true, readAt: new Date() })
+
+    // Si c'est une notification custom, mettre à jour aussi le statut dans customNotifications
+    const notificationData = notificationDoc.data()
+    if (notificationData?.customNotificationId) {
+      const customNotifRef = adminDb.collection('customNotifications').doc(notificationData.customNotificationId)
+      const customNotifDoc = await customNotifRef.get()
+      
+      if (customNotifDoc.exists) {
+        const customData = customNotifDoc.data()!
+        const recipients = customData.recipients || []
+        
+        // Trouver et mettre à jour le destinataire
+        const updatedRecipients = recipients.map((r: any) => {
+          if (r.email === userId || r.email === notificationData.userId) {
+            return { ...r, read: true, readAt: new Date() }
+          }
+          return r
+        })
+        
+        // Calculer le nouveau readCount
+        const readCount = updatedRecipients.filter((r: any) => r.read).length
+        
+        await customNotifRef.update({
+          recipients: updatedRecipients,
+          readCount
+        })
+      }
+    }
 
     return NextResponse.json({
       success: true,

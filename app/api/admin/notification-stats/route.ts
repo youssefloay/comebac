@@ -6,43 +6,64 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const notificationId = searchParams.get('id')
 
+    // Si un ID est fourni, retourner les détails d'une notification
     if (notificationId) {
-      // Récupérer les stats d'une notification spécifique
       const notifDoc = await adminDb.collection('customNotifications').doc(notificationId).get()
       
       if (!notifDoc.exists) {
-        return NextResponse.json({ error: 'Notification non trouvée' }, { status: 404 })
+        return NextResponse.json(
+          { error: 'Notification non trouvée' },
+          { status: 404 }
+        )
       }
 
-      const data = notifDoc.data()
+      const data = notifDoc.data()!
       
-      // Compter les lectures
-      const readCount = data?.recipients?.filter((r: any) => r.read).length || 0
-      const totalCount = data?.recipientCount || 0
+      // Calculer les stats de lecture
+      const recipients = data.recipients || []
+      const readCount = recipients.filter((r: any) => r.read).length
+      const unreadCount = recipients.length - readCount
+      const readPercentage = recipients.length > 0 
+        ? Math.round((readCount / recipients.length) * 100) 
+        : 0
 
       return NextResponse.json({
         id: notifDoc.id,
-        title: data?.title,
-        message: data?.message,
-        createdAt: data?.createdAt,
-        recipientCount: totalCount,
+        title: data.title,
+        message: data.message,
+        targetType: data.targetType,
+        priority: data.priority,
+        createdAt: data.createdAt,
+        recipientCount: recipients.length,
         readCount,
-        unreadCount: totalCount - readCount,
-        readPercentage: totalCount > 0 ? Math.round((readCount / totalCount) * 100) : 0,
-        recipients: data?.recipients || []
+        unreadCount,
+        readPercentage,
+        recipients: recipients.map((r: any) => ({
+          email: r.email,
+          name: r.name,
+          type: r.type,
+          teamName: r.teamName,
+          read: r.read,
+          readAt: r.readAt
+        }))
       })
     }
 
-    // Récupérer toutes les notifications
-    const notificationsSnap = await adminDb.collection('customNotifications')
+    // Sinon, retourner la liste de toutes les notifications
+    const notificationsSnap = await adminDb
+      .collection('customNotifications')
       .orderBy('createdAt', 'desc')
       .limit(50)
       .get()
 
     const notifications = notificationsSnap.docs.map(doc => {
       const data = doc.data()
-      const readCount = data.recipients?.filter((r: any) => r.read).length || 0
-      const totalCount = data.recipientCount || 0
+      const recipients = data.recipients || []
+      const readCount = recipients.filter((r: any) => r.read).length
+      const unreadCount = recipients.length - readCount
+      const readPercentage = recipients.length > 0 
+        ? Math.round((readCount / recipients.length) * 100) 
+        : 0
 
       return {
         id: doc.id,
@@ -51,15 +72,14 @@ export async function GET(request: NextRequest) {
         targetType: data.targetType,
         priority: data.priority,
         createdAt: data.createdAt,
-        recipientCount: totalCount,
+        recipientCount: recipients.length,
         readCount,
-        unreadCount: totalCount - readCount,
-        readPercentage: totalCount > 0 ? Math.round((readCount / totalCount) * 100) : 0
+        unreadCount,
+        readPercentage
       }
     })
 
     return NextResponse.json({
-      success: true,
       notifications
     })
 
