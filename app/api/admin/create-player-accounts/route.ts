@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
-import { sendEmail } from '@/lib/email-service'
+import { generateWelcomeEmail, sendEmail } from '@/lib/email-service'
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,31 +55,31 @@ export async function POST(request: NextRequest) {
 
         console.log(`✅ Document playerAccounts créé`)
 
-        // 3. Générer le lien de réinitialisation de mot de passe
+        // 3. Récupérer le nom de l'équipe
+        let teamName = 'votre équipe'
+        try {
+          const teamDoc = await firestore.collection('teams').doc(teamId).get()
+          if (teamDoc.exists) {
+            teamName = teamDoc.data()?.name || teamName
+          } else {
+            const regDoc = await firestore.collection('teamRegistrations').doc(teamId).get()
+            if (regDoc.exists) {
+              teamName = regDoc.data()?.teamName || teamName
+            }
+          }
+        } catch (error) {
+          console.log('⚠️ Impossible de récupérer le nom de l\'équipe')
+        }
+
+        // 4. Générer le lien de réinitialisation de mot de passe
         const resetLink = await auth.generatePasswordResetLink(player.email)
 
         console.log(`✅ Lien de réinitialisation généré`)
 
-        // 4. Envoyer l'email
-        await sendEmail({
-          to: player.email,
-          subject: '🎉 Bienvenue sur ComeBac League!',
-          html: `
-            <!DOCTYPE html>
-            <html>
-            <body style="font-family: Arial, sans-serif; padding: 20px;">
-              <h2>Bienvenue ${player.firstName}!</h2>
-              <p>Ton compte joueur a été créé avec succès.</p>
-              <p><strong>Email:</strong> ${player.email}</p>
-              <p>Clique sur le lien ci-dessous pour créer ton mot de passe:</p>
-              <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background: #10b981; color: white; text-decoration: none; border-radius: 8px; margin: 20px 0;">
-                Créer mon mot de passe
-              </a>
-              <p style="color: #666; font-size: 14px;">Ce lien expire dans 1 heure.</p>
-            </body>
-            </html>
-          `
-        })
+        // 5. Envoyer l'email avec le nouveau template
+        const playerName = `${player.firstName} ${player.lastName}`
+        const emailData = generateWelcomeEmail(playerName, teamName, resetLink, player.email)
+        await sendEmail(emailData)
 
         console.log(`✅ Email envoyé à ${player.email}`)
 

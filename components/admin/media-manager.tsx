@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import type { Team, Player } from "@/lib/types"
 import { updateTeamLogo, updatePlayerProfile } from "@/lib/db"
+import { ImageCropper } from "./ImageCropper"
 
 interface MediaManagerProps {
   teams: Team[]
@@ -31,44 +32,73 @@ export function MediaManager({ teams, players, onUpdate }: MediaManagerProps) {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
   const [uploading, setUploading] = useState(false)
   const [editingStats, setEditingStats] = useState(false)
+  const [cropperImage, setCropperImage] = useState<string | null>(null)
+  const [cropperType, setCropperType] = useState<'team' | 'player'>('team')
+  const [cropperTarget, setCropperTarget] = useState<Team | Player | null>(null)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Simuler l'upload d'image (en production, utiliser un service comme Cloudinary, AWS S3, etc.)
-  const handleImageUpload = async (file: File): Promise<string> => {
-    // Ici, vous devriez implémenter l'upload vers votre service de stockage
-    // Pour la démo, on retourne une URL placeholder
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(`https://via.placeholder.com/400x400?text=${encodeURIComponent(file.name)}`)
-      }, 1000)
-    })
+  // Upload d'image vers Firebase Storage
+  const handleImageUpload = async (file: File, type: 'team' | 'player', targetId: string): Promise<string> => {
+    const { uploadTeamLogo: uploadTeam, uploadPlayerPhoto: uploadPlayer } = await import('@/lib/upload-image')
+    
+    if (type === 'team') {
+      return await uploadTeam(targetId, file)
+    } else {
+      return await uploadPlayer(targetId, file)
+    }
+  }
+
+  const handleFileSelect = (file: File, type: 'team' | 'player', target: Team | Player) => {
+    console.log('📸 File selected:', file.name, type)
+    const reader = new FileReader()
+    reader.onload = () => {
+      const imageData = reader.result as string
+      console.log('✅ Image loaded, opening cropper...')
+      setCropperImage(imageData)
+      setCropperType(type)
+      setCropperTarget(target)
+    }
+    reader.onerror = (error) => {
+      console.error('❌ Error reading file:', error)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    setUploading(true)
+    setCropperImage(null)
+    
+    try {
+      // Convertir le blob en File
+      const file = new File([croppedBlob], 'cropped-image.jpg', { type: 'image/jpeg' })
+      
+      if (cropperType === 'team' && cropperTarget) {
+        const team = cropperTarget as Team
+        const imageUrl = await handleImageUpload(file, 'team', team.id)
+        await updateTeamLogo(team.id, imageUrl)
+      } else if (cropperType === 'player' && cropperTarget) {
+        const player = cropperTarget as Player
+        const imageUrl = await handleImageUpload(file, 'player', player.id)
+        await updatePlayerProfile(player.id, { photo: imageUrl })
+      }
+      
+      onUpdate()
+    } catch (error) {
+      console.error("Error uploading image:", error)
+      alert('Erreur lors de l\'upload de l\'image. Vérifiez la console.')
+    } finally {
+      setUploading(false)
+      setCropperTarget(null)
+    }
   }
 
   const handleTeamLogoUpload = async (team: Team, file: File) => {
-    setUploading(true)
-    try {
-      const logoUrl = await handleImageUpload(file)
-      await updateTeamLogo(team.id, logoUrl)
-      onUpdate()
-    } catch (error) {
-      console.error("Error uploading team logo:", error)
-    } finally {
-      setUploading(false)
-    }
+    handleFileSelect(file, 'team', team)
   }
 
   const handlePlayerPhotoUpload = async (player: Player, file: File) => {
-    setUploading(true)
-    try {
-      const photoUrl = await handleImageUpload(file)
-      await updatePlayerProfile(player.id, { photo: photoUrl })
-      onUpdate()
-    } catch (error) {
-      console.error("Error uploading player photo:", error)
-    } finally {
-      setUploading(false)
-    }
+    handleFileSelect(file, 'player', player)
   }
 
   const handlePlayerStatsUpdate = async (player: Player, stats: any) => {
@@ -301,6 +331,20 @@ export function MediaManager({ teams, players, onUpdate }: MediaManagerProps) {
             />
           </motion.div>
         </div>
+      )}
+
+      {/* Image Cropper */}
+      {cropperImage && (
+        <ImageCropper
+          image={cropperImage}
+          onCropComplete={handleCropComplete}
+          onCancel={() => {
+            setCropperImage(null)
+            setCropperTarget(null)
+          }}
+          aspectRatio={1}
+          shape="round"
+        />
       )}
     </div>
   )

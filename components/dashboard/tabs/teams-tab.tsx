@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { Plus, Trash2, Edit2, AlertCircle, X, Users, TrendingUp, Calendar } from "lucide-react"
 // Removed old imports - using API endpoints instead
 import type { Team } from "@/lib/types"
+import { ImageCropper } from "@/components/admin/ImageCropper"
 
 interface Player {
   id: string
@@ -57,6 +58,7 @@ export default function TeamsTab() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
+  const [cropperImage, setCropperImage] = useState<string | null>(null)
   const [teamPlayers, setTeamPlayers] = useState<Player[]>([])
   const [teamStats, setTeamStats] = useState<TeamStats | null>(null)
   const [teamMatches, setTeamMatches] = useState<Match[]>([])
@@ -267,18 +269,23 @@ export default function TeamsTab() {
       return
     }
 
-    // Validate file size (max 500KB for base64)
-    if (file.size > 500 * 1024) {
-      setError('L\'image ne doit pas dépasser 500KB')
-      return
-    }
-
-    setUploadingLogo(true)
     setError(null)
+
+    // Ouvrir le cropper
+    const reader = new FileReader()
+    reader.onload = () => {
+      setCropperImage(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    setUploadingLogo(true)
+    setCropperImage(null)
 
     try {
       const formData = new FormData()
-      formData.append('file', file)
+      formData.append('file', croppedBlob, 'logo.jpg')
 
       const response = await fetch('/api/upload-team-logo', {
         method: 'POST',
@@ -852,6 +859,17 @@ export default function TeamsTab() {
             Créer la première équipe
           </button>
         </div>
+      )}
+
+      {/* Image Cropper */}
+      {cropperImage && (
+        <ImageCropper
+          image={cropperImage}
+          onCropComplete={handleCropComplete}
+          onCancel={() => setCropperImage(null)}
+          aspectRatio={1}
+          shape="round"
+        />
       )}
     </div>
   )
