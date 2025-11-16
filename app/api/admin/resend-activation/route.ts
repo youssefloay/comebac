@@ -77,7 +77,9 @@ export async function POST(request: NextRequest) {
       emailResult = await sendEmail(generateWelcomeEmail(fallbackName, 'ComeBac League', resetLink, email))
     }
 
-    if (!emailResult?.success) {
+    const isEmailSent = emailResult?.success || emailResult?.error === 'API key not configured'
+
+    if (!isEmailSent) {
       return NextResponse.json(
         { error: 'Erreur lors de l\'envoi de l\'email' },
         { status: 500 }
@@ -88,7 +90,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Email d\'activation envoyé'
+      message: emailResult?.success ? 'Email d\'activation envoyé' : 'Aucun email envoyé (mode local)'
     })
 
   } catch (error: any) {
