@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useRouter } from 'next/navigation'
-import { collection, getDocs, doc, updateDoc, query, where } from 'firebase/firestore'
+import { collection, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { Users, Shield, User, Edit, Save, X, Trash2, Mail, MoreVertical } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { Users, Shield, User, Edit, Save, X, Trash2, Mail } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 interface Account {
   id: string
@@ -21,6 +21,9 @@ interface Account {
   position?: string
   jerseyNumber?: number
   createdAt: any
+  collection: 'playerAccounts' | 'users' | 'userProfiles'
+  hasLoggedIn?: boolean
+  profileCompleted?: boolean
 }
 
 interface Team {
@@ -57,6 +60,18 @@ export default function AccountsManagementPage() {
     }
   }, [user, isAdmin])
 
+  const parseFullName = (fullName?: string) => {
+    if (!fullName) {
+      return { firstName: undefined, lastName: undefined }
+    }
+    const parts = fullName.trim().split(' ')
+    if (parts.length === 0) {
+      return { firstName: undefined, lastName: undefined }
+    }
+    const [firstName, ...rest] = parts
+    return { firstName, lastName: rest.join(' ') || undefined }
+  }
+
   const loadData = async () => {
     try {
       // Charger les équipes
@@ -83,26 +98,78 @@ export default function AccountsManagementPage() {
           teamName: team?.name,
           position: data.position,
           jerseyNumber: data.jerseyNumber,
-          createdAt: data.createdAt
+          createdAt: data.createdAt,
+          collection: 'playerAccounts' as const,
+          hasLoggedIn: !!data.lastLogin
         }
       })
 
-      // Charger les profils utilisateurs (pour les admins et users)
+      // Charger les userProfiles pour enrichir les données
       const userProfilesSnap = await getDocs(collection(db, 'userProfiles'))
-      const userProfiles = userProfilesSnap.docs.map(doc => {
+      const profilesByUid = new Map<string, { id: string; data: any }>()
+      const profilesByEmail = new Map<string, { id: string; data: any }>()
+      userProfilesSnap.docs.forEach(doc => {
         const data = doc.data()
+        const uidKey = (data.uid || doc.id) as string
+        if (uidKey) {
+          profilesByUid.set(uidKey, { id: doc.id, data })
+        }
+        if (data.email) {
+          profilesByEmail.set(data.email.toLowerCase().trim(), { id: doc.id, data })
+        }
+      })
+
+      // Charger les comptes utilisateurs/admins
+      const usersSnap = await getDocs(collection(db, 'users'))
+      const userAccounts = usersSnap.docs.map(doc => {
+        const data = doc.data()
+        const normalizedEmail = data.email?.toLowerCase().trim()
+        const profile = profilesByUid.get(doc.id) || (normalizedEmail ? profilesByEmail.get(normalizedEmail) : undefined)
+        const { firstName, lastName } = parseFullName(profile?.data?.fullName)
+
         return {
           id: doc.id,
-          uid: data.uid,
+          uid: doc.id,
           email: data.email,
-          firstName: data.fullName?.split(' ')[0],
-          lastName: data.fullName?.split(' ').slice(1).join(' '),
-          role: data.role || 'user' as 'user' | 'admin',
-          createdAt: data.createdAt
+          firstName: firstName || data.firstName,
+          lastName: lastName || data.lastName,
+          role: (profile?.data?.role || data.role || 'user') as 'user' | 'player' | 'admin',
+          teamId: profile?.data?.teamId,
+          teamName: profile?.data?.teamName,
+          createdAt: data.createdAt,
+          collection: 'users' as const,
+          hasLoggedIn: !!data.lastLogin,
+          profileCompleted: !!profile
         }
       })
 
-      const allAccounts = [...playerAccounts, ...userProfiles]
+      // Ajouter les profils orphelins (profil sans entrée users)
+      const userIds = new Set(userAccounts.map(account => account.uid))
+      const orphanProfiles = userProfilesSnap.docs
+        .filter(doc => {
+          const data = doc.data()
+          const uidKey = data.uid || doc.id
+          return data.email && (!uidKey || !userIds.has(uidKey))
+        })
+        .map(doc => {
+          const data = doc.data()
+          const { firstName, lastName } = parseFullName(data.fullName)
+          return {
+            id: doc.id,
+            uid: data.uid,
+            email: data.email,
+            firstName,
+            lastName,
+            role: (data.role || 'user') as 'user' | 'player' | 'admin',
+            teamId: data.teamId,
+            teamName: data.teamName,
+            createdAt: data.createdAt,
+            collection: 'userProfiles' as const,
+            profileCompleted: true
+          }
+        })
+
+      const allAccounts = [...playerAccounts, ...userAccounts, ...orphanProfiles]
       setAccounts(allAccounts)
     } catch (error) {
       console.error('Erreur lors du chargement des comptes:', error)
@@ -115,10 +182,10 @@ export default function AccountsManagementPage() {
   const startEdit = (account: Account) => {
     setEditingAccount(account.id)
     setEditForm({
+      firstName: account.firstName || '',
+      lastName: account.lastName || '',
       role: account.role,
-      teamId: account.teamId,
-      firstName: account.firstName,
-      lastName: account.lastName
+      teamId: account.teamId
     })
   }
 
@@ -135,19 +202,43 @@ export default function AccountsManagementPage() {
       const account = accounts.find(a => a.id === accountId)
       if (!account) return
 
-      // Utiliser l'API de changement de rôle
-      const response = await fetch('/api/admin/change-role', {
+      const updates: Record<string, any> = {}
+      if (editForm.firstName !== undefined) {
+        const newFirstName = editForm.firstName.trim()
+        const currentFirstName = (account.firstName || '').trim()
+        if (newFirstName !== currentFirstName) {
+          updates.firstName = newFirstName
+        }
+      }
+      if (editForm.lastName !== undefined) {
+        const newLastName = editForm.lastName.trim()
+        const currentLastName = (account.lastName || '').trim()
+        if (newLastName !== currentLastName) {
+          updates.lastName = newLastName
+        }
+      }
+      if (editForm.role && editForm.role !== account.role) {
+        updates.role = editForm.role
+      }
+
+      if (Object.keys(updates).length === 0) {
+        setMessage({ type: 'error', text: 'Aucune modification à enregistrer.' })
+        return
+      }
+
+      const response = await fetch('/api/admin/update-account', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          accountId: accountId,
-          currentRole: account.role,
-          newRole: editForm.role || account.role,
+          accountId: account.id,
+          accountType: account.collection === 'playerAccounts'
+            ? 'player'
+            : account.role === 'admin'
+              ? 'admin'
+              : 'user',
           uid: account.uid,
-          email: account.email,
-          firstName: editForm.firstName || account.firstName,
-          lastName: editForm.lastName || account.lastName,
-          teamId: editForm.teamId
+          teamId: editForm.teamId || account.teamId,
+          updates
         })
       })
 
@@ -178,7 +269,7 @@ export default function AccountsManagementPage() {
     setMessage(null)
 
     try {
-      const collection_name = account.role === 'player' ? 'playerAccounts' : 'userProfiles'
+      const collection_name = account.collection
       
       const response = await fetch('/api/admin/manage-account', {
         method: 'POST',

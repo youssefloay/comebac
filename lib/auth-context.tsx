@@ -12,7 +12,7 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail
 } from 'firebase/auth'
-import { auth } from './firebase'
+import { auth, db } from './firebase'
 import { getPasswordResetActionCodeSettings } from '@/lib/password-reset'
 import { useRouter } from 'next/navigation'
 import { getUserProfile } from './db'
@@ -157,7 +157,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const { collection, query, where, getDocs, updateDoc, doc, serverTimestamp } = await import('firebase/firestore')
-      const { db } = await import('@/lib/firebase')
       const { getDeviceInfo } = await import('@/lib/device-info')
       
       const deviceInfo = getDeviceInfo()
@@ -297,11 +296,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUpWithEmail = async (email: string, password: string, phone?: string) => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      const sanitizedEmail = email.trim()
+      const normalizedEmail = sanitizedEmail.toLowerCase()
+
+      // Vérifier si l'email existe déjà en tant que joueur ou coach
+      const { collection, query, where, getDocs } = await import('firebase/firestore')
+      const buildEmailChecks = (collectionName: string) => {
+        const colRef = collection(db, collectionName)
+        const queries = [
+          getDocs(query(colRef, where('email', '==', sanitizedEmail)))
+        ]
+
+        if (sanitizedEmail !== normalizedEmail) {
+          queries.push(getDocs(query(colRef, where('email', '==', normalizedEmail))))
+        }
+        return queries
+      }
+
+      const [playerChecks, coachChecks] = await Promise.all([
+        Promise.all(buildEmailChecks('playerAccounts')),
+        Promise.all(buildEmailChecks('coachAccounts'))
+      ])
+
+      const playerExists = playerChecks.some(snapshot => !snapshot.empty)
+      const coachExists = coachChecks.some(snapshot => !snapshot.empty)
+
+      if (playerExists || coachExists) {
+        throw new Error('Cet email a déjà accès à l\'application Joueur/Coach. Connecte-toi directement comme joueur ou utilise "Mot de passe oublié".')
+      }
+
+      const userCredential = await createUserWithEmailAndPassword(auth, sanitizedEmail, password)
       
       // Créer le document utilisateur dans Firestore avec le téléphone
       await setDoc(doc(db, 'users', userCredential.user.uid), {
-        email: email,
+        email: sanitizedEmail,
         phone: phone || '',
         role: 'user',
         createdAt: serverTimestamp(),
@@ -315,7 +343,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Il ne pourra se reconnecter qu'après avoir vérifié son email
       await signOut(auth)
       
-      console.log('Email de vérification envoyé à:', email, '- Utilisateur déconnecté en attente de vérification')
+      console.log('Email de vérification envoyé à:', sanitizedEmail, '- Utilisateur déconnecté en attente de vérification')
     } catch (error: any) {
       console.error('Error signing up with email:', error)
       

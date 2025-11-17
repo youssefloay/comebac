@@ -1,20 +1,47 @@
 import { NextResponse } from 'next/server'
 import { adminDb, adminAuth } from '@/lib/firebase-admin'
 
+interface AuthMeta {
+  lastSignIn: string | null
+  createdAt: string | null
+  emailVerified: boolean
+}
+
+async function getAllAuthUsers() {
+  const users = []
+  let pageToken: string | undefined
+
+  do {
+    const result = await adminAuth.listUsers(1000, pageToken)
+    users.push(...result.users)
+    pageToken = result.pageToken
+  } while (pageToken)
+
+  return users
+}
+
 export async function GET() {
   try {
     // Récupérer toutes les équipes
     const teamsSnap = await adminDb.collection('teams').get()
     
-    // Récupérer tous les utilisateurs Auth
-    const authUsers = await adminAuth.listUsers()
-    const authUsersMap = new Map(
-      authUsers.users.map(u => [u.email?.toLowerCase(), {
-        lastSignIn: u.metadata.lastSignInTime,
-        createdAt: u.metadata.creationTime,
-        emailVerified: u.emailVerified
-      }])
-    )
+    // Récupérer tous les utilisateurs Auth avec pagination
+    const authUsers = await getAllAuthUsers()
+    const authByEmail = new Map<string, AuthMeta>()
+    const authByUid = new Map<string, AuthMeta>()
+
+    authUsers.forEach(user => {
+      const meta: AuthMeta = {
+        lastSignIn: user.metadata.lastSignInTime || null,
+        createdAt: user.metadata.creationTime || null,
+        emailVerified: user.emailVerified
+      }
+      const normalizedEmail = user.email?.trim().toLowerCase()
+      if (normalizedEmail) {
+        authByEmail.set(normalizedEmail, meta)
+      }
+      authByUid.set(user.uid, meta)
+    })
 
     const teams = []
 
@@ -29,8 +56,9 @@ export async function GET() {
 
       const players = playersSnap.docs.map(doc => {
         const data = doc.data()
-        const email = data.email?.toLowerCase()
-        const authData = authUsersMap.get(email)
+        const normalizedEmail = data.email?.trim().toLowerCase()
+        const authData = (data.uid ? authByUid.get(data.uid) : undefined) 
+          || (normalizedEmail ? authByEmail.get(normalizedEmail) : undefined)
 
         return {
           id: doc.id,
