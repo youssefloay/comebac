@@ -71,6 +71,33 @@ export async function GET() {
         }
       })
 
+      const coachesSnap = await adminDb
+        .collection('coachAccounts')
+        .where('teamId', '==', teamDoc.id)
+        .get()
+
+      const coaches = coachesSnap.docs.map(doc => {
+        const data = doc.data()
+        const normalizedEmail = data.email?.trim().toLowerCase()
+        const authData = (data.uid ? authByUid.get(data.uid) : undefined)
+          || (normalizedEmail ? authByEmail.get(normalizedEmail) : undefined)
+
+        const fullName = `${data.firstName || ''} ${data.lastName || ''}`.trim() || data.email
+
+        return {
+          id: doc.id,
+          uid: data.uid || null,
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          name: fullName,
+          hasAccount: !!authData,
+          lastSignIn: authData?.lastSignIn || null,
+          emailVerified: authData?.emailVerified ?? false,
+          createdAt: authData?.createdAt || null
+        }
+      })
+
       // Trier: jamais connectés d'abord, puis par nom
       players.sort((a, b) => {
         if (!a.hasAccount && b.hasAccount) return -1
@@ -88,6 +115,7 @@ export async function GET() {
         id: teamDoc.id,
         name: teamData.name,
         players,
+        coaches,
         connectedCount,
         neverConnectedCount,
         noAccountCount

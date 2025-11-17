@@ -14,10 +14,24 @@ interface Player {
   createdAt: string | null
 }
 
+interface Coach {
+  id: string
+  uid?: string | null
+  email: string
+  firstName?: string
+  lastName?: string
+  name: string
+  hasAccount: boolean
+  lastSignIn: string | null
+  emailVerified: boolean
+  createdAt: string | null
+}
+
 interface Team {
   id: string
   name: string
   players: Player[]
+  coaches: Coach[]
   connectedCount: number
   neverConnectedCount: number
   noAccountCount: number
@@ -28,7 +42,8 @@ export default function TeamAccountsPage() {
   const [loading, setLoading] = useState(true)
   const [teams, setTeams] = useState<Team[]>([])
   const [sendingEmail, setSendingEmail] = useState<string | null>(null)
-  const [creatingAccount, setCreatingAccount] = useState<string | null>(null)
+  const [creatingPlayerAccount, setCreatingPlayerAccount] = useState<string | null>(null)
+  const [creatingCoachAccount, setCreatingCoachAccount] = useState<string | null>(null)
   const [teamResending, setTeamResending] = useState<string | null>(null)
 
   useEffect(() => {
@@ -40,7 +55,10 @@ export default function TeamAccountsPage() {
       const response = await fetch('/api/admin/team-accounts')
       if (response.ok) {
         const data = await response.json()
-        setTeams(data.teams)
+        setTeams(data.teams.map((team: Team) => ({
+          ...team,
+          coaches: team.coaches || []
+        })))
       }
     } catch (error) {
       console.error('Erreur:', error)
@@ -72,7 +90,7 @@ export default function TeamAccountsPage() {
   }
 
   const createPlayerAccount = async (playerId: string, playerName: string) => {
-    setCreatingAccount(playerId)
+    setCreatingPlayerAccount(playerId)
     try {
       const response = await fetch('/api/admin/create-account-from-player', {
         method: 'POST',
@@ -90,12 +108,40 @@ export default function TeamAccountsPage() {
     } catch (error) {
       alert('❌ Erreur lors de la création du compte')
     } finally {
-      setCreatingAccount(null)
+      setCreatingPlayerAccount(null)
     }
   }
 
-  const resendTeamActivations = async (teamId: string, teamName: string, players: Player[]) => {
-    const targets = players.filter(player => player.hasAccount && !player.lastSignIn)
+  const createCoachAccount = async (coach: Coach, teamName: string) => {
+    setCreatingCoachAccount(coach.id)
+    try {
+      const response = await fetch('/api/admin/create-coach-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: coach.email,
+          firstName: coach.firstName || coach.name.split(' ')[0] || 'Coach',
+          lastName: coach.lastName || coach.name.split(' ').slice(1).join(' '),
+          teamName
+        })
+      })
+
+      if (response.ok) {
+        alert(`✅ Compte créé pour ${coach.name}`)
+        await loadTeamAccounts()
+      } else {
+        const data = await response.json()
+        alert(`❌ Erreur: ${data.error}`)
+      }
+    } catch (error) {
+      alert('❌ Erreur lors de la création du compte coach')
+    } finally {
+      setCreatingCoachAccount(null)
+    }
+  }
+
+  const resendTeamActivations = async (teamId: string, teamName: string, players: Player[], coaches: Coach[]) => {
+    const targets = [...players, ...coaches].filter(person => person.hasAccount && !person.lastSignIn)
     if (targets.length === 0) {
       alert('Aucun joueur à relancer pour cette équipe')
       return
@@ -254,7 +300,7 @@ export default function TeamAccountsPage() {
                       </span>
                     </div>
                     <button
-                      onClick={() => resendTeamActivations(team.id, team.name, team.players)}
+                      onClick={() => resendTeamActivations(team.id, team.name, team.players, team.coaches)}
                       disabled={teamResending === team.id || neverConnectedPlayers.length === 0}
                       className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-orange-200 text-orange-700 hover:bg-orange-100 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                     >
@@ -275,7 +321,84 @@ export default function TeamAccountsPage() {
                 </div>
 
                 {/* Listes catégorisées */}
-                <div className="p-6">
+                <div className="p-6 space-y-6">
+                  {team.coaches.length > 0 && (
+                    <div className="rounded-xl border border-blue-100 bg-blue-50/60">
+                      <div className="flex items-center justify-between px-4 py-3 border-b border-blue-100">
+                        <div className="flex items-center gap-2 text-blue-700 font-semibold">
+                          👤 Coachs ({team.coaches.length})
+                        </div>
+                      </div>
+                      <div className="divide-y divide-blue-100">
+                        {team.coaches.map((coach) => {
+                          const status = coach.hasAccount
+                            ? (coach.lastSignIn
+                              ? `Dernière connexion: ${formatDate(coach.lastSignIn)}`
+                              : 'Compte créé mais jamais connecté')
+                            : 'Aucun compte créé'
+
+                          return (
+                            <div key={coach.id} className="px-4 py-3">
+                              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                                <div>
+                                  <p className="font-semibold text-gray-900">{coach.name}</p>
+                                  <p className="text-sm text-gray-600">{coach.email}</p>
+                                  <p className={`text-xs mt-1 ${coach.hasAccount ? 'text-blue-700' : 'text-red-600'}`}>
+                                    {status}
+                                  </p>
+                                  {coach.createdAt && coach.hasAccount && (
+                                    <p className="text-xs text-gray-500">
+                                      Compte créé: {formatDate(coach.createdAt)}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex gap-2">
+                                  {coach.hasAccount ? (
+                                    <button
+                                      onClick={() => sendActivationEmail(coach.email, coach.name)}
+                                      disabled={sendingEmail === coach.email}
+                                      className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      {sendingEmail === coach.email ? (
+                                        <>
+                                          <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                          Envoi...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Send className="w-3 h-3" />
+                                          Relancer
+                                        </>
+                                      )}
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => createCoachAccount(coach, team.name)}
+                                      disabled={creatingCoachAccount === coach.id}
+                                      className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      {creatingCoachAccount === coach.id ? (
+                                        <>
+                                          <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                          Création...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Send className="w-3 h-3" />
+                                          Créer compte
+                                        </>
+                                      )}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Déjà connectés */}
                     <div className="rounded-xl border border-green-100 bg-green-50/60">
@@ -376,10 +499,10 @@ export default function TeamAccountsPage() {
                                 </div>
                                 <button
                                   onClick={() => createPlayerAccount(player.id, player.name)}
-                                  disabled={creatingAccount === player.id}
+                                  disabled={creatingPlayerAccount === player.id}
                                   className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                  {creatingAccount === player.id ? (
+                                  {creatingPlayerAccount === player.id ? (
                                     <>
                                       <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                       Création...
