@@ -524,6 +524,24 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
         updatedAt: data.createdAt?.toDate() || new Date(),
       } as UserProfile;
     }
+
+    // Enfin, vérifier dans coachAccounts
+    const coachQuery = query(collection(db, "coachAccounts"), where("uid", "==", uid));
+    const coachSnapshot = await getDocs(coachQuery);
+    if (coachSnapshot.docs.length > 0) {
+      const doc = coachSnapshot.docs[0];
+      const data = doc.data();
+      return {
+        id: doc.id,
+        uid: data.uid,
+        email: data.email,
+        fullName: `${data.firstName || ''} ${data.lastName || ''}`.trim() || data.email,
+        username: data.email?.split('@')[0] || data.uid,
+        role: 'coach',
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.createdAt?.toDate() || new Date(),
+      } as UserProfile;
+    }
     
     return null;
   } catch (error) {

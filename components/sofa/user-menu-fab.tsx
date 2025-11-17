@@ -32,12 +32,21 @@ interface PlayerData {
   photo?: string
 }
 
+interface CoachData {
+  id: string
+  firstName?: string
+  lastName?: string
+  teamId?: string
+  teamName?: string
+}
+
 export function UserMenuFAB() {
   const { user, userProfile, logout, isAdmin } = useAuth()
   const [showMenu, setShowMenu] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [playerData, setPlayerData] = useState<PlayerData | null>(null)
   const [loadingPlayer, setLoadingPlayer] = useState(true)
+  const [coachData, setCoachData] = useState<CoachData | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
   // Load player data if user is a player
@@ -84,6 +93,39 @@ export function UserMenuFAB() {
     }
 
     loadPlayerData()
+  }, [user])
+
+  // Load coach data if account exists
+  useEffect(() => {
+    const loadCoachData = async () => {
+      if (!user?.email) {
+        setCoachData(null)
+        return
+      }
+
+      try {
+        const coachQuery = query(
+          collection(db, 'coachAccounts'),
+          where('email', '==', user.email)
+        )
+        const coachSnap = await getDocs(coachQuery)
+
+        if (!coachSnap.empty) {
+          const coachDoc = coachSnap.docs[0]
+          setCoachData({
+            id: coachDoc.id,
+            ...coachDoc.data()
+          } as CoachData)
+        } else {
+          setCoachData(null)
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement du profil coach:', error)
+        setCoachData(null)
+      }
+    }
+
+    loadCoachData()
   }, [user])
 
   // Close menu when clicking outside
@@ -188,6 +230,12 @@ export function UserMenuFAB() {
                         Joueur
                       </span>
                     )}
+                    {coachData && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-medium">
+                        <Users className="w-3 h-3" />
+                        Coach
+                      </span>
+                    )}
                     {isAdmin && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-sofa-blue bg-opacity-10 text-sofa-blue rounded text-xs font-medium">
                         <Settings className="w-3 h-3" />
@@ -264,6 +312,55 @@ export function UserMenuFAB() {
                 </>
               )}
 
+              {/* Section Coach si applicable */}
+              {coachData && (
+                <>
+                  <div className="px-3 py-2">
+                    <p className="text-xs font-semibold text-sofa-text-muted uppercase tracking-wider">
+                      Espace Coach
+                    </p>
+                  </div>
+
+                  <Link
+                    href="/coach"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors"
+                    onClick={() => setShowMenu(false)}
+                  >
+                    <Activity className="w-4 h-4" />
+                    Tableau de bord
+                  </Link>
+
+                  <Link
+                    href="/coach/team"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors"
+                    onClick={() => setShowMenu(false)}
+                  >
+                    <Users className="w-4 h-4" />
+                    Mon équipe
+                  </Link>
+
+                  <Link
+                    href="/coach/matches"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors"
+                    onClick={() => setShowMenu(false)}
+                  >
+                    <Trophy className="w-4 h-4" />
+                    Matchs & compos
+                  </Link>
+
+                  <Link
+                    href="/coach/stats"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors"
+                    onClick={() => setShowMenu(false)}
+                  >
+                    <Target className="w-4 h-4" />
+                    Statistiques
+                  </Link>
+
+                  <div className="my-2 border-t border-sofa-border"></div>
+                </>
+              )}
+
               {/* Navigation principale */}
               <Link
                 href="/public"
@@ -274,18 +371,30 @@ export function UserMenuFAB() {
                 Accueil Public
               </Link>
 
-              {/* Toggle Button - Only show if player data exists */}
-              {playerData && (
+              {/* Toggle Buttons */}
+              {(playerData || coachData) && (
                 <>
                   <div className="my-2 border-t border-sofa-border"></div>
-                  <Link
-                    href="/player"
-                    className="flex items-center gap-2 w-full px-3 py-2 text-sm bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 rounded-lg transition-colors font-medium shadow-md"
-                    onClick={() => setShowMenu(false)}
-                  >
-                    <Activity className="w-4 h-4" />
-                    Basculer sur Joueur
-                  </Link>
+                  {playerData && (
+                    <Link
+                      href="/player"
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 rounded-lg transition-colors font-medium shadow-md"
+                      onClick={() => setShowMenu(false)}
+                    >
+                      <Activity className="w-4 h-4" />
+                      Basculer sur Joueur
+                    </Link>
+                  )}
+                  {coachData && (
+                    <Link
+                      href="/coach"
+                      className="mt-2 flex items-center gap-2 w-full px-3 py-2 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 rounded-lg transition-colors font-medium shadow-md"
+                      onClick={() => setShowMenu(false)}
+                    >
+                      <Users className="w-4 h-4" />
+                      Basculer sur Coach
+                    </Link>
+                  )}
                 </>
               )}
 
@@ -300,16 +409,28 @@ export function UserMenuFAB() {
                 </Link>
               )}
 
-              {playerData && (
-                <Link
-                  href="/player"
-                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors bg-sofa-green bg-opacity-5"
-                  onClick={() => setShowMenu(false)}
-                >
-                  <Activity className="w-4 h-4" />
-                  Retour Espace Joueur
-                </Link>
-              )}
+              <div className="space-y-2">
+                {playerData && (
+                  <Link
+                    href="/player"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors bg-sofa-green bg-opacity-5"
+                    onClick={() => setShowMenu(false)}
+                  >
+                    <Activity className="w-4 h-4" />
+                    Retour Espace Joueur
+                  </Link>
+                )}
+                {coachData && (
+                  <Link
+                    href="/coach"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors bg-sofa-blue bg-opacity-5"
+                    onClick={() => setShowMenu(false)}
+                  >
+                    <Users className="w-4 h-4" />
+                    Retour Espace Coach
+                  </Link>
+                )}
+              </div>
 
               {isAdmin && (
                 <>

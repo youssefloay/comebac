@@ -41,6 +41,13 @@ export function BottomNavigation() {
   const { user, userProfile, logout, isAdmin } = useAuth()
   const [showMoreMenu, setShowMoreMenu] = useState(false)
   const [isPlayer, setIsPlayer] = useState(false)
+  const [isCoach, setIsCoach] = useState(false)
+
+  const roleLabels: string[] = []
+  if (isAdmin) roleLabels.push('Admin')
+  if (isCoach) roleLabels.push('Coach')
+  if (isPlayer) roleLabels.push('Joueur')
+  if (!roleLabels.length) roleLabels.push('Utilisateur')
 
   // Check if user is a player
   useEffect(() => {
@@ -63,6 +70,29 @@ export function BottomNavigation() {
     }
     
     checkPlayer()
+  }, [user])
+
+  // Check if user is a coach
+  useEffect(() => {
+    if (!user?.email) return
+
+    const checkCoach = async () => {
+      try {
+        const { collection, query, where, getDocs } = await import('firebase/firestore')
+        const { db } = await import('@/lib/firebase')
+
+        const coachQuery = query(
+          collection(db, 'coachAccounts'),
+          where('email', '==', user.email)
+        )
+        const coachSnap = await getDocs(coachQuery)
+        setIsCoach(!coachSnap.empty)
+      } catch (error) {
+        console.error('Error checking coach status:', error)
+      }
+    }
+
+    checkCoach()
   }, [user])
 
   if (!user) return null
@@ -185,7 +215,7 @@ export function BottomNavigation() {
                       {userProfile?.fullName || user.email}
                     </div>
                     <div className="text-sm text-gray-600">
-                      @{userProfile?.username || "user"} • {isAdmin ? "Admin" : "Utilisateur"}
+                      @{userProfile?.username || "user"} • {roleLabels.join(' / ')}
                     </div>
                   </div>
                 </div>
@@ -230,6 +260,20 @@ export function BottomNavigation() {
                     >
                       <Gamepad2 className="w-5 h-5" />
                       <span className="font-semibold">Basculer sur Joueur</span>
+                    </Link>
+                  </div>
+                )}
+
+                {/* Coach Toggle Button */}
+                {isCoach && (
+                  <div className="mb-6">
+                    <Link
+                      href="/coach"
+                      onClick={() => setShowMoreMenu(false)}
+                      className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md"
+                    >
+                      <Users className="w-5 h-5" />
+                      <span className="font-semibold">Basculer sur Coach</span>
                     </Link>
                   </div>
                 )}
