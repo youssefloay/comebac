@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Trophy, Target, Award, TrendingUp, Calendar, Users, Shield } from 'lucide-react'
 import Link from 'next/link'
+import { NotificationBell } from '@/components/notifications/notification-bell'
 
 interface PlayerData {
   id: string
@@ -185,21 +186,26 @@ export function PlayerDashboard() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Bienvenue, {playerData.firstName}! 👋
-          </h1>
-          <p className="text-gray-600">
-            {playerData.position} • #{playerData.jerseyNumber}
-          </p>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Bienvenue, {playerData.firstName}! 👋
+              </h1>
+              <p className="text-gray-600">
+                {playerData.position} • #{playerData.jerseyNumber}
+              </p>
+            </div>
+            <NotificationBell />
+          </div>
         </div>
 
         {/* Team Info Card */}
         {teamData && (
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-lg shadow-lg mb-8">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center overflow-hidden">
                 {teamData.logo ? (
-                  <img src={teamData.logo} alt={teamData.name} className="w-12 h-12 object-contain" />
+                  <img src={teamData.logo} alt={teamData.name} className="w-full h-full object-cover" />
                 ) : (
                   <Shield className="w-8 h-8 text-blue-600" />
                 )}

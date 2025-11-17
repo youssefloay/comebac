@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Trophy, Users, Calendar, TrendingUp, Clipboard, BarChart3, Shield, Target, AlertCircle, Plus } from 'lucide-react'
 import Link from 'next/link'
+import { NotificationBell } from '@/components/notifications/notification-bell'
 
 interface CoachData {
   id: string
@@ -234,12 +235,17 @@ export function CoachDashboard() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Bienvenue, Coach {coachData.firstName}! 🏆
-          </h1>
-          <p className="text-gray-600">
-            Gérez votre équipe et préparez vos matchs
-          </p>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Bienvenue, Coach {coachData.firstName}! 🏆
+              </h1>
+              <p className="text-gray-600">
+                Gérez votre équipe et préparez vos matchs
+              </p>
+            </div>
+            <NotificationBell />
+          </div>
         </div>
 
         {/* Alerte composition manquante */}
@@ -273,9 +279,9 @@ export function CoachDashboard() {
             }}
           >
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center overflow-hidden">
                 {teamData.logo ? (
-                  <img src={teamData.logo} alt={teamData.name} className="w-12 h-12 object-contain" />
+                  <img src={teamData.logo} alt={teamData.name} className="w-full h-full object-cover" />
                 ) : (
                   <Shield className="w-8 h-8" style={{ color: teamData.color }} />
                 )}

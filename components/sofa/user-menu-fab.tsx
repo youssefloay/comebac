@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
@@ -48,6 +49,13 @@ export function UserMenuFAB() {
   const [loadingPlayer, setLoadingPlayer] = useState(true)
   const [coachData, setCoachData] = useState<CoachData | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const pathname = usePathname()
+  const hasPlayerSection = !!playerData && (!userProfile || userProfile.role === 'player' || userProfile.role === 'admin')
+  const visiblePlayerData = hasPlayerSection ? playerData : null
+  const isOnPlayerArea = pathname?.startsWith('/player')
+  const isOnCoachArea = pathname?.startsWith('/coach')
+  const showPlayerSection = !!visiblePlayerData && isOnPlayerArea
+  const showCoachSection = !!coachData && isOnCoachArea
 
   // Load player data if user is a player
   useEffect(() => {
@@ -191,16 +199,16 @@ export function UserMenuFAB() {
               <div className="flex items-center gap-3">
                 {/* Avatar ou photo */}
                 <div className="relative flex-shrink-0">
-                  {playerData ? (
+                  {visiblePlayerData ? (
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sofa-blue to-sofa-green flex items-center justify-center text-white text-lg font-bold">
-                      {playerData.photo ? (
+                      {visiblePlayerData.photo ? (
                         <img 
-                          src={playerData.photo} 
-                          alt={`${playerData.firstName} ${playerData.lastName}`}
+                          src={visiblePlayerData.photo} 
+                          alt={`${visiblePlayerData.firstName} ${visiblePlayerData.lastName}`}
                           className="w-full h-full rounded-full object-cover"
                         />
                       ) : (
-                        `${playerData.firstName[0]}${playerData.lastName[0]}`
+                        `${visiblePlayerData.firstName[0]}${visiblePlayerData.lastName[0]}`
                       )}
                     </div>
                   ) : (
@@ -208,9 +216,9 @@ export function UserMenuFAB() {
                       <User className="w-6 h-6 text-sofa-text-muted" />
                     </div>
                   )}
-                  {playerData && (
+                  {visiblePlayerData && (
                     <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-sofa-green rounded-full flex items-center justify-center text-white font-bold text-xs border-2 border-white">
-                      {playerData.jerseyNumber}
+                      {visiblePlayerData.jerseyNumber}
                     </div>
                   )}
                 </div>
@@ -218,13 +226,13 @@ export function UserMenuFAB() {
                 {/* Infos utilisateur */}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-sofa-text-primary truncate">
-                    {playerData 
-                      ? `${playerData.firstName} ${playerData.lastName}`
+                    {visiblePlayerData 
+                      ? `${visiblePlayerData.firstName} ${visiblePlayerData.lastName}`
                       : userProfile?.fullName || user.email
                     }
                   </p>
                   <div className="flex items-center gap-2">
-                    {playerData && (
+                    {visiblePlayerData && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-sofa-green bg-opacity-10 text-sofa-green rounded text-xs font-medium">
                         <Activity className="w-3 h-3" />
                         Joueur
@@ -249,7 +257,7 @@ export function UserMenuFAB() {
             
             <div className="p-2 space-y-1">
               {/* Section Joueur si applicable */}
-              {playerData && (
+              {showPlayerSection && (
                 <>
                   <div className="px-3 py-2">
                     <p className="text-xs font-semibold text-sofa-text-muted uppercase tracking-wider">
@@ -301,19 +309,11 @@ export function UserMenuFAB() {
                     <Bell className="w-4 h-4" />
                     Notifications
                   </Link>
-
-                  <div className="my-2 border-t border-sofa-border"></div>
-
-                  <div className="px-3 py-2">
-                    <p className="text-xs font-semibold text-sofa-text-muted uppercase tracking-wider">
-                      Navigation
-                    </p>
-                  </div>
                 </>
               )}
 
               {/* Section Coach si applicable */}
-              {coachData && (
+              {showCoachSection && (
                 <>
                   <div className="px-3 py-2">
                     <p className="text-xs font-semibold text-sofa-text-muted uppercase tracking-wider">
@@ -361,7 +361,13 @@ export function UserMenuFAB() {
                 </>
               )}
 
-              {/* Navigation principale */}
+              {/* Navigation */}
+              <div className="my-2 border-t border-sofa-border"></div>
+              <div className="px-3 py-2">
+                <p className="text-xs font-semibold text-sofa-text-muted uppercase tracking-wider">
+                  Navigation
+                </p>
+              </div>
               <Link
                 href="/public"
                 className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors"
@@ -372,10 +378,10 @@ export function UserMenuFAB() {
               </Link>
 
               {/* Toggle Buttons */}
-              {(playerData || coachData) && (
+              {(visiblePlayerData || coachData) && (
                 <>
                   <div className="my-2 border-t border-sofa-border"></div>
-                  {playerData && (
+                  {visiblePlayerData && !isOnPlayerArea && (
                     <Link
                       href="/player"
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 rounded-lg transition-colors font-medium shadow-md"
@@ -385,7 +391,7 @@ export function UserMenuFAB() {
                       Basculer sur Joueur
                     </Link>
                   )}
-                  {coachData && (
+                  {coachData && !isOnCoachArea && (
                     <Link
                       href="/coach"
                       className="mt-2 flex items-center gap-2 w-full px-3 py-2 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 rounded-lg transition-colors font-medium shadow-md"
@@ -398,7 +404,7 @@ export function UserMenuFAB() {
                 </>
               )}
 
-              {!playerData && (
+              {!visiblePlayerData && (
                 <Link
                   href="/public/fantasy"
                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors"
@@ -408,29 +414,6 @@ export function UserMenuFAB() {
                   Fantasy ✨
                 </Link>
               )}
-
-              <div className="space-y-2">
-                {playerData && (
-                  <Link
-                    href="/player"
-                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors bg-sofa-green bg-opacity-5"
-                    onClick={() => setShowMenu(false)}
-                  >
-                    <Activity className="w-4 h-4" />
-                    Retour Espace Joueur
-                  </Link>
-                )}
-                {coachData && (
-                  <Link
-                    href="/coach"
-                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-text-primary hover:bg-sofa-bg-hover rounded-lg transition-colors bg-sofa-blue bg-opacity-5"
-                    onClick={() => setShowMenu(false)}
-                  >
-                    <Users className="w-4 h-4" />
-                    Retour Espace Coach
-                  </Link>
-                )}
-              </div>
 
               {isAdmin && (
                 <>

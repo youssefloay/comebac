@@ -63,14 +63,16 @@ export function BottomNavigation() {
           where('email', '==', user.email)
         )
         const playerAccountsSnap = await getDocs(playerAccountsQuery)
-        setIsPlayer(!playerAccountsSnap.empty)
+        const hasPlayerAccount = !playerAccountsSnap.empty
+        const allowPlayerAccess = hasPlayerAccount && (!userProfile || userProfile.role === 'player' || userProfile.role === 'admin')
+        setIsPlayer(allowPlayerAccess)
       } catch (error) {
         console.error('Error checking player status:', error)
       }
     }
     
     checkPlayer()
-  }, [user])
+  }, [user, userProfile])
 
   // Check if user is a coach
   useEffect(() => {
