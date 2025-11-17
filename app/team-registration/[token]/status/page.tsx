@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { doc, getDoc, onSnapshot, collection, query, where, getDocs, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { Users, Link as LinkIcon, Copy, Check, Loader, Send, ArrowRight, Clock } from 'lucide-react'
+import { Users, Link as LinkIcon, Copy, Check, Loader, Send, ArrowRight, Clock, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { SimpleLogo } from '@/components/ui/logo'
 import { useParams } from 'next/navigation'
@@ -46,6 +46,7 @@ export default function TeamStatusPage() {
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [removingPlayerIndex, setRemovingPlayerIndex] = useState<number | null>(null)
 
   const inviteLink = typeof window !== 'undefined' 
     ? `${window.location.origin}/join-team/${token}`
@@ -164,6 +165,31 @@ export default function TeamStatusPage() {
       console.error('Erreur:', err)
       alert('❌ Erreur lors de la suppression')
       setSubmitting(false)
+    }
+  }
+
+  const handleRemovePlayer = async (player: Player, index: number) => {
+    if (!registration) return
+    if (registration.status !== 'pending_players') {
+      alert('Vous ne pouvez plus modifier la liste une fois soumise.')
+      return
+    }
+
+    const confirmRemoval = confirm(`Supprimer ${player.firstName} ${player.lastName} de l'équipe ?`)
+    if (!confirmRemoval) return
+
+    setRemovingPlayerIndex(index)
+    try {
+      const updatedPlayers = registration.players.filter((_, i) => i !== index)
+      await updateDoc(doc(db, 'teamRegistrations', (registration as any).id), {
+        players: updatedPlayers
+      })
+      setRegistration({ ...registration, players: updatedPlayers })
+    } catch (err) {
+      console.error('Erreur suppression joueur:', err)
+      alert('Impossible de supprimer ce joueur pour le moment.')
+    } finally {
+      setRemovingPlayerIndex(null)
     }
   }
 
@@ -342,8 +368,8 @@ export default function TeamStatusPage() {
             ) : (
               <div className="space-y-3">
                 {registration.players.map((player, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
+                  <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg gap-3">
+                    <div className="flex-1">
                       <p className="font-medium text-gray-900">
                         {player.firstName} {player.lastName}
                       </p>
@@ -351,7 +377,27 @@ export default function TeamStatusPage() {
                         {player.position} • #{player.jerseyNumber}
                       </p>
                     </div>
-                    <Check className="w-5 h-5 text-green-600" />
+                    {registration.status === 'pending_players' ? (
+                      <button
+                        onClick={() => handleRemovePlayer(player, index)}
+                        disabled={removingPlayerIndex === index}
+                        className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                      >
+                        {removingPlayerIndex === index ? (
+                          <>
+                            <Loader className="w-4 h-4 animate-spin" />
+                            Suppression...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="w-4 h-4" />
+                            Retirer
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <Check className="w-5 h-5 text-green-600" />
+                    )}
                   </div>
                 ))}
               </div>
