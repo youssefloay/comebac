@@ -4,7 +4,9 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { 
   User, 
   signInWithEmailAndPassword, 
-  signInWithPopup, 
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider, 
   signOut, 
   onAuthStateChanged,
@@ -63,6 +65,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
+    // Gérer le résultat de la redirection Google
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth)
+        if (result && result.user) {
+          console.log('Google sign-in redirect successful')
+          if (result.user.email) {
+            updateLastLogin(result.user.email)
+          }
+        }
+      } catch (error: any) {
+        console.error('Error handling redirect result:', error)
+        // Ne pas bloquer l'application si la redirection échoue
+      }
+    }
+    
+    handleRedirectResult()
+    
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user)
       
@@ -413,9 +433,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider()
-      await signInWithPopup(auth, provider)
-    } catch (error) {
+      // Ajouter des scopes si nécessaire
+      provider.addScope('profile')
+      provider.addScope('email')
+      // Forcer la sélection du compte
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      })
+      
+      // Essayer d'abord avec popup
+      try {
+        const result = await signInWithPopup(auth, provider)
+        
+        // Mettre à jour lastLogin après connexion réussie
+        if (result.user.email) {
+          updateLastLogin(result.user.email)
+        }
+      } catch (popupError: any) {
+        // Si popup échoue avec internal-error, essayer avec redirect
+        if (popupError.code === 'auth/internal-error' || popupError.code === 'auth/popup-blocked') {
+          console.log('Popup failed, trying redirect method...')
+          await signInWithRedirect(auth, provider)
+          // Note: signInWithRedirect ne retourne pas immédiatement
+          // Le résultat sera géré par getRedirectResult dans useEffect
+          return
+        }
+        throw popupError
+      }
+    } catch (error: any) {
       console.error('Error signing in with Google:', error)
+      
+      // Améliorer les messages d'erreur
+      if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error('La fenêtre de connexion a été fermée. Veuillez réessayer.')
+      } else if (error.code === 'auth/popup-blocked') {
+        throw new Error('La fenêtre popup a été bloquée. Veuillez autoriser les popups pour ce site.')
+      } else if (error.code === 'auth/unauthorized-domain') {
+        const currentDomain = typeof window !== 'undefined' ? window.location.hostname : 'unknown'
+        throw new Error(`Ce domaine (${currentDomain}) n'est pas autorisé. Veuillez l'ajouter dans Firebase Console → Authentication → Settings → Authorized domains.`)
+      } else if (error.code === 'auth/internal-error') {
+        throw new Error('Erreur interne Firebase. Vérifiez que :\n1. Google Sign-In est activé dans Firebase Console\n2. Le domaine est autorisé\n3. Les clés OAuth sont correctement configurées')
+      } else if (error.code === 'auth/operation-not-allowed') {
+        throw new Error('La méthode de connexion Google n\'est pas activée. Activez-la dans Firebase Console → Authentication → Sign-in method.')
+      }
+      
       throw error
     }
   }
