@@ -26,7 +26,6 @@ import {
 import Link from 'next/link'
 import { calculatePlayerBadges } from '@/lib/player-badges'
 import { PlayerBadges } from '@/components/player/player-badges'
-import { uploadPlayerPhoto } from '@/lib/upload-image'
 
 interface PlayerData {
   id: string
@@ -162,14 +161,15 @@ export default function PlayerProfilePage() {
         }
 
         setPlayerData(player)
+        // Pré-remplir editData avec toutes les valeurs actuelles
         setEditData({
-          phone: player.phone,
-          photo: player.photo,
-          foot: player.foot,
-          tshirtSize: player.tshirtSize,
-          birthDate: player.birthDate,
-          position: player.position,
-          height: player.height
+          phone: player.phone || '',
+          photo: player.photo || '',
+          foot: player.foot || 'Droitier',
+          tshirtSize: player.tshirtSize || '',
+          birthDate: player.birthDate || '',
+          position: player.position || '',
+          height: player.height || 0
         })
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error)
@@ -234,7 +234,12 @@ export default function PlayerProfilePage() {
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !user || !playerData) return
+    if (!file || !user || !playerData) {
+      console.log('Missing file, user, or playerData:', { file: !!file, user: !!user, playerData: !!playerData })
+      return
+    }
+
+    console.log('📸 Photo upload started:', { fileName: file.name, fileSize: file.size, fileType: file.type })
 
     // Vérifier le type de fichier
     if (!file.type.startsWith('image/')) {
@@ -242,7 +247,7 @@ export default function PlayerProfilePage() {
       return
     }
 
-    // Vérifier la taille (max 5MB)
+    // Vérifier la taille (max 5MB avant compression)
     if (file.size > 5 * 1024 * 1024) {
       alert('L\'image ne doit pas dépasser 5MB')
       return
@@ -250,32 +255,74 @@ export default function PlayerProfilePage() {
 
     setUploadingPhoto(true)
     try {
-      // Upload vers Firebase Storage
-      const photoUrl = await uploadPlayerPhoto(playerData.id, file)
-
-      // Mettre à jour le profil
-      const response = await fetch('/api/profile/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.uid,
-          userType: 'player',
-          updates: { photo: photoUrl }
+      // Compresser l'image si nécessaire (max 800 KB pour base64)
+      let fileToUpload = file
+      const maxSizeKB = 800 // Limite pour base64 dans Firestore
+      const fileSizeKB = file.size / 1024
+      
+      if (fileSizeKB > maxSizeKB) {
+        console.log('📦 Compressing image...', { originalSize: fileSizeKB.toFixed(2), targetSize: maxSizeKB })
+        const { compressImage } = await import('@/lib/image-compression')
+        fileToUpload = await compressImage(file, maxSizeKB)
+        console.log('✅ Image compressed:', { 
+          original: `${fileSizeKB.toFixed(2)} KB`, 
+          compressed: `${(fileToUpload.size / 1024).toFixed(2)} KB` 
         })
-      })
-
-      if (response.ok) {
-        setPlayerData({ ...playerData, photo: photoUrl })
-        setEditData({ ...editData, photo: photoUrl })
-        alert('Photo de profil mise à jour!')
-      } else {
-        const data = await response.json()
-        alert(`Erreur: ${data.error}`)
       }
-    } catch (error) {
-      console.error('Erreur upload photo:', error)
-      alert('Erreur lors de l\'upload de la photo')
+      
+      console.log('📤 Uploading via API route...', { playerId: playerData.id, fileName: fileToUpload.name, fileSize: fileToUpload.size })
+      
+      // Vérifier que l'utilisateur est authentifié
+      if (!user || !user.uid) {
+        throw new Error('Utilisateur non authentifié')
+      }
+      
+      // Upload via API route (contourne les problèmes CORS)
+      const formData = new FormData()
+      formData.append('file', fileToUpload)
+      formData.append('userId', user.uid)
+      formData.append('userType', 'player')
+      
+      // Ajouter un timeout pour éviter un chargement infini
+      const uploadPromise = fetch('/api/profile/upload-photo-client', {
+        method: 'POST',
+        body: formData
+      })
+      
+      const timeoutPromise = new Promise<Response>((_, reject) => 
+        setTimeout(() => reject(new Error('Upload timeout après 30 secondes')), 30000)
+      )
+      
+      const response = await Promise.race([uploadPromise, timeoutPromise])
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('❌ Upload failed:', errorData)
+        throw new Error(errorData.error || 'Erreur lors de l\'upload')
+      }
+
+      const uploadData = await response.json()
+      const photoUrl = uploadData.photoUrl
+      console.log('✅ Upload successful, photo URL:', photoUrl)
+      
+      if (!photoUrl) {
+        throw new Error('URL de photo non retournée')
+      }
+
+      // Mettre à jour les données locales (le profil est déjà mis à jour par l'API)
+      setPlayerData({ ...playerData, photo: photoUrl })
+      setEditData({ ...editData, photo: photoUrl })
+      alert('Photo de profil mise à jour avec succès!')
+    } catch (error: any) {
+      console.error('❌ Erreur upload photo:', error)
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      })
+      alert(`Erreur lors de l'upload de la photo: ${error.message || 'Erreur inconnue'}\n\nVérifiez la console pour plus de détails.`)
     } finally {
+      console.log('🔄 Resetting upload state...')
       setUploadingPhoto(false)
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
@@ -321,7 +368,19 @@ export default function PlayerProfilePage() {
           </div>
           {!editing ? (
             <button
-              onClick={() => setEditing(true)}
+              onClick={() => {
+                // Réinitialiser editData avec les valeurs actuelles du profil
+                setEditData({
+                  phone: playerData.phone || '',
+                  photo: playerData.photo || '',
+                  foot: playerData.foot || 'Droitier',
+                  tshirtSize: playerData.tshirtSize || '',
+                  birthDate: playerData.birthDate || '',
+                  position: playerData.position || '',
+                  height: playerData.height || 0
+                })
+                setEditing(true)
+              }}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
             >
               <Edit className="w-4 h-4" />
@@ -374,32 +433,30 @@ export default function PlayerProfilePage() {
                   `${playerData.firstName[0]}${playerData.lastName[0]}`
                 )}
               </div>
-              <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm border-2 border-white">
+              <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm border-2 border-white z-10">
                 {playerData.jerseyNumber}
               </div>
-              {editing && (
-                <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                    className="hidden"
-                  />
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingPhoto}
-                    className="p-2 bg-white rounded-full text-gray-900 hover:bg-gray-100 transition"
-                    title="Changer la photo"
-                  >
-                    {uploadingPhoto ? (
-                      <LoadingSpinner size="sm" />
-                    ) : (
-                      <Camera className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-              )}
+              
+              {/* Bouton pour changer la photo - toujours visible */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingPhoto}
+                className="absolute top-0 right-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed z-20 border-2 border-white"
+                title="Changer la photo"
+              >
+                {uploadingPhoto ? (
+                  <LoadingSpinner size="sm" />
+                ) : (
+                  <span className="text-lg font-bold leading-none">+</span>
+                )}
+              </button>
             </div>
             
             <div className="flex-1">
@@ -486,11 +543,11 @@ export default function PlayerProfilePage() {
                     type="tel"
                     value={editData.phone || ''}
                     onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
-                    className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                     placeholder="Numéro de téléphone"
                   />
                 ) : (
-                  <p className="font-medium text-gray-900">{playerData.phone}</p>
+                  <p className="font-medium text-gray-900">{playerData.phone || 'Non renseigné'}</p>
                 )}
               </div>
             </div>
@@ -512,7 +569,7 @@ export default function PlayerProfilePage() {
                     type="date"
                     value={editData.birthDate || ''}
                     onChange={(e) => setEditData({ ...editData, birthDate: e.target.value })}
-                    className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                   />
                 ) : (
                   <p className="font-medium text-gray-900">
@@ -540,7 +597,7 @@ export default function PlayerProfilePage() {
                   <select
                     value={editData.position || ''}
                     onChange={(e) => setEditData({ ...editData, position: e.target.value })}
-                    className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                   >
                     <option value="">Sélectionner</option>
                     <option value="Gardien">Gardien</option>
@@ -549,7 +606,7 @@ export default function PlayerProfilePage() {
                     <option value="Attaquant">Attaquant</option>
                   </select>
                 ) : (
-                  <p className="font-medium text-gray-900">{playerData.position}</p>
+                  <p className="font-medium text-gray-900">{playerData.position || 'Non renseigné'}</p>
                 )}
               </div>
             </div>
@@ -573,7 +630,7 @@ export default function PlayerProfilePage() {
                     max="250"
                     value={editData.height || ''}
                     onChange={(e) => setEditData({ ...editData, height: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                     placeholder="Taille en cm"
                   />
                 ) : (
@@ -592,7 +649,7 @@ export default function PlayerProfilePage() {
                   <select
                     value={editData.foot || ''}
                     onChange={(e) => setEditData({ ...editData, foot: e.target.value })}
-                    className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                   >
                     <option value="">Sélectionner</option>
                     <option value="Droitier">Droitier</option>
@@ -600,7 +657,7 @@ export default function PlayerProfilePage() {
                     <option value="Ambidextre">Ambidextre</option>
                   </select>
                 ) : (
-                  <p className="font-medium text-gray-900">{playerData.foot}</p>
+                  <p className="font-medium text-gray-900">{playerData.foot || 'Non renseigné'}</p>
                 )}
               </div>
             </div>
@@ -613,7 +670,7 @@ export default function PlayerProfilePage() {
                   <select
                     value={editData.tshirtSize || ''}
                     onChange={(e) => setEditData({ ...editData, tshirtSize: e.target.value })}
-                    className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                   >
                     <option value="">Sélectionner</option>
                     <option value="XS">XS</option>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase-admin/storage'
-import { adminDb } from '@/lib/firebase-admin'
+import { getStorage } from 'firebase-admin/storage'
+import { adminDb, adminApp } from '@/lib/firebase-admin'
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,15 +37,60 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes)
 
     // Upload vers Firebase Storage
-    const storage = getStorage()
+    console.log('📤 Uploading to Firebase Storage via Admin SDK...')
+    const storage = getStorage(adminApp)
+    
+    // Essayer différents noms de bucket possibles
+    const projectId = process.env.FIREBASE_PROJECT_ID || 'scolar-league'
+    const possibleBuckets = [
+      'scolar-league.firebasestorage.app',
+      'scolar-league.appspot.com',
+      `${projectId}.appspot.com`,
+      `${projectId}.firebasestorage.app`
+    ]
+    
+    let bucket
+    let bucketName
+    let lastError: any = null
+    
+    for (const name of possibleBuckets) {
+      try {
+        bucket = storage.bucket(name)
+        // Vérifier si le bucket existe en essayant de lister les fichiers (opération légère)
+        await bucket.exists()
+        bucketName = name
+        console.log('✅ Bucket found:', bucketName)
+        break
+      } catch (error: any) {
+        console.log(`❌ Bucket "${name}" not accessible:`, error.message)
+        lastError = error
+        continue
+      }
+    }
+    
+    if (!bucket || !bucketName) {
+      throw new Error(`Aucun bucket accessible trouvé. Essayé: ${possibleBuckets.join(', ')}. Dernière erreur: ${lastError?.message || 'Inconnue'}`)
+    }
+    
     const fileName = `${userType}-photos/${userId}-${Date.now()}.jpg`
-    const storageRef = ref(storage, fileName)
+    console.log('📁 File path:', fileName)
+    
+    const fileRef = bucket.file(fileName)
 
-    await uploadBytes(storageRef, buffer, {
+    console.log('⬆️ Saving file to bucket...')
+    await fileRef.save(buffer, {
       contentType: 'image/jpeg',
+      metadata: {
+        cacheControl: 'public, max-age=31536000',
+      },
     })
+    console.log('✅ File saved')
 
-    const downloadURL = await getDownloadURL(storageRef)
+    // Rendre le fichier public et obtenir l'URL
+    console.log('🔓 Making file public...')
+    await fileRef.makePublic()
+    const downloadURL = `https://storage.googleapis.com/${bucket.name}/${fileName}`
+    console.log('✅ File is public, URL:', downloadURL)
 
     // Mettre à jour le profil dans Firestore
     if (userType === 'player') {

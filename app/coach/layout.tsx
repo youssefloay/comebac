@@ -140,6 +140,7 @@ export default function CoachLayout({ children }: { children: React.ReactNode })
   ]
 
   const extraMenuItems = [
+    { href: '/coach/profile', icon: User, label: 'Profil' },
     { href: '/coach/ranking', icon: Trophy, label: 'Classement' },
     { href: '/coach/stats', icon: BarChart3, label: 'Statistiques' }
   ]

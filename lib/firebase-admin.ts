@@ -1,19 +1,24 @@
-import { initializeApp, getApps, cert } from 'firebase-admin/app'
+import { initializeApp, getApps, cert, type App } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 
 // Initialize Firebase Admin SDK
+let adminApp: App
 if (!getApps().length) {
-  initializeApp({
+  adminApp = initializeApp({
     credential: cert({
       projectId: process.env.FIREBASE_PROJECT_ID,
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     }),
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'scolar-league.firebasestorage.app',
   })
+} else {
+  adminApp = getApps()[0]
 }
 
-export const adminAuth = getAuth()
+export { adminApp }
+export const adminAuth = getAuth(adminApp)
 
 // Obtenir l'instance Firestore
 const _adminDb = getFirestore()
