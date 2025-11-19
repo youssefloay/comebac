@@ -7,6 +7,8 @@ import { useAuth } from "@/lib/auth-context";
 import { useTheme } from "@/lib/theme-context";
 import { Home, Trophy, Calendar, BarChart3, Users, Sun, Moon } from "lucide-react";
 import { NotificationDropdown } from "@/components/notifications/notification-dropdown";
+import { LanguageSelector } from "@/components/ui/language-selector";
+import { FantasyButton } from "@/components/fantasy/fantasy-button";
 
 const navigationItems = [
   { href: "/public", label: "Accueil", icon: Home },
@@ -20,6 +22,7 @@ export function SofaNavigation() {
   const pathname = usePathname();
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const isAdminPage = pathname?.startsWith('/admin');
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800">
@@ -66,8 +69,11 @@ export function SofaNavigation() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2">
-            {/* NOTIFICATION DROPDOWN */}
-            <NotificationDropdown />
+            {/* Language Selector - Only for non-admin pages */}
+            {!isAdminPage && <LanguageSelector />}
+
+            {/* Fantasy Button - Only for non-admin pages */}
+            {!isAdminPage && <FantasyButton href="/public/fantasy" page="header" />}
 
             {/* Theme Toggle */}
             <button
@@ -76,6 +82,9 @@ export function SofaNavigation() {
             >
               {theme === "light" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </button>
+
+            {/* NOTIFICATION DROPDOWN */}
+            <NotificationDropdown />
 
             {/* Login Button */}
             {!user && (

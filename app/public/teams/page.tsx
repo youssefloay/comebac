@@ -8,6 +8,7 @@ import { collection, getDocs, query, where } from "firebase/firestore"
 import type { Team, Player } from "@/lib/types"
 import { Users, MapPin, Trophy, Target } from "lucide-react"
 import { FavoriteButton } from "@/components/favorites/favorite-button"
+import { t } from "@/lib/i18n"
 
 interface TeamWithPlayers extends Team {
   players: Player[]
@@ -82,21 +83,21 @@ export default function TeamsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-sofa-text-primary mb-2">Équipes</h1>
+        <h1 className="text-4xl font-bold text-sofa-text-primary mb-2">{t('teams.title')}</h1>
         <p className="text-sofa-text-secondary">
-          Découvrez toutes les équipes et leurs joueurs du championnat
+          {t('teams.subtitle')}
         </p>
       </div>
 
       {loading ? (
         <div className="text-center py-20">
           <div className="w-12 h-12 border-4 border-sofa-border border-t-sofa-text-accent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-sofa-text-secondary">Chargement des équipes...</p>
+          <p className="text-sofa-text-secondary">{t('teams.loading')}</p>
         </div>
       ) : teams.length === 0 ? (
         <div className="sofa-card p-12 text-center">
           <Users className="w-16 h-16 text-sofa-text-muted mx-auto mb-4" />
-          <p className="text-sofa-text-secondary">Aucune équipe disponible</p>
+          <p className="text-sofa-text-secondary">{t('teams.noTeams')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -155,13 +156,13 @@ export default function TeamsPage() {
                       <div className="flex items-center gap-2">
                         <Users className="w-5 h-5 text-sofa-text-accent" />
                         <span className="text-sofa-text-primary font-semibold">
-                          {team.playerCount} joueurs
+                          {team.playerCount} {team.playerCount > 1 ? t('team.playersCount') : t('team.playerSingular')}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-sofa-text-muted" />
                         <span className="text-sm text-sofa-text-muted">
-                          Stade de {team.name}
+                          {t('team.stadiumOf')} {team.name}
                         </span>
                       </div>
                     </div>
@@ -170,7 +171,7 @@ export default function TeamsPage() {
                     {team.players.length > 0 ? (
                       <div className="space-y-2 mb-4">
                         <h3 className="text-sm font-semibold text-sofa-text-secondary uppercase tracking-wide">
-                          Joueurs Clés
+                          {t('teams.keyPlayers')}
                         </h3>
                         {team.players.slice(0, 3).map((player) => (
                           <div key={player.id} className="flex items-center gap-3 p-2 bg-sofa-bg-tertiary rounded-lg">
@@ -183,7 +184,7 @@ export default function TeamsPage() {
                                   {player.name}
                                 </span>
                                 {(player as any).isCaptain && (
-                                  <span className="inline-flex items-center justify-center w-5 h-5 bg-yellow-500 text-white text-xs font-bold rounded-full" title="Capitaine">
+                                  <span className="inline-flex items-center justify-center w-5 h-5 bg-yellow-500 text-white text-xs font-bold rounded-full" title={t('teams.captain')}>
                                     C
                                   </span>
                                 )}
@@ -205,7 +206,7 @@ export default function TeamsPage() {
                         {team.players.length > 3 && (
                           <div className="text-center pt-2">
                             <span className="text-sm text-sofa-text-accent">
-                              +{team.players.length - 3} autres joueurs
+                              +{team.players.length - 3} {t('teams.morePlayers')}
                             </span>
                           </div>
                         )}
@@ -213,14 +214,14 @@ export default function TeamsPage() {
                     ) : (
                       <div className="text-center py-4">
                         <Users className="w-8 h-8 text-sofa-text-muted mx-auto mb-2" />
-                        <p className="text-sm text-sofa-text-muted">Aucun joueur enregistré</p>
+                        <p className="text-sm text-sofa-text-muted">{t('team.noPlayers')}</p>
                       </div>
                     )}
 
                     {/* Action Button */}
                     <div className="pt-4 border-t border-sofa-border">
                       <div className="flex items-center justify-center gap-2 text-sofa-text-accent group-hover:text-sofa-green transition-colors">
-                        <span className="text-sm font-medium">Voir l'équipe</span>
+                        <span className="text-sm font-medium">{t('teams.viewTeam')}</span>
                         <Target className="w-4 h-4" />
                       </div>
                     </div>

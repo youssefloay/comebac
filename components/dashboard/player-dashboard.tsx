@@ -8,6 +8,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Trophy, Target, Award, TrendingUp, Calendar, Users, Shield } from 'lucide-react'
 import Link from 'next/link'
 import { NotificationBell } from '@/components/notifications/notification-bell'
+import { t } from '@/lib/i18n'
 
 interface PlayerData {
   id: string
@@ -173,7 +174,7 @@ export function PlayerDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <p className="text-gray-600">Aucune donnée joueur trouvée</p>
+          <p className="text-gray-600">{t('player.noData')}</p>
         </div>
       </div>
     )
@@ -189,7 +190,7 @@ export function PlayerDashboard() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Bienvenue, {playerData.firstName}! 👋
+                {t('player.welcome')}, {playerData.firstName}! 👋
               </h1>
               <p className="text-gray-600">
                 {playerData.position} • #{playerData.jerseyNumber}
@@ -212,11 +213,11 @@ export function PlayerDashboard() {
               </div>
               <div className="flex-1">
                 <h2 className="text-2xl font-bold mb-1">{teamData.name}</h2>
-                <p className="text-blue-100">Mon Équipe</p>
+                <p className="text-blue-100">{t('player.myTeam')}</p>
               </div>
               <div className="text-right">
                 <div className="text-3xl font-bold">{teamData.players}</div>
-                <p className="text-blue-100 text-sm">Joueurs</p>
+                <p className="text-blue-100 text-sm">{t('player.players')}</p>
               </div>
             </div>
           </div>
@@ -228,7 +229,7 @@ export function PlayerDashboard() {
             <div className="flex flex-col items-center text-center">
               <Trophy className="w-10 h-10 text-blue-600 mb-3" />
               <span className="text-3xl font-bold text-gray-900 mb-1">{stats.matchesPlayed}</span>
-              <p className="text-sm text-gray-600">Matchs Joués</p>
+              <p className="text-sm text-gray-600">{t('player.matchesPlayed')}</p>
             </div>
           </div>
 
@@ -236,7 +237,7 @@ export function PlayerDashboard() {
             <div className="flex flex-col items-center text-center">
               <Target className="w-10 h-10 text-green-600 mb-3" />
               <span className="text-3xl font-bold text-gray-900 mb-1">{stats.goals}</span>
-              <p className="text-sm text-gray-600">Buts</p>
+              <p className="text-sm text-gray-600">{t('player.goals')}</p>
             </div>
           </div>
 
@@ -244,7 +245,7 @@ export function PlayerDashboard() {
             <div className="flex flex-col items-center text-center">
               <TrendingUp className="w-10 h-10 text-purple-600 mb-3" />
               <span className="text-3xl font-bold text-gray-900 mb-1">{stats.assists}</span>
-              <p className="text-sm text-gray-600">Passes Décisives</p>
+              <p className="text-sm text-gray-600">{t('player.assists')}</p>
             </div>
           </div>
 

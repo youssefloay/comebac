@@ -78,7 +78,7 @@ export function BottomNavigation() {
         )
         const playerAccountsSnap = await getDocs(playerAccountsQuery)
         const hasPlayerAccount = !playerAccountsSnap.empty
-        const allowPlayerAccess = hasPlayerAccount && (!userProfile || userProfile.role === 'player' || userProfile.role === 'admin')
+        const allowPlayerAccess = hasPlayerAccount && (!userProfile || (userProfile as any).role === 'player' || (userProfile as any).role === 'admin')
         setIsPlayer(allowPlayerAccess)
       } catch (error) {
         console.error('Error checking player status:', error)
@@ -137,14 +137,14 @@ export function BottomNavigation() {
                     : 'text-sofa-text-muted hover:text-sofa-text-primary hover:bg-sofa-bg-hover'
                 }`}
                 aria-current={isActive ? "page" : undefined}
-                aria-label={tab.label}
+                aria-label={useTranslation ? t(tab.labelKey) : t(tab.labelKey)}
               >
                 <Icon 
                   className={`w-5 h-5 mb-1 ${isActive ? 'scale-110' : ''} transition-transform`} 
                   aria-hidden="true"
                 />
                 <span className="text-xs font-medium truncate">
-                  {useTranslation ? t(tab.labelKey) : (tab as any).label || t(tab.labelKey)}
+                  {useTranslation ? t(tab.labelKey) : t(tab.labelKey)}
                 </span>
                 {isActive && (
                   <motion.div
@@ -218,15 +218,12 @@ export function BottomNavigation() {
                 <h3 className="text-lg font-bold text-gray-900">
                   {useTranslation ? t('nav.menu') : 'Menu'}
                 </h3>
-                <div className="flex items-center gap-2">
-                  {!isAdminPage && <LanguageSelector />}
-                  <button
-                    onClick={() => setShowMoreMenu(false)}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowMoreMenu(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
               {/* User Info */}
@@ -269,7 +266,7 @@ export function BottomNavigation() {
                       >
                         <Icon className="w-5 h-5" />
                         <span className="font-medium">
-                          {useTranslation ? t(tab.labelKey) : (tab as any).label || t(tab.labelKey)}
+                          {useTranslation ? t(tab.labelKey) : t(tab.labelKey)}
                         </span>
                         {isActive && (
                           <div className="ml-auto w-2 h-2 bg-green-600 rounded-full" />
@@ -314,21 +311,27 @@ export function BottomNavigation() {
                 {/* Admin Section */}
                 {isAdmin && (
                   <div className="space-y-2 mb-6">
-                    <div className="text-sm font-medium text-gray-500 px-3 py-2">Administration</div>
+                    <div className="text-sm font-medium text-gray-500 px-3 py-2">
+                      {useTranslation ? t('nav.administration') : 'Administration'}
+                    </div>
                     <Link
                       href="/admin"
                       onClick={() => setShowMoreMenu(false)}
                       className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 text-gray-700 transition-all"
                     >
                       <Settings className="w-5 h-5" />
-                      <span className="font-medium">Admin Panel</span>
+                      <span className="font-medium">
+                        {useTranslation ? t('nav.adminPanel') : 'Panneau Admin'}
+                      </span>
                     </Link>
                   </div>
                 )}
 
                 {/* Social Links */}
                 <div className="space-y-2 mb-6">
-                  <div className="text-sm font-medium text-gray-500 px-3 py-2">Follow Us</div>
+                  <div className="text-sm font-medium text-gray-500 px-3 py-2">
+                    {useTranslation ? t('nav.followUs') : 'Suivez-nous'}
+                  </div>
                   <div className="flex items-center gap-3 px-3 py-2">
                     <a
                       href="https://www.instagram.com/comebac.league/"
@@ -366,6 +369,17 @@ export function BottomNavigation() {
                   </div>
                 </div>
 
+                {/* Quick Actions */}
+                <div className="space-y-2 pt-4 border-t border-gray-100 mb-4">
+                  <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 text-gray-700 transition-all w-full">
+                    <NotificationBell />
+                    <span className="font-medium">
+                      {useTranslation ? t('notifications.title') : 'Notifications'}
+                    </span>
+                  </div>
+                  <LanguageSelector />
+                </div>
+
                 {/* Actions */}
                 <div className="space-y-2 pt-4 border-t border-gray-100">
                   <button
@@ -376,7 +390,9 @@ export function BottomNavigation() {
                     className="flex items-center gap-4 p-3 rounded-xl hover:bg-red-50 text-red-600 transition-all w-full text-left"
                   >
                     <LogOut className="w-5 h-5" />
-                    <span className="font-medium">Logout</span>
+                    <span className="font-medium">
+                      {useTranslation ? t('nav.logout') : 'Se déconnecter'}
+                    </span>
                   </button>
                 </div>
               </div>

@@ -1,3 +1,5 @@
+import { translations as translationsData } from './translations'
+
 export type Language = 'fr' | 'en'
 
 interface Translations {
@@ -7,30 +9,7 @@ interface Translations {
   }
 }
 
-const translations: Translations = {
-  // Navigation
-  'nav.home': { fr: 'Accueil', en: 'Home' },
-  'nav.matches': { fr: 'Matchs', en: 'Matches' },
-  'nav.ranking': { fr: 'Classement', en: 'Ranking' },
-  'nav.teams': { fr: 'Équipes', en: 'Teams' },
-  'nav.stats': { fr: 'Stats', en: 'Stats' },
-  'nav.fantasy': { fr: 'Fantasy', en: 'Fantasy' },
-  'nav.more': { fr: 'Plus', en: 'More' },
-  'nav.menu': { fr: 'Menu', en: 'Menu' },
-  'nav.navigation': { fr: 'Navigation', en: 'Navigation' },
-  'nav.switchToPlayer': { fr: 'Basculer sur Joueur', en: 'Switch to Player' },
-  'nav.switchToCoach': { fr: 'Basculer sur Coach', en: 'Switch to Coach' },
-  'nav.adminPanel': { fr: 'Panneau Admin', en: 'Admin Panel' },
-  'nav.administration': { fr: 'Administration', en: 'Administration' },
-  'nav.followUs': { fr: 'Suivez-nous', en: 'Follow Us' },
-  'nav.logout': { fr: 'Se déconnecter', en: 'Logout' },
-  
-  // Roles
-  'role.player': { fr: 'Joueur', en: 'Player' },
-  'role.coach': { fr: 'Coach', en: 'Coach' },
-  'role.admin': { fr: 'Admin', en: 'Admin' },
-  'role.user': { fr: 'Utilisateur', en: 'User' },
-}
+const translations: Translations = translationsData
 
 let currentLanguage: Language = 'en'
 

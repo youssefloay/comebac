@@ -71,8 +71,11 @@ export function NotificationBell() {
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
-        className="relative flex items-center justify-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
+        onClick={(e) => {
+          e.stopPropagation()
+          setOpen(true)
+        }}
+        className="relative flex items-center justify-center p-0"
         aria-label="Notifications"
       >
         <Bell className="w-5 h-5 flex-shrink-0" />

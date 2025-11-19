@@ -13,10 +13,14 @@ import { PageTracker } from '@/components/analytics/page-tracker'
 import { useAuth } from '@/lib/auth-context'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { InstallPrompt } from '@/components/pwa/InstallPrompt'
+import { LanguageSelector } from '@/components/ui/language-selector'
+import { usePathname } from 'next/navigation'
 import '@/styles/sofascore-theme.css'
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
+  const pathname = usePathname()
+  const isAdminPage = pathname?.startsWith('/admin')
 
   if (loading) {
     return (
@@ -72,8 +76,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           </div>
           
           <div className="flex items-center gap-2">
-            {/* Notification Dropdown */}
-            <NotificationDropdown />
+            {/* Language Selector - Only for non-admin pages */}
+            {!isAdminPage && <LanguageSelector />}
             
             {/* Fantasy Button */}
             <FantasyButton href="/public/fantasy" page="header" />
@@ -97,6 +101,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
               </svg>
             </button>
+            
+            {/* Notification Dropdown */}
+            <NotificationDropdown />
           </div>
         </div>
       </div>

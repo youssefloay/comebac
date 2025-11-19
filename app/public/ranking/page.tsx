@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { db } from "@/lib/firebase"
 import { collection, getDocs } from "firebase/firestore"
 import type { TeamStatistics, Team } from "@/lib/types"
+import { t } from "@/lib/i18n"
 import { TeamLink } from "@/components/ui/team-link"
 
 interface RankingTeam extends TeamStatistics {
@@ -87,7 +88,7 @@ export default function RankingPage() {
             return {
               id: data.docId || data.id,
               teamId: data.teamId,
-              teamName: team?.name || "Équipe inconnue",
+              teamName: team?.name || t('home.unknownTeam'),
               teamLogo: team?.logo,
               points: data.points || 0,
               wins: data.wins || 0,
@@ -160,8 +161,8 @@ export default function RankingPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-sofa-text-primary mb-2">Classement Général</h1>
-          <p className="text-sofa-text-secondary">Classement officiel de la ComeBac League</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-sofa-text-primary mb-2">{t('ranking.title')}</h1>
+          <p className="text-sofa-text-secondary">{t('ranking.subtitle')}</p>
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-3">
           {ranking.length > 4 && (
@@ -170,14 +171,14 @@ export default function RankingPage() {
               disabled={cleaning}
               className="sofa-btn bg-sofa-red hover:bg-red-600 text-xs sm:text-sm"
             >
-              {cleaning ? 'Nettoyage...' : '🧹 Nettoyer Doublons'}
+              {cleaning ? t('ranking.cleanup') : t('ranking.cleanupDuplicates')}
             </button>
           )}
           <button
             onClick={() => setShowDebug(!showDebug)}
             className="sofa-btn-secondary sofa-btn text-xs sm:text-sm"
           >
-            {showDebug ? 'Masquer Debug' : 'Debug Info'}
+            {showDebug ? t('ranking.hideDebug') : t('ranking.debugInfo')}
           </button>
         </div>
       </div>
@@ -186,7 +187,7 @@ export default function RankingPage() {
       {topThree.length >= 3 && (
         <div className="mb-8">
           <h2 className="text-xl font-bold text-sofa-text-primary mb-4 flex items-center gap-2">
-            🏆 Podium
+            {t('ranking.podium')}
           </h2>
           <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto">
             {/* 2nd Place */}
@@ -262,7 +263,7 @@ export default function RankingPage() {
         <div className="sofa-card p-6 mb-8 border-l-4 border-sofa-orange">
           <h3 className="font-semibold text-sofa-text-accent mb-3">Informations de Debug</h3>
           <p className="text-sm text-sofa-text-secondary mb-2">
-            Équipes affichées: {ranking.length} | 
+            {t('ranking.teamsDisplayed')}: {ranking.length} | 
             Ouvrez la console du navigateur (F12) pour plus de détails sur les doublons
           </p>
           {ranking.length > 4 && (
@@ -276,18 +277,18 @@ export default function RankingPage() {
       {loading ? (
         <div className="text-center py-20">
           <div className="w-12 h-12 border-4 border-sofa-border border-t-sofa-text-accent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-sofa-text-secondary">Chargement du classement...</p>
+          <p className="text-sofa-text-secondary">{t('ranking.loading')}</p>
         </div>
       ) : ranking.length === 0 ? (
         <div className="sofa-card p-12 text-center">
-          <p className="text-sofa-text-secondary">Aucune donnée de classement disponible</p>
+          <p className="text-sofa-text-secondary">{t('ranking.noData')}</p>
         </div>
       ) : (
         <div>
           {/* Complete Ranking Table */}
           <div className="mb-6">
             <h2 className="text-xl font-bold text-sofa-text-primary mb-4 flex items-center gap-2">
-              📊 Classement Complet
+              📊 {t('ranking.fullRanking')}
             </h2>
           </div>
 
@@ -298,8 +299,8 @@ export default function RankingPage() {
                 <thead>
                   <tr>
                     <th className="text-left whitespace-nowrap">Pos</th>
-                    <th className="text-left whitespace-nowrap">Équipe</th>
-                    <th className="text-center whitespace-nowrap">Matchs</th>
+                    <th className="text-left whitespace-nowrap">{t('ranking.team')}</th>
+                    <th className="text-center whitespace-nowrap">{t('ranking.matches')}</th>
                     <th className="text-center whitespace-nowrap">V</th>
                     <th className="text-center whitespace-nowrap">N</th>
                     <th className="text-center whitespace-nowrap">D</th>
@@ -389,7 +390,7 @@ export default function RankingPage() {
               <thead>
                 <tr>
                   <th className="text-left py-2 px-1" style={{width: '8%'}}>#</th>
-                  <th className="text-left py-2 px-1" style={{width: '20%'}}>Équipe</th>
+                  <th className="text-left py-2 px-1" style={{width: '20%'}}>{t('ranking.team')}</th>
                   <th className="text-center py-2 px-1" style={{width: '8%'}}>MJ</th>
                   <th className="text-center py-2 px-1" style={{width: '8%'}}>V</th>
                   <th className="text-center py-2 px-1" style={{width: '8%'}}>N</th>

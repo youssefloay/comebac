@@ -8,6 +8,7 @@ import { db } from "@/lib/firebase"
 import { collection, getDocs, query, where, doc, getDoc, orderBy } from "firebase/firestore"
 import type { Team, Player, Match, MatchResult, TeamStatistics } from "@/lib/types"
 import { SofaMatchCard } from "@/components/sofa/match-card"
+import { t } from "@/lib/i18n"
 import { 
   ArrowLeft, 
   Users, 
@@ -186,7 +187,7 @@ export default function TeamDetailPage() {
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="text-center py-20">
           <div className="w-12 h-12 border-4 border-sofa-border border-t-sofa-text-accent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-sofa-text-secondary">Chargement de l'équipe...</p>
+          <p className="text-sofa-text-secondary">{t('team.loading')}</p>
         </div>
       </div>
     )
@@ -197,10 +198,10 @@ export default function TeamDetailPage() {
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="sofa-card p-12 text-center">
           <Users className="w-16 h-16 text-sofa-text-muted mx-auto mb-4" />
-          <p className="text-sofa-text-secondary">Équipe non trouvée</p>
+          <p className="text-sofa-text-secondary">{t('team.notFound')}</p>
           <Link href="/public/teams">
             <button className="sofa-btn mt-4">
-              Retour aux équipes
+              {t('team.backToTeams')}
             </button>
           </Link>
         </div>
@@ -212,8 +213,8 @@ export default function TeamDetailPage() {
 
   const convertMatchFormat = (match: Match & { homeTeam?: Team; awayTeam?: Team; result?: MatchResult }) => ({
     id: match.id,
-    teamA: match.homeTeam?.name || 'Équipe inconnue',
-    teamB: match.awayTeam?.name || 'Équipe inconnue',
+    teamA: match.homeTeam?.name || t('home.unknownTeam'),
+    teamB: match.awayTeam?.name || t('home.unknownTeam'),
     teamAId: match.homeTeamId,
     teamBId: match.awayTeamId,
     date: match.date,
@@ -222,14 +223,14 @@ export default function TeamDetailPage() {
     status: match.status === 'completed' ? 'completed' as const : 
             match.status === 'in_progress' ? 'live' as const :
             'upcoming' as const,
-    venue: `Stade de ${match.homeTeam?.name || 'l\'équipe'}`,
+    venue: `${t('team.stadiumOf')} ${match.homeTeam?.name || t('home.unknownTeam')}`,
     round: match.round
   })
 
   const tabs = [
-    { id: 'matches', label: 'Matchs', icon: Calendar },
-    { id: 'players', label: 'Joueurs', icon: Users },
-    { id: 'stats', label: 'Statistiques', icon: BarChart3 },
+    { id: 'matches', label: t('team.tabs.matches'), icon: Calendar },
+    { id: 'players', label: t('team.tabs.players'), icon: Users },
+    { id: 'stats', label: t('team.tabs.stats'), icon: BarChart3 },
   ]
 
   return (
@@ -238,7 +239,7 @@ export default function TeamDetailPage() {
       <div className="mb-6 sm:mb-8">
         <Link href="/public/teams" className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 transition-colors mb-4">
           <ArrowLeft className="w-4 h-4" />
-          <span>Retour aux équipes</span>
+          <span>{t('team.backToTeams')}</span>
         </Link>
         
         <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
@@ -257,11 +258,11 @@ export default function TeamDetailPage() {
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-white/90">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="text-sm sm:text-base">{players.length} joueurs</span>
+                  <span className="text-sm sm:text-base">{players.length} {t('team.playersCount')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="text-sm sm:text-base">Stade de {team.name}</span>
+                  <span className="text-sm sm:text-base">{t('team.stadiumOf')} {team.name}</span>
                 </div>
               </div>
             </div>
@@ -286,7 +287,7 @@ export default function TeamDetailPage() {
                   {team.coach.firstName.charAt(0)}{team.coach.lastName.charAt(0)}
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs sm:text-sm text-gray-600 mb-1">Entraîneur</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('team.coach')}</p>
                   <p className="font-semibold text-gray-900 text-base sm:text-lg">
                     {team.coach.firstName} {team.coach.lastName}
                   </p>
@@ -339,7 +340,7 @@ export default function TeamDetailPage() {
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                       <Trophy className="w-5 h-5 text-green-600" />
-                      Derniers Résultats
+                      {t('team.lastResults')}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {matches
@@ -361,7 +362,7 @@ export default function TeamDetailPage() {
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                       <Calendar className="w-5 h-5 text-blue-600" />
-                      Prochains Matchs
+                      {t('team.upcomingMatches')}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {matches
@@ -381,8 +382,8 @@ export default function TeamDetailPage() {
             ) : (
               <div className="bg-white rounded-xl p-12 text-center border">
                 <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucun match</h3>
-                <p className="text-gray-600">Cette équipe n'a pas encore de matchs programmés.</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('team.noMatches')}</h3>
+                <p className="text-gray-600">{t('team.noMatchesDesc')}</p>
               </div>
             )}
           </motion.div>
@@ -407,7 +408,7 @@ export default function TeamDetailPage() {
                       </div>
                       <div>
                         <h2 className="text-xl font-bold text-gray-900">{position}s</h2>
-                        <p className="text-sm text-gray-600">{positionPlayers.length} joueur{positionPlayers.length > 1 ? 's' : ''}</p>
+                        <p className="text-sm text-gray-600">{positionPlayers.length} {positionPlayers.length > 1 ? t('team.playersCount') : t('team.playerSingular')}</p>
                       </div>
                     </div>
 
@@ -441,7 +442,7 @@ export default function TeamDetailPage() {
                                 </p>
                               )}
                               <p className={`text-sm ${getPositionColor(player.position || '')} truncate`}>
-                                {player.position || 'Position non définie'}
+                                {player.position || t('team.positionUndefined')}
                               </p>
                             </div>
                           </div>
@@ -454,8 +455,8 @@ export default function TeamDetailPage() {
             ) : (
               <div className="bg-white rounded-xl p-12 text-center border">
                 <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucun joueur enregistré</h3>
-                <p className="text-gray-600">Cette équipe n'a pas encore de joueurs enregistrés.</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('team.noPlayers')}</h3>
+                <p className="text-gray-600">{t('team.noPlayers')}</p>
               </div>
             )}
           </motion.div>
@@ -476,7 +477,7 @@ export default function TeamDetailPage() {
                       <Calendar className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Matchs Joués</p>
+                      <p className="text-sm text-gray-600">{t('team.matchesPlayed')}</p>
                       <p className="text-2xl font-bold text-gray-900">{teamStats.matchesPlayed}</p>
                     </div>
                   </div>
@@ -488,7 +489,7 @@ export default function TeamDetailPage() {
                       <Trophy className="w-5 h-5 text-green-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Points</p>
+                      <p className="text-sm text-gray-600">{t('team.points')}</p>
                       <p className="text-2xl font-bold text-gray-900">{teamStats.points}</p>
                     </div>
                   </div>
@@ -500,7 +501,7 @@ export default function TeamDetailPage() {
                       <Target className="w-5 h-5 text-yellow-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Buts Pour</p>
+                      <p className="text-sm text-gray-600">{t('team.goalsFor')}</p>
                       <p className="text-2xl font-bold text-gray-900">{teamStats.goalsFor}</p>
                     </div>
                   </div>
@@ -512,7 +513,7 @@ export default function TeamDetailPage() {
                       <Shield className="w-5 h-5 text-red-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Buts Contre</p>
+                      <p className="text-sm text-gray-600">{t('team.goalsAgainst')}</p>
                       <p className="text-2xl font-bold text-gray-900">{teamStats.goalsAgainst}</p>
                     </div>
                   </div>
@@ -524,7 +525,7 @@ export default function TeamDetailPage() {
                       <Award className="w-5 h-5 text-green-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Victoires</p>
+                      <p className="text-sm text-gray-600">{t('team.wins')}</p>
                       <p className="text-2xl font-bold text-gray-900">{teamStats.wins}</p>
                     </div>
                   </div>
@@ -536,7 +537,7 @@ export default function TeamDetailPage() {
                       <TrendingUp className="w-5 h-5 text-gray-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Nuls</p>
+                      <p className="text-sm text-gray-600">{t('team.draws')}</p>
                       <p className="text-2xl font-bold text-gray-900">{teamStats.draws}</p>
                     </div>
                   </div>
@@ -548,7 +549,7 @@ export default function TeamDetailPage() {
                       <TrendingUp className="w-5 h-5 text-red-600 rotate-180" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Défaites</p>
+                      <p className="text-sm text-gray-600">{t('team.losses')}</p>
                       <p className="text-2xl font-bold text-gray-900">{teamStats.losses}</p>
                     </div>
                   </div>
@@ -560,7 +561,7 @@ export default function TeamDetailPage() {
                       <BarChart3 className="w-5 h-5 text-purple-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Différence</p>
+                      <p className="text-sm text-gray-600">{t('team.goalDifference')}</p>
                       <p className={`text-2xl font-bold ${
                         (teamStats.goalsFor - teamStats.goalsAgainst) >= 0 ? 'text-green-600' : 'text-red-600'
                       }`}>
@@ -573,8 +574,8 @@ export default function TeamDetailPage() {
             ) : (
               <div className="bg-white rounded-xl p-12 text-center border">
                 <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucune statistique</h3>
-                <p className="text-gray-600">Les statistiques de cette équipe ne sont pas encore disponibles.</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('team.noStats')}</h3>
+                <p className="text-gray-600">{t('team.statsNotAvailable')}</p>
               </div>
             )}
           </motion.div>

@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import { Sparkles, Trophy, Users, Star, Zap } from "lucide-react"
 import Link from "next/link"
+import { t } from "@/lib/i18n"
 
 export default function FantasyPage() {
   return (
@@ -33,10 +34,10 @@ export default function FantasyPage() {
             </motion.div>
             
             <h1 className="text-4xl md:text-5xl font-black text-white mb-2">
-              ComeBac Fantasy
+              {t('fantasy.title')}
             </h1>
             <p className="text-xl text-purple-100">
-              Bientôt disponible ! 🎮
+              {t('fantasy.comingSoon')}
             </p>
           </div>
 
@@ -44,11 +45,10 @@ export default function FantasyPage() {
           <div className="p-8 md:p-12">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Une expérience unique arrive ! ✨
+                {t('fantasy.uniqueExperience')}
               </h2>
               <p className="text-gray-600 text-lg leading-relaxed">
-                Préparez-vous à vivre la ComeBac League comme jamais auparavant. 
-                Créez votre équipe de rêve, affrontez vos amis et devenez le meilleur manager !
+                {t('fantasy.description')}
               </p>
             </div>
 
@@ -59,9 +59,9 @@ export default function FantasyPage() {
                 className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-2xl"
               >
                 <Trophy className="w-10 h-10 text-purple-600 mb-3" />
-                <h3 className="font-bold text-gray-900 mb-2">Compétitions</h3>
+                <h3 className="font-bold text-gray-900 mb-2">{t('fantasy.competitions')}</h3>
                 <p className="text-sm text-gray-600">
-                  Participez à des ligues privées et publiques
+                  {t('fantasy.competitionsDesc')}
                 </p>
               </motion.div>
 
@@ -70,9 +70,9 @@ export default function FantasyPage() {
                 className="bg-gradient-to-br from-pink-50 to-pink-100 p-6 rounded-2xl"
               >
                 <Users className="w-10 h-10 text-pink-600 mb-3" />
-                <h3 className="font-bold text-gray-900 mb-2">Équipe de rêve</h3>
+                <h3 className="font-bold text-gray-900 mb-2">{t('fantasy.dreamTeam')}</h3>
                 <p className="text-sm text-gray-600">
-                  Composez votre équipe avec les meilleurs joueurs
+                  {t('fantasy.dreamTeamDesc')}
                 </p>
               </motion.div>
 
@@ -114,7 +114,7 @@ export default function FantasyPage() {
                 href="/public"
                 className="inline-block px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all transform hover:scale-105 shadow-lg"
               >
-                Retour à l'accueil
+                {t('common.backToHome')}
               </Link>
             </div>
           </div>

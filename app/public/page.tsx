@@ -9,6 +9,7 @@ import { SofaStatCard } from '@/components/sofa/stat-card'
 import { SofaTeamCard } from '@/components/sofa/team-card'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import Link from 'next/link'
+import { t } from '@/lib/i18n'
 import { 
   Calendar, 
   Clock, 
@@ -228,8 +229,8 @@ export default function PublicHome() {
 
   const convertMatchFormat = (match: Match) => ({
     id: match.id,
-    teamA: match.homeTeam?.name || 'Équipe inconnue',
-    teamB: match.awayTeam?.name || 'Équipe inconnue',
+    teamA: match.homeTeam?.name || t('home.unknownTeam'),
+    teamB: match.awayTeam?.name || t('home.unknownTeam'),
     teamAId: match.homeTeamId,
     teamBId: match.awayTeamId,
     date: match.date,
@@ -238,7 +239,7 @@ export default function PublicHome() {
     status: match.status === 'completed' ? 'completed' as const : 
             match.status === 'in_progress' ? 'live' as const :
             'upcoming' as const,
-    venue: `Stade de ${match.homeTeam?.name || 'l\'équipe'}`,
+    venue: `${t('home.stadium')} ${match.homeTeam?.name || t('home.unknownTeam')}`,
     round: match.round
   })
 
@@ -273,10 +274,10 @@ export default function PublicHome() {
             className="text-center"
           >
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 text-sofa-text-primary">
-              ComeBac League
+              {t('home.title')}
             </h1>
             <p className="text-sm sm:text-base text-sofa-text-secondary mb-6 max-w-xl mx-auto">
-              Championnat scolaire en temps réel
+              {t('home.subtitle')}
             </p>
           </motion.div>
         </div>
@@ -295,17 +296,17 @@ export default function PublicHome() {
                 {liveMatch ? (
                   <>
                     <div className="w-3 h-3 bg-sofa-red rounded-full animate-pulse"></div>
-                    Match en Direct
+                    {t('home.liveMatch')}
                   </>
                 ) : (
                   <>
                     <Clock className="w-6 h-6 text-sofa-blue" />
-                    Prochain Match
+                    {t('home.nextMatch')}
                   </>
                 )}
               </h2>
               <Link href="/public/matches" className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium">
-                Tous les matchs →
+                {t('home.allMatches')} →
               </Link>
             </div>
             
@@ -328,10 +329,10 @@ export default function PublicHome() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold text-sofa-text-primary flex items-center gap-3">
                 <Trophy className="w-6 h-6 text-sofa-green" />
-                Podium
+                {t('home.podium')}
               </h2>
               <Link href="/public/ranking" className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium">
-                Classement complet →
+                {t('home.fullRanking')} →
               </Link>
             </div>
             
@@ -383,31 +384,31 @@ export default function PublicHome() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
-          <h2 className="text-xl font-bold text-sofa-text-primary mb-4">Statistiques de la Ligue</h2>
+          <h2 className="text-xl font-bold text-sofa-text-primary mb-4">{t('home.leagueStats')}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             <SofaStatCard
-              title="Équipes"
+              title={t('home.teamsCount')}
               value={stats.teams}
               icon={Users}
               color="blue"
               index={0}
             />
             <SofaStatCard
-              title="Matchs"
+              title={t('nav.matches')}
               value={stats.matches}
               icon={Calendar}
               color="green"
               index={1}
             />
             <SofaStatCard
-              title="Buts"
+              title={t('stats.goals')}
               value={stats.goals}
               icon={Target}
               color="purple"
               index={2}
             />
             <SofaStatCard
-              title="Terminés"
+              title={t('match.completed')}
               value={stats.completed}
               icon={Trophy}
               color="orange"
@@ -426,10 +427,10 @@ export default function PublicHome() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-sofa-text-primary flex items-center gap-3">
                 <Trophy className="w-5 h-5 text-sofa-green" />
-                Derniers Résultats
+                {t('matches.lastResults')}
               </h2>
               <Link href="/public/matches" className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium">
-                Tous les résultats →
+                {t('matches.allResults')} →
               </Link>
             </div>
             
@@ -475,10 +476,10 @@ export default function PublicHome() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-sofa-text-primary flex items-center gap-3">
                 <Calendar className="w-5 h-5 text-sofa-blue" />
-                Prochains Matchs
+                {t('matches.upcomingMatches')}
               </h2>
               <Link href="/public/matches" className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium">
-                Calendrier complet →
+                {t('matches.fullSchedule')} →
               </Link>
             </div>
             
@@ -510,10 +511,10 @@ export default function PublicHome() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-sofa-text-primary flex items-center gap-3">
                 <Users className="w-5 h-5 text-sofa-blue" />
-                Équipes ({teams.length})
+                {t('home.teamsCount')} ({teams.length})
               </h2>
               <Link href="/public/teams" className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium">
-                Toutes les équipes →
+                {t('teams.viewAll')} →
               </Link>
             </div>
             

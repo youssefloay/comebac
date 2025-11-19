@@ -8,6 +8,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Trophy, Users, Calendar, TrendingUp, Clipboard, BarChart3, Shield, Target, AlertCircle, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { NotificationBell } from '@/components/notifications/notification-bell'
+import { t } from '@/lib/i18n'
 
 interface CoachData {
   id: string
@@ -213,7 +214,7 @@ export function CoachDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <p className="text-gray-600">Aucune donnée entraîneur trouvée</p>
+          <p className="text-gray-600">{t('coach.noData')}</p>
         </div>
       </div>
     )
@@ -238,10 +239,10 @@ export function CoachDashboard() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Bienvenue, Coach {coachData.firstName}! 🏆
+                {t('coach.welcomeCoach')} {coachData.firstName}! 🏆
               </h1>
               <p className="text-gray-600">
-                Gérez votre équipe et préparez vos matchs
+                {t('coach.manageTeam')}
               </p>
             </div>
             <NotificationBell />
@@ -254,16 +255,16 @@ export function CoachDashboard() {
             <div className="flex items-start gap-3">
               <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <h3 className="font-bold text-red-900 mb-1">⚠️ Composition manquante</h3>
+                <h3 className="font-bold text-red-900 mb-1">{t('coach.missingLineup')}</h3>
                 <p className="text-red-700 text-sm mb-3">
-                  Vous avez un match dans moins de 24h sans composition validée !
+                  {t('coach.missingLineupDesc')}
                 </p>
                 <Link
                   href="/coach/lineups"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium text-sm"
                 >
                   <Clipboard className="w-4 h-4" />
-                  Créer la composition maintenant
+                  {t('coach.createLineupNow')}
                 </Link>
               </div>
             </div>
@@ -288,11 +289,11 @@ export function CoachDashboard() {
               </div>
               <div className="flex-1">
                 <h2 className="text-2xl font-bold mb-1">{teamData.name}</h2>
-                <p className="text-white/90">Mon Équipe</p>
+                <p className="text-white/90">{t('coach.myTeam')}</p>
               </div>
               <div className="text-right">
                 <div className="text-3xl font-bold">{teamData.players}</div>
-                <p className="text-white/90 text-sm">Joueurs</p>
+                <p className="text-white/90 text-sm">{t('coach.players')}</p>
               </div>
             </div>
           </div>
@@ -304,7 +305,7 @@ export function CoachDashboard() {
             <div className="flex flex-col items-center text-center">
               <Trophy className="w-10 h-10 text-blue-600 mb-3" />
               <span className="text-3xl font-bold text-gray-900 mb-1">{stats.matchesPlayed}</span>
-              <p className="text-sm text-gray-600">Matchs Joués</p>
+              <p className="text-sm text-gray-600">{t('coach.matchesPlayed')}</p>
             </div>
           </div>
 
@@ -341,7 +342,7 @@ export function CoachDashboard() {
           <div className="bg-gradient-to-br from-purple-600 to-purple-700 text-white p-6 rounded-lg shadow-lg">
             <div className="flex items-center gap-3 mb-3">
               <Trophy className="w-8 h-8" />
-              <h3 className="text-xl font-bold">Position au Classement</h3>
+              <h3 className="text-xl font-bold">{t('coach.rankingPosition')}</h3>
             </div>
             <div className="flex items-center justify-between">
               <div>
@@ -391,7 +392,7 @@ export function CoachDashboard() {
         {/* Prochains Matchs */}
         {upcomingMatches.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Prochains Matchs</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">{t('coach.upcomingMatches')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {upcomingMatches.map((match) => {
                 const hoursUntilMatch = (match.date.getTime() - new Date().getTime()) / (1000 * 60 * 60)
@@ -489,7 +490,7 @@ export function CoachDashboard() {
                 <Users className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Mon Équipe</h3>
+                <h3 className="font-semibold text-gray-900">{t('coach.myTeam')}</h3>
                 <p className="text-sm text-gray-600">Gérer les joueurs</p>
               </div>
             </div>
@@ -504,8 +505,8 @@ export function CoachDashboard() {
                 <Clipboard className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Compositions</h3>
-                <p className="text-sm text-gray-600">Créer les lineups</p>
+                <h3 className="font-semibold text-gray-900">{t('coach.lineups')}</h3>
+                <p className="text-sm text-gray-600">{t('coach.createLineups')}</p>
               </div>
             </div>
           </Link>
@@ -519,8 +520,8 @@ export function CoachDashboard() {
                 <Calendar className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Matchs</h3>
-                <p className="text-sm text-gray-600">Calendrier et résultats</p>
+                <h3 className="font-semibold text-gray-900">{t('coach.matches')}</h3>
+                <p className="text-sm text-gray-600">{t('coach.scheduleResults')}</p>
               </div>
             </div>
           </Link>

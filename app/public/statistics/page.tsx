@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { getTeams } from "@/lib/db"
+import { t } from "@/lib/i18n"
 import { 
   getCurrentRanking, 
   getTopScorers, 
@@ -171,7 +172,7 @@ export default function PublicStatisticsPage() {
     }
   }
 
-  const getTeamName = (teamId: string) => teams.find((t) => t.id === teamId)?.name || "Équipe inconnue"
+  const getTeamName = (teamId: string) => teams.find((t) => t.id === teamId)?.name || t('home.unknownTeam')
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat("fr-FR", {
@@ -186,7 +187,7 @@ export default function PublicStatisticsPage() {
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="text-center py-12">
           <div className="w-12 h-12 border-4 border-gray-200 border-t-sofa-green rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-sofa-text-secondary">Chargement des statistiques...</p>
+          <p className="text-sofa-text-secondary">{t('stats.loading')}</p>
         </div>
       </div>
     )
@@ -201,8 +202,8 @@ export default function PublicStatisticsPage() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Compact Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-sofa-text-primary mb-2">Statistiques de la Ligue</h1>
-        <p className="text-sofa-text-secondary">Analyses complètes et données en temps réel</p>
+        <h1 className="text-3xl font-bold text-sofa-text-primary mb-2">{t('stats.title')}</h1>
+        <p className="text-sofa-text-secondary">{t('stats.subtitle')}</p>
       </div>
 
       {/* Priority Content - Key Stats Overview */}
@@ -262,7 +263,7 @@ export default function PublicStatisticsPage() {
         {/* Recent Matches */}
         <div className="sofa-card p-6">
           <h2 className="text-lg font-bold text-sofa-text-primary mb-4 flex items-center gap-2">
-            📅 Derniers Résultats
+            📅 {t('matches.lastResults')}
           </h2>
           <div className="space-y-3">
             {recentMatches.map((match, index) => (
@@ -294,12 +295,12 @@ export default function PublicStatisticsPage() {
         <div className="border-b border-sofa-border">
           <nav className="flex space-x-1 px-4 overflow-x-auto scrollbar-hide" role="tablist">
             {[
-              { id: 'ranking', label: 'Classement', icon: TrendingUp, priority: 1 },
-              { id: 'scorers', label: 'Buteurs', icon: Target, priority: 2 },
-              { id: 'matches', label: 'Matchs', icon: Calendar, priority: 3 },
-              { id: 'team-details', label: 'Équipes', icon: Users, priority: 4 },
+              { id: 'ranking', label: t('ranking.title'), icon: TrendingUp, priority: 1 },
+              { id: 'scorers', label: t('stats.topScorers'), icon: Target, priority: 2 },
+              { id: 'matches', label: t('nav.matches'), icon: Calendar, priority: 3 },
+              { id: 'team-details', label: t('nav.teams'), icon: Users, priority: 4 },
               { id: 'analytics', label: 'Analytics', icon: BarChart3, priority: 5 },
-              { id: 'comparison', label: 'Comparaison', icon: GitCompare, priority: 6 }
+              { id: 'comparison', label: t('stats.comparison'), icon: GitCompare, priority: 6 }
             ].map(({ id, label, icon: Icon, priority }) => (
               <button
                 key={id}
@@ -327,7 +328,7 @@ export default function PublicStatisticsPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
                 <Trophy className="w-5 h-5 text-sofa-text-accent" />
-                <h2 className="text-xl font-semibold text-sofa-text-primary">Classement Général</h2>
+                <h2 className="text-xl font-semibold text-sofa-text-primary">{t('ranking.title')}</h2>
               </div>
               
               {/* Desktop Table */}
@@ -335,16 +336,16 @@ export default function PublicStatisticsPage() {
                 <table className="sofa-table">
                   <thead className="bg-sofa-bg-secondary border-b-2 border-sofa-text-accent">
                     <tr>
-                      <th className="text-sofa-text-primary font-bold">Position</th>
-                      <th className="text-sofa-text-primary font-bold">Équipe</th>
-                      <th className="text-sofa-text-primary font-bold">Matchs</th>
-                      <th className="text-sofa-text-primary font-bold">Victoires</th>
-                      <th className="text-sofa-text-primary font-bold">Nuls</th>
-                      <th className="text-sofa-text-primary font-bold">Défaites</th>
-                      <th className="text-sofa-text-primary font-bold">Buts Pour</th>
-                      <th className="text-sofa-text-primary font-bold">Buts Contre</th>
-                      <th className="text-sofa-text-primary font-bold">Différence</th>
-                      <th className="text-sofa-text-primary font-bold">Points</th>
+                      <th className="text-sofa-text-primary font-bold">{t('ranking.position')}</th>
+                      <th className="text-sofa-text-primary font-bold">{t('ranking.team')}</th>
+                      <th className="text-sofa-text-primary font-bold">{t('ranking.matches')}</th>
+                      <th className="text-sofa-text-primary font-bold">{t('ranking.wins')}</th>
+                      <th className="text-sofa-text-primary font-bold">{t('ranking.draws')}</th>
+                      <th className="text-sofa-text-primary font-bold">{t('ranking.losses')}</th>
+                      <th className="text-sofa-text-primary font-bold">{t('ranking.goalsFor')}</th>
+                      <th className="text-sofa-text-primary font-bold">{t('ranking.goalsAgainst')}</th>
+                      <th className="text-sofa-text-primary font-bold">{t('ranking.goalDifference')}</th>
+                      <th className="text-sofa-text-primary font-bold">{t('ranking.points')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -439,21 +440,21 @@ export default function PublicStatisticsPage() {
                     <div className="grid grid-cols-3 gap-4 text-center">
                       <div className="bg-green-100 rounded-lg p-2">
                         <div className="text-lg font-bold text-green-700">{team.wins}</div>
-                        <div className="text-xs text-green-600">Victoires</div>
+                        <div className="text-xs text-green-600">{t('ranking.wins')}</div>
                       </div>
                       <div className="bg-yellow-100 rounded-lg p-2">
                         <div className="text-lg font-bold text-yellow-700">{team.draws}</div>
-                        <div className="text-xs text-yellow-600">Nuls</div>
+                        <div className="text-xs text-yellow-600">{t('ranking.draws')}</div>
                       </div>
                       <div className="bg-red-100 rounded-lg p-2">
                         <div className="text-lg font-bold text-red-700">{team.losses}</div>
-                        <div className="text-xs text-red-600">Défaites</div>
+                        <div className="text-xs text-red-600">{t('ranking.losses')}</div>
                       </div>
                     </div>
                     
                     <div className="flex justify-between items-center mt-3 pt-3 border-t border-sofa-border">
                       <div className="text-sm text-sofa-text-secondary">
-                        <span className="font-medium">Buts:</span> {team.goalsFor} - {team.goalsAgainst}
+                        <span className="font-medium">{t('stats.goals')}:</span> {team.goalsFor} - {team.goalsAgainst}
                       </div>
                       <div className={`text-sm font-bold ${team.goalDifference >= 0 ? 'text-sofa-green' : 'text-sofa-red'}`}>
                         Diff: {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
@@ -479,12 +480,12 @@ export default function PublicStatisticsPage() {
                   <thead className="bg-sofa-bg-secondary border-b-2 border-sofa-green">
                     <tr>
                       <th className="text-sofa-text-primary font-bold">Rang</th>
-                      <th className="text-sofa-text-primary font-bold">Joueur</th>
-                      <th className="text-sofa-text-primary font-bold">Buts</th>
-                      <th className="text-sofa-text-primary font-bold">Passes Décisives</th>
-                      <th className="text-sofa-text-primary font-bold">Matchs</th>
-                      <th className="text-sofa-text-primary font-bold">Buts/Match</th>
-                      <th className="text-sofa-text-primary font-bold">Total Points</th>
+                      <th className="text-sofa-text-primary font-bold">{t('role.player')}</th>
+                      <th className="text-sofa-text-primary font-bold">{t('stats.goals')}</th>
+                      <th className="text-sofa-text-primary font-bold">{t('player.assists')}</th>
+                      <th className="text-sofa-text-primary font-bold">{t('ranking.matches')}</th>
+                      <th className="text-sofa-text-primary font-bold">{t('stats.goalsPerMatch')}</th>
+                      <th className="text-sofa-text-primary font-bold">{t('stats.totalPoints')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -566,7 +567,7 @@ export default function PublicStatisticsPage() {
                     <div className="grid grid-cols-3 gap-4 text-center">
                       <div className="bg-green-100 rounded-lg p-3">
                         <div className="text-xl font-bold text-green-700">⚽ {scorer.goals}</div>
-                        <div className="text-xs text-green-600">Buts</div>
+                        <div className="text-xs text-green-600">{t('stats.goals')}</div>
                       </div>
                       <div className="bg-blue-100 rounded-lg p-3">
                         <div className="text-xl font-bold text-blue-700">🎯 {scorer.assists}</div>
@@ -574,7 +575,7 @@ export default function PublicStatisticsPage() {
                       </div>
                       <div className="bg-purple-100 rounded-lg p-3">
                         <div className="text-xl font-bold text-purple-700">{scorer.goalsPerMatch}</div>
-                        <div className="text-xs text-purple-600">Buts/Match</div>
+                        <div className="text-xs text-purple-600">{t('stats.goalsPerMatch')}</div>
                       </div>
                     </div>
                   </div>
@@ -588,7 +589,7 @@ export default function PublicStatisticsPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
                 <Calendar className="w-5 h-5 text-sofa-text-accent" />
-                <h2 className="text-xl font-semibold text-sofa-text-primary">Historique des Matchs</h2>
+                <h2 className="text-xl font-semibold text-sofa-text-primary">{t('stats.matchHistory')}</h2>
               </div>
               <div className="space-y-4">
                 {matchHistory.slice(0, 15).map((match, idx) => (
@@ -597,7 +598,7 @@ export default function PublicStatisticsPage() {
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-medium text-sofa-text-secondary">{formatDate(match.date)}</span>
                         <span className="sofa-badge sofa-badge-completed">
-                          Journée {match.round}
+                          {t('match.round')} {match.round}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-sofa-text-muted">
@@ -633,7 +634,7 @@ export default function PublicStatisticsPage() {
             <div className="space-y-6">
               <div className="flex items-center gap-4 mb-6">
                 <Users className="w-5 h-5 text-sofa-text-accent" />
-                <h2 className="text-xl font-semibold text-sofa-text-primary">Analyse Détaillée d'Équipe</h2>
+                <h2 className="text-xl font-semibold text-sofa-text-primary">{t('stats.teamAnalysis')}</h2>
                 <select
                   value={selectedTeamId}
                   onChange={(e) => setSelectedTeamId(e.target.value)}
@@ -654,10 +655,10 @@ export default function PublicStatisticsPage() {
                     <div className="sofa-stat-card">
                       <div className="flex items-center gap-3 mb-2">
                         <Calendar className="w-6 h-6 text-sofa-text-accent" />
-                        <span className="font-medium text-sofa-text-primary">Matchs Joués</span>
+                        <span className="font-medium text-sofa-text-primary">{t('team.matchesPlayed')}</span>
                       </div>
                       <p className="sofa-stat-number">{teamStats.completedMatches}</p>
-                      <p className="sofa-stat-label">sur {teamStats.totalMatches} programmés</p>
+                      <p className="sofa-stat-label">{t('stats.of')} {teamStats.totalMatches} {t('stats.scheduled')}</p>
                     </div>
                     
                     <div className="sofa-stat-card">
@@ -716,25 +717,25 @@ export default function PublicStatisticsPage() {
                   {/* Performance Metrics */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="sofa-card">
-                      <h3 className="text-lg font-semibold text-sofa-text-primary mb-4">Statistiques Générales</h3>
+                      <h3 className="text-lg font-semibold text-sofa-text-primary mb-4">{t('stats.general')}</h3>
                       <div className="space-y-4">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-sofa-text-secondary">Matchs Joués</span>
+                          <span className="text-sm text-sofa-text-secondary">{t('team.matchesPlayed')}</span>
                           <span className="text-lg font-bold text-sofa-green">{analyticsData.totalMatches}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-sofa-text-secondary">Total Buts</span>
+                          <span className="text-sm text-sofa-text-secondary">{t('stats.totalGoals')}</span>
                           <span className="text-lg font-bold text-sofa-blue">{analyticsData.totalGoals}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-sofa-text-secondary">Moyenne/Match</span>
+                          <span className="text-sm text-sofa-text-secondary">{t('stats.avgPerMatch')}</span>
                           <span className="text-lg font-bold text-sofa-text-accent">{analyticsData.avgGoalsPerMatch}</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="sofa-card">
-                      <h3 className="text-lg font-semibold text-sofa-text-primary mb-4">Efficacité Offensive</h3>
+                      <h3 className="text-lg font-semibold text-sofa-text-primary mb-4">{t('stats.offensiveEfficiency')}</h3>
                       <div className="space-y-4">
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-sofa-text-secondary">Buts/Match</span>
@@ -746,21 +747,21 @@ export default function PublicStatisticsPage() {
                             style={{ width: `${Math.min((analyticsData.avgGoalsPerMatch / 5) * 100, 100)}%` }}
                           />
                         </div>
-                        <div className="text-xs text-sofa-text-muted">Basé sur les matchs réels</div>
+                        <div className="text-xs text-sofa-text-muted">{t('stats.basedOnRealMatches')}</div>
                       </div>
                     </div>
 
                     <div className="sofa-card">
-                      <h3 className="text-lg font-semibold text-sofa-text-primary mb-4">Performance Équipes</h3>
+                      <h3 className="text-lg font-semibold text-sofa-text-primary mb-4">{t('stats.teamPerformance')}</h3>
                       <div className="space-y-4">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-sofa-text-secondary">Équipes Actives</span>
+                          <span className="text-sm text-sofa-text-secondary">{t('stats.activeTeams')}</span>
                           <span className="text-lg font-bold text-sofa-text-accent">{analyticsData.teamMetrics.length}</span>
                         </div>
                         <div className="w-full bg-sofa-bg-secondary rounded-full h-2">
                           <div className="bg-sofa-text-accent h-2 rounded-full w-full" />
                         </div>
-                        <div className="text-xs text-sofa-text-muted">Équipes avec statistiques</div>
+                        <div className="text-xs text-sofa-text-muted">{t('stats.teamsWithStats')}</div>
                       </div>
                     </div>
                   </div>
@@ -903,7 +904,7 @@ export default function PublicStatisticsPage() {
               ) : (
                 <div className="text-center py-12">
                   <div className="w-12 h-12 border-4 border-gray-200 border-t-sofa-green rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-sofa-text-secondary">Chargement des analytics...</p>
+                  <p className="text-sofa-text-secondary">{t('stats.loadingAnalytics')}</p>
                 </div>
               )}
             </div>
@@ -914,13 +915,13 @@ export default function PublicStatisticsPage() {
             <div className="space-y-6">
               <div className="flex items-center gap-2 mb-6">
                 <GitCompare className="w-5 h-5 text-sofa-text-accent" />
-                <h2 className="text-xl font-semibold text-sofa-text-primary">Comparaison d'Équipes</h2>
+                <h2 className="text-xl font-semibold text-sofa-text-primary">{t('stats.teamComparison')}</h2>
               </div>
 
               {/* Team Selection */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div className="sofa-card">
-                  <h3 className="text-lg font-semibold text-sofa-text-primary mb-4">Équipe A</h3>
+                  <h3 className="text-lg font-semibold text-sofa-text-primary mb-4">{t('stats.teamA')}</h3>
                   <select 
                     value={comparisonTeamA}
                     onChange={(e) => setComparisonTeamA(e.target.value)}
@@ -933,7 +934,7 @@ export default function PublicStatisticsPage() {
                   </select>
                 </div>
                 <div className="sofa-card">
-                  <h3 className="text-lg font-semibold text-sofa-text-primary mb-4">Équipe B</h3>
+                  <h3 className="text-lg font-semibold text-sofa-text-primary mb-4">{t('stats.teamB')}</h3>
                   <select 
                     value={comparisonTeamB}
                     onChange={(e) => setComparisonTeamB(e.target.value)}
@@ -956,19 +957,19 @@ export default function PublicStatisticsPage() {
                     <div className="grid grid-cols-3 gap-6 text-center">
                       <div>
                         <div className="text-2xl font-bold text-sofa-green mb-2">{comparisonData.team1Wins}</div>
-                        <div className="text-sm text-sofa-text-secondary">Victoires {getTeamName(comparisonTeamA)}</div>
+                        <div className="text-sm text-sofa-text-secondary">{t('ranking.wins')} {getTeamName(comparisonTeamA)}</div>
                       </div>
                       <div>
                         <div className="text-2xl font-bold text-sofa-yellow mb-2">{comparisonData.draws}</div>
-                        <div className="text-sm text-sofa-text-secondary">Matchs Nuls</div>
+                        <div className="text-sm text-sofa-text-secondary">{t('stats.draws')}</div>
                       </div>
                       <div>
                         <div className="text-2xl font-bold text-sofa-blue mb-2">{comparisonData.team2Wins}</div>
-                        <div className="text-sm text-sofa-text-secondary">Victoires {getTeamName(comparisonTeamB)}</div>
+                        <div className="text-sm text-sofa-text-secondary">{t('ranking.wins')} {getTeamName(comparisonTeamB)}</div>
                       </div>
                     </div>
                     <div className="mt-4 text-center text-sm text-sofa-text-muted">
-                      Total: {comparisonData.totalMatches} match(s) joué(s)
+                      {t('stats.total')}: {comparisonData.totalMatches} {t('stats.matchesPlayed')}
                     </div>
                   </div>
 
@@ -1024,7 +1025,7 @@ export default function PublicStatisticsPage() {
               ) : comparisonTeamA && comparisonTeamB && comparisonTeamA !== comparisonTeamB ? (
                 <div className="text-center py-12">
                   <div className="w-12 h-12 border-4 border-gray-200 border-t-sofa-green rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-sofa-text-secondary">Chargement de la comparaison...</p>
+                  <p className="text-sofa-text-secondary">{t('stats.loadingComparison')}</p>
                 </div>
               ) : (
                 <div className="sofa-card">
@@ -1068,7 +1069,7 @@ export default function PublicStatisticsPage() {
                       </div>
                     ) : (
                       <div className="text-center py-8 text-sofa-text-secondary">
-                        Aucune donnée de tendance disponible
+                        {t('stats.noTrendData')}
                       </div>
                     )}
                   </div>
@@ -1165,7 +1166,7 @@ export default function PublicStatisticsPage() {
               ) : (
                 <div className="text-center py-12">
                   <div className="w-12 h-12 border-4 border-gray-200 border-t-sofa-green rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-sofa-text-secondary">Chargement des tendances...</p>
+                  <p className="text-sofa-text-secondary">{t('stats.loadingTrends')}</p>
                 </div>
               )}
             </div>
@@ -1176,14 +1177,14 @@ export default function PublicStatisticsPage() {
             <div className="space-y-6">
               <div className="flex items-center gap-2 mb-6">
                 <Brain className="w-5 h-5 text-sofa-text-accent" />
-                <h2 className="text-xl font-semibold text-sofa-text-primary">Prédictions IA</h2>
+                <h2 className="text-xl font-semibold text-sofa-text-primary">{t('stats.aiPredictions')}</h2>
               </div>
 
               {predictionsData ? (
                 <>
                   {/* Next Matches Predictions */}
                   <div className="sofa-card">
-                    <h3 className="text-lg font-semibold text-sofa-text-primary mb-6">Prochains Matchs - Prédictions</h3>
+                    <h3 className="text-lg font-semibold text-sofa-text-primary mb-6">{t('stats.upcomingMatchesPredictions')}</h3>
                     {predictionsData.length > 0 ? (
                       <div className="space-y-4">
                         {predictionsData.map((match: any, idx: number) => (
@@ -1213,7 +1214,7 @@ export default function PublicStatisticsPage() {
                               </div>
                               
                               <div className="space-y-2">
-                                <div className="text-sm text-sofa-text-secondary">Match Nul</div>
+                                <div className="text-sm text-sofa-text-secondary">{t('stats.draw')}</div>
                                 <div className="text-lg font-bold text-sofa-yellow">{match.draw}%</div>
                                 <div className="w-full bg-sofa-bg-secondary rounded-full h-2">
                                   <div 
@@ -1236,14 +1237,14 @@ export default function PublicStatisticsPage() {
                             </div>
 
                             <div className="mt-3 text-xs text-sofa-text-muted text-center">
-                              Match prévu le {new Date(match.date).toLocaleDateString('fr-FR')}
+                              {t('stats.matchScheduled')} {new Date(match.date).toLocaleDateString('fr-FR')}
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
                       <div className="text-center py-8 text-sofa-text-secondary">
-                        Aucun match à venir programmé pour le moment
+                        {t('stats.noUpcomingMatches')}
                       </div>
                     )}
                   </div>
@@ -1290,7 +1291,7 @@ export default function PublicStatisticsPage() {
               ) : (
                 <div className="text-center py-12">
                   <div className="w-12 h-12 border-4 border-gray-200 border-t-sofa-green rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-sofa-text-secondary">Chargement des prédictions...</p>
+                  <p className="text-sofa-text-secondary">{t('stats.loadingPredictions')}</p>
                 </div>
               )}
             </div>
@@ -1311,7 +1312,7 @@ export default function PublicStatisticsPage() {
                     <div className="sofa-card">
                       <div className="flex items-center gap-3 mb-4">
                         <Trophy className="w-6 h-6 text-sofa-yellow" />
-                        <h3 className="text-lg font-semibold text-sofa-text-primary">Joueur du Mois</h3>
+                        <h3 className="text-lg font-semibold text-sofa-text-primary">{t('stats.playerOfMonth')}</h3>
                       </div>
                       <div className="text-center space-y-3">
                         <div className="w-20 h-20 bg-gradient-to-br from-sofa-yellow to-sofa-orange rounded-full flex items-center justify-center mx-auto">
@@ -1319,12 +1320,12 @@ export default function PublicStatisticsPage() {
                         </div>
                         <div>
                           <p className="text-xl font-bold text-sofa-text-primary">{awardsData.monthlyAwards.player.name}</p>
-                          <p className="text-sm text-sofa-text-secondary">{awardsData.monthlyAwards.player.team} - Joueur</p>
+                          <p className="text-sm text-sofa-text-secondary">{awardsData.monthlyAwards.player.team} - {t('role.player')}</p>
                         </div>
                         <div className="grid grid-cols-3 gap-4 text-center pt-4 border-t border-sofa-border">
                           <div>
                             <p className="text-lg font-bold text-sofa-green">{awardsData.monthlyAwards.player.goals}</p>
-                            <p className="text-xs text-sofa-text-muted">Buts</p>
+                            <p className="text-xs text-sofa-text-muted">{t('stats.goals')}</p>
                           </div>
                           <div>
                             <p className="text-lg font-bold text-sofa-blue">{awardsData.monthlyAwards.player.assists}</p>
@@ -1343,7 +1344,7 @@ export default function PublicStatisticsPage() {
                     <div className="sofa-card">
                       <div className="flex items-center gap-3 mb-4">
                         <Award className="w-6 h-6 text-sofa-text-accent" />
-                        <h3 className="text-lg font-semibold text-sofa-text-primary">Équipe du Mois</h3>
+                        <h3 className="text-lg font-semibold text-sofa-text-primary">{t('stats.teamOfMonth')}</h3>
                       </div>
                       <div className="text-center space-y-3">
                         <div className="w-20 h-20 bg-gradient-to-br from-sofa-text-accent to-sofa-green rounded-full flex items-center justify-center mx-auto">
@@ -1356,11 +1357,11 @@ export default function PublicStatisticsPage() {
                         <div className="grid grid-cols-3 gap-4 text-center pt-4 border-t border-sofa-border">
                           <div>
                             <p className="text-lg font-bold text-sofa-green">{awardsData.monthlyAwards.team.wins}</p>
-                            <p className="text-xs text-sofa-text-muted">Victoires</p>
+                            <p className="text-xs text-sofa-text-muted">{t('ranking.wins')}</p>
                           </div>
                           <div>
                             <p className="text-lg font-bold text-sofa-blue">{awardsData.monthlyAwards.team.goals}</p>
-                            <p className="text-xs text-sofa-text-muted">Buts</p>
+                            <p className="text-xs text-sofa-text-muted">{t('stats.goals')}</p>
                           </div>
                           <div>
                             <p className="text-lg font-bold text-sofa-text-accent">{awardsData.monthlyAwards.team.conceded}</p>
@@ -1410,7 +1411,7 @@ export default function PublicStatisticsPage() {
                       </div>
                     ) : (
                       <div className="text-center py-8 text-sofa-text-secondary">
-                        Aucun exploit remarquable enregistré pour le moment
+                        {t('stats.noFeats')}
                       </div>
                     )}
                   </div>
@@ -1418,7 +1419,7 @@ export default function PublicStatisticsPage() {
               ) : (
                 <div className="text-center py-12">
                   <div className="w-12 h-12 border-4 border-gray-200 border-t-sofa-green rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-sofa-text-secondary">Chargement des récompenses...</p>
+                  <p className="text-sofa-text-secondary">{t('stats.loadingAwards')}</p>
                 </div>
               )}
             </div>

@@ -5,6 +5,7 @@ import { db } from "@/lib/firebase"
 import { collection, getDocs, query, orderBy } from "firebase/firestore"
 import type { Match, Team, MatchResult } from "@/lib/types"
 import { SofaMatchCard } from "@/components/sofa/match-card"
+import { t } from "@/lib/i18n"
 
 import { 
   Calendar, 
@@ -232,8 +233,8 @@ export default function MatchesPage() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Compact Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-sofa-text-primary mb-2">Calendrier des Matchs</h1>
-        <p className="text-sofa-text-secondary">Suivez tous les matchs de la ComeBac League</p>
+        <h1 className="text-3xl font-bold text-sofa-text-primary mb-2">{t('matches.title')}</h1>
+        <p className="text-sofa-text-secondary">{t('matches.subtitle')}</p>
       </div>
 
       {/* Quick Stats - More Compact */}
@@ -241,7 +242,7 @@ export default function MatchesPage() {
         <div className="sofa-stat-card">
           <div className="flex items-center gap-2 mb-2">
             <Calendar className="w-5 h-5 text-sofa-blue" />
-            <span className="text-sm font-medium text-sofa-text-secondary">Total</span>
+            <span className="text-sm font-medium text-sofa-text-secondary">{t('matches.total')}</span>
           </div>
           <div className="sofa-stat-number text-xl">{matches.length}</div>
         </div>
@@ -249,7 +250,7 @@ export default function MatchesPage() {
         <div className="sofa-stat-card">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle className="w-5 h-5 text-sofa-green" />
-            <span className="text-sm font-medium text-sofa-text-secondary">Terminés</span>
+            <span className="text-sm font-medium text-sofa-text-secondary">{t('matches.completed')}</span>
           </div>
           <div className="sofa-stat-number text-xl">{matches.filter(m => m.status === 'completed').length}</div>
         </div>
@@ -257,7 +258,7 @@ export default function MatchesPage() {
         <div className="sofa-stat-card">
           <div className="flex items-center gap-2 mb-2">
             <Clock className="w-5 h-5 text-sofa-orange" />
-            <span className="text-sm font-medium text-sofa-text-secondary">À venir</span>
+            <span className="text-sm font-medium text-sofa-text-secondary">{t('matches.upcoming')}</span>
           </div>
           <div className="sofa-stat-number text-xl">{matches.filter(m => m.status === 'scheduled').length}</div>
         </div>
@@ -265,7 +266,7 @@ export default function MatchesPage() {
         <div className="sofa-stat-card">
           <div className="flex items-center gap-2 mb-2">
             <Trophy className="w-5 h-5 text-sofa-text-accent" />
-            <span className="text-sm font-medium text-sofa-text-secondary">Journées</span>
+            <span className="text-sm font-medium text-sofa-text-secondary">{t('matches.rounds')}</span>
           </div>
           <div className="sofa-stat-number text-xl">{rounds.length}</div>
         </div>
@@ -276,14 +277,14 @@ export default function MatchesPage() {
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-sofa-text-primary flex items-center gap-2">
             <Filter className="w-4 h-4" />
-            Filtres
+            {t('matches.filters')}
           </h2>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="md:hidden flex items-center gap-2 text-sofa-text-muted hover:text-sofa-text-primary transition-colors"
           >
             <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-            {showFilters ? 'Masquer' : 'Afficher'}
+            {showFilters ? t('matches.hide') : t('matches.show')}
           </button>
         </div>
         
@@ -308,7 +309,7 @@ export default function MatchesPage() {
                   : 'bg-sofa-bg-tertiary text-sofa-text-muted hover:bg-sofa-bg-hover'
               }`}
             >
-              🔴 En direct
+              🔴 {t('matches.live')}
             </button>
             <button
               onClick={() => setFilterStatus('scheduled')}
@@ -318,7 +319,7 @@ export default function MatchesPage() {
                   : 'bg-sofa-bg-tertiary text-sofa-text-muted hover:bg-sofa-bg-hover'
               }`}
             >
-              📅 À venir
+              📅 {t('matches.upcoming')}
             </button>
             <button
               onClick={() => setFilterStatus('completed')}
@@ -328,20 +329,20 @@ export default function MatchesPage() {
                   : 'bg-sofa-bg-tertiary text-sofa-text-muted hover:bg-sofa-bg-hover'
               }`}
             >
-              ✅ Terminés
+              ✅ {t('matches.completed')}
             </button>
           </div>
           
           <div>
-            <label className="block text-xs font-medium text-sofa-text-muted mb-1">Journée</label>
+            <label className="block text-xs font-medium text-sofa-text-muted mb-1">{t('matches.round')}</label>
             <select
               value={selectedRound}
               onChange={(e) => setSelectedRound(e.target.value === 'all' ? 'all' : Number(e.target.value))}
               className="w-full px-3 py-2 border border-sofa-border rounded-lg focus:ring-2 focus:ring-sofa-text-accent outline-none bg-sofa-bg-card text-sofa-text-primary"
             >
-              <option value="all">Toutes</option>
+              <option value="all">{t('matches.all')}</option>
               {rounds.map(round => (
-                <option key={round} value={round}>J{round}</option>
+                <option key={round} value={round}>{t('matches.round')} {round}</option>
               ))}
             </select>
           </div>
@@ -364,13 +365,13 @@ export default function MatchesPage() {
       {loading ? (
         <div className="text-center py-12">
           <div className="w-12 h-12 border-4 border-sofa-border border-t-sofa-text-accent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-sofa-text-muted">Chargement des matchs...</p>
+          <p className="text-sofa-text-muted">{t('matches.loading')}</p>
         </div>
       ) : filteredMatches.length === 0 ? (
         <div className="sofa-card p-12 text-center">
           <Calendar className="w-16 h-16 text-sofa-text-muted mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-sofa-text-primary mb-2">Aucun match trouvé</h3>
-          <p className="text-sofa-text-muted">Aucun match ne correspond aux filtres sélectionnés.</p>
+          <h3 className="text-lg font-semibold text-sofa-text-primary mb-2">{t('matches.notFound')}</h3>
+          <p className="text-sofa-text-muted">{t('matches.noMatchesFilter')}</p>
         </div>
       ) : (
         <div className="space-y-8">
@@ -379,7 +380,7 @@ export default function MatchesPage() {
             <section>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-3 h-3 bg-sofa-red rounded-full animate-pulse"></div>
-                <h2 className="text-xl font-bold text-sofa-text-primary">Matchs en Direct</h2>
+                <h2 className="text-xl font-bold text-sofa-text-primary">{t('matches.liveMatches')}</h2>
                 <span className="bg-sofa-red text-white px-2 py-1 rounded-full text-xs font-medium">
                   {liveMatches.length}
                 </span>
@@ -388,15 +389,15 @@ export default function MatchesPage() {
                 {liveMatches.map((match, index) => {
                   const convertedMatch = {
                     id: match.id,
-                    teamA: match.homeTeam?.name || 'Équipe inconnue',
-                    teamB: match.awayTeam?.name || 'Équipe inconnue',
+                    teamA: match.homeTeam?.name || t('home.unknownTeam'),
+                    teamB: match.awayTeam?.name || t('home.unknownTeam'),
                     teamAId: match.homeTeamId,
                     teamBId: match.awayTeamId,
                     date: match.date,
                     scoreA: match.result?.homeTeamScore,
                     scoreB: match.result?.awayTeamScore,
                     status: 'live' as const,
-                    venue: `Stade de ${match.homeTeam?.name || 'l\'équipe'}`,
+                    venue: `${t('team.stadiumOf')} ${match.homeTeam?.name || t('home.unknownTeam')}`,
                     round: match.round
                   }
                   
@@ -426,15 +427,15 @@ export default function MatchesPage() {
                 {todayMatches.map((match, index) => {
                   const convertedMatch = {
                     id: match.id,
-                    teamA: match.homeTeam?.name || 'Équipe inconnue',
-                    teamB: match.awayTeam?.name || 'Équipe inconnue',
+                    teamA: match.homeTeam?.name || t('home.unknownTeam'),
+                    teamB: match.awayTeam?.name || t('home.unknownTeam'),
                     teamAId: match.homeTeamId,
                     teamBId: match.awayTeamId,
                     date: match.date,
                     scoreA: match.result?.homeTeamScore,
                     scoreB: match.result?.awayTeamScore,
                     status: match.status === 'completed' ? 'completed' as const : 'upcoming' as const,
-                    venue: `Stade de ${match.homeTeam?.name || 'l\'équipe'}`,
+                    venue: `${t('team.stadiumOf')} ${match.homeTeam?.name || t('home.unknownTeam')}`,
                     round: match.round
                   }
                   
@@ -456,7 +457,7 @@ export default function MatchesPage() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <Clock className="w-5 h-5 text-sofa-orange" />
-                  <h2 className="text-xl font-bold text-sofa-text-primary">Prochains Matchs</h2>
+                  <h2 className="text-xl font-bold text-sofa-text-primary">{t('matches.upcomingMatches')}</h2>
                   <span className="bg-sofa-orange text-white px-2 py-1 rounded-full text-xs font-medium">
                     {upcomingMatches.length}
                   </span>
@@ -466,7 +467,7 @@ export default function MatchesPage() {
                     onClick={() => setFilterStatus('scheduled')}
                     className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium"
                   >
-                    Voir tous →
+                    {t('home.viewAll')} →
                   </button>
                 )}
               </div>
@@ -474,15 +475,15 @@ export default function MatchesPage() {
                 {upcomingMatches.map((match, index) => {
                   const convertedMatch = {
                     id: match.id,
-                    teamA: match.homeTeam?.name || 'Équipe inconnue',
-                    teamB: match.awayTeam?.name || 'Équipe inconnue',
+                    teamA: match.homeTeam?.name || t('home.unknownTeam'),
+                    teamB: match.awayTeam?.name || t('home.unknownTeam'),
                     teamAId: match.homeTeamId,
                     teamBId: match.awayTeamId,
                     date: match.date,
                     scoreA: match.result?.homeTeamScore,
                     scoreB: match.result?.awayTeamScore,
                     status: 'upcoming' as const,
-                    venue: `Stade de ${match.homeTeam?.name || 'l\'équipe'}`,
+                    venue: `${t('team.stadiumOf')} ${match.homeTeam?.name || t('home.unknownTeam')}`,
                     round: match.round
                   }
                   
@@ -504,7 +505,7 @@ export default function MatchesPage() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <Trophy className="w-5 h-5 text-sofa-green" />
-                  <h2 className="text-xl font-bold text-sofa-text-primary">Derniers Résultats</h2>
+                  <h2 className="text-xl font-bold text-sofa-text-primary">{t('matches.lastResults')}</h2>
                   <span className="bg-sofa-green text-white px-2 py-1 rounded-full text-xs font-medium">
                     {recentMatches.length}
                   </span>
@@ -514,7 +515,7 @@ export default function MatchesPage() {
                     onClick={() => setFilterStatus('completed')}
                     className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium"
                   >
-                    Voir tous →
+                    {t('home.viewAll')} →
                   </button>
                 )}
               </div>
@@ -522,15 +523,15 @@ export default function MatchesPage() {
                 {recentMatches.map((match, index) => {
                   const convertedMatch = {
                     id: match.id,
-                    teamA: match.homeTeam?.name || 'Équipe inconnue',
-                    teamB: match.awayTeam?.name || 'Équipe inconnue',
+                    teamA: match.homeTeam?.name || t('home.unknownTeam'),
+                    teamB: match.awayTeam?.name || t('home.unknownTeam'),
                     teamAId: match.homeTeamId,
                     teamBId: match.awayTeamId,
                     date: match.date,
                     scoreA: match.result?.homeTeamScore,
                     scoreB: match.result?.awayTeamScore,
                     status: 'completed' as const,
-                    venue: `Stade de ${match.homeTeam?.name || 'l\'équipe'}`,
+                    venue: `${t('team.stadiumOf')} ${match.homeTeam?.name || t('home.unknownTeam')}`,
                     round: match.round
                   }
                   
@@ -552,13 +553,13 @@ export default function MatchesPage() {
               <div className="flex items-center gap-3 mb-4">
                 <Filter className="w-5 h-5 text-sofa-text-accent" />
                 <h2 className="text-xl font-bold text-sofa-text-primary">
-                  Résultats filtrés
+                  {t('matches.filteredResults')}
                   {filterStatus !== 'all' && ` - ${
                     filterStatus === 'scheduled' ? 'À venir' :
-                    filterStatus === 'completed' ? 'Terminés' :
+                    filterStatus === 'completed' ? t('matches.completedPlural') :
                     filterStatus === 'in_progress' ? 'En direct' : ''
                   }`}
-                  {selectedRound !== 'all' && ` - Journée ${selectedRound}`}
+                  {selectedRound !== 'all' && ` - ${t('matches.round')} ${selectedRound}`}
                 </h2>
                 <span className="bg-sofa-text-accent text-white px-2 py-1 rounded-full text-xs font-medium">
                   {filteredMatches.length}
@@ -568,8 +569,8 @@ export default function MatchesPage() {
                 {filteredMatches.map((match, index) => {
                   const convertedMatch = {
                     id: match.id,
-                    teamA: match.homeTeam?.name || 'Équipe inconnue',
-                    teamB: match.awayTeam?.name || 'Équipe inconnue',
+                    teamA: match.homeTeam?.name || t('home.unknownTeam'),
+                    teamB: match.awayTeam?.name || t('home.unknownTeam'),
                     teamAId: match.homeTeamId,
                     teamBId: match.awayTeamId,
                     date: match.date,
@@ -578,7 +579,7 @@ export default function MatchesPage() {
                     status: match.status === 'completed' ? 'completed' as const : 
                             match.status === 'in_progress' ? 'live' as const :
                             'upcoming' as const,
-                    venue: `Stade de ${match.homeTeam?.name || 'l\'équipe'}`,
+                    venue: `${t('team.stadiumOf')} ${match.homeTeam?.name || t('home.unknownTeam')}`,
                     round: match.round
                   }
                   
