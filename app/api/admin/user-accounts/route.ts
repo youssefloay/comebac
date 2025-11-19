@@ -27,12 +27,26 @@ export async function GET() {
     const accounts = authUsers.map(authUser => {
       const email = authUser.email || ''
       
+      // Normaliser l'email pour la comparaison (lowercase, trim)
+      const normalizedEmail = email.toLowerCase().trim()
+      
       // Chercher dans playerAccounts
-      const playerAccount = playerAccounts.find(pa => pa.email === email)
-      const player = players.find(p => p.email === email)
+      const playerAccount = playerAccounts.find(pa => {
+        const paEmail = pa.email?.toLowerCase().trim()
+        return paEmail === normalizedEmail
+      })
+      
+      // Chercher dans players (collection principale)
+      const player = players.find(p => {
+        const pEmail = p.email?.toLowerCase().trim()
+        return pEmail === normalizedEmail
+      })
       
       // Chercher dans coachAccounts
-      const coachAccount = coachAccounts.find(ca => ca.email === email)
+      const coachAccount = coachAccounts.find(ca => {
+        const caEmail = ca.email?.toLowerCase().trim()
+        return caEmail === normalizedEmail
+      })
       
       // Déterminer le type et les infos
       let type = 'unknown'
@@ -42,6 +56,7 @@ export async function GET() {
       let role = 'Utilisateur'
       
       if (playerAccount) {
+        // A un compte dans playerAccounts
         type = 'player'
         name = `${playerAccount.firstName} ${playerAccount.lastName}`
         teamId = playerAccount.teamId
@@ -51,6 +66,19 @@ export async function GET() {
         if (playerAccount.isActingCoach) {
           role = 'Joueur / Coach intérimaire'
         } else if (player?.isCaptain) {
+          role = 'Joueur / Capitaine'
+        } else {
+          role = 'Joueur'
+        }
+      } else if (player) {
+        // N'a pas de compte dans playerAccounts mais est dans players (inscrit dans une équipe)
+        type = 'player'
+        name = player.name || `${player.firstName || ''} ${player.lastName || ''}`.trim() || email
+        teamId = player.teamId
+        const team = teams.find(t => t.id === teamId)
+        teamName = team?.name || 'N/A'
+        
+        if (player.isCaptain) {
           role = 'Joueur / Capitaine'
         } else {
           role = 'Joueur'

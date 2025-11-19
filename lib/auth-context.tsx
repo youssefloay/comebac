@@ -300,41 +300,91 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const normalizedEmail = sanitizedEmail.toLowerCase()
 
       // Vérifier si l'email existe déjà en tant que joueur ou coach
-      const { collection, query, where, getDocs } = await import('firebase/firestore')
-      const buildEmailChecks = (collectionName: string) => {
-        const colRef = collection(db, collectionName)
-        const queries = [
-          getDocs(query(colRef, where('email', '==', sanitizedEmail)))
-        ]
+      const { collection, query, where, getDocs, setDoc, updateDoc, doc, serverTimestamp } = await import('firebase/firestore')
+      
+      // Vérifier dans playerAccounts (compte déjà créé)
+      const playerAccountsQuery = query(
+        collection(db, 'playerAccounts'),
+        where('email', '==', sanitizedEmail)
+      )
+      const playerAccountsSnap = await getDocs(playerAccountsQuery)
+      
+      // Vérifier dans coachAccounts (compte déjà créé)
+      const coachAccountsQuery = query(
+        collection(db, 'coachAccounts'),
+        where('email', '==', sanitizedEmail)
+      )
+      const coachAccountsSnap = await getDocs(coachAccountsQuery)
+      
+      // Vérifier dans players (collection principale) - pour les joueurs inscrits mais sans compte
+      const playersQuery = query(
+        collection(db, 'players'),
+        where('email', '==', sanitizedEmail)
+      )
+      const playersSnap = await getDocs(playersQuery)
 
-        if (sanitizedEmail !== normalizedEmail) {
-          queries.push(getDocs(query(colRef, where('email', '==', normalizedEmail))))
-        }
-        return queries
-      }
+      const playerAccountExists = !playerAccountsSnap.empty
+      const coachAccountExists = !coachAccountsSnap.empty
+      const playerExists = !playersSnap.empty
 
-      const [playerChecks, coachChecks] = await Promise.all([
-        Promise.all(buildEmailChecks('playerAccounts')),
-        Promise.all(buildEmailChecks('coachAccounts'))
-      ])
-
-      const playerExists = playerChecks.some(snapshot => !snapshot.empty)
-      const coachExists = coachChecks.some(snapshot => !snapshot.empty)
-
-      if (playerExists || coachExists) {
+      // Si l'email existe déjà dans playerAccounts ou coachAccounts, bloquer
+      if (playerAccountExists || coachAccountExists) {
         throw new Error('Cet email a déjà accès à l\'application Joueur/Coach. Connecte-toi directement comme joueur ou utilise "Mot de passe oublié".')
       }
 
+      // Créer le compte Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, sanitizedEmail, password)
-      
-      // Créer le document utilisateur dans Firestore avec le téléphone
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
-        email: sanitizedEmail,
-        phone: phone || '',
-        role: 'user',
-        createdAt: serverTimestamp(),
-        emailVerified: false
-      })
+      const uid = userCredential.user.uid
+
+      // Si l'email existe dans players (inscrit dans une équipe), créer automatiquement playerAccount
+      if (playerExists) {
+        const playerDoc = playersSnap.docs[0]
+        const playerData = playerDoc.data()
+        
+        // Créer le playerAccount avec les données du joueur
+        await setDoc(doc(db, 'playerAccounts', uid), {
+          uid: uid,
+          email: sanitizedEmail,
+          firstName: playerData.firstName || playerData.name?.split(' ')[0] || '',
+          lastName: playerData.lastName || playerData.name?.split(' ').slice(1).join(' ') || '',
+          nickname: playerData.nickname || '',
+          phone: phone || playerData.phone || '',
+          position: playerData.position || '',
+          jerseyNumber: playerData.number || playerData.jerseyNumber || 0,
+          teamId: playerData.teamId || '',
+          birthDate: playerData.birthDate || '',
+          height: playerData.height || 0,
+          tshirtSize: playerData.tshirtSize || 'M',
+          foot: playerData.strongFoot === 'Droit' ? 'Droitier' : playerData.strongFoot === 'Gauche' ? 'Gaucher' : 'Ambidextre',
+          role: 'player',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        })
+        
+        console.log('✅ Compte joueur créé automatiquement pour:', sanitizedEmail)
+      } else if (!coachAccountsSnap.empty) {
+        // Si l'email existe dans coachAccounts (même sans uid), mettre à jour avec l'UID
+        const coachDoc = coachAccountsSnap.docs[0]
+        const coachData = coachDoc.data()
+        
+        // Mettre à jour le coachAccount avec l'UID si manquant
+        if (!coachData.uid || coachData.uid !== uid) {
+          await updateDoc(coachDoc.ref, {
+            uid: uid,
+            updatedAt: serverTimestamp()
+          })
+          console.log('✅ Compte coach mis à jour automatiquement pour:', sanitizedEmail)
+        }
+      } else {
+        // Sinon, créer un compte utilisateur normal
+        await setDoc(doc(db, 'users', uid), {
+          email: sanitizedEmail,
+          phone: phone || '',
+          role: 'user',
+          createdAt: serverTimestamp(),
+          emailVerified: false
+        })
+      }
       
       // Envoyer l'email de vérification
       await sendEmailVerification(userCredential.user)

@@ -29,24 +29,42 @@ export default function TeamsPage() {
           ...doc.data(),
         })) as Team[]
 
-        // Fetch all players
+        // Fetch all players from players collection (for display)
         const playersSnap = await getDocs(collection(db, "players"))
         const allPlayers = playersSnap.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         })) as Player[]
 
+        // Fetch all player accounts (for accurate count)
+        const playerAccountsSnap = await getDocs(collection(db, "playerAccounts"))
+        const allPlayerAccounts = playerAccountsSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+
         // Group players by team
         const teamsWithPlayers = teamsData.map(team => {
           const teamPlayers = allPlayers.filter(player => player.teamId === team.id)
+          // Count from playerAccounts for accurate number
+          const teamPlayerAccounts = allPlayerAccounts.filter(
+            (account: any) => account.teamId === team.id
+          )
+          const actualPlayerCount = teamPlayerAccounts.length
+          
           // Log pour debug
-          if (teamPlayers.length > 0) {
-            console.log(`Équipe ${team.name}:`, teamPlayers.map(p => ({ name: p.name, isCaptain: (p as any).isCaptain })))
+          if (teamPlayers.length > 0 || actualPlayerCount > 0) {
+            console.log(`Équipe ${team.name}:`, {
+              playersCollection: teamPlayers.length,
+              playerAccountsCollection: actualPlayerCount,
+              players: teamPlayers.map(p => ({ name: p.name, isCaptain: (p as any).isCaptain }))
+            })
           }
+          
           return {
             ...team,
             players: teamPlayers,
-            playerCount: teamPlayers.length
+            playerCount: actualPlayerCount // Use playerAccounts count for accuracy
           }
         })
 

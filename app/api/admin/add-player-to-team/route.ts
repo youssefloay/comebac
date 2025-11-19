@@ -64,7 +64,30 @@ export async function POST(request: NextRequest) {
 
       let coachDocId: string
 
+      let userRecord
+      try {
+        const { adminAuth } = await import('@/lib/firebase-admin')
+        
+        // Créer ou récupérer compte Firebase Auth
+        try {
+          userRecord = await adminAuth.getUserByEmail(player.email)
+        } catch (error: any) {
+          if (error.code === 'auth/user-not-found') {
+            userRecord = await adminAuth.createUser({
+              email: player.email,
+              password: Math.random().toString(36).slice(-12) + 'Aa1!',
+              displayName: `${player.firstName} ${player.lastName}`
+            })
+          } else {
+            throw error
+          }
+        }
+      } catch (authError) {
+        console.error('❌ Erreur création compte Auth:', authError)
+      }
+
       if (coachSnap.empty) {
+        // Créer le coachAccount avec l'UID si disponible
         const coachDocRef = await addDoc(collection(db, 'coachAccounts'), {
           email: player.email,
           firstName: player.firstName,
@@ -73,6 +96,7 @@ export async function POST(request: NextRequest) {
           birthDate: player.birthDate || '',
           teamId: teamId,
           teamName: teamData.name,
+          uid: userRecord?.uid || null,
           // Auto-remplir les infos communes de l'équipe
           schoolName: teamData.schoolName || teamData.school || '',
           grade: teamData.teamGrade || '',
@@ -81,47 +105,41 @@ export async function POST(request: NextRequest) {
           updatedAt: serverTimestamp()
         })
         coachDocId = coachDocRef.id
-        console.log('✅ Coach account créé, envoi email...')
+        console.log('✅ Coach account créé dans coachAccounts, envoi email...')
 
         // Envoyer email coach avec le bon template
-        try {
-          const { adminAuth } = await import('@/lib/firebase-admin')
-          
-          // Créer compte Firebase Auth
-          let userRecord
+        if (userRecord) {
           try {
-            userRecord = await adminAuth.getUserByEmail(player.email)
-          } catch (error: any) {
-            if (error.code === 'auth/user-not-found') {
-              userRecord = await adminAuth.createUser({
-                email: player.email,
-                password: Math.random().toString(36).slice(-12) + 'Aa1!',
-                displayName: `${player.firstName} ${player.lastName}`
-              })
-            } else {
-              throw error
-            }
+            const { adminAuth } = await import('@/lib/firebase-admin')
+            
+            // Générer lien de réinitialisation
+            const resetLink = await adminAuth.generatePasswordResetLink(player.email, getPasswordResetActionCodeSettings(player.email))
+
+            // Envoyer email avec le template professionnel
+            await sendCoachWelcomeEmail({
+              email: player.email,
+              firstName: player.firstName,
+              lastName: player.lastName,
+              teamName: teamData.name,
+              resetLink
+            })
+            
+            console.log('✅ Email coach envoyé avec le bon template')
+          } catch (emailError) {
+            console.error('❌ Erreur envoi email coach:', emailError)
           }
-
-          // Générer lien de réinitialisation
-          const resetLink = await adminAuth.generatePasswordResetLink(player.email, getPasswordResetActionCodeSettings(player.email))
-
-          // Envoyer email avec le template professionnel
-          await sendCoachWelcomeEmail({
-            email: player.email,
-            firstName: player.firstName,
-            lastName: player.lastName,
-            teamName: teamData.name,
-            resetLink
-          })
-          
-          console.log('✅ Email coach envoyé avec le bon template')
-        } catch (emailError) {
-          console.error('❌ Erreur envoi email coach:', emailError)
         }
       } else {
         coachDocId = coachSnap.docs[0].id
-        console.log('ℹ️ Coach account existe déjà:', coachDocId)
+        // Mettre à jour l'UID si manquant
+        if (userRecord && !coachSnap.docs[0].data().uid) {
+          await updateDoc(coachSnap.docs[0].ref, {
+            uid: userRecord.uid,
+            updatedAt: serverTimestamp()
+          })
+          console.log('✅ UID mis à jour dans coachAccounts')
+        }
+        console.log('ℹ️ Coach account existe déjà dans coachAccounts:', coachDocId)
       }
 
       // Mettre à jour le document teams avec les informations du coach

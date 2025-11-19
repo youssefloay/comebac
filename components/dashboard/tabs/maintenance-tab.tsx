@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { Loader, Wrench, CheckCircle, AlertCircle } from "lucide-react"
+import { Loader, Wrench, CheckCircle, AlertCircle, X } from "lucide-react"
 import CustomNotificationModal from "@/components/admin/CustomNotificationModal"
+import CaptainsCoachesManager from "@/components/admin/captains-coaches-manager"
 
 interface Team {
   id: string
@@ -46,6 +47,7 @@ export default function MaintenanceTab() {
   const [teams, setTeams] = useState<Team[]>([])
   const [showAddPlayerModal, setShowAddPlayerModal] = useState(false)
   const [showNotificationModal, setShowNotificationModal] = useState(false)
+  const [showCaptainsCoachesModal, setShowCaptainsCoachesModal] = useState(false)
   const [selectedTeamId, setSelectedTeamId] = useState('')
   const [isCoach, setIsCoach] = useState(false)
   const [editingAccount, setEditingAccount] = useState<{ id: string; type: 'player' | 'coach'; data: PlayerAccount | CoachAccount } | null>(null)
@@ -329,6 +331,25 @@ export default function MaintenanceTab() {
           </div>
         </div>
       )}
+
+      {/* Gestion des Capitaines et Coachs - Bouton */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <span className="text-2xl">👥</span>
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-gray-900">Gestion des Capitaines et Coachs</h3>
+            <p className="text-xs text-gray-600">Voir et gérer les contacts des capitaines et coachs</p>
+          </div>
+          <button
+            onClick={() => setShowCaptainsCoachesModal(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm"
+          >
+            Ouvrir
+          </button>
+        </div>
+      </div>
 
       {/* Outils de réparation */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1859,6 +1880,29 @@ export default function MaintenanceTab() {
             </div>
             </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal Gestion des Capitaines et Coachs */}
+      {showCaptainsCoachesModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowCaptainsCoachesModal(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-2xl font-bold text-gray-900">Gestion des Capitaines et Coachs</h3>
+              <button
+                onClick={() => setShowCaptainsCoachesModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <CaptainsCoachesManager />
+            </div>
           </div>
         </div>
       )}
