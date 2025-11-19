@@ -39,7 +39,8 @@ export async function POST(request: NextRequest) {
       .get()
 
     if (!playerSnap.empty) {
-      const data = playerSnap.docs[0].data() as any
+      const playerDoc = playerSnap.docs[0]
+      const data = playerDoc.data() as any
       matchedType = 'player'
       let teamName = data.teamName || 'votre équipe'
       if (!teamName && data.teamId) {
@@ -50,6 +51,13 @@ export async function POST(request: NextRequest) {
       }
       const playerName = `${data.firstName || ''} ${data.lastName || ''}`.trim() || name || user.displayName || 'Joueur'
       emailResult = await sendEmail(generateWelcomeEmail(playerName, teamName, resetLink, email))
+      
+      // Enregistrer la date de dernière relance
+      if (emailResult?.success || emailResult?.error === 'API key not configured') {
+        await adminDb.collection('playerAccounts').doc(playerDoc.id).update({
+          lastResendDate: new Date().toISOString()
+        })
+      }
     } else {
       const coachSnap = await adminDb
         .collection('coachAccounts')
@@ -58,7 +66,8 @@ export async function POST(request: NextRequest) {
         .get()
 
       if (!coachSnap.empty) {
-        const data = coachSnap.docs[0].data() as any
+        const coachDoc = coachSnap.docs[0]
+        const data = coachDoc.data() as any
         matchedType = 'coach'
         await sendCoachWelcomeEmail({
           email,
@@ -68,6 +77,13 @@ export async function POST(request: NextRequest) {
           resetLink
         })
         emailResult = { success: true }
+        
+        // Enregistrer la date de dernière relance
+        if (emailResult.success) {
+          await adminDb.collection('coachAccounts').doc(coachDoc.id).update({
+            lastResendDate: new Date().toISOString()
+          })
+        }
       }
     }
 

@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { db } from "@/lib/firebase"
 import { collection, getDocs, query, orderBy } from "firebase/firestore"
-import { CheckCircle, XCircle, Clock, User, Mail, Calendar, Info, X as CloseIcon } from "lucide-react"
+import { CheckCircle, XCircle, Clock, User, Mail, Calendar, Info, X as CloseIcon, RefreshCw } from "lucide-react"
 import { getDeviceIcon, getDeviceLabel } from "@/lib/device-info"
 
 interface AccountActivity {
@@ -34,16 +34,19 @@ interface AccountActivity {
 export default function ActivityTab() {
   const [activities, setActivities] = useState<AccountActivity[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [typeFilter, setTypeFilter] = useState<'all' | 'player' | 'coach' | 'user' | 'admin'>('all')
   const [selectedActivity, setSelectedActivity] = useState<AccountActivity | null>(null)
 
-  useEffect(() => {
-    fetchActivities()
-  }, [])
-
-  const fetchActivities = async () => {
+  const fetchActivities = useCallback(async (isRefresh = false) => {
     try {
+      if (isRefresh) {
+        setRefreshing(true)
+      } else {
+        setLoading(true)
+      }
+      
       const [playersSnap, coachesSnap, teamsSnap, usersSnap, userProfilesSnap] = await Promise.all([
         getDocs(collection(db, 'playerAccounts')),
         getDocs(collection(db, 'coachAccounts')),
@@ -194,12 +197,42 @@ export default function ActivityTab() {
         return 0
       })
 
+      // Vérification des données récupérées
+      console.log('📊 Données récupérées:', {
+        players: playerActivities.length,
+        coaches: coachActivities.length,
+        users: userActivities.length,
+        userProfiles: userProfileActivities.length,
+        total: allActivities.length,
+        isRefresh: isRefresh
+      })
+
       setActivities(allActivities)
     } catch (error) {
       console.error("Error fetching activities:", error)
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
+  }, [])
+
+  useEffect(() => {
+    fetchActivities()
+  }, [fetchActivities])
+
+  // Rafraîchissement automatique toutes les 30 secondes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!loading && !refreshing) {
+        fetchActivities(true)
+      }
+    }, 30000) // 30 secondes
+
+    return () => clearInterval(interval)
+  }, [fetchActivities, loading, refreshing])
+
+  const handleManualRefresh = () => {
+    fetchActivities(true)
   }
 
   const filteredActivities = activities.filter(activity => {
@@ -249,9 +282,20 @@ export default function ActivityTab() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Activité des Comptes</h2>
-        <p className="text-gray-600">Suivez les connexions et l'activité des joueurs et entraîneurs</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Activité des Comptes</h2>
+          <p className="text-gray-600">Suivez les connexions et l'activité des joueurs et entraîneurs</p>
+        </div>
+        <button
+          onClick={handleManualRefresh}
+          disabled={loading || refreshing}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Rafraîchir les données"
+        >
+          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+          <span>{refreshing ? 'Rafraîchissement...' : 'Rafraîchir'}</span>
+        </button>
       </div>
 
       {/* Stats Cards */}

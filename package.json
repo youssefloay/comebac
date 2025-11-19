@@ -4,9 +4,13 @@
   "private": true,
   "scripts": {
     "build": "next build",
+    "build:ios": "next build && npx cap sync ios",
     "dev": "next dev",
     "lint": "eslint .",
     "start": "next start",
+    "cap:sync": "npx cap sync",
+    "cap:open:ios": "npx cap open ios",
+    "cap:ios": "npm run build && npx cap sync ios && npx cap open ios",
     "setup-test-data": "npx tsx scripts/setup-test-data.ts",
     "generate-results": "npx tsx scripts/generate-match-results.ts",
     "update-stats": "npx tsx scripts/update-team-stats.ts",

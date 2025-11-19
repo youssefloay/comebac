@@ -67,7 +67,8 @@ export async function GET() {
           hasAccount: !!authData,
           lastSignIn: authData?.lastSignIn || null,
           emailVerified: authData?.emailVerified || false,
-          createdAt: authData?.createdAt || null
+          createdAt: authData?.createdAt || null,
+          lastResendDate: data.lastResendDate || null
         }
       })
 
@@ -94,7 +95,8 @@ export async function GET() {
           hasAccount: !!authData,
           lastSignIn: authData?.lastSignIn || null,
           emailVerified: authData?.emailVerified ?? false,
-          createdAt: authData?.createdAt || null
+          createdAt: authData?.createdAt || null,
+          lastResendDate: data.lastResendDate || null
         }
       })
 

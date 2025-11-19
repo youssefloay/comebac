@@ -12,6 +12,7 @@ interface Player {
   lastSignIn: string | null
   emailVerified: boolean
   createdAt: string | null
+  lastResendDate: string | null
 }
 
 interface Coach {
@@ -25,6 +26,7 @@ interface Coach {
   lastSignIn: string | null
   emailVerified: boolean
   createdAt: string | null
+  lastResendDate: string | null
 }
 
 interface Team {
@@ -78,6 +80,7 @@ export default function TeamAccountsPage() {
 
       if (response.ok) {
         alert(`✅ Email d'activation envoyé à ${email}`)
+        await loadTeamAccounts() // Recharger pour afficher la nouvelle date de relance
       } else {
         const data = await response.json()
         alert(`❌ Erreur: ${data.error}`)
@@ -175,6 +178,7 @@ export default function TeamAccountsPage() {
 
     alert(`Relance terminée: ${successCount} email(s) envoyé(s), ${errorCount} erreur(s)`)
     setTeamResending(null)
+    await loadTeamAccounts() // Recharger pour afficher les nouvelles dates de relance
   }
 
   const formatDate = (dateStr: string | null) => {
@@ -351,6 +355,11 @@ export default function TeamAccountsPage() {
                                       Compte créé: {formatDate(coach.createdAt)}
                                     </p>
                                   )}
+                                  {coach.lastResendDate && (
+                                    <p className="text-xs text-orange-600 font-medium">
+                                      📧 Dernière relance: {formatDate(coach.lastResendDate)}
+                                    </p>
+                                  )}
                                 </div>
                                 <div className="flex gap-2">
                                   {coach.hasAccount ? (
@@ -425,6 +434,11 @@ export default function TeamAccountsPage() {
                               </p>
                               <p className="text-sm text-gray-600 truncate">{player.email}</p>
                               <p className="text-xs text-gray-500 mt-1">Dernière connexion: {formatDate(player.lastSignIn)}</p>
+                              {player.lastResendDate && (
+                                <p className="text-xs text-orange-600 font-medium mt-1">
+                                  📧 Dernière relance: {formatDate(player.lastResendDate)}
+                                </p>
+                              )}
                             </div>
                           ))
                         )}
@@ -451,6 +465,11 @@ export default function TeamAccountsPage() {
                                   <p className="font-semibold text-gray-900">{player.name}</p>
                                   <p className="text-sm text-gray-600 truncate">{player.email}</p>
                                   <p className="text-xs text-gray-500 mt-1">Compte créé: {formatDate(player.createdAt)}</p>
+                                  {player.lastResendDate && (
+                                    <p className="text-xs text-orange-600 font-medium mt-1">
+                                      📧 Dernière relance: {formatDate(player.lastResendDate)}
+                                    </p>
+                                  )}
                                 </div>
                                 <button
                                   onClick={() => sendActivationEmail(player.email, player.name)}
