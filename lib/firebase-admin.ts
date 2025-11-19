@@ -14,9 +14,20 @@ if (!getApps().length) {
 }
 
 export const adminAuth = getAuth()
-export const adminDb = getFirestore()
+
+// Obtenir l'instance Firestore
+const _adminDb = getFirestore()
 
 // Configurer Firestore pour ignorer les propriétés undefined
-adminDb.settings({
-  ignoreUndefinedProperties: true
-})
+// Cette configuration doit être faite avant toute utilisation
+// Utiliser un try-catch car settings() ne peut être appelé qu'une seule fois
+try {
+  _adminDb.settings({
+    ignoreUndefinedProperties: true
+  })
+} catch (error: any) {
+  // Si settings() a déjà été appelé, ignorer l'erreur silencieusement
+  // C'est normal si le module est importé plusieurs fois
+}
+
+export const adminDb = _adminDb

@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Mode normal - Capacitor chargera l'app depuis le serveur de production
+  // Pour un export statique (sans API routes), décommentez: output: 'export',
   typescript: {
     ignoreBuildErrors: true,
   },

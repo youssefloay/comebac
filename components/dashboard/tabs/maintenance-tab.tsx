@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Loader, Wrench, CheckCircle, AlertCircle } from "lucide-react"
 import CustomNotificationModal from "@/components/admin/CustomNotificationModal"
@@ -13,6 +13,32 @@ interface Team {
   school?: string
 }
 
+interface PlayerAccount {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  name: string
+  phone?: string
+  position?: string
+  jerseyNumber?: number
+  birthDate?: string
+  height?: string
+  tshirtSize?: string
+  foot?: string
+  nickname?: string
+}
+
+interface CoachAccount {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  name: string
+  phone?: string
+  birthDate?: string
+}
+
 export default function MaintenanceTab() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -22,6 +48,10 @@ export default function MaintenanceTab() {
   const [showNotificationModal, setShowNotificationModal] = useState(false)
   const [selectedTeamId, setSelectedTeamId] = useState('')
   const [isCoach, setIsCoach] = useState(false)
+  const [editingAccount, setEditingAccount] = useState<{ id: string; type: 'player' | 'coach'; data: PlayerAccount | CoachAccount } | null>(null)
+  const [teamAccounts, setTeamAccounts] = useState<{ players: PlayerAccount[]; coaches: CoachAccount[] }>({ players: [], coaches: [] })
+  const [showForm, setShowForm] = useState(false)
+  const formRef = useRef<HTMLDivElement>(null)
   const [playerData, setPlayerData] = useState({
     firstName: '',
     lastName: '',
@@ -40,8 +70,44 @@ export default function MaintenanceTab() {
     loadTeams()
   }, [])
 
+  useEffect(() => {
+    if (selectedTeamId) {
+      loadTeamAccounts()
+    } else {
+      setTeamAccounts({ players: [], coaches: [] })
+    }
+  }, [selectedTeamId])
+
+  // Scroll vers le formulaire quand il s'ouvre
+  useEffect(() => {
+    if (showForm && formRef.current) {
+      setTimeout(() => {
+        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 100)
+    }
+  }, [showForm])
+
   // Récupérer l'équipe sélectionnée
   const selectedTeam = selectedTeamId ? teams.find(t => t.id === selectedTeamId) : null
+
+  const loadTeamAccounts = async () => {
+    if (!selectedTeamId) return
+    try {
+      const response = await fetch('/api/admin/team-accounts')
+      if (response.ok) {
+        const data = await response.json()
+        const team = data.teams?.find((t: any) => t.id === selectedTeamId)
+        if (team) {
+          setTeamAccounts({
+            players: team.players || [],
+            coaches: team.coaches || []
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Erreur chargement comptes:', error)
+    }
+  }
 
   const loadTeams = async () => {
     try {
@@ -1001,10 +1067,30 @@ export default function MaintenanceTab() {
             Ajouter un joueur ou entraîneur à une équipe déjà validée
           </p>
           <button
-            onClick={() => setShowAddPlayerModal(true)}
+            onClick={() => {
+              setEditingAccount(null)
+              setIsCoach(false)
+              setShowForm(false)
+              setPlayerData({
+                firstName: '',
+                lastName: '',
+                nickname: '',
+                email: '',
+                phone: '',
+                birthDate: '',
+                height: '',
+                tshirtSize: 'M',
+                position: '',
+                foot: '',
+                jerseyNumber: ''
+              })
+              setSelectedTeamId('')
+              setTeamAccounts({ players: [], coaches: [] })
+              setShowAddPlayerModal(true)
+            }}
             className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm"
           >
-            Ajouter
+            Gérer joueurs/coaches
           </button>
         </div>
 
@@ -1073,31 +1159,38 @@ export default function MaintenanceTab() {
         teams={teams}
       />
 
-      {/* Modal Ajouter joueur/coach */}
+      {/* Modal Gérer joueurs/coaches */}
       {showAddPlayerModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowAddPlayerModal(false)}>
-          <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-2xl font-bold mb-4">Ajouter un {isCoach ? 'entraîneur' : 'joueur'}</h2>
-            
-            {/* Type */}
-            <div className="mb-4">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={isCoach}
-                  onChange={(e) => setIsCoach(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm font-medium">C'est un entraîneur</span>
-              </label>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => {
+          setShowAddPlayerModal(false)
+          setEditingAccount(null)
+          setShowForm(false)
+        }}>
+          <div className="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold">
+                {editingAccount ? `Modifier ${editingAccount.type === 'coach' ? 'l\'entraîneur' : 'le joueur'}` : 'Gérer joueurs/coaches'}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowAddPlayerModal(false)
+                  setEditingAccount(null)
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
             </div>
-
-            {/* Équipe */}
+            
+            {/* Sélection équipe */}
             <div className="mb-4">
               <label className="block text-sm font-medium mb-2">Équipe *</label>
               <select
                 value={selectedTeamId}
-                onChange={(e) => setSelectedTeamId(e.target.value)}
+                onChange={(e) => {
+                  setSelectedTeamId(e.target.value)
+                  setEditingAccount(null)
+                }}
                 className="w-full px-4 py-2 border rounded-lg"
                 required
               >
@@ -1107,6 +1200,389 @@ export default function MaintenanceTab() {
                 ))}
               </select>
             </div>
+
+            {/* Liste des joueurs/coaches si équipe sélectionnée */}
+            {selectedTeamId && (
+              <div className="mb-6 space-y-4">
+                {/* Liste des joueurs */}
+                {teamAccounts.players.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Joueurs ({teamAccounts.players.length})</h3>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {teamAccounts.players.map((player) => (
+                        <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div>
+                            <p className="font-medium">{player.name}</p>
+                            <p className="text-sm text-gray-600">{player.email}</p>
+                            {player.position && <p className="text-xs text-gray-500">#{player.jerseyNumber} - {player.position}</p>}
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={async () => {
+                                setIsCoach(false)
+                                setShowForm(true)
+                                setLoading(true)
+                                try {
+                                  // Charger les données complètes du joueur
+                                  const response = await fetch(`/api/admin/get-account-details?accountId=${player.id}&accountType=player`)
+                                  const accountData = await response.json()
+                                  
+                                  if (response.ok && accountData) {
+                                    setEditingAccount({ id: player.id, type: 'player', data: accountData })
+                                    setPlayerData({
+                                      firstName: accountData.firstName || '',
+                                      lastName: accountData.lastName || '',
+                                      nickname: accountData.nickname || '',
+                                      email: accountData.email || '',
+                                      phone: accountData.phone || '',
+                                      birthDate: accountData.birthDate || '',
+                                      height: accountData.height?.toString() || '',
+                                      tshirtSize: accountData.tshirtSize || 'M',
+                                      position: accountData.position || '',
+                                      foot: accountData.foot || '',
+                                      jerseyNumber: accountData.jerseyNumber?.toString() || ''
+                                    })
+                                  } else {
+                                    // Fallback sur les données disponibles
+                                    setEditingAccount({ id: player.id, type: 'player', data: player })
+                                    setPlayerData({
+                                      firstName: player.firstName || '',
+                                      lastName: player.lastName || '',
+                                      nickname: player.nickname || '',
+                                      email: player.email || '',
+                                      phone: player.phone || '',
+                                      birthDate: player.birthDate || '',
+                                      height: player.height?.toString() || '',
+                                      tshirtSize: player.tshirtSize || 'M',
+                                      position: player.position || '',
+                                      foot: player.foot || '',
+                                      jerseyNumber: player.jerseyNumber?.toString() || ''
+                                    })
+                                  }
+                                } catch (error) {
+                                  console.error('Erreur chargement données:', error)
+                                  // Fallback sur les données disponibles
+                                  setEditingAccount({ id: player.id, type: 'player', data: player })
+                                  setPlayerData({
+                                    firstName: player.firstName || '',
+                                    lastName: player.lastName || '',
+                                    nickname: player.nickname || '',
+                                    email: player.email || '',
+                                    phone: player.phone || '',
+                                    birthDate: player.birthDate || '',
+                                    height: player.height?.toString() || '',
+                                    tshirtSize: player.tshirtSize || 'M',
+                                    position: player.position || '',
+                                    foot: player.foot || '',
+                                    jerseyNumber: player.jerseyNumber?.toString() || ''
+                                  })
+                                } finally {
+                                  setLoading(false)
+                                }
+                              }}
+                              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                            >
+                              Modifier
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (!confirm(`Supprimer ${player.name} ?`)) return
+                                setLoading(true)
+                                try {
+                                  const response = await fetch('/api/admin/delete-account', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      accountId: player.id,
+                                      accountType: 'player',
+                                      email: player.email
+                                    })
+                                  })
+                                  const data = await response.json()
+                                  if (response.ok) {
+                                    setMessage({ type: 'success', text: data.message })
+                                    loadTeamAccounts()
+                                  } else {
+                                    setMessage({ type: 'error', text: data.error })
+                                  }
+                                } catch (error) {
+                                  setMessage({ type: 'error', text: 'Erreur lors de la suppression' })
+                                } finally {
+                                  setLoading(false)
+                                }
+                              }}
+                              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                            >
+                              Supprimer
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Liste des coaches */}
+                {teamAccounts.coaches.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Coaches ({teamAccounts.coaches.length})</h3>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {teamAccounts.coaches.map((coach) => (
+                        <div key={coach.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                          <div>
+                            <p className="font-medium">{coach.name}</p>
+                            <p className="text-sm text-gray-600">{coach.email}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={async () => {
+                                setIsCoach(true)
+                                setShowForm(true)
+                                setLoading(true)
+                                try {
+                                  // Charger les données complètes du coach
+                                  const response = await fetch(`/api/admin/get-account-details?accountId=${coach.id}&accountType=coach`)
+                                  const accountData = await response.json()
+                                  
+                                  if (response.ok && accountData) {
+                                    setEditingAccount({ id: coach.id, type: 'coach', data: accountData })
+                                    setPlayerData({
+                                      firstName: accountData.firstName || '',
+                                      lastName: accountData.lastName || '',
+                                      nickname: '',
+                                      email: accountData.email || '',
+                                      phone: accountData.phone || '',
+                                      birthDate: accountData.birthDate || '',
+                                      height: '',
+                                      tshirtSize: 'M',
+                                      position: '',
+                                      foot: '',
+                                      jerseyNumber: ''
+                                    })
+                                  } else {
+                                    // Fallback sur les données disponibles
+                                    setEditingAccount({ id: coach.id, type: 'coach', data: coach })
+                                    setPlayerData({
+                                      firstName: coach.firstName || '',
+                                      lastName: coach.lastName || '',
+                                      nickname: '',
+                                      email: coach.email || '',
+                                      phone: coach.phone || '',
+                                      birthDate: coach.birthDate || '',
+                                      height: '',
+                                      tshirtSize: 'M',
+                                      position: '',
+                                      foot: '',
+                                      jerseyNumber: ''
+                                    })
+                                  }
+                                } catch (error) {
+                                  console.error('Erreur chargement données:', error)
+                                  // Fallback sur les données disponibles
+                                  setEditingAccount({ id: coach.id, type: 'coach', data: coach })
+                                  setPlayerData({
+                                    firstName: coach.firstName || '',
+                                    lastName: coach.lastName || '',
+                                    nickname: '',
+                                    email: coach.email || '',
+                                    phone: coach.phone || '',
+                                    birthDate: coach.birthDate || '',
+                                    height: '',
+                                    tshirtSize: 'M',
+                                    position: '',
+                                    foot: '',
+                                    jerseyNumber: ''
+                                  })
+                                } finally {
+                                  setLoading(false)
+                                }
+                              }}
+                              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                            >
+                              Modifier
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (!confirm(`Supprimer ${coach.name} ?`)) return
+                                setLoading(true)
+                                try {
+                                  const response = await fetch('/api/admin/delete-account', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      accountId: coach.id,
+                                      accountType: 'coach',
+                                      email: coach.email
+                                    })
+                                  })
+                                  const data = await response.json()
+                                  if (response.ok) {
+                                    setMessage({ type: 'success', text: data.message })
+                                    loadTeamAccounts()
+                                  } else {
+                                    setMessage({ type: 'error', text: data.error })
+                                  }
+                                } catch (error) {
+                                  setMessage({ type: 'error', text: 'Erreur lors de la suppression' })
+                                } finally {
+                                  setLoading(false)
+                                }
+                              }}
+                              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                            >
+                              Supprimer
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Boutons ajouter et modifier */}
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <button
+                    onClick={() => {
+                      setEditingAccount(null)
+                      setIsCoach(false)
+                      setShowForm(true)
+                      setPlayerData({
+                        firstName: '',
+                        lastName: '',
+                        nickname: '',
+                        email: '',
+                        phone: '',
+                        birthDate: '',
+                        height: '',
+                        tshirtSize: 'M',
+                        position: '',
+                        foot: '',
+                        jerseyNumber: ''
+                      })
+                    }}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  >
+                    + Ajouter un joueur
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingAccount(null)
+                      setIsCoach(true)
+                      setShowForm(true)
+                      setPlayerData({
+                        firstName: '',
+                        lastName: '',
+                        nickname: '',
+                        email: '',
+                        phone: '',
+                        birthDate: '',
+                        height: '',
+                        tshirtSize: 'M',
+                        position: '',
+                        foot: '',
+                        jerseyNumber: ''
+                      })
+                    }}
+                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+                  >
+                    + Ajouter un coach
+                  </button>
+                  {(teamAccounts.players.length > 0 || teamAccounts.coaches.length > 0) && (
+                    <button
+                      onClick={() => {
+                        // Afficher un message pour guider l'utilisateur
+                        if (teamAccounts.players.length === 0 && teamAccounts.coaches.length === 0) {
+                          alert('Aucun joueur ou coach à modifier. Ajoutez-en d\'abord.')
+                          return
+                        }
+                        // Si un seul joueur, le modifier directement
+                        if (teamAccounts.players.length === 1 && teamAccounts.coaches.length === 0) {
+                          const player = teamAccounts.players[0]
+                          setIsCoach(false)
+                          setShowForm(true)
+                          setLoading(true)
+                          fetch(`/api/admin/get-account-details?accountId=${player.id}&accountType=player`)
+                            .then(res => res.json())
+                            .then(accountData => {
+                              if (accountData && accountData.id) {
+                                setEditingAccount({ id: player.id, type: 'player', data: accountData })
+                                setPlayerData({
+                                  firstName: accountData.firstName || '',
+                                  lastName: accountData.lastName || '',
+                                  nickname: accountData.nickname || '',
+                                  email: accountData.email || '',
+                                  phone: accountData.phone || '',
+                                  birthDate: accountData.birthDate || '',
+                                  height: accountData.height?.toString() || '',
+                                  tshirtSize: accountData.tshirtSize || 'M',
+                                  position: accountData.position || '',
+                                  foot: accountData.foot || '',
+                                  jerseyNumber: accountData.jerseyNumber?.toString() || ''
+                                })
+                              }
+                            })
+                            .catch(err => console.error('Erreur:', err))
+                            .finally(() => setLoading(false))
+                        } else if (teamAccounts.coaches.length === 1 && teamAccounts.players.length === 0) {
+                          const coach = teamAccounts.coaches[0]
+                          setIsCoach(true)
+                          setShowForm(true)
+                          setLoading(true)
+                          fetch(`/api/admin/get-account-details?accountId=${coach.id}&accountType=coach`)
+                            .then(res => res.json())
+                            .then(accountData => {
+                              if (accountData && accountData.id) {
+                                setEditingAccount({ id: coach.id, type: 'coach', data: accountData })
+                                setPlayerData({
+                                  firstName: accountData.firstName || '',
+                                  lastName: accountData.lastName || '',
+                                  nickname: '',
+                                  email: accountData.email || '',
+                                  phone: accountData.phone || '',
+                                  birthDate: accountData.birthDate || '',
+                                  height: '',
+                                  tshirtSize: 'M',
+                                  position: '',
+                                  foot: '',
+                                  jerseyNumber: ''
+                                })
+                              }
+                            })
+                            .catch(err => console.error('Erreur:', err))
+                            .finally(() => setLoading(false))
+                        } else {
+                          // S'il y a plusieurs joueurs/coaches, afficher un message
+                          alert('Il y a plusieurs joueurs/coaches. Veuillez cliquer sur "Modifier" à côté de celui que vous souhaitez modifier dans la liste ci-dessus.')
+                        }
+                      }}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      ✏️ Modifier
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Formulaire d'ajout/modification */}
+            {selectedTeamId && showForm && (
+              <div ref={formRef} className="mt-6 border-t-2 border-gray-200 pt-6 bg-gray-50 rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">{editingAccount ? '✏️ Modifier' : '➕ Ajouter'} un {isCoach ? 'entraîneur' : 'joueur'}</h3>
+            
+            {/* Type - seulement si on ajoute (pas en mode édition) */}
+            {!editingAccount && (
+              <div className="mb-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={isCoach}
+                    onChange={(e) => setIsCoach(e.target.checked)}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm font-medium">C'est un entraîneur</span>
+                </label>
+              </div>
+            )}
 
             {/* Infos de l'équipe sélectionnée */}
             {selectedTeam && (
@@ -1122,7 +1598,7 @@ export default function MaintenanceTab() {
                   )}
                 </div>
                 <p className="text-xs text-blue-700 mt-2">
-                  ℹ️ Le joueur/coach sera ajouté à cette équipe avec ces informations communes
+                  ℹ️ Le joueur/coach sera {editingAccount ? 'modifié' : 'ajouté'} à cette équipe avec ces informations communes
                 </p>
               </div>
             )}
@@ -1264,7 +1740,10 @@ export default function MaintenanceTab() {
             {/* Boutons */}
             <div className="flex gap-4">
               <button
-                onClick={() => setShowAddPlayerModal(false)}
+                onClick={() => {
+                  setShowForm(false)
+                  setEditingAccount(null)
+                }}
                 className="flex-1 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
               >
                 Annuler
@@ -1282,40 +1761,92 @@ export default function MaintenanceTab() {
                   
                   setLoading(true)
                   try {
-                    const response = await fetch('/api/admin/add-player-to-team', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        teamId: selectedTeamId,
-                        player: playerData,
-                        isCoach
+                    if (editingAccount) {
+                      // Mode modification
+                      const response = await fetch('/api/admin/update-account', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          accountId: editingAccount.id,
+                          accountType: editingAccount.type,
+                          teamId: selectedTeamId,
+                          updates: {
+                            firstName: playerData.firstName,
+                            lastName: playerData.lastName,
+                            email: playerData.email,
+                            phone: playerData.phone,
+                            birthDate: playerData.birthDate,
+                            ...(isCoach ? {} : {
+                              nickname: playerData.nickname,
+                              height: playerData.height,
+                              tshirtSize: playerData.tshirtSize,
+                              foot: playerData.foot,
+                              position: playerData.position,
+                              jerseyNumber: parseInt(playerData.jerseyNumber) || 0
+                            })
+                          }
+                        })
                       })
-                    })
-                    
-                    const data = await response.json()
-                    if (response.ok) {
-                      setMessage({ type: 'success', text: data.message })
-                      setShowAddPlayerModal(false)
-                      setPlayerData({
-                        firstName: '',
-                        lastName: '',
-                        nickname: '',
-                        email: '',
-                        phone: '',
-                        birthDate: '',
-                        height: '',
-                        tshirtSize: 'M',
-                        position: '',
-                        foot: '',
-                        jerseyNumber: ''
-                      })
-                      setSelectedTeamId('')
-                      setIsCoach(false)
+                      
+                      const data = await response.json()
+                      if (response.ok) {
+                        setMessage({ type: 'success', text: `${editingAccount.type === 'coach' ? 'Entraîneur' : 'Joueur'} modifié avec succès!` })
+                        setEditingAccount(null)
+                        setShowForm(false)
+                        loadTeamAccounts()
+                        setPlayerData({
+                          firstName: '',
+                          lastName: '',
+                          nickname: '',
+                          email: '',
+                          phone: '',
+                          birthDate: '',
+                          height: '',
+                          tshirtSize: 'M',
+                          position: '',
+                          foot: '',
+                          jerseyNumber: ''
+                        })
+                      } else {
+                        setMessage({ type: 'error', text: data.error })
+                      }
                     } else {
-                      setMessage({ type: 'error', text: data.error })
+                      // Mode ajout
+                      const response = await fetch('/api/admin/add-player-to-team', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          teamId: selectedTeamId,
+                          player: playerData,
+                          isCoach
+                        })
+                      })
+                      
+                      const data = await response.json()
+                      if (response.ok) {
+                        setMessage({ type: 'success', text: data.message })
+                        setShowForm(false)
+                        loadTeamAccounts()
+                        setPlayerData({
+                          firstName: '',
+                          lastName: '',
+                          nickname: '',
+                          email: '',
+                          phone: '',
+                          birthDate: '',
+                          height: '',
+                          tshirtSize: 'M',
+                          position: '',
+                          foot: '',
+                          jerseyNumber: ''
+                        })
+                        setIsCoach(false)
+                      } else {
+                        setMessage({ type: 'error', text: data.error })
+                      }
                     }
                   } catch (error) {
-                    setMessage({ type: 'error', text: 'Erreur lors de l\'ajout' })
+                    setMessage({ type: 'error', text: `Erreur lors de ${editingAccount ? 'la modification' : 'l\'ajout'}` })
                   } finally {
                     setLoading(false)
                   }
@@ -1323,9 +1854,11 @@ export default function MaintenanceTab() {
                 disabled={loading}
                 className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
               >
-                {loading ? 'Ajout en cours...' : 'Ajouter'}
+                {loading ? (editingAccount ? 'Modification en cours...' : 'Ajout en cours...') : (editingAccount ? 'Modifier' : 'Ajouter')}
               </button>
             </div>
+            </div>
+            )}
           </div>
         </div>
       )}

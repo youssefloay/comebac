@@ -67,13 +67,64 @@ const ALTERNATIVE_POSITIONS: Record<string, string[]> = {
   Attaquant: ["BU", "AG", "AD", "MOC"],
 };
 
+interface PlayerAccount {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  name: string
+  phone?: string
+  position?: string
+  jerseyNumber?: number
+  birthDate?: string
+  height?: string
+  tshirtSize?: string
+  foot?: string
+  nickname?: string
+}
+
+interface CoachAccount {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  name: string
+  phone?: string
+  birthDate?: string
+}
+
 export default function PlayersTab() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<string>("");
   const [players, setPlayers] = useState<Player[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isCoach, setIsCoach] = useState(false);
+  const [showManageModal, setShowManageModal] = useState(false);
+  const [manageTeamId, setManageTeamId] = useState<string>('');
+  const [teamAccounts, setTeamAccounts] = useState<{ players: PlayerAccount[]; coaches: CoachAccount[] }>({ players: [], coaches: [] });
+  const [editingAccount, setEditingAccount] = useState<{ id: string; type: 'player' | 'coach'; data: PlayerAccount | CoachAccount } | null>(null);
+  const [showManageForm, setShowManageForm] = useState(false);
+  const [managePlayerData, setManagePlayerData] = useState({
+    firstName: '',
+    lastName: '',
+    nickname: '',
+    email: '',
+    phone: '',
+    birthDate: '',
+    height: '',
+    tshirtSize: 'M',
+    position: '',
+    foot: '',
+    jerseyNumber: ''
+  });
+  const [manageIsCoach, setManageIsCoach] = useState(false);
+  const [manageLoading, setManageLoading] = useState(false);
   const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
     name: "",
     number: "",
     position: "Milieu",
@@ -116,6 +167,33 @@ export default function PlayersTab() {
       setPlayers([]);
     }
   }, [selectedTeam]);
+
+  useEffect(() => {
+    if (manageTeamId) {
+      loadTeamAccounts();
+    } else {
+      setTeamAccounts({ players: [], coaches: [] });
+    }
+  }, [manageTeamId]);
+
+  const loadTeamAccounts = async () => {
+    if (!manageTeamId) return;
+    try {
+      const response = await fetch('/api/admin/team-accounts');
+      if (response.ok) {
+        const data = await response.json();
+        const team = data.teams?.find((t: any) => t.id === manageTeamId);
+        if (team) {
+          setTeamAccounts({
+            players: team.players || [],
+            coaches: team.coaches || []
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Erreur chargement comptes:', error);
+    }
+  };
 
   const loadTeams = async () => {
     try {
@@ -408,18 +486,38 @@ export default function PlayersTab() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">
-          Gestion des Joueurs
+          Gestion des Joueurs & Coaches
         </h2>
-        <button
-          onClick={() => {
-            handleCancel();
-            setShowForm(true);
-          }}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus className="w-5 h-5" />
-          Ajouter un joueur
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              setManageTeamId(selectedTeam || '');
+              setShowManageModal(true);
+              setEditingAccount(null);
+              setShowManageForm(false);
+              setManagePlayerData({
+                firstName: '',
+                lastName: '',
+                nickname: '',
+                email: '',
+                phone: '',
+                birthDate: '',
+                height: '',
+                tshirtSize: 'M',
+                position: '',
+                foot: '',
+                jerseyNumber: ''
+              });
+              if (selectedTeam) {
+                loadTeamAccounts();
+              }
+            }}
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+          >
+            <Plus className="w-5 h-5" />
+            Gérer joueurs/coaches
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -1065,6 +1163,636 @@ export default function PlayersTab() {
           </div>
         )}
       </div>
+
+      {/* Modal Gérer joueurs/coaches */}
+      {showManageModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => {
+          setShowManageModal(false)
+          setEditingAccount(null)
+          setShowManageForm(false)
+        }}>
+          <div className="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold">
+                {editingAccount ? `Modifier ${editingAccount.type === 'coach' ? 'l\'entraîneur' : 'le joueur'}` : 'Gérer joueurs/coaches'}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowManageModal(false)
+                  setEditingAccount(null)
+                  setShowManageForm(false)
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            
+            {/* Sélection équipe */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Équipe *</label>
+              <select
+                value={manageTeamId}
+                onChange={(e) => {
+                  setManageTeamId(e.target.value)
+                  setEditingAccount(null)
+                  setShowManageForm(false)
+                }}
+                className="w-full px-4 py-2 border rounded-lg"
+                required
+              >
+                <option value="">Sélectionner une équipe</option>
+                {teams.map(team => (
+                  <option key={team.id} value={team.id}>{team.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Liste des joueurs/coaches si équipe sélectionnée */}
+            {manageTeamId && (
+              <div className="mb-6 space-y-4">
+                {/* Liste des joueurs */}
+                {teamAccounts.players.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Joueurs ({teamAccounts.players.length})</h3>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {teamAccounts.players.map((player) => (
+                        <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div>
+                            <p className="font-medium">{player.name}</p>
+                            <p className="text-sm text-gray-600">{player.email}</p>
+                            {player.position && <p className="text-xs text-gray-500">#{player.jerseyNumber} - {player.position}</p>}
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={async () => {
+                                setManageIsCoach(false)
+                                setShowManageForm(true)
+                                setManageLoading(true)
+                                try {
+                                  const response = await fetch(`/api/admin/get-account-details?accountId=${player.id}&accountType=player`)
+                                  const accountData = await response.json()
+                                  
+                                  if (response.ok && accountData) {
+                                    setEditingAccount({ id: player.id, type: 'player', data: accountData })
+                                    setManagePlayerData({
+                                      firstName: accountData.firstName || '',
+                                      lastName: accountData.lastName || '',
+                                      nickname: accountData.nickname || '',
+                                      email: accountData.email || '',
+                                      phone: accountData.phone || '',
+                                      birthDate: accountData.birthDate || '',
+                                      height: accountData.height?.toString() || '',
+                                      tshirtSize: accountData.tshirtSize || 'M',
+                                      position: accountData.position || '',
+                                      foot: accountData.foot || '',
+                                      jerseyNumber: accountData.jerseyNumber?.toString() || ''
+                                    })
+                                  } else {
+                                    setEditingAccount({ id: player.id, type: 'player', data: player })
+                                    setManagePlayerData({
+                                      firstName: player.firstName || '',
+                                      lastName: player.lastName || '',
+                                      nickname: player.nickname || '',
+                                      email: player.email || '',
+                                      phone: player.phone || '',
+                                      birthDate: player.birthDate || '',
+                                      height: player.height?.toString() || '',
+                                      tshirtSize: player.tshirtSize || 'M',
+                                      position: player.position || '',
+                                      foot: player.foot || '',
+                                      jerseyNumber: player.jerseyNumber?.toString() || ''
+                                    })
+                                  }
+                                } catch (error) {
+                                  console.error('Erreur chargement données:', error)
+                                  setEditingAccount({ id: player.id, type: 'player', data: player })
+                                  setManagePlayerData({
+                                    firstName: player.firstName || '',
+                                    lastName: player.lastName || '',
+                                    nickname: player.nickname || '',
+                                    email: player.email || '',
+                                    phone: player.phone || '',
+                                    birthDate: player.birthDate || '',
+                                    height: player.height?.toString() || '',
+                                    tshirtSize: player.tshirtSize || 'M',
+                                    position: player.position || '',
+                                    foot: player.foot || '',
+                                    jerseyNumber: player.jerseyNumber?.toString() || ''
+                                  })
+                                } finally {
+                                  setManageLoading(false)
+                                }
+                              }}
+                              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                            >
+                              Modifier
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (!confirm(`Supprimer ${player.name} ?`)) return
+                                setManageLoading(true)
+                                try {
+                                  const response = await fetch('/api/admin/delete-account', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      accountId: player.id,
+                                      accountType: 'player',
+                                      email: player.email
+                                    })
+                                  })
+                                  const data = await response.json()
+                                  if (response.ok) {
+                                    setSuccess(data.message)
+                                    loadTeamAccounts()
+                                    loadPlayers()
+                                  } else {
+                                    setError(data.error)
+                                  }
+                                } catch (error) {
+                                  setError('Erreur lors de la suppression')
+                                } finally {
+                                  setManageLoading(false)
+                                }
+                              }}
+                              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                            >
+                              Supprimer
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Liste des coaches */}
+                {teamAccounts.coaches.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Coaches ({teamAccounts.coaches.length})</h3>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {teamAccounts.coaches.map((coach) => (
+                        <div key={coach.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                          <div>
+                            <p className="font-medium">{coach.name}</p>
+                            <p className="text-sm text-gray-600">{coach.email}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={async () => {
+                                setManageIsCoach(true)
+                                setShowManageForm(true)
+                                setManageLoading(true)
+                                try {
+                                  const response = await fetch(`/api/admin/get-account-details?accountId=${coach.id}&accountType=coach`)
+                                  const accountData = await response.json()
+                                  
+                                  if (response.ok && accountData) {
+                                    setEditingAccount({ id: coach.id, type: 'coach', data: accountData })
+                                    setManagePlayerData({
+                                      firstName: accountData.firstName || '',
+                                      lastName: accountData.lastName || '',
+                                      nickname: '',
+                                      email: accountData.email || '',
+                                      phone: accountData.phone || '',
+                                      birthDate: accountData.birthDate || '',
+                                      height: '',
+                                      tshirtSize: 'M',
+                                      position: '',
+                                      foot: '',
+                                      jerseyNumber: ''
+                                    })
+                                  } else {
+                                    setEditingAccount({ id: coach.id, type: 'coach', data: coach })
+                                    setManagePlayerData({
+                                      firstName: coach.firstName || '',
+                                      lastName: coach.lastName || '',
+                                      nickname: '',
+                                      email: coach.email || '',
+                                      phone: coach.phone || '',
+                                      birthDate: coach.birthDate || '',
+                                      height: '',
+                                      tshirtSize: 'M',
+                                      position: '',
+                                      foot: '',
+                                      jerseyNumber: ''
+                                    })
+                                  }
+                                } catch (error) {
+                                  console.error('Erreur chargement données:', error)
+                                  setEditingAccount({ id: coach.id, type: 'coach', data: coach })
+                                  setManagePlayerData({
+                                    firstName: coach.firstName || '',
+                                    lastName: coach.lastName || '',
+                                    nickname: '',
+                                    email: coach.email || '',
+                                    phone: coach.phone || '',
+                                    birthDate: coach.birthDate || '',
+                                    height: '',
+                                    tshirtSize: 'M',
+                                    position: '',
+                                    foot: '',
+                                    jerseyNumber: ''
+                                  })
+                                } finally {
+                                  setManageLoading(false)
+                                }
+                              }}
+                              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                            >
+                              Modifier
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (!confirm(`Supprimer ${coach.name} ?`)) return
+                                setManageLoading(true)
+                                try {
+                                  const response = await fetch('/api/admin/delete-account', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      accountId: coach.id,
+                                      accountType: 'coach',
+                                      email: coach.email
+                                    })
+                                  })
+                                  const data = await response.json()
+                                  if (response.ok) {
+                                    setSuccess(data.message)
+                                    loadTeamAccounts()
+                                  } else {
+                                    setError(data.error)
+                                  }
+                                } catch (error) {
+                                  setError('Erreur lors de la suppression')
+                                } finally {
+                                  setManageLoading(false)
+                                }
+                              }}
+                              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                            >
+                              Supprimer
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Boutons ajouter */}
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={() => {
+                      setEditingAccount(null)
+                      setManageIsCoach(false)
+                      setShowManageForm(true)
+                      setManagePlayerData({
+                        firstName: '',
+                        lastName: '',
+                        nickname: '',
+                        email: '',
+                        phone: '',
+                        birthDate: '',
+                        height: '',
+                        tshirtSize: 'M',
+                        position: '',
+                        foot: '',
+                        jerseyNumber: ''
+                      })
+                    }}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  >
+                    + Ajouter un joueur
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingAccount(null)
+                      setManageIsCoach(true)
+                      setShowManageForm(true)
+                      setManagePlayerData({
+                        firstName: '',
+                        lastName: '',
+                        nickname: '',
+                        email: '',
+                        phone: '',
+                        birthDate: '',
+                        height: '',
+                        tshirtSize: 'M',
+                        position: '',
+                        foot: '',
+                        jerseyNumber: ''
+                      })
+                    }}
+                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+                  >
+                    + Ajouter un coach
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Formulaire d'ajout/modification */}
+            {manageTeamId && showManageForm && (
+              <div className="mt-6 border-t-2 border-gray-200 pt-6 bg-gray-50 rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-4 text-gray-900">{editingAccount ? '✏️ Modifier' : '➕ Ajouter'} un {manageIsCoach ? 'entraîneur' : 'joueur'}</h3>
+                
+                {/* Type - seulement si on ajoute (pas en mode édition) */}
+                {!editingAccount && (
+                  <div className="mb-4">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={manageIsCoach}
+                        onChange={(e) => setManageIsCoach(e.target.checked)}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm font-medium">C'est un entraîneur</span>
+                    </label>
+                  </div>
+                )}
+
+                {/* Infos de l'équipe sélectionnée */}
+                {teams.find(t => t.id === manageTeamId) && (
+                  <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h3 className="font-semibold text-blue-900 mb-2">📋 Informations de l'équipe</h3>
+                    <div className="space-y-1 text-sm">
+                      <p><span className="font-medium">Équipe:</span> {teams.find(t => t.id === manageTeamId)?.name}</p>
+                      {(teams.find(t => t.id === manageTeamId)?.schoolName || teams.find(t => t.id === manageTeamId)?.school) && (
+                        <p><span className="font-medium">École:</span> {teams.find(t => t.id === manageTeamId)?.schoolName || teams.find(t => t.id === manageTeamId)?.school}</p>
+                      )}
+                      {teams.find(t => t.id === manageTeamId)?.teamGrade && (
+                        <p><span className="font-medium">Classe:</span> {teams.find(t => t.id === manageTeamId)?.teamGrade}</p>
+                      )}
+                    </div>
+                    <p className="text-xs text-blue-700 mt-2">
+                      ℹ️ Le joueur/coach sera {editingAccount ? 'modifié' : 'ajouté'} à cette équipe avec ces informations communes
+                    </p>
+                  </div>
+                )}
+
+                {/* Formulaire */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Prénom *</label>
+                    <input
+                      type="text"
+                      value={managePlayerData.firstName}
+                      onChange={(e) => setManagePlayerData({...managePlayerData, firstName: e.target.value})}
+                      className="w-full px-4 py-2 border rounded-lg"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Nom *</label>
+                    <input
+                      type="text"
+                      value={managePlayerData.lastName}
+                      onChange={(e) => setManagePlayerData({...managePlayerData, lastName: e.target.value})}
+                      className="w-full px-4 py-2 border rounded-lg"
+                      required
+                    />
+                  </div>
+                  {!manageIsCoach && (
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Surnom</label>
+                      <input
+                        type="text"
+                        value={managePlayerData.nickname}
+                        onChange={(e) => setManagePlayerData({...managePlayerData, nickname: e.target.value})}
+                        className="w-full px-4 py-2 border rounded-lg"
+                        maxLength={15}
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Email *</label>
+                    <input
+                      type="email"
+                      value={managePlayerData.email}
+                      onChange={(e) => setManagePlayerData({...managePlayerData, email: e.target.value})}
+                      className="w-full px-4 py-2 border rounded-lg"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Téléphone *</label>
+                    <input
+                      type="tel"
+                      value={managePlayerData.phone}
+                      onChange={(e) => setManagePlayerData({...managePlayerData, phone: e.target.value})}
+                      className="w-full px-4 py-2 border rounded-lg"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Date de naissance</label>
+                    <input
+                      type="date"
+                      value={managePlayerData.birthDate}
+                      onChange={(e) => setManagePlayerData({...managePlayerData, birthDate: e.target.value})}
+                      className="w-full px-4 py-2 border rounded-lg"
+                    />
+                  </div>
+                  {!manageIsCoach && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Taille (cm)</label>
+                        <input
+                          type="number"
+                          value={managePlayerData.height}
+                          onChange={(e) => setManagePlayerData({...managePlayerData, height: e.target.value})}
+                          className="w-full px-4 py-2 border rounded-lg"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Taille T-shirt</label>
+                        <select
+                          value={managePlayerData.tshirtSize}
+                          onChange={(e) => setManagePlayerData({...managePlayerData, tshirtSize: e.target.value})}
+                          className="w-full px-4 py-2 border rounded-lg"
+                        >
+                          <option value="XS">XS</option>
+                          <option value="S">S</option>
+                          <option value="M">M</option>
+                          <option value="L">L</option>
+                          <option value="XL">XL</option>
+                          <option value="XXL">XXL</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Position *</label>
+                        <select
+                          value={managePlayerData.position}
+                          onChange={(e) => setManagePlayerData({...managePlayerData, position: e.target.value})}
+                          className="w-full px-4 py-2 border rounded-lg"
+                          required
+                        >
+                          <option value="">Sélectionner...</option>
+                          <option value="Gardien">Gardien</option>
+                          <option value="Défenseur">Défenseur</option>
+                          <option value="Milieu">Milieu</option>
+                          <option value="Attaquant">Attaquant</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Pied *</label>
+                        <select
+                          value={managePlayerData.foot}
+                          onChange={(e) => setManagePlayerData({...managePlayerData, foot: e.target.value})}
+                          className="w-full px-4 py-2 border rounded-lg"
+                          required
+                        >
+                          <option value="">Sélectionner...</option>
+                          <option value="Droitier">Droitier</option>
+                          <option value="Gaucher">Gaucher</option>
+                          <option value="Ambidextre">Ambidextre</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">N° Maillot *</label>
+                        <input
+                          type="number"
+                          value={managePlayerData.jerseyNumber}
+                          onChange={(e) => setManagePlayerData({...managePlayerData, jerseyNumber: e.target.value})}
+                          className="w-full px-4 py-2 border rounded-lg"
+                          min="1"
+                          max="99"
+                          required
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Boutons */}
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => {
+                      setShowManageForm(false)
+                      setEditingAccount(null)
+                    }}
+                    className="flex-1 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (!manageTeamId || !managePlayerData.firstName || !managePlayerData.lastName || !managePlayerData.email || !managePlayerData.phone) {
+                        alert('Veuillez remplir tous les champs obligatoires')
+                        return
+                      }
+                      if (!manageIsCoach && (!managePlayerData.position || !managePlayerData.foot || !managePlayerData.jerseyNumber)) {
+                        alert('Veuillez remplir tous les champs obligatoires du joueur')
+                        return
+                      }
+                      
+                      setManageLoading(true)
+                      try {
+                        if (editingAccount) {
+                          // Mode modification
+                          const response = await fetch('/api/admin/update-account', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              accountId: editingAccount.id,
+                              accountType: editingAccount.type,
+                              teamId: manageTeamId,
+                              updates: {
+                                firstName: managePlayerData.firstName,
+                                lastName: managePlayerData.lastName,
+                                email: managePlayerData.email,
+                                phone: managePlayerData.phone,
+                                birthDate: managePlayerData.birthDate,
+                                ...(manageIsCoach ? {} : {
+                                  nickname: managePlayerData.nickname,
+                                  height: managePlayerData.height,
+                                  tshirtSize: managePlayerData.tshirtSize,
+                                  foot: managePlayerData.foot,
+                                  position: managePlayerData.position,
+                                  jerseyNumber: parseInt(managePlayerData.jerseyNumber) || 0
+                                })
+                              }
+                            })
+                          })
+                          
+                          const data = await response.json()
+                          if (response.ok) {
+                            setSuccess(`${editingAccount.type === 'coach' ? 'Entraîneur' : 'Joueur'} modifié avec succès!`)
+                            setEditingAccount(null)
+                            setShowManageForm(false)
+                            loadTeamAccounts()
+                            loadPlayers()
+                            setManagePlayerData({
+                              firstName: '',
+                              lastName: '',
+                              nickname: '',
+                              email: '',
+                              phone: '',
+                              birthDate: '',
+                              height: '',
+                              tshirtSize: 'M',
+                              position: '',
+                              foot: '',
+                              jerseyNumber: ''
+                            })
+                          } else {
+                            setError(data.error)
+                          }
+                        } else {
+                          // Mode ajout
+                          const response = await fetch('/api/admin/add-player-to-team', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              teamId: manageTeamId,
+                              player: managePlayerData,
+                              isCoach: manageIsCoach
+                            })
+                          })
+                          
+                          const data = await response.json()
+                          if (response.ok) {
+                            setSuccess(data.message)
+                            setShowManageForm(false)
+                            loadTeamAccounts()
+                            loadPlayers()
+                            setManagePlayerData({
+                              firstName: '',
+                              lastName: '',
+                              nickname: '',
+                              email: '',
+                              phone: '',
+                              birthDate: '',
+                              height: '',
+                              tshirtSize: 'M',
+                              position: '',
+                              foot: '',
+                              jerseyNumber: ''
+                            })
+                            setManageIsCoach(false)
+                          } else {
+                            setError(data.error)
+                          }
+                        }
+                      } catch (error) {
+                        setError(`Erreur lors de ${editingAccount ? 'la modification' : 'l\'ajout'}`)
+                      } finally {
+                        setManageLoading(false)
+                      }
+                    }}
+                    disabled={manageLoading}
+                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {manageLoading ? (editingAccount ? 'Modification en cours...' : 'Ajout en cours...') : (editingAccount ? 'Modifier' : 'Ajouter')}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

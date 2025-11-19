@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { NotificationBell } from "@/components/notifications/notification-bell"
+import { t, getLanguage } from "@/lib/i18n"
+import { LanguageSelector } from "@/components/ui/language-selector"
 import {
   Home,
   Trophy,
@@ -22,18 +24,18 @@ import {
   Sparkles
 } from "lucide-react"
 
-// Onglets principaux (toujours visibles)
+// Main tabs (always visible) - will use i18n in component
 const mainTabs = [
-  { href: "/public", label: "Accueil", icon: Home },
-  { href: "/public/matches", label: "Matchs", icon: Calendar },
-  { href: "/public/ranking", label: "Classement", icon: Trophy },
-  { href: "/public/teams", label: "Équipes", icon: Users },
+  { href: "/public", labelKey: "nav.home", icon: Home },
+  { href: "/public/matches", labelKey: "nav.matches", icon: Calendar },
+  { href: "/public/ranking", labelKey: "nav.ranking", icon: Trophy },
+  { href: "/public/teams", labelKey: "nav.teams", icon: Users },
 ]
 
-// Onglets secondaires (dans le menu "Plus")
+// Secondary tabs (in the "More" menu)
 const secondaryTabs = [
-  { href: "/public/statistics", label: "Stats", icon: BarChart3 },
-  { href: "/public/fantasy", label: "Fantasy", icon: Sparkles },
+  { href: "/public/statistics", labelKey: "nav.stats", icon: BarChart3 },
+  { href: "/public/fantasy", labelKey: "nav.fantasy", icon: Sparkles },
 ]
 
 export function BottomNavigation() {
@@ -42,12 +44,24 @@ export function BottomNavigation() {
   const [showMoreMenu, setShowMoreMenu] = useState(false)
   const [isPlayer, setIsPlayer] = useState(false)
   const [isCoach, setIsCoach] = useState(false)
+  const [lang, setLang] = useState(getLanguage())
+
+  // Check if we're on admin pages (keep French)
+  const isAdminPage = pathname?.startsWith('/admin')
+  
+  // Force French for admin, use i18n for others
+  const useTranslation = !isAdminPage
 
   const roleLabels: string[] = []
-  if (isAdmin) roleLabels.push('Admin')
-  if (isCoach) roleLabels.push('Coach')
-  if (isPlayer) roleLabels.push('Joueur')
-  if (!roleLabels.length) roleLabels.push('Utilisateur')
+  if (isAdmin) roleLabels.push(useTranslation ? t('role.admin') : 'Admin')
+  if (isCoach) roleLabels.push(useTranslation ? t('role.coach') : 'Coach')
+  if (isPlayer) roleLabels.push(useTranslation ? t('role.player') : 'Joueur')
+  if (!roleLabels.length) roleLabels.push(useTranslation ? t('role.user') : 'Utilisateur')
+  
+  // Update lang when it changes
+  useEffect(() => {
+    setLang(getLanguage())
+  }, [])
 
   // Check if user is a player
   useEffect(() => {
@@ -105,7 +119,7 @@ export function BottomNavigation() {
       <nav 
         className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#111827]/95 backdrop-blur-xl border-t border-sofa-border safe-area-pb shadow-[0_-4px_20px_rgba(0,0,0,0.08)]"
         role="navigation"
-        aria-label="Navigation mobile principale"
+        aria-label="Main mobile navigation"
       >
         <div className="flex items-center justify-around px-1 py-2">
           {/* Main Tabs - Improved accessibility */}
@@ -129,7 +143,9 @@ export function BottomNavigation() {
                   className={`w-5 h-5 mb-1 ${isActive ? 'scale-110' : ''} transition-transform`} 
                   aria-hidden="true"
                 />
-                <span className="text-xs font-medium truncate">{tab.label}</span>
+                <span className="text-xs font-medium truncate">
+                  {useTranslation ? t(tab.labelKey) : (tab as any).label || t(tab.labelKey)}
+                </span>
                 {isActive && (
                   <motion.div
                     layoutId="activeBottomTab"
@@ -154,11 +170,13 @@ export function BottomNavigation() {
                 ? 'text-sofa-text-accent bg-sofa-text-accent/10'
                 : 'text-sofa-text-muted hover:text-sofa-text-primary hover:bg-sofa-bg-hover'
             }`}
-            aria-label="Ouvrir le menu supplémentaire"
+            aria-label="Open additional menu"
             aria-expanded={showMoreMenu}
           >
             <MoreHorizontal className="w-5 h-5 mb-1" aria-hidden="true" />
-            <span className="text-xs font-medium">Plus</span>
+            <span className="text-xs font-medium">
+              {useTranslation ? t('nav.more') : 'Plus'}
+            </span>
             {secondaryTabs.some(tab => pathname === tab.href) && (
               <motion.div
                 layoutId="activeBottomTab"
@@ -197,13 +215,18 @@ export function BottomNavigation() {
             >
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                <h3 className="text-lg font-bold text-gray-900">Menu</h3>
-                <button
-                  onClick={() => setShowMoreMenu(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <h3 className="text-lg font-bold text-gray-900">
+                  {useTranslation ? t('nav.menu') : 'Menu'}
+                </h3>
+                <div className="flex items-center gap-2">
+                  {!isAdminPage && <LanguageSelector />}
+                  <button
+                    onClick={() => setShowMoreMenu(false)}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               {/* User Info */}
@@ -226,7 +249,9 @@ export function BottomNavigation() {
               {/* Navigation Items */}
               <div className="p-4">
                 <div className="space-y-2 mb-6">
-                  <div className="text-sm font-medium text-gray-500 px-3 py-2">Navigation</div>
+                  <div className="text-sm font-medium text-gray-500 px-3 py-2">
+                    {useTranslation ? t('nav.navigation') : 'Navigation'}
+                  </div>
                   {secondaryTabs.map((tab) => {
                     const isActive = pathname === tab.href
                     const Icon = tab.icon
@@ -243,7 +268,9 @@ export function BottomNavigation() {
                         }`}
                       >
                         <Icon className="w-5 h-5" />
-                        <span className="font-medium">{tab.label}</span>
+                        <span className="font-medium">
+                          {useTranslation ? t(tab.labelKey) : (tab as any).label || t(tab.labelKey)}
+                        </span>
                         {isActive && (
                           <div className="ml-auto w-2 h-2 bg-green-600 rounded-full" />
                         )}
@@ -261,7 +288,9 @@ export function BottomNavigation() {
                       className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all shadow-md"
                     >
                       <Gamepad2 className="w-5 h-5" />
-                      <span className="font-semibold">Basculer sur Joueur</span>
+                      <span className="font-semibold">
+                        {useTranslation ? t('nav.switchToPlayer') : 'Basculer sur Joueur'}
+                      </span>
                     </Link>
                   </div>
                 )}
@@ -275,7 +304,9 @@ export function BottomNavigation() {
                       className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md"
                     >
                       <Users className="w-5 h-5" />
-                      <span className="font-semibold">Basculer sur Coach</span>
+                      <span className="font-semibold">
+                        {useTranslation ? t('nav.switchToCoach') : 'Basculer sur Coach'}
+                      </span>
                     </Link>
                   </div>
                 )}
@@ -290,14 +321,14 @@ export function BottomNavigation() {
                       className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 text-gray-700 transition-all"
                     >
                       <Settings className="w-5 h-5" />
-                      <span className="font-medium">Panneau Admin</span>
+                      <span className="font-medium">Admin Panel</span>
                     </Link>
                   </div>
                 )}
 
                 {/* Social Links */}
                 <div className="space-y-2 mb-6">
-                  <div className="text-sm font-medium text-gray-500 px-3 py-2">Suivez-nous</div>
+                  <div className="text-sm font-medium text-gray-500 px-3 py-2">Follow Us</div>
                   <div className="flex items-center gap-3 px-3 py-2">
                     <a
                       href="https://www.instagram.com/comebac.league/"
@@ -345,7 +376,7 @@ export function BottomNavigation() {
                     className="flex items-center gap-4 p-3 rounded-xl hover:bg-red-50 text-red-600 transition-all w-full text-left"
                   >
                     <LogOut className="w-5 h-5" />
-                    <span className="font-medium">Se déconnecter</span>
+                    <span className="font-medium">Logout</span>
                   </button>
                 </div>
               </div>

@@ -52,13 +52,24 @@ export default function TeamDetailPage() {
           teamsMap.set(doc.id, { id: doc.id, ...doc.data() })
         })
 
-        // Fetch players
+        // Fetch players (exclude coaches)
         const playersQuery = query(collection(db, "players"), where("teamId", "==", teamId))
         const playersSnap = await getDocs(playersQuery)
-        const playersData = playersSnap.docs.map((doc) => ({
+        const allPlayersData = playersSnap.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         })) as Player[]
+        
+        // Filter out coaches
+        const playersData = allPlayersData.filter((player) => {
+          // Exclude coaches - check isCoach flag or position "Entraîneur"
+          const isCoach = (player as any).isCoach === true || 
+                         player.position?.toLowerCase().includes('entraîneur') ||
+                         player.position?.toLowerCase().includes('entraineur') ||
+                         player.position?.toLowerCase().includes('coach')
+          return !isCoach
+        })
+        
         playersData.sort((a, b) => (a.number || 0) - (b.number || 0))
         setPlayers(playersData)
 

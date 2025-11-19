@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { getPasswordResetActionCodeSettings } from '@/lib/password-reset'
+import { generateWelcomeEmail, sendCoachWelcomeEmail, sendEmail } from '@/lib/email-service'
 
 export async function POST(request: NextRequest) {
   try {
@@ -80,10 +81,9 @@ export async function POST(request: NextRequest) {
 
         console.log('✅ Coach account créé, envoi email...')
 
-        // Envoyer email coach via l'API générique
+        // Envoyer email coach avec le bon template
         try {
           const { adminAuth } = await import('@/lib/firebase-admin')
-          const { sendEmail } = await import('@/lib/email-service')
           
           // Créer compte Firebase Auth
           let userRecord
@@ -104,27 +104,16 @@ export async function POST(request: NextRequest) {
           // Générer lien de réinitialisation
           const resetLink = await adminAuth.generatePasswordResetLink(player.email, getPasswordResetActionCodeSettings(player.email))
 
-          // Envoyer email
-          await sendEmail({
-            to: player.email,
-            subject: '🏆 Bienvenue Coach sur ComeBac League!',
-            html: `
-              <!DOCTYPE html>
-              <html>
-              <body style="font-family: Arial, sans-serif; padding: 20px;">
-                <h2>Bienvenue ${player.firstName}!</h2>
-                <p>Votre compte coach a été créé pour l'équipe <strong>${teamData.name}</strong>.</p>
-                <p>Cliquez sur le lien ci-dessous pour créer votre mot de passe:</p>
-                <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background: #F97316; color: white; text-decoration: none; border-radius: 8px; margin: 20px 0;">
-                  Créer mon mot de passe
-                </a>
-                <p style="color: #666; font-size: 14px;">Ce lien expire dans 1 heure.</p>
-              </body>
-              </html>
-            `
+          // Envoyer email avec le template professionnel
+          await sendCoachWelcomeEmail({
+            email: player.email,
+            firstName: player.firstName,
+            lastName: player.lastName,
+            teamName: teamData.name,
+            resetLink
           })
           
-          console.log('✅ Email coach envoyé')
+          console.log('✅ Email coach envoyé avec le bon template')
         } catch (emailError) {
           console.error('❌ Erreur envoi email coach:', emailError)
         }
@@ -143,7 +132,6 @@ export async function POST(request: NextRequest) {
         try {
           const { adminAuth } = await import('@/lib/firebase-admin')
           const { adminDb } = await import('@/lib/firebase-admin')
-          const { sendEmail } = await import('@/lib/email-service')
           
           // Créer compte Firebase Auth
           let userRecord
@@ -188,27 +176,12 @@ export async function POST(request: NextRequest) {
           // Générer lien de réinitialisation
           const resetLink = await adminAuth.generatePasswordResetLink(player.email, getPasswordResetActionCodeSettings(player.email))
 
-          // Envoyer email
-          await sendEmail({
-            to: player.email,
-            subject: '🎉 Bienvenue sur ComeBac League!',
-            html: `
-              <!DOCTYPE html>
-              <html>
-              <body style="font-family: Arial, sans-serif; padding: 20px;">
-                <h2>Bienvenue ${player.firstName}!</h2>
-                <p>Ton compte joueur a été créé pour l'équipe <strong>${teamData.name}</strong>.</p>
-                <p>Clique sur le lien ci-dessous pour créer ton mot de passe:</p>
-                <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background: #10b981; color: white; text-decoration: none; border-radius: 8px; margin: 20px 0;">
-                  Créer mon mot de passe
-                </a>
-                <p style="color: #666; font-size: 14px;">Ce lien expire dans 1 heure.</p>
-              </body>
-              </html>
-            `
-          })
+          // Envoyer email avec le template professionnel
+          const playerName = `${player.firstName} ${player.lastName}`
+          const emailData = generateWelcomeEmail(playerName, teamData.name, resetLink, player.email)
+          await sendEmail(emailData)
           
-          console.log('✅ Email joueur envoyé')
+          console.log('✅ Email joueur envoyé avec le bon template')
         } catch (emailError) {
           console.error('❌ Erreur création compte joueur:', emailError)
           throw emailError

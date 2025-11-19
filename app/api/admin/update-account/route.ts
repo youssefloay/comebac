@@ -20,13 +20,19 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date().toISOString()
     }
 
-    if (updates.firstName) updateData.firstName = updates.firstName
-    if (updates.lastName) updateData.lastName = updates.lastName
-    if (updates.email) updateData.email = updates.email
-    if (updates.teamName) updateData.teamName = updates.teamName
-    if (updates.position) updateData.position = updates.position
+    if (updates.firstName !== undefined) updateData.firstName = updates.firstName
+    if (updates.lastName !== undefined) updateData.lastName = updates.lastName
+    if (updates.email !== undefined) updateData.email = updates.email
+    if (updates.phone !== undefined) updateData.phone = updates.phone
+    if (updates.birthDate !== undefined) updateData.birthDate = updates.birthDate || null
+    if (updates.nickname !== undefined) updateData.nickname = updates.nickname || ''
+    if (updates.height !== undefined) updateData.height = updates.height || null
+    if (updates.tshirtSize !== undefined) updateData.tshirtSize = updates.tshirtSize
+    if (updates.foot !== undefined) updateData.foot = updates.foot
+    if (updates.teamName !== undefined) updateData.teamName = updates.teamName
+    if (updates.position !== undefined) updateData.position = updates.position
     if (updates.jerseyNumber !== undefined) updateData.jerseyNumber = updates.jerseyNumber
-    if (updates.role) updateData.role = updates.role
+    if (updates.role !== undefined) updateData.role = updates.role
 
     // 1. Mettre à jour la collection principale selon le type
     if (accountType === 'coach') {
