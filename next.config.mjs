@@ -1,3 +1,9 @@
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Mode normal - Capacitor chargera l'app depuis le serveur de production
@@ -10,6 +16,13 @@ const nextConfig = {
   },
   env: {
     MATCH_SCHEDULE_ENABLED: "true",
+  },
+  // Configuration Turbopack pour résoudre le problème de workspace root
+  // Spécifie explicitement le répertoire racine du projet
+  experimental: {
+    turbo: {
+      root: path.resolve(__dirname),
+    },
   },
   async headers() {
     return [

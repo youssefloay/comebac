@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import { AuthProvider } from "@/lib/auth-context"
 import { ThemeProvider } from "@/lib/theme-context"
 import { RegisterSW } from "@/components/pwa/RegisterSW"
@@ -115,6 +116,7 @@ export default function RootLayout({
         </ThemeProvider>
         <RegisterSW />
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

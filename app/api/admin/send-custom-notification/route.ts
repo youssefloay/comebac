@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminDb } from '@/lib/firebase-admin'
+import { adminDb, adminAuth } from '@/lib/firebase-admin'
 
 export async function POST(request: NextRequest) {
   try {
@@ -198,9 +198,21 @@ export async function POST(request: NextRequest) {
 
     for (const recipient of recipients) {
       try {
+        // Récupérer l'UID Firebase Auth depuis l'email (priorité absolue)
+        let userId: string | null = null
+        try {
+          const userRecord = await adminAuth.getUserByEmail(recipient.email)
+          userId = userRecord.uid
+        } catch (error: any) {
+          // Si l'utilisateur n'existe pas dans Firebase Auth, utiliser l'email comme fallback
+          // (pour les comptes qui n'ont pas encore été créés dans Firebase Auth)
+          console.warn(`⚠️ UID non trouvé pour ${recipient.email}, utilisation de l'email comme fallback`)
+          userId = recipient.email
+        }
+
         // Créer une notification individuelle pour chaque utilisateur
         await adminDb.collection('notifications').add({
-          userId: recipient.email,
+          userId: userId, // Utiliser l'UID Firebase Auth (ou email en fallback)
           title,
           message,
           type: 'custom',
@@ -215,7 +227,8 @@ export async function POST(request: NextRequest) {
         results.push({
           email: recipient.email,
           name: recipient.name,
-          status: 'sent'
+          status: 'sent',
+          userId: userId
         })
       } catch (error: any) {
         errorCount++
