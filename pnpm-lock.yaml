@@ -110,9 +110,6 @@ importers:
       date-fns:
         specifier: 4.1.0
         version: 4.1.0
-      dotenv:
-        specifier: ^17.2.3
-        version: 17.2.3
       embla-carousel-react:
         specifier: 8.5.1
         version: 8.5.1(react@19.2.0)
@@ -192,6 +189,9 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.0.0
+      dotenv:
+        specifier: ^17.2.3
+        version: 17.2.3
       postcss:
         specifier: ^8.5
         version: 8.5.0
