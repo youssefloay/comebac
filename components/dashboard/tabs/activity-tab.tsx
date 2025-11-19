@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import { db } from "@/lib/firebase"
 import { collection, getDocs, query, orderBy } from "firebase/firestore"
 import { CheckCircle, XCircle, Clock, User, Mail, Calendar, Info, X as CloseIcon, RefreshCw } from "lucide-react"
@@ -235,18 +235,22 @@ export default function ActivityTab() {
     fetchActivities(true)
   }
 
-  const filteredActivities = activities.filter(activity => {
-    // Filtre par statut de connexion
-    if (filter === 'active' && !activity.hasLoggedIn) return false
-    if (filter === 'inactive' && activity.hasLoggedIn) return false
-    
-    // Filtre par type
-    if (typeFilter !== 'all' && activity.type !== typeFilter) return false
-    
-    return true
-  })
+  // Optimisation avec useMemo pour éviter les recalculs
+  const filteredActivities = useMemo(() => 
+    activities.filter(activity => {
+      // Filtre par statut de connexion
+      if (filter === 'active' && !activity.hasLoggedIn) return false
+      if (filter === 'inactive' && activity.hasLoggedIn) return false
+      
+      // Filtre par type
+      if (typeFilter !== 'all' && activity.type !== typeFilter) return false
+      
+      return true
+    }),
+    [activities, filter, typeFilter]
+  )
 
-  const stats = {
+  const stats = useMemo(() => ({
     total: activities.length,
     active: activities.filter(a => a.hasLoggedIn).length,
     inactive: activities.filter(a => !a.hasLoggedIn).length,
@@ -254,7 +258,7 @@ export default function ActivityTab() {
     coaches: activities.filter(a => a.type === 'coach').length,
     users: activities.filter(a => a.type === 'user').length,
     admins: activities.filter(a => a.type === 'admin').length
-  }
+  }), [activities])
 
   const formatDate = (date?: Date) => {
     if (!date) return 'Jamais'

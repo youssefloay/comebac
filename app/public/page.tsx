@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { collection, query, orderBy, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
@@ -69,20 +69,23 @@ export default function PublicHome() {
       try {
         console.log('🔄 Chargement des données...')
         
-        // Load teams with player counts
-        console.log('📊 Chargement des équipes...')
-        const teamsSnap = await getDocs(collection(db, 'teams'))
+        // Charger toutes les données en parallèle pour améliorer les performances
+        const [teamsSnap, playersSnap, matchesSnap, statsSnap, resultsSnap] = await Promise.all([
+          getDocs(collection(db, 'teams')),
+          getDocs(collection(db, 'players')),
+          getDocs(collection(db, 'matches')),
+          getDocs(query(collection(db, 'teamStatistics'), orderBy('points', 'desc'))),
+          getDocs(collection(db, 'matchResults'))
+        ])
+        
+        console.log(`✅ ${teamsSnap.docs.length} équipes, ${playersSnap.docs.length} joueurs, ${matchesSnap.docs.length} matchs chargés`)
+        
         const teamsData = teamsSnap.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as Team[]
-        console.log(`✅ ${teamsData.length} équipes chargées`)
-
-        // Load all players to count them per team
-        console.log('👥 Chargement des joueurs...')
-        const playersSnap = await getDocs(collection(db, 'players'))
+        
         const allPlayers = playersSnap.docs.map(doc => doc.data())
-        console.log(`✅ ${allPlayers.length} joueurs chargés`)
         
         // Add player counts to teams
         const teamsWithPlayerCounts = teamsData.map(team => ({
@@ -97,11 +100,6 @@ export default function PublicHome() {
         teamsData.forEach(team => {
           teamsMap.set(team.id, team)
         })
-
-        // Load all matches
-        console.log('⚽ Chargement des matchs...')
-        const matchesSnap = await getDocs(collection(db, 'matches'))
-        console.log(`✅ ${matchesSnap.docs.length} matchs trouvés`)
         const allMatches = matchesSnap.docs.map(doc => {
           const data = doc.data()
           return {
@@ -113,12 +111,11 @@ export default function PublicHome() {
           }
         }) as Match[]
 
-        // Trier les matchs par date côté client
+        // Load standings from teamStatistics (with duplicate filtering)
+        // statsSnap est déjà chargé en parallèle ci-dessus
         allMatches.sort((a, b) => b.date.getTime() - a.date.getTime())
 
-        // Load match results
-        console.log('🏆 Chargement des résultats...')
-        const resultsSnap = await getDocs(collection(db, 'matchResults'))
+        // Process match results (déjà chargés en parallèle)
         console.log(`✅ ${resultsSnap.docs.length} résultats trouvés`)
         const resultsMap = new Map()
         let totalGoals = 0
@@ -157,9 +154,7 @@ export default function PublicHome() {
         setUpcomingMatches(upcomingMatchesFiltered)
         setRecentMatches(recentMatchesFiltered)
 
-        // Load standings from teamStatistics (with duplicate filtering)
-        const statsSnap = await getDocs(query(collection(db, 'teamStatistics'), orderBy('points', 'desc')))
-        
+        // Process standings from teamStatistics (déjà chargés en parallèle)
         console.log(`[Public Home] Raw statistics count: ${statsSnap.docs.length}`)
         
         // Remove duplicates by keeping only the best entry per team

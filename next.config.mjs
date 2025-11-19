@@ -12,18 +12,20 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+    // Optimisation des images activée pour de meilleures performances
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60,
+    // Garder unoptimized pour les images externes si nécessaire
+    // unoptimized: true,
   },
   env: {
     MATCH_SCHEDULE_ENABLED: "true",
   },
   // Configuration Turbopack pour résoudre le problème de workspace root
-  // Spécifie explicitement le répertoire racine du projet
-  experimental: {
-    turbo: {
-      root: path.resolve(__dirname),
-    },
-  },
+  // Note: La configuration turbo.root n'est pas encore supportée dans Next.js 16
+  // Le warning peut être ignoré, ou vous pouvez mettre à jour vers Next.js 17+
   async headers() {
     return [
       {
@@ -51,6 +53,34 @@ const nextConfig = {
             value: "connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://firestore.googleapis.com wss://*.firebaseio.com wss://*.firestore.googleapis.com https://*.google-analytics.com https://region1.google-analytics.com"
           }
         ]
+      },
+      // Cache pour les assets statiques
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/images/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/comebac.png',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
       }
     ]
   }

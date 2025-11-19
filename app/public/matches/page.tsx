@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo, useCallback } from "react"
 import { db } from "@/lib/firebase"
 import { collection, getDocs, query, orderBy } from "firebase/firestore"
 import type { Match, Team, MatchResult } from "@/lib/types"
@@ -19,7 +19,6 @@ import {
 
 export default function MatchesPage() {
   const [matches, setMatches] = useState<(Match & { homeTeam?: Team; awayTeam?: Team; result?: MatchResult })[]>([])
-  const [filteredMatches, setFilteredMatches] = useState<(Match & { homeTeam?: Team; awayTeam?: Team; result?: MatchResult })[]>([])
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState<'all' | 'scheduled' | 'completed' | 'in_progress'>('all')
   const [selectedRound, setSelectedRound] = useState<number | 'all'>('all')
@@ -183,8 +182,8 @@ export default function MatchesPage() {
     fetchMatches()
   }, [])
 
-  // Filter matches based on status and round
-  useEffect(() => {
+  // Filter matches based on status and round - optimisé avec useMemo
+  const filteredMatches = useMemo(() => {
     let filtered = matches
 
     if (filterStatus !== 'all') {
@@ -202,7 +201,7 @@ export default function MatchesPage() {
       return new Date(a.date).getTime() - new Date(b.date).getTime()
     })
 
-    setFilteredMatches(filtered)
+    return filtered
   }, [matches, filterStatus, selectedRound])
 
 
@@ -216,18 +215,22 @@ export default function MatchesPage() {
     matchesWithResults: matches.filter(m => m.result).length
   })
 
-  // Organize matches by priority
-  const liveMatches = filteredMatches.filter(m => m.status === 'in_progress')
-  const todayMatches = filteredMatches.filter(m => {
-    const today = new Date()
-    const matchDate = new Date(m.date)
-    return matchDate.toDateString() === today.toDateString() && m.status !== 'in_progress'
-  })
-  const upcomingMatches = filteredMatches.filter(m => 
-    m.status === 'scheduled' && 
-    !todayMatches.includes(m)
-  ).slice(0, 6)
-  const recentMatches = filteredMatches.filter(m => m.status === 'completed').slice(0, 6)
+  // Organize matches by priority - optimisé avec useMemo
+  const { liveMatches, todayMatches, upcomingMatches, recentMatches } = useMemo(() => {
+    const live = filteredMatches.filter(m => m.status === 'in_progress')
+    const today = filteredMatches.filter(m => {
+      const today = new Date()
+      const matchDate = new Date(m.date)
+      return matchDate.toDateString() === today.toDateString() && m.status !== 'in_progress'
+    })
+    const upcoming = filteredMatches.filter(m => 
+      m.status === 'scheduled' && 
+      !today.includes(m)
+    ).slice(0, 6)
+    const recent = filteredMatches.filter(m => m.status === 'completed').slice(0, 6)
+    
+    return { liveMatches: live, todayMatches: today, upcomingMatches: upcoming, recentMatches: recent }
+  }, [filteredMatches])
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">

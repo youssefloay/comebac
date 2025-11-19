@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 // Using API endpoints instead of direct DB calls
 import { FifaCardPersonal } from "@/components/fifa/fifa-card-personal";
 import type { Team, Player } from "@/lib/types";
@@ -9,7 +9,6 @@ import { Users, Search } from "lucide-react";
 export default function PlayersPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
-  const [filteredPlayers, setFilteredPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTeam, setSelectedTeam] = useState<string>("all");
@@ -19,10 +18,6 @@ export default function PlayersPage() {
   useEffect(() => {
     loadData();
   }, []);
-
-  useEffect(() => {
-    filterPlayers();
-  }, [players, searchTerm, selectedTeam, selectedPosition, sortBy]);
 
   const loadData = async () => {
     try {
@@ -68,7 +63,8 @@ export default function PlayersPage() {
     }
   };
 
-  const filterPlayers = () => {
+  // Optimisation avec useMemo pour éviter les recalculs inutiles
+  const filteredPlayers = useMemo(() => {
     let filtered = [...players];
 
     // Filtre par recherche
@@ -108,8 +104,8 @@ export default function PlayersPage() {
       }
     });
 
-    setFilteredPlayers(filtered);
-  };
+    return filtered;
+  }, [players, searchTerm, selectedTeam, selectedPosition, sortBy]);
 
   const positions = ["Gardien", "Défenseur", "Milieu", "Attaquant"];
 
@@ -124,14 +120,20 @@ export default function PlayersPage() {
     );
   }
 
-  // Get top players for highlights
-  const topScorers = [...players]
-    .sort((a, b) => (b.seasonStats?.goals || 0) - (a.seasonStats?.goals || 0))
-    .slice(0, 3)
+  // Get top players for highlights - optimisé avec useMemo
+  const topScorers = useMemo(() => 
+    [...players]
+      .sort((a, b) => (b.seasonStats?.goals || 0) - (a.seasonStats?.goals || 0))
+      .slice(0, 3),
+    [players]
+  )
   
-  const topRated = [...players]
-    .sort((a, b) => (b.overall || 0) - (a.overall || 0))
-    .slice(0, 3)
+  const topRated = useMemo(() =>
+    [...players]
+      .sort((a, b) => (b.overall || 0) - (a.overall || 0))
+      .slice(0, 3),
+    [players]
+  )
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
