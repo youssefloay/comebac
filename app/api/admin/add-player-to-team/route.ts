@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { getPasswordResetActionCodeSettings } from '@/lib/password-reset'
 import { generateWelcomeEmail, sendCoachWelcomeEmail, sendEmail } from '@/lib/email-service'
@@ -62,8 +62,10 @@ export async function POST(request: NextRequest) {
       )
       const coachSnap = await getDocs(coachQuery)
 
+      let coachDocId: string
+
       if (coachSnap.empty) {
-        await addDoc(collection(db, 'coachAccounts'), {
+        const coachDocRef = await addDoc(collection(db, 'coachAccounts'), {
           email: player.email,
           firstName: player.firstName,
           lastName: player.lastName,
@@ -78,7 +80,7 @@ export async function POST(request: NextRequest) {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         })
-
+        coachDocId = coachDocRef.id
         console.log('✅ Coach account créé, envoi email...')
 
         // Envoyer email coach avec le bon template
@@ -117,7 +119,27 @@ export async function POST(request: NextRequest) {
         } catch (emailError) {
           console.error('❌ Erreur envoi email coach:', emailError)
         }
+      } else {
+        coachDocId = coachSnap.docs[0].id
+        console.log('ℹ️ Coach account existe déjà:', coachDocId)
       }
+
+      // Mettre à jour le document teams avec les informations du coach
+      await updateDoc(doc(db, 'teams', teamId), {
+        coachId: coachDocId,
+        coachFirstName: player.firstName,
+        coachLastName: player.lastName,
+        coachEmail: player.email,
+        coach: {
+          firstName: player.firstName,
+          lastName: player.lastName,
+          birthDate: player.birthDate || '',
+          email: player.email,
+          phone: player.phone || ''
+        },
+        updatedAt: serverTimestamp()
+      })
+      console.log('✅ Document teams mis à jour avec les informations du coach')
     } else {
       // Créer compte joueur
       const playerQuery = query(

@@ -83,10 +83,25 @@ export async function POST(request: NextRequest) {
 
         // Mettre à jour le coach dans l'équipe
         if (accountType === 'coach' && teamData?.coachId === accountId) {
+          // Récupérer les données complètes du coach depuis coachAccounts
+          const coachDoc = await adminDb.collection('coachAccounts').doc(accountId).get()
+          const coachData = coachDoc.exists ? coachDoc.data() : null
+          
           const coachUpdate: any = {}
           if (updates.firstName) coachUpdate.coachFirstName = updates.firstName
           if (updates.lastName) coachUpdate.coachLastName = updates.lastName
           if (updates.email) coachUpdate.coachEmail = updates.email
+          
+          // Mettre à jour l'objet coach complet
+          if (coachData) {
+            coachUpdate.coach = {
+              firstName: updates.firstName || coachData.firstName || '',
+              lastName: updates.lastName || coachData.lastName || '',
+              birthDate: updates.birthDate || coachData.birthDate || '',
+              email: updates.email || coachData.email || '',
+              phone: updates.phone || coachData.phone || ''
+            }
+          }
           
           if (Object.keys(coachUpdate).length > 0) {
             batch.update(teamRef, coachUpdate)
@@ -120,6 +135,13 @@ export async function POST(request: NextRequest) {
         .where('name', '==', updates.teamName)
         .get()
       
+      // Récupérer les données complètes du coach si nécessaire
+      let coachData: any = null
+      if (accountType === 'coach') {
+        const coachDoc = await adminDb.collection('coachAccounts').doc(accountId).get()
+        coachData = coachDoc.exists ? coachDoc.data() : null
+      }
+      
       if (!teamsSnapshot.empty) {
         teamsSnapshot.forEach(doc => {
           const teamData = doc.data()
@@ -130,6 +152,17 @@ export async function POST(request: NextRequest) {
             if (updates.firstName) coachUpdate.coachFirstName = updates.firstName
             if (updates.lastName) coachUpdate.coachLastName = updates.lastName
             if (updates.email) coachUpdate.coachEmail = updates.email
+            
+            // Mettre à jour l'objet coach complet
+            if (coachData) {
+              coachUpdate.coach = {
+                firstName: updates.firstName || coachData.firstName || '',
+                lastName: updates.lastName || coachData.lastName || '',
+                birthDate: updates.birthDate || coachData.birthDate || '',
+                email: updates.email || coachData.email || '',
+                phone: updates.phone || coachData.phone || ''
+              }
+            }
             
             if (Object.keys(coachUpdate).length > 0) {
               batch.update(doc.ref, coachUpdate)
