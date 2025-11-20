@@ -7,6 +7,7 @@ import { AuthProvider } from "@/lib/auth-context"
 import { ThemeProvider } from "@/lib/theme-context"
 import { RegisterSW } from "@/components/pwa/RegisterSW"
 import { InstallPrompt } from "@/components/pwa/InstallPrompt"
+import { AdSenseScript } from "@/components/ads/AdSenseScript"
 import "./globals.css"
 import "@/styles/sofascore-theme.css"
 import "@/styles/fifa-cards.css"
@@ -108,6 +109,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#10b981" />
       </head>
       <body className={`${inter.className} font-sans antialiased`}>
+        <AdSenseScript />
         <ThemeProvider>
           <AuthProvider>
             {children}

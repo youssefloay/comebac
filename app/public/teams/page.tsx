@@ -9,6 +9,7 @@ import type { Team, Player } from "@/lib/types"
 import { Users, MapPin, Trophy, Target } from "lucide-react"
 import { FavoriteButton } from "@/components/favorites/favorite-button"
 import { t } from "@/lib/i18n"
+import { AdBanner } from "@/components/ads/AdBanner"
 
 interface TeamWithPlayers extends Team {
   players: Player[]
@@ -106,6 +107,9 @@ export default function TeamsPage() {
           {t('teams.subtitle')}
         </p>
       </div>
+
+      {/* Publicité en haut de page */}
+      <AdBanner slot="1234567898" format="auto" style="horizontal" className="mb-6" />
 
       {loading ? (
         <div className="text-center py-20">
@@ -249,6 +253,11 @@ export default function TeamsPage() {
             </motion.div>
           ))}
         </div>
+      )}
+
+      {/* Publicité après la grille des équipes */}
+      {!loading && teams.length > 0 && (
+        <AdBanner slot="1234567899" format="auto" style="horizontal" className="mt-8" />
       )}
     </div>
   )

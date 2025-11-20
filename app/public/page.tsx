@@ -10,6 +10,7 @@ import { SofaTeamCard } from '@/components/sofa/team-card'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import Link from 'next/link'
 import { t } from '@/lib/i18n'
+import { AdBanner } from '@/components/ads/AdBanner'
 import { 
   Calendar, 
   Clock, 
@@ -279,6 +280,9 @@ export default function PublicHome() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
+        {/* Publicité après le hero */}
+        <AdBanner slot="1234567890" format="auto" style="horizontal" />
+
         {/* Priority 1: Featured Match (Live or Next) */}
         {featuredMatch && (
           <motion.section
@@ -373,6 +377,9 @@ export default function PublicHome() {
           </motion.section>
         )}
 
+        {/* Publicité après le podium */}
+        <AdBanner slot="1234567891" format="auto" style="horizontal" />
+
         {/* Priority 3: Quick Stats - More Compact */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
@@ -460,6 +467,9 @@ export default function PublicHome() {
             </div>
           </motion.section>
         )}
+
+        {/* Publicité après les résultats récents */}
+        <AdBanner slot="1234567892" format="auto" style="horizontal" />
 
         {/* Priority 5: Upcoming Matches - Compact */}
         {upcomingMatches.length > 1 && (

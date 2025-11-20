@@ -6,6 +6,7 @@ import { collection, getDocs } from "firebase/firestore"
 import type { TeamStatistics, Team } from "@/lib/types"
 import { t } from "@/lib/i18n"
 import { TeamLink } from "@/components/ui/team-link"
+import { AdBanner } from "@/components/ads/AdBanner"
 
 interface RankingTeam extends TeamStatistics {
   teamName: string
@@ -183,6 +184,9 @@ export default function RankingPage() {
         </div>
       </div>
 
+      {/* Publicité en haut de page */}
+      <AdBanner slot="1234567896" format="auto" style="horizontal" className="mb-6" />
+
       {/* Podium Section */}
       {topThree.length >= 3 && (
         <div className="mb-8">
@@ -257,6 +261,11 @@ export default function RankingPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Publicité après le podium */}
+      {topThree.length >= 3 && (
+        <AdBanner slot="1234567897" format="auto" style="horizontal" className="mb-6" />
       )}
 
       {showDebug && (
