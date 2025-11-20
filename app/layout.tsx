@@ -107,6 +107,7 @@ export default function RootLayout({
         <meta name="msapplication-TileImage" content="/comebac.png" />
         <meta name="msapplication-TileColor" content="#10b981" />
         <meta name="theme-color" content="#10b981" />
+        <meta name="google-adsense-account" content="ca-pub-6906465408852552" />
       </head>
       <body className={`${inter.className} font-sans antialiased`}>
         <AdSenseScript />

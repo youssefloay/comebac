@@ -108,9 +108,6 @@ export default function TeamsPage() {
         </p>
       </div>
 
-      {/* Publicité en haut de page */}
-      <AdBanner slot="1234567898" format="auto" style="horizontal" className="mb-6" />
-
       {loading ? (
         <div className="text-center py-20">
           <div className="w-12 h-12 border-4 border-sofa-border border-t-sofa-text-accent rounded-full animate-spin mx-auto mb-4"></div>
@@ -255,9 +252,11 @@ export default function TeamsPage() {
         </div>
       )}
 
-      {/* Publicité après la grille des équipes */}
+      {/* Publicité discrète en bas de page */}
       {!loading && teams.length > 0 && (
-        <AdBanner slot="1234567899" format="auto" style="horizontal" className="mt-8" />
+        <div className="pt-8 mt-8">
+          <AdBanner slot="1234567898" format="auto" style="horizontal" className="opacity-75" />
+        </div>
       )}
     </div>
   )

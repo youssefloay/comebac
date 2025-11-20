@@ -241,9 +241,6 @@ export default function MatchesPage() {
         <p className="text-sofa-text-secondary">{t('matches.subtitle')}</p>
       </div>
 
-      {/* Publicité en haut de page */}
-      <AdBanner slot="1234567893" format="auto" style="horizontal" className="mb-6" />
-
       {/* Quick Stats - More Compact */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <div className="sofa-stat-card">
@@ -368,9 +365,6 @@ export default function MatchesPage() {
         </div>
       </div>
 
-      {/* Publicité après les filtres */}
-      <AdBanner slot="1234567894" format="auto" style="horizontal" className="mb-6" />
-
       {/* Organized Matches Display */}
       {loading ? (
         <div className="text-center py-12">
@@ -421,11 +415,6 @@ export default function MatchesPage() {
                 })}
               </div>
             </section>
-          )}
-
-          {/* Publicité après les matchs en direct */}
-          {liveMatches.length > 0 && (
-            <AdBanner slot="1234567895" format="auto" style="horizontal" />
           )}
 
           {/* Today's Matches */}
@@ -611,6 +600,11 @@ export default function MatchesPage() {
           )}
         </div>
       )}
+
+      {/* Publicité discrète en bas de page */}
+      <div className="pt-8 mt-8">
+        <AdBanner slot="1234567893" format="auto" style="horizontal" className="opacity-75" />
+      </div>
     </div>
   )
 }

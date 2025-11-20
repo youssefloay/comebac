@@ -27,7 +27,7 @@ export function AdBanner({
     : 'w-full max-w-[728px] mx-auto my-4'
 
   return (
-    <div className={`${containerClass} ${className} flex justify-center items-center min-h-[90px] bg-gray-50 rounded-lg border border-gray-200`}>
+    <div className={`${containerClass} ${className} flex justify-center items-center min-h-[90px] opacity-90`}>
       <AdSense 
         adSlot={slot}
         adFormat={format}

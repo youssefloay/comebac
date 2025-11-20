@@ -184,9 +184,6 @@ export default function RankingPage() {
         </div>
       </div>
 
-      {/* Publicité en haut de page */}
-      <AdBanner slot="1234567896" format="auto" style="horizontal" className="mb-6" />
-
       {/* Podium Section */}
       {topThree.length >= 3 && (
         <div className="mb-8">
@@ -261,11 +258,6 @@ export default function RankingPage() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Publicité après le podium */}
-      {topThree.length >= 3 && (
-        <AdBanner slot="1234567897" format="auto" style="horizontal" className="mb-6" />
       )}
 
       {showDebug && (
@@ -497,6 +489,11 @@ export default function RankingPage() {
         </div>
         </div>
       )}
+
+      {/* Publicité discrète en bas de page */}
+      <div className="pt-8 mt-8">
+        <AdBanner slot="1234567896" format="auto" style="horizontal" className="opacity-75" />
+      </div>
     </div>
   )
 }
