@@ -101,12 +101,12 @@ export function AlertForm({ onSubmit, initialData, onRegisterClick }: AlertFormP
         />
       </div>
 
-      {/* Button REGISTRE NOW */}
+      {/* Button REGISTER NOW */}
       <button
         type="submit"
         className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg hover:shadow-xl"
       >
-        REGISTRE NOW
+        REGISTER NOW
       </button>
     </form>
   )

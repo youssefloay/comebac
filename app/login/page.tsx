@@ -407,7 +407,7 @@ export default function LoginPage() {
                   href="/register-team"
                   className="inline-flex items-center justify-center w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors shadow-lg hover:shadow-xl"
                 >
-                  REGISTRE NOW
+                  REGISTER NOW
                 </a>
               </div>
 

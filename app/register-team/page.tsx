@@ -45,7 +45,7 @@ export default function RegisterTeamPage() {
             ← Back
           </Link>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Registre your team
+            Register your team
           </h1>
           <p className="text-lg text-gray-600">
             Register your team and join the competition
