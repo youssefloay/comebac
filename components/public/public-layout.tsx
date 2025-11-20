@@ -115,6 +115,18 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         {children}
       </main>
       
+      {/* Footer discret */}
+      <footer className="py-4 px-4 border-t border-gray-100 mt-12">
+        <div className="max-w-7xl mx-auto flex items-center justify-center">
+          <Link 
+            href="/public/privacy" 
+            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            Politique de confidentialité
+          </Link>
+        </div>
+      </footer>
+      
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden">
         <BottomNavigation />
