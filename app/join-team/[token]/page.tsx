@@ -218,7 +218,7 @@ export default function JoinTeamPage() {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Oups!</h2>
           <p className="text-gray-600 mb-6">{error}</p>
-          <Link href="/register-team-new" className="text-green-600 hover:text-green-700 font-medium">
+          <Link href="/register-team" className="text-green-600 hover:text-green-700 font-medium">
             Retour à l'accueil
           </Link>
         </div>

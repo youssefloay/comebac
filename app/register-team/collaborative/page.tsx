@@ -219,7 +219,7 @@ export default function CollaborativeRegistrationPage() {
       <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link href="/register-team-new" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
+            <Link href="/register-team" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
               <ArrowLeft className="w-5 h-5" />
               <span>Retour</span>
             </Link>

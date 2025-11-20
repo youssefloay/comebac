@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           '/login',
           '/',
           '/register-team',
-          '/register-team-new',
+          '/register-team',
           '/register-team/collaborative',
           '/update-registration',
           '/team-registration',
