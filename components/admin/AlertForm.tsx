@@ -45,7 +45,7 @@ export function AlertForm({ onSubmit, initialData, onRegisterClick }: AlertFormP
           id="alert"
           value={formData.alert}
           onChange={(e) => setFormData({ ...formData, alert: e.target.value })}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
         />
       </div>
 
@@ -62,7 +62,7 @@ export function AlertForm({ onSubmit, initialData, onRegisterClick }: AlertFormP
           value={formData.why}
           onChange={(e) => setFormData({ ...formData, why: e.target.value })}
           rows={4}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
         />
       </div>
 
@@ -80,7 +80,7 @@ export function AlertForm({ onSubmit, initialData, onRegisterClick }: AlertFormP
           value={formData.remainingPlaces}
           onChange={(e) => setFormData({ ...formData, remainingPlaces: parseInt(e.target.value) || 0 })}
           min="0"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
         />
       </div>
 
@@ -97,7 +97,7 @@ export function AlertForm({ onSubmit, initialData, onRegisterClick }: AlertFormP
           id="deadline"
           value={formData.deadline}
           onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
         />
       </div>
 
