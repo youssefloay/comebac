@@ -65,6 +65,52 @@ export default function TeamRegistrationsPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending')
 
+  // Vérifier les paramètres URL pour les actions depuis l'email
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const success = params.get('success')
+    const error = params.get('error')
+    const registrationId = params.get('registrationId')
+    const teamName = params.get('teamName')
+
+    if (success) {
+      if (success === 'marked_for_validation') {
+        setMessage({ type: 'success', text: `✅ Équipe marquée pour validation. Veuillez finaliser l'approbation ci-dessous.` })
+        if (registrationId) {
+          // Sélectionner automatiquement l'inscription
+          const registration = registrations.find(r => r.id === registrationId)
+          if (registration) {
+            setSelectedRegistration(registration)
+          }
+        }
+      } else if (success === 'rejected') {
+        setMessage({ type: 'success', text: `✅ Équipe rejetée avec succès.` })
+      } else if (success === 'already_approved') {
+        setMessage({ type: 'success', text: `ℹ️ L'équipe "${teamName || ''}" est déjà approuvée.` })
+      } else if (success === 'already_rejected') {
+        setMessage({ type: 'success', text: `ℹ️ L'équipe "${teamName || ''}" est déjà rejetée.` })
+      }
+      // Nettoyer l'URL
+      window.history.replaceState({}, '', '/admin/team-registrations')
+    }
+
+    if (error) {
+      let errorMessage = 'Une erreur est survenue'
+      if (error === 'missing_params') {
+        errorMessage = 'Paramètres manquants dans l\'URL'
+      } else if (error === 'invalid_action') {
+        errorMessage = 'Action invalide'
+      } else if (error === 'not_found') {
+        errorMessage = 'Inscription non trouvée'
+      } else {
+        errorMessage = decodeURIComponent(error)
+      }
+      setMessage({ type: 'error', text: `❌ ${errorMessage}` })
+      // Nettoyer l'URL
+      window.history.replaceState({}, '', '/admin/team-registrations')
+    }
+  }, [registrations])
+
   useEffect(() => {
     if (!authLoading) {
       if (!user) {

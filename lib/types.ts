@@ -79,8 +79,22 @@ export interface MatchResult {
   homeTeamScore: number
   awayTeamScore: number
   // Each scorer can reference a player document (playerId) and include a display name and optional assists
-  homeTeamGoalScorers: Array<{ playerId?: string; playerName: string; assists?: string }>
-  awayTeamGoalScorers: Array<{ playerId?: string; playerName: string; assists?: string }>
+  homeTeamGoalScorers: Array<{ 
+    playerId?: string
+    playerName: string
+    assists?: string
+    isPenalty?: boolean
+    isPenaltyMissed?: boolean
+    isOwnGoal?: boolean
+  }>
+  awayTeamGoalScorers: Array<{ 
+    playerId?: string
+    playerName: string
+    assists?: string
+    isPenalty?: boolean
+    isPenaltyMissed?: boolean
+    isOwnGoal?: boolean
+  }>
   // Cards for each team
   homeTeamYellowCards?: Array<{ playerId?: string; playerName: string }>
   awayTeamYellowCards?: Array<{ playerId?: string; playerName: string }>

@@ -34,11 +34,25 @@ interface MatchResultFormProps {
 export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFormProps) {
   const [homeScore, setHomeScore] = useState(match.result?.homeTeamScore || 0)
   const [awayScore, setAwayScore] = useState(match.result?.awayTeamScore || 0)
-  const [homeScorers, setHomeScorers] = useState<Array<{ playerId?: string; playerName: string; assists?: string }>>(
-    (match.result?.homeTeamGoalScorers || []).map(s => ({ playerId: (s as any).playerId || '', playerName: s.playerName, assists: s.assists }))
+  const [homeScorers, setHomeScorers] = useState<Array<{ playerId?: string; playerName: string; assists?: string; isPenalty?: boolean; isPenaltyMissed?: boolean; isOwnGoal?: boolean }>>(
+    (match.result?.homeTeamGoalScorers || []).map(s => ({ 
+      playerId: (s as any).playerId || '', 
+      playerName: s.playerName, 
+      assists: s.assists,
+      isPenalty: (s as any).isPenalty || false,
+      isPenaltyMissed: (s as any).isPenaltyMissed || false,
+      isOwnGoal: (s as any).isOwnGoal || false
+    }))
   )
-  const [awayScorers, setAwayScorers] = useState<Array<{ playerId?: string; playerName: string; assists?: string }>>(
-    (match.result?.awayTeamGoalScorers || []).map(s => ({ playerId: (s as any).playerId || '', playerName: s.playerName, assists: s.assists }))
+  const [awayScorers, setAwayScorers] = useState<Array<{ playerId?: string; playerName: string; assists?: string; isPenalty?: boolean; isPenaltyMissed?: boolean; isOwnGoal?: boolean }>>(
+    (match.result?.awayTeamGoalScorers || []).map(s => ({ 
+      playerId: (s as any).playerId || '', 
+      playerName: s.playerName, 
+      assists: s.assists,
+      isPenalty: (s as any).isPenalty || false,
+      isPenaltyMissed: (s as any).isPenaltyMissed || false,
+      isOwnGoal: (s as any).isOwnGoal || false
+    }))
   )
 
   const [homePlayers, setHomePlayers] = useState<Player[]>([])
@@ -58,9 +72,9 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
 
   const handleAddScorer = (team: 'home' | 'away') => {
     if (team === 'home') {
-      setHomeScorers([...homeScorers, { playerId: '', playerName: '', assists: '' }])
+      setHomeScorers([...homeScorers, { playerId: '', playerName: '', assists: '', isPenalty: false, isPenaltyMissed: false, isOwnGoal: false }])
     } else {
-      setAwayScorers([...awayScorers, { playerId: '', playerName: '', assists: '' }])
+      setAwayScorers([...awayScorers, { playerId: '', playerName: '', assists: '', isPenalty: false, isPenaltyMissed: false, isOwnGoal: false }])
     }
   }
 
@@ -111,16 +125,48 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
   const handleScorerChange = (
     team: 'home' | 'away',
     index: number,
-    field: 'playerId' | 'playerName' | 'assists',
-    value: string
+    field: 'playerId' | 'playerName' | 'assists' | 'isPenalty' | 'isPenaltyMissed' | 'isOwnGoal',
+    value: string | boolean
   ) => {
     if (team === 'home') {
       const newScorers = [...homeScorers]
       newScorers[index] = { ...newScorers[index], [field]: value }
+      // Si own goal est coché, réinitialiser les autres champs et changer la liste de joueurs
+      if (field === 'isOwnGoal' && value === true) {
+        newScorers[index].playerId = ''
+        newScorers[index].playerName = ''
+        newScorers[index].assists = ''
+        newScorers[index].isPenalty = false
+        newScorers[index].isPenaltyMissed = false
+      }
+      // Si penalty raté est coché, décocher penalty
+      if (field === 'isPenaltyMissed' && value === true) {
+        newScorers[index].isPenalty = false
+      }
+      // Si penalty est coché, décocher penalty raté
+      if (field === 'isPenalty' && value === true) {
+        newScorers[index].isPenaltyMissed = false
+      }
       setHomeScorers(newScorers)
     } else {
       const newScorers = [...awayScorers]
       newScorers[index] = { ...newScorers[index], [field]: value }
+      // Si own goal est coché, réinitialiser les autres champs et changer la liste de joueurs
+      if (field === 'isOwnGoal' && value === true) {
+        newScorers[index].playerId = ''
+        newScorers[index].playerName = ''
+        newScorers[index].assists = ''
+        newScorers[index].isPenalty = false
+        newScorers[index].isPenaltyMissed = false
+      }
+      // Si penalty raté est coché, décocher penalty
+      if (field === 'isPenaltyMissed' && value === true) {
+        newScorers[index].isPenalty = false
+      }
+      // Si penalty est coché, décocher penalty raté
+      if (field === 'isPenalty' && value === true) {
+        newScorers[index].isPenaltyMissed = false
+      }
       setAwayScorers(newScorers)
     }
   }
@@ -129,18 +175,34 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
   const updateScorerFields = (
     team: 'home' | 'away',
     index: number,
-    fields: Partial<{ playerId?: string; playerName?: string; assists?: string }>
+    fields: Partial<{ playerId?: string; playerName?: string; assists?: string; isPenalty?: boolean; isPenaltyMissed?: boolean; isOwnGoal?: boolean }>
   ) => {
     if (team === 'home') {
       setHomeScorers((prev) => {
         const newScorers = [...prev]
         newScorers[index] = { ...newScorers[index], ...fields }
+        // Si own goal est coché, réinitialiser les autres champs
+        if (fields.isOwnGoal === true) {
+          newScorers[index].playerId = ''
+          newScorers[index].playerName = ''
+          newScorers[index].assists = ''
+          newScorers[index].isPenalty = false
+          newScorers[index].isPenaltyMissed = false
+        }
         return newScorers
       })
     } else {
       setAwayScorers((prev) => {
         const newScorers = [...prev]
         newScorers[index] = { ...newScorers[index], ...fields }
+        // Si own goal est coché, réinitialiser les autres champs
+        if (fields.isOwnGoal === true) {
+          newScorers[index].playerId = ''
+          newScorers[index].playerName = ''
+          newScorers[index].assists = ''
+          newScorers[index].isPenalty = false
+          newScorers[index].isPenaltyMissed = false
+        }
         return newScorers
       })
     }
@@ -181,24 +243,28 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    // Compter les buts valides (exclure les penalties ratés)
+    const homeValidGoals = homeScorers.filter(s => !s.isPenaltyMissed).length
+    const awayValidGoals = awayScorers.filter(s => !s.isPenaltyMissed).length
+    
     // Validation
-    if (homeScorers.length !== homeScore) {
-      alert(`Le nombre de buteurs de l'équipe ${match.homeTeam?.name} (${homeScorers.length}) ne correspond pas au score (${homeScore})`);
+    if (homeValidGoals !== homeScore) {
+      alert(`Le nombre de buts valides de l'équipe ${match.homeTeam?.name} (${homeValidGoals}) ne correspond pas au score (${homeScore}). N'oubliez pas que les penalties ratés ne comptent pas !`);
       return;
     }
     
-    if (awayScorers.length !== awayScore) {
-      alert(`Le nombre de buteurs de l'équipe ${match.awayTeam?.name} (${awayScorers.length}) ne correspond pas au score (${awayScore})`);
+    if (awayValidGoals !== awayScore) {
+      alert(`Le nombre de buts valides de l'équipe ${match.awayTeam?.name} (${awayValidGoals}) ne correspond pas au score (${awayScore}). N'oubliez pas que les penalties ratés ne comptent pas !`);
       return;
     }
     
-    // Check if all scorer names are filled
-    if (homeScorers.some(scorer => !scorer.playerName.trim())) {
+    // Check if all scorer names are filled (sauf penalties ratés)
+    if (homeScorers.some(scorer => !scorer.isPenaltyMissed && !scorer.playerName.trim())) {
       alert(`Veuillez remplir tous les noms des buteurs de l'équipe ${match.homeTeam?.name}`);
       return;
     }
     
-    if (awayScorers.some(scorer => !scorer.playerName.trim())) {
+    if (awayScorers.some(scorer => !scorer.isPenaltyMissed && !scorer.playerName.trim())) {
       alert(`Veuillez remplir tous les noms des buteurs de l'équipe ${match.awayTeam?.name}`);
       return;
     }
@@ -233,14 +299,15 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
   }
 
   const getScoreValidation = () => {
-    const homeScorersCount = homeScorers.filter(s => s.playerName.trim()).length
-    const awayScorersCount = awayScorers.filter(s => s.playerName.trim()).length
+    // Compter les buts valides (exclure les penalties ratés)
+    const homeValidGoals = homeScorers.filter(s => !s.isPenaltyMissed && s.playerName.trim()).length
+    const awayValidGoals = awayScorers.filter(s => !s.isPenaltyMissed && s.playerName.trim()).length
     
     return {
-      homeValid: homeScorersCount === homeScore,
-      awayValid: awayScorersCount === awayScore,
-      homeScorersCount,
-      awayScorersCount
+      homeValid: homeValidGoals === homeScore,
+      awayValid: awayValidGoals === awayScore,
+      homeScorersCount: homeValidGoals,
+      awayScorersCount: awayValidGoals
     }
   }
 
@@ -458,51 +525,56 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
                     </div>
 
                     <div className="space-y-3">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          🎯 Qui a marqué ce but ?
-                        </label>
-                        <select
-                          value={scorer.playerId || (scorer.playerName ? '__manual__' : '')}
-                          onChange={(e) => {
-                            const val = e.target.value
-                            if (val === '__manual__') {
-                              updateScorerFields('home', index, { playerId: '', playerName: '' })
-                            } else {
-                              const p = homePlayers.find((pl) => pl.id === val)
-                              if (p) {
-                                updateScorerFields('home', index, { playerId: p.id, playerName: p.name })
-                              }
-                            }
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm bg-white text-gray-900 font-medium"
-                          style={{ color: scorer.playerId ? '#059669' : '#6B7280' }}
-                        >
-                          <option value="" className="text-gray-400">👆 Choisir le buteur dans la liste...</option>
-                          {homePlayers.map((p) => (
-                            <option key={p.id} value={p.id} className="text-gray-900">
-                              ⚽ #{p.number} - {p.name}
-                            </option>
-                          ))}
-                          <option value="__manual__" className="text-blue-600">✏️ Autre joueur (saisir le nom)</option>
-                        </select>
-                      </div>
+                      {!scorer.isOwnGoal && (
+                        <>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              🎯 Qui a marqué ce but ?
+                            </label>
+                            <select
+                              value={scorer.playerId || (scorer.playerName ? '__manual__' : '')}
+                              onChange={(e) => {
+                                const val = e.target.value
+                                if (val === '__manual__') {
+                                  updateScorerFields('home', index, { playerId: '', playerName: '' })
+                                } else {
+                                  const p = homePlayers.find((pl) => pl.id === val)
+                                  if (p) {
+                                    updateScorerFields('home', index, { playerId: p.id, playerName: p.name })
+                                  }
+                                }
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm bg-white text-gray-900 font-medium"
+                              style={{ color: scorer.playerId ? '#059669' : '#6B7280' }}
+                              disabled={scorer.isPenaltyMissed}
+                            >
+                              <option value="" className="text-gray-400">👆 Choisir le buteur dans la liste...</option>
+                              {homePlayers.map((p) => (
+                                <option key={p.id} value={p.id} className="text-gray-900">
+                                  ⚽ #{p.number} - {p.name}
+                                </option>
+                              ))}
+                              <option value="__manual__" className="text-blue-600">✏️ Autre joueur (saisir le nom)</option>
+                            </select>
+                          </div>
 
-                      {(!scorer.playerId || scorer.playerName) && (
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            ✏️ Nom du buteur (si pas dans la liste)
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Tapez le nom du joueur qui a marqué..."
-                            value={scorer.playerName}
-                            onChange={(e) => handleScorerChange('home', index, 'playerName', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm bg-white text-gray-900 font-medium"
-                            required
-                            disabled={!!scorer.playerId}
-                          />
-                        </div>
+                          {(!scorer.playerId || scorer.playerName) && (
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">
+                                ✏️ Nom du buteur (si pas dans la liste)
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="Tapez le nom du joueur qui a marqué..."
+                                value={scorer.playerName}
+                                onChange={(e) => handleScorerChange('home', index, 'playerName', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm bg-white text-gray-900 font-medium"
+                                required={!scorer.isPenaltyMissed}
+                                disabled={!!scorer.playerId || scorer.isPenaltyMissed}
+                              />
+                            </div>
+                          )}
+                        </>
                       )}
 
                       <div>
@@ -524,6 +596,7 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
                           }}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm bg-white text-gray-900 font-medium"
                           style={{ color: scorer.assists ? '#2563EB' : '#6B7280' }}
+                          disabled={scorer.isOwnGoal || scorer.isPenaltyMissed}
                         >
                           <option value="" className="text-gray-400">👆 Choisir le passeur ou laisser vide...</option>
                           {homePlayers.map((p) => (
@@ -533,6 +606,96 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
                           ))}
                           <option value="__manual_assist__" className="text-blue-600">✏️ Autre joueur</option>
                         </select>
+                      </div>
+
+                      {/* Options spéciales */}
+                      <div className="space-y-2 pt-2 border-t border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id={`home-penalty-${index}`}
+                            checked={scorer.isPenalty || false}
+                            onChange={(e) => handleScorerChange('home', index, 'isPenalty', e.target.checked)}
+                            disabled={scorer.isOwnGoal || scorer.isPenaltyMissed}
+                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                          />
+                          <label htmlFor={`home-penalty-${index}`} className="text-xs font-medium text-gray-700 cursor-pointer">
+                            ⚽ Penalty marqué
+                          </label>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id={`home-penalty-missed-${index}`}
+                            checked={scorer.isPenaltyMissed || false}
+                            onChange={(e) => handleScorerChange('home', index, 'isPenaltyMissed', e.target.checked)}
+                            disabled={scorer.isOwnGoal || scorer.isPenalty}
+                            className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                          />
+                          <label htmlFor={`home-penalty-missed-${index}`} className="text-xs font-medium text-gray-700 cursor-pointer">
+                            ❌ Penalty raté (ne compte pas dans le score)
+                          </label>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id={`home-own-goal-${index}`}
+                            checked={scorer.isOwnGoal || false}
+                            onChange={(e) => {
+                              handleScorerChange('home', index, 'isOwnGoal', e.target.checked)
+                            }}
+                            disabled={scorer.isPenalty || scorer.isPenaltyMissed}
+                            className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                          />
+                          <label htmlFor={`home-own-goal-${index}`} className="text-xs font-medium text-gray-700 cursor-pointer">
+                            🚨 But contre son camp (Own Goal)
+                          </label>
+                        </div>
+
+                        {/* Si own goal, afficher la liste de l'équipe adverse */}
+                        {scorer.isOwnGoal && (
+                          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
+                            <label className="block text-xs font-medium text-red-700 mb-1">
+                              🎯 Joueur de l'équipe adverse qui a marqué contre son camp :
+                            </label>
+                            <select
+                              value={scorer.playerId || (scorer.playerName ? '__manual__' : '')}
+                              onChange={(e) => {
+                                const val = e.target.value
+                                if (val === '__manual__') {
+                                  updateScorerFields('home', index, { playerId: '', playerName: '' })
+                                } else {
+                                  const p = awayPlayers.find((pl) => pl.id === val)
+                                  if (p) {
+                                    updateScorerFields('home', index, { playerId: p.id, playerName: p.name })
+                                  }
+                                }
+                              }}
+                              className="w-full px-3 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none text-sm bg-white text-gray-900 font-medium"
+                            >
+                              <option value="" className="text-gray-400">👆 Choisir le joueur adverse...</option>
+                              {awayPlayers.map((p) => (
+                                <option key={p.id} value={p.id} className="text-gray-900">
+                                  ⚽ #{p.number} - {p.name}
+                                </option>
+                              ))}
+                              <option value="__manual__" className="text-blue-600">✏️ Autre joueur (saisir le nom)</option>
+                            </select>
+                            {(!scorer.playerId || scorer.playerName) && (
+                              <input
+                                type="text"
+                                placeholder="Nom du joueur adverse..."
+                                value={scorer.playerName}
+                                onChange={(e) => handleScorerChange('home', index, 'playerName', e.target.value)}
+                                className="w-full mt-2 px-3 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none text-sm bg-white text-gray-900 font-medium"
+                                required
+                                disabled={!!scorer.playerId}
+                              />
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -595,53 +758,58 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
                     </div>
 
                     <div className="space-y-3">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          🎯 Qui a marqué ce but ?
-                        </label>
-                        <select
-                          value={scorer.playerId || (scorer.playerName ? '__manual__' : '')}
-                          onChange={(e) => {
-                            const val = e.target.value
-                            if (val === '__manual__') {
-                              handleScorerChange('away', index, 'playerId', '')
-                              handleScorerChange('away', index, 'playerName', '')
-                            } else {
-                              const p = awayPlayers.find((pl) => pl.id === val)
-                              if (p) {
-                                handleScorerChange('away', index, 'playerId', p.id)
-                                handleScorerChange('away', index, 'playerName', p.name)
-                              }
-                            }
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm bg-white text-gray-900 font-medium"
-                          style={{ color: scorer.playerId ? '#059669' : '#6B7280' }}
-                        >
-                          <option value="" className="text-gray-400">👆 Choisir le buteur dans la liste...</option>
-                          {awayPlayers.map((p) => (
-                            <option key={p.id} value={p.id} className="text-gray-900">
-                              ⚽ #{p.number} - {p.name}
-                            </option>
-                          ))}
-                          <option value="__manual__" className="text-blue-600">✏️ Autre joueur (saisir le nom)</option>
-                        </select>
-                      </div>
+                      {!scorer.isOwnGoal && (
+                        <>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              🎯 Qui a marqué ce but ?
+                            </label>
+                            <select
+                              value={scorer.playerId || (scorer.playerName ? '__manual__' : '')}
+                              onChange={(e) => {
+                                const val = e.target.value
+                                if (val === '__manual__') {
+                                  handleScorerChange('away', index, 'playerId', '')
+                                  handleScorerChange('away', index, 'playerName', '')
+                                } else {
+                                  const p = awayPlayers.find((pl) => pl.id === val)
+                                  if (p) {
+                                    handleScorerChange('away', index, 'playerId', p.id)
+                                    handleScorerChange('away', index, 'playerName', p.name)
+                                  }
+                                }
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm bg-white text-gray-900 font-medium"
+                              style={{ color: scorer.playerId ? '#059669' : '#6B7280' }}
+                              disabled={scorer.isPenaltyMissed}
+                            >
+                              <option value="" className="text-gray-400">👆 Choisir le buteur dans la liste...</option>
+                              {awayPlayers.map((p) => (
+                                <option key={p.id} value={p.id} className="text-gray-900">
+                                  ⚽ #{p.number} - {p.name}
+                                </option>
+                              ))}
+                              <option value="__manual__" className="text-blue-600">✏️ Autre joueur (saisir le nom)</option>
+                            </select>
+                          </div>
 
-                      {(!scorer.playerId || scorer.playerName) && (
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            ✏️ Nom du buteur (si pas dans la liste)
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Tapez le nom du joueur qui a marqué..."
-                            value={scorer.playerName}
-                            onChange={(e) => handleScorerChange('away', index, 'playerName', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm bg-white text-gray-900 font-medium"
-                            required
-                            disabled={!!scorer.playerId}
-                          />
-                        </div>
+                          {(!scorer.playerId || scorer.playerName) && (
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">
+                                ✏️ Nom du buteur (si pas dans la liste)
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="Tapez le nom du joueur qui a marqué..."
+                                value={scorer.playerName}
+                                onChange={(e) => handleScorerChange('away', index, 'playerName', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm bg-white text-gray-900 font-medium"
+                                required={!scorer.isPenaltyMissed}
+                                disabled={!!scorer.playerId || scorer.isPenaltyMissed}
+                              />
+                            </div>
+                          )}
+                        </>
                       )}
 
                       <div>
@@ -663,6 +831,7 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
                           }}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm bg-white text-gray-900 font-medium"
                           style={{ color: scorer.assists ? '#2563EB' : '#6B7280' }}
+                          disabled={scorer.isOwnGoal || scorer.isPenaltyMissed}
                         >
                           <option value="" className="text-gray-400">👆 Choisir le passeur ou laisser vide...</option>
                           {awayPlayers.map((p) => (
@@ -672,6 +841,96 @@ export function MatchResultForm({ match, onSubmit, isSubmitting }: MatchResultFo
                           ))}
                           <option value="__manual_assist__" className="text-blue-600">✏️ Autre joueur</option>
                         </select>
+                      </div>
+
+                      {/* Options spéciales */}
+                      <div className="space-y-2 pt-2 border-t border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id={`away-penalty-${index}`}
+                            checked={scorer.isPenalty || false}
+                            onChange={(e) => handleScorerChange('away', index, 'isPenalty', e.target.checked)}
+                            disabled={scorer.isOwnGoal || scorer.isPenaltyMissed}
+                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                          />
+                          <label htmlFor={`away-penalty-${index}`} className="text-xs font-medium text-gray-700 cursor-pointer">
+                            ⚽ Penalty marqué
+                          </label>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id={`away-penalty-missed-${index}`}
+                            checked={scorer.isPenaltyMissed || false}
+                            onChange={(e) => handleScorerChange('away', index, 'isPenaltyMissed', e.target.checked)}
+                            disabled={scorer.isOwnGoal || scorer.isPenalty}
+                            className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                          />
+                          <label htmlFor={`away-penalty-missed-${index}`} className="text-xs font-medium text-gray-700 cursor-pointer">
+                            ❌ Penalty raté (ne compte pas dans le score)
+                          </label>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id={`away-own-goal-${index}`}
+                            checked={scorer.isOwnGoal || false}
+                            onChange={(e) => {
+                              handleScorerChange('away', index, 'isOwnGoal', e.target.checked)
+                            }}
+                            disabled={scorer.isPenalty || scorer.isPenaltyMissed}
+                            className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                          />
+                          <label htmlFor={`away-own-goal-${index}`} className="text-xs font-medium text-gray-700 cursor-pointer">
+                            🚨 But contre son camp (Own Goal)
+                          </label>
+                        </div>
+
+                        {/* Si own goal, afficher la liste de l'équipe adverse */}
+                        {scorer.isOwnGoal && (
+                          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
+                            <label className="block text-xs font-medium text-red-700 mb-1">
+                              🎯 Joueur de l'équipe adverse qui a marqué contre son camp :
+                            </label>
+                            <select
+                              value={scorer.playerId || (scorer.playerName ? '__manual__' : '')}
+                              onChange={(e) => {
+                                const val = e.target.value
+                                if (val === '__manual__') {
+                                  updateScorerFields('away', index, { playerId: '', playerName: '' })
+                                } else {
+                                  const p = homePlayers.find((pl) => pl.id === val)
+                                  if (p) {
+                                    updateScorerFields('away', index, { playerId: p.id, playerName: p.name })
+                                  }
+                                }
+                              }}
+                              className="w-full px-3 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none text-sm bg-white text-gray-900 font-medium"
+                            >
+                              <option value="" className="text-gray-400">👆 Choisir le joueur adverse...</option>
+                              {homePlayers.map((p) => (
+                                <option key={p.id} value={p.id} className="text-gray-900">
+                                  ⚽ #{p.number} - {p.name}
+                                </option>
+                              ))}
+                              <option value="__manual__" className="text-blue-600">✏️ Autre joueur (saisir le nom)</option>
+                            </select>
+                            {(!scorer.playerId || scorer.playerName) && (
+                              <input
+                                type="text"
+                                placeholder="Nom du joueur adverse..."
+                                value={scorer.playerName}
+                                onChange={(e) => handleScorerChange('away', index, 'playerName', e.target.value)}
+                                className="w-full mt-2 px-3 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none text-sm bg-white text-gray-900 font-medium"
+                                required
+                                disabled={!!scorer.playerId}
+                              />
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
