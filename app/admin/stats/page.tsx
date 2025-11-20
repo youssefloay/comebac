@@ -27,23 +27,43 @@ export default function AdminStatsPage() {
       ])
 
       if (notifRes.ok) {
-        const data = await notifRes.json()
-        setNotificationStats(data)
+        const contentType = notifRes.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          const data = await notifRes.json()
+          setNotificationStats(data)
+        } else {
+          console.error('Notification stats: réponse non-JSON reçue')
+        }
       }
 
       if (fantasyRes.ok) {
-        const data = await fantasyRes.json()
-        setFantasyStats(data)
+        const contentType = fantasyRes.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          const data = await fantasyRes.json()
+          setFantasyStats(data)
+        } else {
+          console.error('Fantasy stats: réponse non-JSON reçue')
+        }
       }
 
       if (pageRes.ok) {
-        const data = await pageRes.json()
-        setPageStats(data)
+        const contentType = pageRes.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          const data = await pageRes.json()
+          setPageStats(data)
+        } else {
+          console.error('Page analytics: réponse non-JSON reçue')
+        }
       }
 
       if (generalRes.ok) {
-        const data = await generalRes.json()
-        setGeneralStats(data)
+        const contentType = generalRes.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          const data = await generalRes.json()
+          setGeneralStats(data)
+        } else {
+          console.error('General stats: réponse non-JSON reçue')
+        }
       }
     } catch (error) {
       console.error('Erreur chargement stats:', error)
