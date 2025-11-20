@@ -405,9 +405,9 @@ export default function LoginPage() {
               <div className="pt-2 border-t border-gray-200">
                 <a
                   href="/register-team"
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-sofa-blue hover:text-sofa-green transition-colors"
+                  className="inline-flex items-center justify-center w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors shadow-lg hover:shadow-xl"
                 >
-                  ➕ Inscrire une équipe (sans compte)
+                  REGISTRE NOW
                 </a>
               </div>
 
