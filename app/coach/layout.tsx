@@ -39,6 +39,7 @@ export default function CoachLayout({ children }: { children: React.ReactNode })
   const [coachData, setCoachData] = useState<CoachData | null>(null)
   const [loadingCoach, setLoadingCoach] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isActingCoach, setIsActingCoach] = useState(false)
 
   useEffect(() => {
     if (!loading) {
@@ -108,6 +109,29 @@ export default function CoachLayout({ children }: { children: React.ReactNode })
             teamName: data.teamName,
             photo: data.photo
           })
+        } else {
+          // Si pas de compte coach, vérifier si c'est un coach intérimaire (joueur avec isActingCoach)
+          const playerAccountsQuery = query(
+            collection(db, 'playerAccounts'),
+            where('email', '==', user?.email || ''),
+            where('isActingCoach', '==', true)
+          )
+          const playerAccountsSnap = await getDocs(playerAccountsQuery)
+          
+          if (!playerAccountsSnap.empty) {
+            const playerDoc = playerAccountsSnap.docs[0]
+            const data = playerDoc.data()
+            
+            setCoachData({
+              id: playerDoc.id,
+              firstName: data.firstName,
+              lastName: data.lastName,
+              teamId: data.teamId,
+              teamName: data.teamName,
+              photo: data.photo
+            })
+            setIsActingCoach(true)
+          }
         }
       } catch (error) {
         console.error('Erreur lors du chargement des données entraîneur:', error)
@@ -235,6 +259,16 @@ export default function CoachLayout({ children }: { children: React.ReactNode })
                       )
                     })}
 
+                    {isActingCoach && (
+                      <Link
+                        href="/player"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-md"
+                      >
+                        <Users className="w-4 h-4" />
+                        <span className="font-medium">Basculer sur Interface Joueur</span>
+                      </Link>
+                    )}
                     <Link
                       href="/public"
                       onClick={() => setMobileMenuOpen(false)}
@@ -312,7 +346,9 @@ export default function CoachLayout({ children }: { children: React.ReactNode })
             </div>
             <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg mb-2">
               <CheckCircle className="w-4 h-4 text-orange-600" />
-              <span className="text-sm font-medium text-orange-700">Entraîneur vérifié</span>
+              <span className="text-sm font-medium text-orange-700">
+                {isActingCoach ? 'Coach Intérimaire' : 'Entraîneur vérifié'}
+              </span>
             </div>
             {coachData.teamName && (
               <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
@@ -321,6 +357,19 @@ export default function CoachLayout({ children }: { children: React.ReactNode })
               </div>
             )}
           </div>
+
+          {/* Acting Coach Badge */}
+          {isActingCoach && (
+            <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Clipboard className="w-5 h-5 text-orange-600" />
+                <span className="text-sm font-bold text-orange-900">Coach Intérimaire</span>
+              </div>
+              <p className="text-xs text-orange-700 leading-relaxed">
+                Vous êtes actuellement coach intérimaire. Vous pouvez basculer vers l'interface joueur à tout moment.
+              </p>
+            </div>
+          )}
 
           {/* Menu Items */}
           <nav className="space-y-1 mb-6">
@@ -344,8 +393,17 @@ export default function CoachLayout({ children }: { children: React.ReactNode })
             })}
           </nav>
 
-          {/* Toggle Button */}
-          <div className="mb-6">
+          {/* Toggle Buttons */}
+          <div className="mb-6 space-y-3">
+            {isActingCoach && (
+              <Link
+                href="/player"
+                className="flex items-center gap-3 w-full px-4 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg hover:from-green-700 hover:to-blue-700 transition shadow-md"
+              >
+                <Users className="w-5 h-5" />
+                <span className="font-medium">Basculer sur Interface Joueur</span>
+              </Link>
+            )}
             <Link
               href="/public"
               className="flex items-center gap-3 w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition shadow-md"

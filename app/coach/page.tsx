@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { CoachDashboard } from '@/components/dashboard/coach-dashboard'
-import { collection, query, where, getDocs } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 
 export default function CoachPage() {
@@ -36,7 +36,20 @@ export default function CoachPage() {
         )
         const coachAccountsSnap = await getDocs(coachAccountsQuery)
         
-        setIsCoach(!coachAccountsSnap.empty)
+        const hasCoachAccount = !coachAccountsSnap.empty
+        
+        // Si pas de compte coach, vérifier si c'est un coach intérimaire (joueur avec isActingCoach)
+        if (!hasCoachAccount) {
+          const playerAccountsQuery = query(
+            collection(db, 'playerAccounts'),
+            where('email', '==', user.email),
+            where('isActingCoach', '==', true)
+          )
+          const playerAccountsSnap = await getDocs(playerAccountsQuery)
+          setIsCoach(!playerAccountsSnap.empty)
+        } else {
+          setIsCoach(true)
+        }
       } catch (error) {
         console.error('Erreur lors de la vérification du statut entraîneur:', error)
         setIsCoach(false)

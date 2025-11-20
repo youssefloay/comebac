@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { Plus, Trash2, Edit2, AlertCircle, X, Users, TrendingUp, Calendar } from "lucide-react"
+import { Plus, Trash2, Edit2, AlertCircle, X, Users, TrendingUp, Calendar, UserCheck, Crown, CheckCircle, XCircle } from "lucide-react"
 // Removed old imports - using API endpoints instead
 import type { Team } from "@/lib/types"
 import { ImageCropper } from "@/components/admin/ImageCropper"
@@ -12,6 +12,13 @@ interface Player {
   name: string
   email: string
   teamId: string
+}
+
+interface TeamCoachInfo {
+  hasCoach: boolean
+  coachName?: string
+  hasActingCoach: boolean
+  actingCoachName?: string
 }
 
 interface TeamStats {
@@ -63,6 +70,9 @@ export default function TeamsTab() {
   const [teamStats, setTeamStats] = useState<TeamStats | null>(null)
   const [teamMatches, setTeamMatches] = useState<Match[]>([])
   const [loadingDetails, setLoadingDetails] = useState(false)
+  const [hasCoach, setHasCoach] = useState(false)
+  const [promotingPlayerId, setPromotingPlayerId] = useState<string | null>(null)
+  const [teamsCoachInfo, setTeamsCoachInfo] = useState<Map<string, TeamCoachInfo>>(new Map())
 
   useEffect(() => {
     loadTeams()
@@ -74,11 +84,46 @@ export default function TeamsTab() {
       const response = await fetch('/api/admin/teams')
       if (!response.ok) throw new Error('Failed to fetch teams')
       const teamsData = await response.json()
-      setTeams(teamsData.map((team: any) => ({
+      const teamsWithDates = teamsData.map((team: any) => ({
         ...team,
         createdAt: team.createdAt ? new Date(team.createdAt.seconds * 1000) : new Date(),
         updatedAt: team.updatedAt ? new Date(team.updatedAt.seconds * 1000) : new Date()
-      })))
+      }))
+      setTeams(teamsWithDates)
+
+      // Charger les informations sur les coaches et coaches intérimaires
+      const accountsRes = await fetch('/api/admin/team-accounts')
+      if (accountsRes.ok) {
+        const accountsData = await accountsRes.json()
+        const coachInfoMap = new Map<string, TeamCoachInfo>()
+
+        accountsData.teams?.forEach((teamData: any) => {
+          const coachInfo: TeamCoachInfo = {
+            hasCoach: false,
+            hasActingCoach: false
+          }
+
+          // Vérifier si l'équipe a un coach
+          if (teamData.coaches && teamData.coaches.length > 0) {
+            const coach = teamData.coaches[0]
+            coachInfo.hasCoach = true
+            coachInfo.coachName = coach.name || `${coach.firstName || ''} ${coach.lastName || ''}`.trim() || coach.email
+          }
+
+          // Vérifier si l'équipe a un coach intérimaire
+          if (teamData.players) {
+            const actingCoach = teamData.players.find((p: any) => p.isActingCoach === true)
+            if (actingCoach) {
+              coachInfo.hasActingCoach = true
+              coachInfo.actingCoachName = actingCoach.name
+            }
+          }
+
+          coachInfoMap.set(teamData.id, coachInfo)
+        })
+
+        setTeamsCoachInfo(coachInfoMap)
+      }
     } catch (err) {
       setError("Erreur lors du chargement des équipes")
       console.error("Error loading teams:", err)
@@ -314,11 +359,48 @@ export default function TeamsTab() {
     setLoadingDetails(true)
     
     try {
-      // Load team players
-      const playersRes = await fetch(`/api/admin/players?teamId=${team.id}`)
-      if (playersRes.ok) {
-        const playersData = await playersRes.json()
-        setTeamPlayers(playersData)
+      // Charger les données de l'équipe avec playerAccounts et coachAccounts
+      const accountsRes = await fetch('/api/admin/team-accounts')
+      let playersLoaded = false
+      
+      if (accountsRes.ok) {
+        const accountsData = await accountsRes.json()
+        const teamData = accountsData.teams?.find((t: any) => t.id === team.id)
+        
+        if (teamData) {
+          // Vérifier si l'équipe a un coach
+          setHasCoach(teamData.coaches && teamData.coaches.length > 0)
+          
+          // Charger les joueurs avec leurs comptes playerAccounts
+          const playersRes = await fetch(`/api/admin/players?teamId=${team.id}`)
+          if (playersRes.ok) {
+            const playersData = await playersRes.json()
+            if (teamData.players) {
+              const playersWithStatus = playersData.map((player: Player) => {
+                const account = teamData.players.find((p: any) => p.email === player.email)
+                return {
+                  ...player,
+                  playerAccountId: account?.id,
+                  isActingCoach: account?.isActingCoach || false
+                }
+              })
+              setTeamPlayers(playersWithStatus)
+              playersLoaded = true
+            } else {
+              setTeamPlayers(playersData)
+              playersLoaded = true
+            }
+          }
+        }
+      }
+
+      // Si l'API team-accounts ne fonctionne pas, charger les joueurs normalement
+      if (!playersLoaded) {
+        const playersRes = await fetch(`/api/admin/players?teamId=${team.id}`)
+        if (playersRes.ok) {
+          const playersData = await playersRes.json()
+          setTeamPlayers(playersData)
+        }
       }
 
       // Load team statistics
@@ -361,6 +443,40 @@ export default function TeamsTab() {
     setTeamPlayers([])
     setTeamStats(null)
     setTeamMatches([])
+    setHasCoach(false)
+  }
+
+  const handlePromoteToActingCoach = async (playerAccountId: string) => {
+    if (!selectedTeam) return
+
+    setPromotingPlayerId(playerAccountId)
+    try {
+      const response = await fetch('/api/team/set-acting-coach', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teamId: selectedTeam.id, playerId: playerAccountId })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'Erreur lors de la promotion')
+        return
+      }
+
+      // Recharger les détails de l'équipe
+      if (selectedTeam) {
+        await handleTeamClick(selectedTeam)
+      }
+      // Recharger la liste des équipes pour mettre à jour les infos coach
+      await loadTeams()
+      alert('Joueur promu coach intérimaire avec succès!')
+    } catch (error) {
+      console.error('Erreur:', error)
+      alert('Erreur lors de la promotion')
+    } finally {
+      setPromotingPlayerId(null)
+    }
   }
 
   return (
@@ -630,7 +746,51 @@ export default function TeamsTab() {
                 </button>
               </div>
             </div>
-            <p className="text-sm text-gray-600">Créée le {team.createdAt.toLocaleDateString("fr-FR")}</p>
+            <p className="text-sm text-gray-600 mb-3">Créée le {team.createdAt.toLocaleDateString("fr-FR")}</p>
+            
+            {/* Informations Coach */}
+            <div className="space-y-2 mt-3 pt-3 border-t border-gray-200">
+              {(() => {
+                const coachInfo = teamsCoachInfo.get(team.id)
+                if (!coachInfo) {
+                  return (
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400"></div>
+                      <span>Chargement...</span>
+                    </div>
+                  )
+                }
+
+                if (coachInfo.hasCoach) {
+                  return (
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span className="text-gray-700">
+                        <span className="font-medium text-green-700">Coach:</span> {coachInfo.coachName}
+                      </span>
+                    </div>
+                  )
+                }
+
+                if (coachInfo.hasActingCoach) {
+                  return (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Crown className="w-4 h-4 text-orange-600" />
+                      <span className="text-gray-700">
+                        <span className="font-medium text-orange-700">Coach Intérimaire:</span> {coachInfo.actingCoachName}
+                      </span>
+                    </div>
+                  )
+                }
+
+                return (
+                  <div className="flex items-center gap-2 text-sm">
+                    <XCircle className="w-4 h-4 text-red-600" />
+                    <span className="text-red-700 font-medium">Besoin d'un coach</span>
+                  </div>
+                )
+              })()}
+            </div>
           </div>
         ))}
       </div>
@@ -775,6 +935,23 @@ export default function TeamsTab() {
                   )}
                 </div>
 
+                {/* Message si pas de coach */}
+                {!hasCoach && (
+                  <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-orange-600 mt-0.5" />
+                      <div className="flex-1">
+                        <h3 className="font-bold text-orange-900 mb-1">
+                          Aucun coach assigné à l'équipe
+                        </h3>
+                        <p className="text-sm text-orange-700">
+                          Vous pouvez choisir un joueur pour qu'il devienne coach intérimaire. Il aura accès aux fonctions de coach tout en restant joueur.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Players */}
                 <div>
                   <div className="flex items-center gap-2 mb-4">
@@ -783,15 +960,42 @@ export default function TeamsTab() {
                   </div>
                   {teamPlayers.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {teamPlayers.map((player) => (
-                        <div key={player.id} className="bg-gray-50 rounded-lg p-4 flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold">
-                            {player.name.charAt(0).toUpperCase()}
+                      {teamPlayers.map((player: any) => (
+                        <div key={player.id} className="bg-gray-50 rounded-lg p-4 relative">
+                          {(player.isActingCoach) && (
+                            <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold">
+                              <Crown className="w-3 h-3" />
+                              Coach Intérimaire
+                            </div>
+                          )}
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold">
+                              {player.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-900">{player.name}</p>
+                              <p className="text-sm text-gray-600">{player.email}</p>
+                            </div>
                           </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">{player.name}</p>
-                            <p className="text-sm text-gray-600">{player.email}</p>
-                          </div>
+                          {!hasCoach && !player.isActingCoach && player.playerAccountId && (
+                            <button
+                              onClick={() => handlePromoteToActingCoach(player.playerAccountId)}
+                              disabled={promotingPlayerId === player.playerAccountId}
+                              className="w-full mt-2 px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {promotingPlayerId === player.playerAccountId ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                  Promotion...
+                                </>
+                              ) : (
+                                <>
+                                  <UserCheck className="w-4 h-4" />
+                                  Nommer Coach Intérimaire
+                                </>
+                              )}
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>

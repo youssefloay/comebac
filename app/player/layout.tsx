@@ -255,6 +255,16 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
                       )
                     })}
 
+                    {actingCoachStatus.isActingCoach && (
+                      <Link
+                        href="/coach"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md"
+                      >
+                        <Clipboard className="w-4 h-4" />
+                        <span className="font-medium">Basculer sur Interface Coach</span>
+                      </Link>
+                    )}
                     <Link
                       href="/public"
                       onClick={() => setMobileMenuOpen(false)}
@@ -373,9 +383,16 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
                 <Clipboard className="w-5 h-5 text-orange-600" />
                 <span className="text-sm font-bold text-orange-900">Coach Intérimaire</span>
               </div>
-              <p className="text-xs text-orange-700 leading-relaxed">
-                En tant que capitaine, vous avez accès aux fonctions de coach jusqu'à ce qu'un coach soit assigné à votre équipe.
+              <p className="text-xs text-orange-700 leading-relaxed mb-3">
+                Vous avez accès aux fonctions de coach jusqu'à ce qu'un coach soit assigné à votre équipe.
               </p>
+              <Link
+                href="/coach"
+                className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition shadow-md text-sm font-medium"
+              >
+                <Clipboard className="w-4 h-4" />
+                Basculer sur Interface Coach
+              </Link>
             </div>
           )}
 

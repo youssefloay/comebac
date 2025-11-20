@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth-context'
 import { collection, query, where, getDocs, doc, getDoc, orderBy, limit } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { Users, Shield, Clock, AlertCircle } from 'lucide-react'
+import { Users, Shield, Clock, AlertCircle, Crown } from 'lucide-react'
 
 interface Player {
   id: string
@@ -14,6 +14,7 @@ interface Player {
   position: string
   jerseyNumber: number
   photo?: string
+  isActingCoach?: boolean
 }
 
 interface Match {
@@ -98,6 +99,7 @@ export default function PlayerTeamPage() {
         setTeamColor(teamDoc.data().color || '#3B82F6')
       }
 
+
       // Charger tous les joueurs de l'équipe
       const teamPlayersQuery = query(
         collection(db, 'playerAccounts'),
@@ -106,7 +108,8 @@ export default function PlayerTeamPage() {
       const teamPlayersSnap = await getDocs(teamPlayersQuery)
       const playersData = teamPlayersSnap.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
+        isActingCoach: doc.data().isActingCoach || false
       })) as Player[]
       playersData.sort((a, b) => a.jerseyNumber - b.jerseyNumber)
       setPlayers(playersData)
@@ -161,6 +164,7 @@ export default function PlayerTeamPage() {
       forwards: starters.filter(p => p.position.toLowerCase().includes('attaquant')).slice(0, 1)
     }
   }
+
 
   if (loading) {
     return (
@@ -311,6 +315,7 @@ export default function PlayerTeamPage() {
           </div>
         )}
 
+
         {/* Liste des joueurs */}
         <div>
           <h2 className="text-xl font-bold text-gray-900 mb-4">Tous les Joueurs</h2>
@@ -318,9 +323,15 @@ export default function PlayerTeamPage() {
             {players.map((player) => (
               <div
                 key={player.id}
-                className="bg-white p-4 rounded-lg shadow-md border border-gray-200"
+                className="bg-white p-4 rounded-lg shadow-md border border-gray-200 relative"
               >
-                <div className="flex items-center gap-3">
+                {player.isActingCoach && (
+                  <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold">
+                    <Crown className="w-3 h-3" />
+                    Coach Intérimaire
+                  </div>
+                )}
+                <div className="flex items-center gap-3 mb-3">
                   <div className="relative">
                     <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-600 to-green-600 flex items-center justify-center text-white text-lg font-bold">
                       {player.photo ? (

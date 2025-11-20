@@ -1,10 +1,9 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Loader, Wrench, CheckCircle, AlertCircle, X } from "lucide-react"
 import CustomNotificationModal from "@/components/admin/CustomNotificationModal"
-import CaptainsCoachesManager from "@/components/admin/captains-coaches-manager"
 
 interface Team {
   id: string
@@ -14,102 +13,16 @@ interface Team {
   school?: string
 }
 
-interface PlayerAccount {
-  id: string
-  email: string
-  firstName: string
-  lastName: string
-  name: string
-  phone?: string
-  position?: string
-  jerseyNumber?: number
-  birthDate?: string
-  height?: string
-  tshirtSize?: string
-  foot?: string
-  nickname?: string
-}
-
-interface CoachAccount {
-  id: string
-  email: string
-  firstName: string
-  lastName: string
-  name: string
-  phone?: string
-  birthDate?: string
-}
-
 export default function MaintenanceTab() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [teams, setTeams] = useState<Team[]>([])
-  const [showAddPlayerModal, setShowAddPlayerModal] = useState(false)
   const [showNotificationModal, setShowNotificationModal] = useState(false)
-  const [showCaptainsCoachesModal, setShowCaptainsCoachesModal] = useState(false)
-  const [selectedTeamId, setSelectedTeamId] = useState('')
-  const [isCoach, setIsCoach] = useState(false)
-  const [editingAccount, setEditingAccount] = useState<{ id: string; type: 'player' | 'coach'; data: PlayerAccount | CoachAccount } | null>(null)
-  const [teamAccounts, setTeamAccounts] = useState<{ players: PlayerAccount[]; coaches: CoachAccount[] }>({ players: [], coaches: [] })
-  const [showForm, setShowForm] = useState(false)
-  const formRef = useRef<HTMLDivElement>(null)
-  const [playerData, setPlayerData] = useState({
-    firstName: '',
-    lastName: '',
-    nickname: '',
-    email: '',
-    phone: '',
-    birthDate: '',
-    height: '',
-    tshirtSize: 'M',
-    position: '',
-    foot: '',
-    jerseyNumber: ''
-  })
 
   useEffect(() => {
     loadTeams()
   }, [])
-
-  useEffect(() => {
-    if (selectedTeamId) {
-      loadTeamAccounts()
-    } else {
-      setTeamAccounts({ players: [], coaches: [] })
-    }
-  }, [selectedTeamId])
-
-  // Scroll vers le formulaire quand il s'ouvre
-  useEffect(() => {
-    if (showForm && formRef.current) {
-      setTimeout(() => {
-        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 100)
-    }
-  }, [showForm])
-
-  // Récupérer l'équipe sélectionnée
-  const selectedTeam = selectedTeamId ? teams.find(t => t.id === selectedTeamId) : null
-
-  const loadTeamAccounts = async () => {
-    if (!selectedTeamId) return
-    try {
-      const response = await fetch('/api/admin/team-accounts')
-      if (response.ok) {
-        const data = await response.json()
-        const team = data.teams?.find((t: any) => t.id === selectedTeamId)
-        if (team) {
-          setTeamAccounts({
-            players: team.players || [],
-            coaches: team.coaches || []
-          })
-        }
-      }
-    } catch (error) {
-      console.error('Erreur chargement comptes:', error)
-    }
-  }
 
   const loadTeams = async () => {
     try {
@@ -331,25 +244,6 @@ export default function MaintenanceTab() {
           </div>
         </div>
       )}
-
-      {/* Gestion des Capitaines et Coachs - Bouton */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-            <span className="text-2xl">👥</span>
-          </div>
-          <div className="flex-1">
-            <h3 className="font-bold text-gray-900">Gestion des Capitaines et Coachs</h3>
-            <p className="text-xs text-gray-600">Voir et gérer les contacts des capitaines et coachs</p>
-          </div>
-          <button
-            onClick={() => setShowCaptainsCoachesModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm"
-          >
-            Ouvrir
-          </button>
-        </div>
-      </div>
 
       {/* Outils de réparation */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1073,48 +967,6 @@ export default function MaintenanceTab() {
           </button>
         </div>
 
-        {/* Ajouter un joueur/coach */}
-        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-green-300 transition-colors">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <span className="text-2xl">➕</span>
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-900">Ajouter joueur/coach</h3>
-              <p className="text-xs text-gray-600">À une équipe validée</p>
-            </div>
-          </div>
-          <p className="text-sm text-gray-600 mb-4">
-            Ajouter un joueur ou entraîneur à une équipe déjà validée
-          </p>
-          <button
-            onClick={() => {
-              setEditingAccount(null)
-              setIsCoach(false)
-              setShowForm(false)
-              setPlayerData({
-                firstName: '',
-                lastName: '',
-                nickname: '',
-                email: '',
-                phone: '',
-                birthDate: '',
-                height: '',
-                tshirtSize: 'M',
-                position: '',
-                foot: '',
-                jerseyNumber: ''
-              })
-              setSelectedTeamId('')
-              setTeamAccounts({ players: [], coaches: [] })
-              setShowAddPlayerModal(true)
-            }}
-            className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm"
-          >
-            Gérer joueurs/coaches
-          </button>
-        </div>
-
         {/* Envoyer notification personnalisée */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-blue-300 transition-colors">
           <div className="flex items-center gap-3 mb-4">
@@ -1160,6 +1012,208 @@ export default function MaintenanceTab() {
         </div>
       </div>
 
+      {/* Section Export/Import */}
+      <div className="mt-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">📥 Export / Import de données</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Export Équipes */}
+          <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-green-300 transition-colors">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">📤</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">Export Équipes</h3>
+                <p className="text-xs text-gray-600">Format CSV</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Télécharger toutes les équipes au format CSV
+            </p>
+            <button
+              onClick={() => {
+                window.location.href = '/api/admin/export/teams'
+              }}
+              className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm"
+            >
+              Exporter CSV
+            </button>
+          </div>
+
+          {/* Export Joueurs */}
+          <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-blue-300 transition-colors">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">📤</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">Export Joueurs</h3>
+                <p className="text-xs text-gray-600">Format CSV</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Télécharger tous les joueurs au format CSV
+            </p>
+            <button
+              onClick={() => {
+                window.location.href = '/api/admin/export/players'
+              }}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm"
+            >
+              Exporter CSV
+            </button>
+          </div>
+
+          {/* Export Matchs */}
+          <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-purple-300 transition-colors">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">📤</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">Export Matchs</h3>
+                <p className="text-xs text-gray-600">Format CSV</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Télécharger tous les matchs au format CSV
+            </p>
+            <button
+              onClick={() => {
+                window.location.href = '/api/admin/export/matches'
+              }}
+              className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium text-sm"
+            >
+              Exporter CSV
+            </button>
+          </div>
+
+          {/* Export Résultats */}
+          <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-orange-300 transition-colors">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">📤</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">Export Résultats</h3>
+                <p className="text-xs text-gray-600">Format CSV</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Télécharger tous les résultats au format CSV
+            </p>
+            <button
+              onClick={() => {
+                window.location.href = '/api/admin/export/results'
+              }}
+              className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium text-sm"
+            >
+              Exporter CSV
+            </button>
+          </div>
+
+          {/* Export Complet */}
+          <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-red-300 transition-colors">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">💾</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">Backup Complet</h3>
+                <p className="text-xs text-gray-600">Format JSON</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Télécharger toutes les données (équipes, joueurs, matchs, résultats) en JSON
+            </p>
+            <button
+              onClick={() => {
+                window.location.href = '/api/admin/export/all'
+              }}
+              className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium text-sm"
+            >
+              Exporter Backup
+            </button>
+          </div>
+
+          {/* Import Joueurs */}
+          <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-cyan-300 transition-colors">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">📥</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">Import Joueurs</h3>
+                <p className="text-xs text-gray-600">Format CSV</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Importer des joueurs depuis un fichier CSV
+            </p>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={async (e) => {
+                const file = e.target.files?.[0]
+                if (!file) return
+
+                const formData = new FormData()
+                formData.append('file', file)
+
+                setLoading(true)
+                setMessage(null)
+                try {
+                  const response = await fetch('/api/admin/import/players', {
+                    method: 'POST',
+                    body: formData
+                  })
+
+                  const data = await response.json()
+                  if (response.ok) {
+                    let msg = `✅ Import réussi!\n`
+                    msg += `${data.created} joueur(s) créé(s)\n`
+                    msg += `${data.updated} joueur(s) mis à jour`
+                    if (data.errors && data.errors.length > 0) {
+                      msg += `\n\n⚠️ ${data.errors.length} erreur(s):\n${data.errors.slice(0, 5).join('\n')}`
+                      if (data.errors.length > 5) {
+                        msg += `\n... et ${data.errors.length - 5} autre(s)`
+                      }
+                    }
+                    setMessage({ type: 'success', text: msg })
+                  } else {
+                    setMessage({ type: 'error', text: data.error || 'Erreur lors de l\'import' })
+                  }
+                } catch (error) {
+                  setMessage({ type: 'error', text: 'Erreur de connexion' })
+                } finally {
+                  setLoading(false)
+                  // Reset input
+                  e.target.value = ''
+                }
+              }}
+              className="hidden"
+              id="import-players-file"
+            />
+            <label
+              htmlFor="import-players-file"
+              className="w-full px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition font-medium text-sm cursor-pointer flex items-center justify-center"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <Loader className="w-4 h-4 animate-spin" />
+                  Import...
+                </span>
+              ) : (
+                'Importer CSV'
+              )}
+            </label>
+            <p className="text-xs text-gray-500 mt-2">
+              Colonnes requises: Email, Prénom, Nom
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Avertissement */}
       <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
         <div className="flex items-start gap-3">
@@ -1179,733 +1233,6 @@ export default function MaintenanceTab() {
         onClose={() => setShowNotificationModal(false)}
         teams={teams}
       />
-
-      {/* Modal Gérer joueurs/coaches */}
-      {showAddPlayerModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => {
-          setShowAddPlayerModal(false)
-          setEditingAccount(null)
-          setShowForm(false)
-        }}>
-          <div className="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold">
-                {editingAccount ? `Modifier ${editingAccount.type === 'coach' ? 'l\'entraîneur' : 'le joueur'}` : 'Gérer joueurs/coaches'}
-              </h2>
-              <button
-                onClick={() => {
-                  setShowAddPlayerModal(false)
-                  setEditingAccount(null)
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
-            
-            {/* Sélection équipe */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Équipe *</label>
-              <select
-                value={selectedTeamId}
-                onChange={(e) => {
-                  setSelectedTeamId(e.target.value)
-                  setEditingAccount(null)
-                }}
-                className="w-full px-4 py-2 border rounded-lg"
-                required
-              >
-                <option value="">Sélectionner une équipe</option>
-                {teams.map(team => (
-                  <option key={team.id} value={team.id}>{team.name}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Liste des joueurs/coaches si équipe sélectionnée */}
-            {selectedTeamId && (
-              <div className="mb-6 space-y-4">
-                {/* Liste des joueurs */}
-                {teamAccounts.players.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">Joueurs ({teamAccounts.players.length})</h3>
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {teamAccounts.players.map((player) => (
-                        <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div>
-                            <p className="font-medium">{player.name}</p>
-                            <p className="text-sm text-gray-600">{player.email}</p>
-                            {player.position && <p className="text-xs text-gray-500">#{player.jerseyNumber} - {player.position}</p>}
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={async () => {
-                                setIsCoach(false)
-                                setShowForm(true)
-                                setLoading(true)
-                                try {
-                                  // Charger les données complètes du joueur
-                                  const response = await fetch(`/api/admin/get-account-details?accountId=${player.id}&accountType=player`)
-                                  const accountData = await response.json()
-                                  
-                                  if (response.ok && accountData) {
-                                    setEditingAccount({ id: player.id, type: 'player', data: accountData })
-                                    setPlayerData({
-                                      firstName: accountData.firstName || '',
-                                      lastName: accountData.lastName || '',
-                                      nickname: accountData.nickname || '',
-                                      email: accountData.email || '',
-                                      phone: accountData.phone || '',
-                                      birthDate: accountData.birthDate || '',
-                                      height: accountData.height?.toString() || '',
-                                      tshirtSize: accountData.tshirtSize || 'M',
-                                      position: accountData.position || '',
-                                      foot: accountData.foot || '',
-                                      jerseyNumber: accountData.jerseyNumber?.toString() || ''
-                                    })
-                                  } else {
-                                    // Fallback sur les données disponibles
-                                    setEditingAccount({ id: player.id, type: 'player', data: player })
-                                    setPlayerData({
-                                      firstName: player.firstName || '',
-                                      lastName: player.lastName || '',
-                                      nickname: player.nickname || '',
-                                      email: player.email || '',
-                                      phone: player.phone || '',
-                                      birthDate: player.birthDate || '',
-                                      height: player.height?.toString() || '',
-                                      tshirtSize: player.tshirtSize || 'M',
-                                      position: player.position || '',
-                                      foot: player.foot || '',
-                                      jerseyNumber: player.jerseyNumber?.toString() || ''
-                                    })
-                                  }
-                                } catch (error) {
-                                  console.error('Erreur chargement données:', error)
-                                  // Fallback sur les données disponibles
-                                  setEditingAccount({ id: player.id, type: 'player', data: player })
-                                  setPlayerData({
-                                    firstName: player.firstName || '',
-                                    lastName: player.lastName || '',
-                                    nickname: player.nickname || '',
-                                    email: player.email || '',
-                                    phone: player.phone || '',
-                                    birthDate: player.birthDate || '',
-                                    height: player.height?.toString() || '',
-                                    tshirtSize: player.tshirtSize || 'M',
-                                    position: player.position || '',
-                                    foot: player.foot || '',
-                                    jerseyNumber: player.jerseyNumber?.toString() || ''
-                                  })
-                                } finally {
-                                  setLoading(false)
-                                }
-                              }}
-                              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                            >
-                              Modifier
-                            </button>
-                            <button
-                              onClick={async () => {
-                                if (!confirm(`Supprimer ${player.name} ?`)) return
-                                setLoading(true)
-                                try {
-                                  const response = await fetch('/api/admin/delete-account', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                      accountId: player.id,
-                                      accountType: 'player',
-                                      email: player.email
-                                    })
-                                  })
-                                  const data = await response.json()
-                                  if (response.ok) {
-                                    setMessage({ type: 'success', text: data.message })
-                                    loadTeamAccounts()
-                                  } else {
-                                    setMessage({ type: 'error', text: data.error })
-                                  }
-                                } catch (error) {
-                                  setMessage({ type: 'error', text: 'Erreur lors de la suppression' })
-                                } finally {
-                                  setLoading(false)
-                                }
-                              }}
-                              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
-                            >
-                              Supprimer
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Liste des coaches */}
-                {teamAccounts.coaches.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">Coaches ({teamAccounts.coaches.length})</h3>
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {teamAccounts.coaches.map((coach) => (
-                        <div key={coach.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
-                          <div>
-                            <p className="font-medium">{coach.name}</p>
-                            <p className="text-sm text-gray-600">{coach.email}</p>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={async () => {
-                                setIsCoach(true)
-                                setShowForm(true)
-                                setLoading(true)
-                                try {
-                                  // Charger les données complètes du coach
-                                  const response = await fetch(`/api/admin/get-account-details?accountId=${coach.id}&accountType=coach`)
-                                  const accountData = await response.json()
-                                  
-                                  if (response.ok && accountData) {
-                                    setEditingAccount({ id: coach.id, type: 'coach', data: accountData })
-                                    setPlayerData({
-                                      firstName: accountData.firstName || '',
-                                      lastName: accountData.lastName || '',
-                                      nickname: '',
-                                      email: accountData.email || '',
-                                      phone: accountData.phone || '',
-                                      birthDate: accountData.birthDate || '',
-                                      height: '',
-                                      tshirtSize: 'M',
-                                      position: '',
-                                      foot: '',
-                                      jerseyNumber: ''
-                                    })
-                                  } else {
-                                    // Fallback sur les données disponibles
-                                    setEditingAccount({ id: coach.id, type: 'coach', data: coach })
-                                    setPlayerData({
-                                      firstName: coach.firstName || '',
-                                      lastName: coach.lastName || '',
-                                      nickname: '',
-                                      email: coach.email || '',
-                                      phone: coach.phone || '',
-                                      birthDate: coach.birthDate || '',
-                                      height: '',
-                                      tshirtSize: 'M',
-                                      position: '',
-                                      foot: '',
-                                      jerseyNumber: ''
-                                    })
-                                  }
-                                } catch (error) {
-                                  console.error('Erreur chargement données:', error)
-                                  // Fallback sur les données disponibles
-                                  setEditingAccount({ id: coach.id, type: 'coach', data: coach })
-                                  setPlayerData({
-                                    firstName: coach.firstName || '',
-                                    lastName: coach.lastName || '',
-                                    nickname: '',
-                                    email: coach.email || '',
-                                    phone: coach.phone || '',
-                                    birthDate: coach.birthDate || '',
-                                    height: '',
-                                    tshirtSize: 'M',
-                                    position: '',
-                                    foot: '',
-                                    jerseyNumber: ''
-                                  })
-                                } finally {
-                                  setLoading(false)
-                                }
-                              }}
-                              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                            >
-                              Modifier
-                            </button>
-                            <button
-                              onClick={async () => {
-                                if (!confirm(`Supprimer ${coach.name} ?`)) return
-                                setLoading(true)
-                                try {
-                                  const response = await fetch('/api/admin/delete-account', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                      accountId: coach.id,
-                                      accountType: 'coach',
-                                      email: coach.email
-                                    })
-                                  })
-                                  const data = await response.json()
-                                  if (response.ok) {
-                                    setMessage({ type: 'success', text: data.message })
-                                    loadTeamAccounts()
-                                  } else {
-                                    setMessage({ type: 'error', text: data.error })
-                                  }
-                                } catch (error) {
-                                  setMessage({ type: 'error', text: 'Erreur lors de la suppression' })
-                                } finally {
-                                  setLoading(false)
-                                }
-                              }}
-                              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
-                            >
-                              Supprimer
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Boutons ajouter et modifier */}
-                <div className="flex flex-wrap gap-2 pt-2">
-                  <button
-                    onClick={() => {
-                      setEditingAccount(null)
-                      setIsCoach(false)
-                      setShowForm(true)
-                      setPlayerData({
-                        firstName: '',
-                        lastName: '',
-                        nickname: '',
-                        email: '',
-                        phone: '',
-                        birthDate: '',
-                        height: '',
-                        tshirtSize: 'M',
-                        position: '',
-                        foot: '',
-                        jerseyNumber: ''
-                      })
-                    }}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                  >
-                    + Ajouter un joueur
-                  </button>
-                  <button
-                    onClick={() => {
-                      setEditingAccount(null)
-                      setIsCoach(true)
-                      setShowForm(true)
-                      setPlayerData({
-                        firstName: '',
-                        lastName: '',
-                        nickname: '',
-                        email: '',
-                        phone: '',
-                        birthDate: '',
-                        height: '',
-                        tshirtSize: 'M',
-                        position: '',
-                        foot: '',
-                        jerseyNumber: ''
-                      })
-                    }}
-                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
-                  >
-                    + Ajouter un coach
-                  </button>
-                  {(teamAccounts.players.length > 0 || teamAccounts.coaches.length > 0) && (
-                    <button
-                      onClick={() => {
-                        // Afficher un message pour guider l'utilisateur
-                        if (teamAccounts.players.length === 0 && teamAccounts.coaches.length === 0) {
-                          alert('Aucun joueur ou coach à modifier. Ajoutez-en d\'abord.')
-                          return
-                        }
-                        // Si un seul joueur, le modifier directement
-                        if (teamAccounts.players.length === 1 && teamAccounts.coaches.length === 0) {
-                          const player = teamAccounts.players[0]
-                          setIsCoach(false)
-                          setShowForm(true)
-                          setLoading(true)
-                          fetch(`/api/admin/get-account-details?accountId=${player.id}&accountType=player`)
-                            .then(res => res.json())
-                            .then(accountData => {
-                              if (accountData && accountData.id) {
-                                setEditingAccount({ id: player.id, type: 'player', data: accountData })
-                                setPlayerData({
-                                  firstName: accountData.firstName || '',
-                                  lastName: accountData.lastName || '',
-                                  nickname: accountData.nickname || '',
-                                  email: accountData.email || '',
-                                  phone: accountData.phone || '',
-                                  birthDate: accountData.birthDate || '',
-                                  height: accountData.height?.toString() || '',
-                                  tshirtSize: accountData.tshirtSize || 'M',
-                                  position: accountData.position || '',
-                                  foot: accountData.foot || '',
-                                  jerseyNumber: accountData.jerseyNumber?.toString() || ''
-                                })
-                              }
-                            })
-                            .catch(err => console.error('Erreur:', err))
-                            .finally(() => setLoading(false))
-                        } else if (teamAccounts.coaches.length === 1 && teamAccounts.players.length === 0) {
-                          const coach = teamAccounts.coaches[0]
-                          setIsCoach(true)
-                          setShowForm(true)
-                          setLoading(true)
-                          fetch(`/api/admin/get-account-details?accountId=${coach.id}&accountType=coach`)
-                            .then(res => res.json())
-                            .then(accountData => {
-                              if (accountData && accountData.id) {
-                                setEditingAccount({ id: coach.id, type: 'coach', data: accountData })
-                                setPlayerData({
-                                  firstName: accountData.firstName || '',
-                                  lastName: accountData.lastName || '',
-                                  nickname: '',
-                                  email: accountData.email || '',
-                                  phone: accountData.phone || '',
-                                  birthDate: accountData.birthDate || '',
-                                  height: '',
-                                  tshirtSize: 'M',
-                                  position: '',
-                                  foot: '',
-                                  jerseyNumber: ''
-                                })
-                              }
-                            })
-                            .catch(err => console.error('Erreur:', err))
-                            .finally(() => setLoading(false))
-                        } else {
-                          // S'il y a plusieurs joueurs/coaches, afficher un message
-                          alert('Il y a plusieurs joueurs/coaches. Veuillez cliquer sur "Modifier" à côté de celui que vous souhaitez modifier dans la liste ci-dessus.')
-                        }
-                      }}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                      ✏️ Modifier
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Formulaire d'ajout/modification */}
-            {selectedTeamId && showForm && (
-              <div ref={formRef} className="mt-6 border-t-2 border-gray-200 pt-6 bg-gray-50 rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900">{editingAccount ? '✏️ Modifier' : '➕ Ajouter'} un {isCoach ? 'entraîneur' : 'joueur'}</h3>
-            
-            {/* Type - seulement si on ajoute (pas en mode édition) */}
-            {!editingAccount && (
-              <div className="mb-4">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={isCoach}
-                    onChange={(e) => setIsCoach(e.target.checked)}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm font-medium">C'est un entraîneur</span>
-                </label>
-              </div>
-            )}
-
-            {/* Infos de l'équipe sélectionnée */}
-            {selectedTeam && (
-              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h3 className="font-semibold text-blue-900 mb-2">📋 Informations de l'équipe</h3>
-                <div className="space-y-1 text-sm">
-                  <p><span className="font-medium">Équipe:</span> {selectedTeam.name}</p>
-                  {(selectedTeam.schoolName || selectedTeam.school) && (
-                    <p><span className="font-medium">École:</span> {selectedTeam.schoolName || selectedTeam.school}</p>
-                  )}
-                  {selectedTeam.teamGrade && (
-                    <p><span className="font-medium">Classe:</span> {selectedTeam.teamGrade}</p>
-                  )}
-                </div>
-                <p className="text-xs text-blue-700 mt-2">
-                  ℹ️ Le joueur/coach sera {editingAccount ? 'modifié' : 'ajouté'} à cette équipe avec ces informations communes
-                </p>
-              </div>
-            )}
-
-            {/* Formulaire */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Prénom *</label>
-                <input
-                  type="text"
-                  value={playerData.firstName}
-                  onChange={(e) => setPlayerData({...playerData, firstName: e.target.value})}
-                  className="w-full px-4 py-2 border rounded-lg"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Nom *</label>
-                <input
-                  type="text"
-                  value={playerData.lastName}
-                  onChange={(e) => setPlayerData({...playerData, lastName: e.target.value})}
-                  className="w-full px-4 py-2 border rounded-lg"
-                  required
-                />
-              </div>
-              {!isCoach && (
-                <div>
-                  <label className="block text-sm font-medium mb-2">Surnom</label>
-                  <input
-                    type="text"
-                    value={playerData.nickname}
-                    onChange={(e) => setPlayerData({...playerData, nickname: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg"
-                    maxLength={15}
-                  />
-                </div>
-              )}
-              <div>
-                <label className="block text-sm font-medium mb-2">Email *</label>
-                <input
-                  type="email"
-                  value={playerData.email}
-                  onChange={(e) => setPlayerData({...playerData, email: e.target.value})}
-                  className="w-full px-4 py-2 border rounded-lg"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Téléphone *</label>
-                <input
-                  type="tel"
-                  value={playerData.phone}
-                  onChange={(e) => setPlayerData({...playerData, phone: e.target.value})}
-                  className="w-full px-4 py-2 border rounded-lg"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Date de naissance</label>
-                <input
-                  type="date"
-                  value={playerData.birthDate}
-                  onChange={(e) => setPlayerData({...playerData, birthDate: e.target.value})}
-                  className="w-full px-4 py-2 border rounded-lg"
-                />
-              </div>
-              {!isCoach && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Taille (cm)</label>
-                    <input
-                      type="number"
-                      value={playerData.height}
-                      onChange={(e) => setPlayerData({...playerData, height: e.target.value})}
-                      className="w-full px-4 py-2 border rounded-lg"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Taille T-shirt</label>
-                    <select
-                      value={playerData.tshirtSize}
-                      onChange={(e) => setPlayerData({...playerData, tshirtSize: e.target.value})}
-                      className="w-full px-4 py-2 border rounded-lg"
-                    >
-                      <option value="XS">XS</option>
-                      <option value="S">S</option>
-                      <option value="M">M</option>
-                      <option value="L">L</option>
-                      <option value="XL">XL</option>
-                      <option value="XXL">XXL</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Position *</label>
-                    <select
-                      value={playerData.position}
-                      onChange={(e) => setPlayerData({...playerData, position: e.target.value})}
-                      className="w-full px-4 py-2 border rounded-lg"
-                      required
-                    >
-                      <option value="">Sélectionner...</option>
-                      <option value="Gardien">Gardien</option>
-                      <option value="Défenseur">Défenseur</option>
-                      <option value="Milieu">Milieu</option>
-                      <option value="Attaquant">Attaquant</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Pied *</label>
-                    <select
-                      value={playerData.foot}
-                      onChange={(e) => setPlayerData({...playerData, foot: e.target.value})}
-                      className="w-full px-4 py-2 border rounded-lg"
-                      required
-                    >
-                      <option value="">Sélectionner...</option>
-                      <option value="Droitier">Droitier</option>
-                      <option value="Gaucher">Gaucher</option>
-                      <option value="Ambidextre">Ambidextre</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">N° Maillot *</label>
-                    <input
-                      type="number"
-                      value={playerData.jerseyNumber}
-                      onChange={(e) => setPlayerData({...playerData, jerseyNumber: e.target.value})}
-                      className="w-full px-4 py-2 border rounded-lg"
-                      min="1"
-                      max="99"
-                      required
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Boutons */}
-            <div className="flex gap-4">
-              <button
-                onClick={() => {
-                  setShowForm(false)
-                  setEditingAccount(null)
-                }}
-                className="flex-1 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={async () => {
-                  if (!selectedTeamId || !playerData.firstName || !playerData.lastName || !playerData.email || !playerData.phone) {
-                    alert('Veuillez remplir tous les champs obligatoires')
-                    return
-                  }
-                  if (!isCoach && (!playerData.position || !playerData.foot || !playerData.jerseyNumber)) {
-                    alert('Veuillez remplir tous les champs obligatoires du joueur')
-                    return
-                  }
-                  
-                  setLoading(true)
-                  try {
-                    if (editingAccount) {
-                      // Mode modification
-                      const response = await fetch('/api/admin/update-account', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          accountId: editingAccount.id,
-                          accountType: editingAccount.type,
-                          teamId: selectedTeamId,
-                          updates: {
-                            firstName: playerData.firstName,
-                            lastName: playerData.lastName,
-                            email: playerData.email,
-                            phone: playerData.phone,
-                            birthDate: playerData.birthDate,
-                            ...(isCoach ? {} : {
-                              nickname: playerData.nickname,
-                              height: playerData.height,
-                              tshirtSize: playerData.tshirtSize,
-                              foot: playerData.foot,
-                              position: playerData.position,
-                              jerseyNumber: parseInt(playerData.jerseyNumber) || 0
-                            })
-                          }
-                        })
-                      })
-                      
-                      const data = await response.json()
-                      if (response.ok) {
-                        setMessage({ type: 'success', text: `${editingAccount.type === 'coach' ? 'Entraîneur' : 'Joueur'} modifié avec succès!` })
-                        setEditingAccount(null)
-                        setShowForm(false)
-                        loadTeamAccounts()
-                        setPlayerData({
-                          firstName: '',
-                          lastName: '',
-                          nickname: '',
-                          email: '',
-                          phone: '',
-                          birthDate: '',
-                          height: '',
-                          tshirtSize: 'M',
-                          position: '',
-                          foot: '',
-                          jerseyNumber: ''
-                        })
-                      } else {
-                        setMessage({ type: 'error', text: data.error })
-                      }
-                    } else {
-                      // Mode ajout
-                      const response = await fetch('/api/admin/add-player-to-team', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          teamId: selectedTeamId,
-                          player: playerData,
-                          isCoach
-                        })
-                      })
-                      
-                      const data = await response.json()
-                      if (response.ok) {
-                        setMessage({ type: 'success', text: data.message })
-                        setShowForm(false)
-                        loadTeamAccounts()
-                        setPlayerData({
-                          firstName: '',
-                          lastName: '',
-                          nickname: '',
-                          email: '',
-                          phone: '',
-                          birthDate: '',
-                          height: '',
-                          tshirtSize: 'M',
-                          position: '',
-                          foot: '',
-                          jerseyNumber: ''
-                        })
-                        setIsCoach(false)
-                      } else {
-                        setMessage({ type: 'error', text: data.error })
-                      }
-                    }
-                  } catch (error) {
-                    setMessage({ type: 'error', text: `Erreur lors de ${editingAccount ? 'la modification' : 'l\'ajout'}` })
-                  } finally {
-                    setLoading(false)
-                  }
-                }}
-                disabled={loading}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-              >
-                {loading ? (editingAccount ? 'Modification en cours...' : 'Ajout en cours...') : (editingAccount ? 'Modifier' : 'Ajouter')}
-              </button>
-            </div>
-            </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Modal Gestion des Capitaines et Coachs */}
-      {showCaptainsCoachesModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowCaptainsCoachesModal(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-2xl font-bold text-gray-900">Gestion des Capitaines et Coachs</h3>
-              <button
-                onClick={() => setShowCaptainsCoachesModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <CaptainsCoachesManager />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

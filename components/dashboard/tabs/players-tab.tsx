@@ -4,7 +4,8 @@ import type React from "react";
 import { useState, useEffect } from "react";
 // Removed old imports - using API endpoints instead
 import type { Team, Player } from "@/lib/types";
-import { Plus, Trash2, Edit2, AlertCircle } from "lucide-react";
+import { Plus, Trash2, Edit2, AlertCircle, Users, Crown, UserCheck, Mail, Phone, Calendar, X, Save } from "lucide-react";
+import CaptainsCoachesManager from "@/components/admin/captains-coaches-manager";
 
 const POSITIONS = ["Gardien", "Défenseur", "Milieu", "Attaquant"] as const;
 
@@ -120,6 +121,10 @@ export default function PlayersTab() {
   });
   const [manageIsCoach, setManageIsCoach] = useState(false);
   const [manageLoading, setManageLoading] = useState(false);
+  const [teamCoachInfo, setTeamCoachInfo] = useState<{ coach?: CoachAccount; actingCoach?: PlayerAccount; captain?: any } | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState<{ type: 'coach' | 'actingCoach' | 'captain' | 'player'; data: any } | null>(null);
+  const [showCaptainsCoachesModal, setShowCaptainsCoachesModal] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -163,10 +168,60 @@ export default function PlayersTab() {
   useEffect(() => {
     if (selectedTeam) {
       loadPlayers();
+      loadTeamInfo();
+      // Charger aussi les teamAccounts pour avoir les infos complètes
+      setManageTeamId(selectedTeam);
     } else {
       setPlayers([]);
+      setTeamCoachInfo(null);
+      setManageTeamId('');
     }
   }, [selectedTeam]);
+
+  const loadTeamInfo = async () => {
+    if (!selectedTeam) return;
+    try {
+      // Charger les comptes de l'équipe
+      const accountsRes = await fetch('/api/admin/team-accounts');
+      if (accountsRes.ok) {
+        const accountsData = await accountsRes.json();
+        const team = accountsData.teams?.find((t: any) => t.id === selectedTeam);
+        
+        if (team) {
+          const info: { coach?: CoachAccount; actingCoach?: PlayerAccount; captain?: any } = {};
+          
+          // Coach
+          if (team.coaches && team.coaches.length > 0) {
+            info.coach = team.coaches[0];
+          }
+          
+          // Coach intérimaire
+          if (team.players) {
+            const actingCoach = team.players.find((p: any) => p.isActingCoach === true);
+            if (actingCoach) {
+              info.actingCoach = actingCoach;
+            }
+          }
+          
+          // Capitaine - chercher dans la collection players
+          const playersRes = await fetch(`/api/admin/players?teamId=${selectedTeam}`);
+          if (playersRes.ok) {
+            const playersData = await playersRes.json();
+            const captain = playersData.find((p: any) => p.isCaptain === true);
+            if (captain) {
+              // Trouver le compte correspondant
+              const captainAccount = team.players?.find((p: any) => p.email === captain.email);
+              info.captain = captainAccount || { ...captain, name: captain.name || `${captain.firstName || ''} ${captain.lastName || ''}`.trim() };
+            }
+          }
+          
+          setTeamCoachInfo(info);
+        }
+      }
+    } catch (error) {
+      console.error('Erreur chargement infos équipe:', error);
+    }
+  };
 
   useEffect(() => {
     if (manageTeamId) {
@@ -490,6 +545,13 @@ export default function PlayersTab() {
         </h2>
         <div className="flex gap-2">
           <button
+            onClick={() => setShowCaptainsCoachesModal(true)}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          >
+            <Users className="w-5 h-5" />
+            Gestion Capitaines & Coachs
+          </button>
+          <button
             onClick={() => {
               setManageTeamId(selectedTeam || '');
               setShowManageModal(true);
@@ -542,6 +604,7 @@ export default function PlayersTab() {
           onChange={(e) => setSelectedTeam(e.target.value)}
           className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-64"
         >
+          <option value="">-- Sélectionner une équipe --</option>
           {teams.map((team) => (
             <option key={team.id} value={team.id}>
               {team.name}
@@ -553,6 +616,198 @@ export default function PlayersTab() {
           remplaçants)
         </p>
       </div>
+
+      {/* Affichage des infos de l'équipe sélectionnée */}
+      {selectedTeam && teamCoachInfo && (
+        <div className="mb-6 bg-white rounded-lg shadow p-6">
+          <div className="mb-4 pb-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+              <Users className="w-5 h-5 text-blue-600" />
+              {teams.find(t => t.id === selectedTeam)?.name || 'Équipe'}
+            </h3>
+            <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+              {(teams.find(t => t.id === selectedTeam)?.schoolName || teams.find(t => t.id === selectedTeam)?.school) && (
+                <div className="flex items-center gap-1">
+                  <span className="font-medium text-gray-700">École:</span>
+                  <span>{teams.find(t => t.id === selectedTeam)?.schoolName || teams.find(t => t.id === selectedTeam)?.school}</span>
+                </div>
+              )}
+              {teams.find(t => t.id === selectedTeam)?.teamGrade && (
+                <div className="flex items-center gap-1">
+                  <span className="font-medium text-gray-700">Classe:</span>
+                  <span>{teams.find(t => t.id === selectedTeam)?.teamGrade}</span>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Coach */}
+            <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <UserCheck className="w-4 h-4 text-orange-600" />
+                <span className="font-semibold text-orange-900">Coach</span>
+              </div>
+              {teamCoachInfo.coach ? (
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(`/api/admin/get-account-details?accountId=${teamCoachInfo.coach.id}&accountType=coach`);
+                      const accountData = await response.json();
+                      if (response.ok && accountData) {
+                        setSelectedPerson({ type: 'coach', data: accountData });
+                      } else {
+                        setSelectedPerson({ type: 'coach', data: teamCoachInfo.coach });
+                      }
+                      setShowDetailsModal(true);
+                    } catch (error) {
+                      setSelectedPerson({ type: 'coach', data: teamCoachInfo.coach });
+                      setShowDetailsModal(true);
+                    }
+                  }}
+                  className="text-left w-full hover:underline"
+                >
+                  <p className="font-medium text-gray-900">{teamCoachInfo.coach.name}</p>
+                  <p className="text-sm text-gray-600">{teamCoachInfo.coach.email}</p>
+                </button>
+              ) : teamCoachInfo.actingCoach ? (
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(`/api/admin/get-account-details?accountId=${teamCoachInfo.actingCoach.id}&accountType=player`);
+                      const accountData = await response.json();
+                      if (response.ok && accountData) {
+                        setSelectedPerson({ type: 'actingCoach', data: accountData });
+                      } else {
+                        setSelectedPerson({ type: 'actingCoach', data: teamCoachInfo.actingCoach });
+                      }
+                      setShowDetailsModal(true);
+                    } catch (error) {
+                      setSelectedPerson({ type: 'actingCoach', data: teamCoachInfo.actingCoach });
+                      setShowDetailsModal(true);
+                    }
+                  }}
+                  className="text-left w-full hover:underline"
+                >
+                  <div className="flex items-center gap-1 mb-1">
+                    <Crown className="w-3 h-3 text-orange-600" />
+                    <p className="font-medium text-gray-900">{teamCoachInfo.actingCoach.name}</p>
+                  </div>
+                  <p className="text-xs text-orange-700">Coach Intérimaire</p>
+                  <p className="text-sm text-gray-600">{teamCoachInfo.actingCoach.email}</p>
+                </button>
+              ) : (
+                <p className="text-sm text-gray-500">Aucun coach</p>
+              )}
+            </div>
+
+            {/* Capitaine */}
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Crown className="w-4 h-4 text-yellow-600" />
+                <span className="font-semibold text-yellow-900">Capitaine</span>
+              </div>
+              {teamCoachInfo.captain ? (
+                <button
+                  onClick={async () => {
+                    try {
+                      if (teamCoachInfo.captain.id) {
+                        const response = await fetch(`/api/admin/get-account-details?accountId=${teamCoachInfo.captain.id}&accountType=player`);
+                        const accountData = await response.json();
+                        if (response.ok && accountData) {
+                          setSelectedPerson({ type: 'captain', data: accountData });
+                        } else {
+                          setSelectedPerson({ type: 'captain', data: teamCoachInfo.captain });
+                        }
+                      } else {
+                        setSelectedPerson({ type: 'captain', data: teamCoachInfo.captain });
+                      }
+                      setShowDetailsModal(true);
+                    } catch (error) {
+                      setSelectedPerson({ type: 'captain', data: teamCoachInfo.captain });
+                      setShowDetailsModal(true);
+                    }
+                  }}
+                  className="text-left w-full hover:underline"
+                >
+                  <p className="font-medium text-gray-900">{teamCoachInfo.captain.name}</p>
+                  <p className="text-sm text-gray-600">{teamCoachInfo.captain.email}</p>
+                  {teamCoachInfo.captain.jerseyNumber && (
+                    <p className="text-xs text-gray-500">#{teamCoachInfo.captain.jerseyNumber}</p>
+                  )}
+                </button>
+              ) : (
+                <p className="text-sm text-gray-500">Aucun capitaine</p>
+              )}
+            </div>
+
+            {/* Joueurs */}
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-4 h-4 text-blue-600" />
+                <span className="font-semibold text-blue-900">Joueurs</span>
+              </div>
+              <p className="text-2xl font-bold text-gray-900">{players.length}</p>
+              <p className="text-sm text-gray-600">joueur{players.length > 1 ? 's' : ''}</p>
+            </div>
+          </div>
+
+          {/* Liste des joueurs */}
+          {players.length > 0 && (
+            <div className="mt-6">
+              <h4 className="font-semibold text-gray-900 mb-3">Liste des joueurs</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {players.map((player) => (
+                  <button
+                    key={player.id}
+                    onClick={async () => {
+                      // Trouver le compte du joueur
+                      const playerAccount = teamAccounts.players?.find((p: any) => p.email === player.email);
+                      try {
+                        if (playerAccount?.id) {
+                          const response = await fetch(`/api/admin/get-account-details?accountId=${playerAccount.id}&accountType=player`);
+                          const accountData = await response.json();
+                          if (response.ok && accountData) {
+                            setSelectedPerson({ type: 'player', data: accountData });
+                          } else {
+                            setSelectedPerson({ 
+                              type: 'player', 
+                              data: playerAccount || { ...player, name: player.name || `${player.firstName || ''} ${player.lastName || ''}`.trim() }
+                            });
+                          }
+                        } else {
+                          setSelectedPerson({ 
+                            type: 'player', 
+                            data: playerAccount || { ...player, name: player.name || `${player.firstName || ''} ${player.lastName || ''}`.trim() }
+                          });
+                        }
+                        setShowDetailsModal(true);
+                      } catch (error) {
+                        setSelectedPerson({ 
+                          type: 'player', 
+                          data: playerAccount || { ...player, name: player.name || `${player.firstName || ''} ${player.lastName || ''}`.trim() }
+                        });
+                        setShowDetailsModal(true);
+                      }
+                    }}
+                    className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-left"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+                        {player.number || '?'}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">{player.name}</p>
+                        <p className="text-xs text-gray-600">{player.position}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {showForm && (
         <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -1065,104 +1320,6 @@ export default function PlayersTab() {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                Nom
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                N°
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                Poste
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                École
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                Âge
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                Note
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                Pied
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {players.map((player) => {
-              const overall = player.overall || 75;
-
-              return (
-                <tr key={player.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                    {player.name}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600 font-bold">
-                    {player.number}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {player.position}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {player.school || "N/A"}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600 font-semibold">
-                    {player.age || "N/A"}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <span
-                      className={`font-bold px-2 py-1 rounded text-xs ${
-                        overall >= 85
-                          ? "bg-yellow-100 text-yellow-800"
-                          : overall >= 80
-                          ? "bg-purple-100 text-purple-800"
-                          : overall >= 75
-                          ? "bg-blue-100 text-blue-800"
-                          : overall >= 70
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {overall}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {player.strongFoot || "N/A"}
-                  </td>
-                  <td className="px-6 py-4 text-sm flex gap-2">
-                    <button
-                      onClick={() => handleEdit(player)}
-                      className="text-blue-600 hover:bg-blue-50 p-2 rounded transition"
-                      title="Modifier"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(player.id, player.name)}
-                      className="text-red-600 hover:bg-red-50 p-2 rounded transition"
-                      title="Supprimer"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        {players.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            Aucun joueur pour cette équipe
-          </div>
-        )}
-      </div>
 
       {/* Modal Gérer joueurs/coaches */}
       {showManageModal && (
@@ -1790,6 +1947,288 @@ export default function PlayersTab() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal de détails avec modification */}
+      {showDetailsModal && selectedPerson && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">
+                  {selectedPerson.type === 'coach' && 'Coach'}
+                  {selectedPerson.type === 'actingCoach' && 'Coach Intérimaire'}
+                  {selectedPerson.type === 'captain' && 'Capitaine'}
+                  {selectedPerson.type === 'player' && 'Joueur'}
+                </h3>
+                <p className="text-gray-600 mt-1">{selectedPerson.data.name}</p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  setSelectedPerson(null);
+                }}
+                className="p-2 hover:bg-gray-100 rounded-full transition"
+              >
+                <X className="w-6 h-6 text-gray-600" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Informations de contact */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-blue-600" />
+                  Informations de contact
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Prénom</label>
+                    <input
+                      type="text"
+                      value={selectedPerson.data.firstName || ''}
+                      onChange={(e) => {
+                        const firstName = e.target.value;
+                        const lastName = selectedPerson.data.lastName || '';
+                        setSelectedPerson({
+                          ...selectedPerson,
+                          data: { 
+                            ...selectedPerson.data, 
+                            firstName,
+                            name: `${firstName} ${lastName}`.trim() || selectedPerson.data.name
+                          }
+                        });
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Nom</label>
+                    <input
+                      type="text"
+                      value={selectedPerson.data.lastName || ''}
+                      onChange={(e) => {
+                        const lastName = e.target.value;
+                        const firstName = selectedPerson.data.firstName || '';
+                        setSelectedPerson({
+                          ...selectedPerson,
+                          data: { 
+                            ...selectedPerson.data, 
+                            lastName,
+                            name: `${firstName} ${lastName}`.trim() || selectedPerson.data.name
+                          }
+                        });
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={selectedPerson.data.email || ''}
+                      onChange={(e) => setSelectedPerson({
+                        ...selectedPerson,
+                        data: { ...selectedPerson.data, email: e.target.value }
+                      })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <Phone className="w-4 h-4" />
+                      Téléphone
+                    </label>
+                    <input
+                      type="tel"
+                      value={selectedPerson.data.phone || ''}
+                      onChange={(e) => setSelectedPerson({
+                        ...selectedPerson,
+                        data: { ...selectedPerson.data, phone: e.target.value }
+                      })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      Date de naissance
+                    </label>
+                    <input
+                      type="date"
+                      value={selectedPerson.data.birthDate || ''}
+                      onChange={(e) => setSelectedPerson({
+                        ...selectedPerson,
+                        data: { ...selectedPerson.data, birthDate: e.target.value }
+                      })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  {selectedPerson.type === 'player' && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Surnom</label>
+                        <input
+                          type="text"
+                          value={selectedPerson.data.nickname || ''}
+                          onChange={(e) => setSelectedPerson({
+                            ...selectedPerson,
+                            data: { ...selectedPerson.data, nickname: e.target.value }
+                          })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Numéro de maillot</label>
+                        <input
+                          type="number"
+                          value={selectedPerson.data.jerseyNumber || selectedPerson.data.number || ''}
+                          onChange={(e) => setSelectedPerson({
+                            ...selectedPerson,
+                            data: { ...selectedPerson.data, jerseyNumber: parseInt(e.target.value) || 0, number: parseInt(e.target.value) || 0 }
+                          })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
+                        <select
+                          value={selectedPerson.data.position || ''}
+                          onChange={(e) => setSelectedPerson({
+                            ...selectedPerson,
+                            data: { ...selectedPerson.data, position: e.target.value }
+                          })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        >
+                          <option value="">-- Sélectionner --</option>
+                          {POSITIONS.map((pos) => (
+                            <option key={pos} value={pos}>{pos}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Taille (cm)</label>
+                        <input
+                          type="number"
+                          value={selectedPerson.data.height || ''}
+                          onChange={(e) => setSelectedPerson({
+                            ...selectedPerson,
+                            data: { ...selectedPerson.data, height: parseInt(e.target.value) || 0 }
+                          })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Boutons d'action */}
+              <div className="flex gap-3 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setShowDetailsModal(false);
+                    setSelectedPerson(null);
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      setManageLoading(true);
+                      const accountType = selectedPerson.type === 'coach' ? 'coach' : 'player';
+                      const accountId = selectedPerson.data.id;
+                      
+                      const firstName = selectedPerson.data.firstName || '';
+                      const lastName = selectedPerson.data.lastName || '';
+                      const fullName = `${firstName} ${lastName}`.trim() || selectedPerson.data.name || '';
+                      
+                      const response = await fetch('/api/admin/update-account', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          accountId,
+                          accountType,
+                          updates: {
+                            firstName,
+                            lastName,
+                            name: fullName,
+                            email: selectedPerson.data.email,
+                            phone: selectedPerson.data.phone,
+                            birthDate: selectedPerson.data.birthDate,
+                            nickname: selectedPerson.data.nickname,
+                            height: selectedPerson.data.height,
+                            position: selectedPerson.data.position,
+                            jerseyNumber: selectedPerson.data.jerseyNumber || selectedPerson.data.number
+                          }
+                        })
+                      });
+
+                      const result = await response.json();
+                      if (response.ok) {
+                        setSuccess('Informations mises à jour avec succès!');
+                        await loadTeamInfo();
+                        await loadTeamAccounts();
+                        await loadPlayers();
+                        setShowDetailsModal(false);
+                        setSelectedPerson(null);
+                        setTimeout(() => setSuccess(null), 3000);
+                      } else {
+                        setError(result.error || 'Erreur lors de la mise à jour');
+                      }
+                    } catch (error) {
+                      setError('Erreur lors de la mise à jour');
+                    } finally {
+                      setManageLoading(false);
+                    }
+                  }}
+                  disabled={manageLoading}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition flex items-center justify-center gap-2"
+                >
+                  {manageLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Enregistrement...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Enregistrer les modifications
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Gestion des Capitaines et Coachs */}
+      {showCaptainsCoachesModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowCaptainsCoachesModal(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-2xl font-bold text-gray-900">Gestion des Capitaines et Coachs</h3>
+              <button
+                onClick={() => setShowCaptainsCoachesModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <CaptainsCoachesManager />
+            </div>
           </div>
         </div>
       )}

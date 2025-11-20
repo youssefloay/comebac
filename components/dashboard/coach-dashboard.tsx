@@ -113,6 +113,29 @@ export function CoachDashboard() {
             }
             setCoachData(coach)
             teamId = data.teamId
+          } else {
+            // Si pas de compte coach, vérifier si c'est un coach intérimaire (joueur avec isActingCoach)
+            const playerAccountsQuery = query(
+              collection(db, 'playerAccounts'),
+              where('email', '==', user.email),
+              where('isActingCoach', '==', true)
+            )
+            const playerAccountsSnap = await getDocs(playerAccountsQuery)
+            
+            if (!playerAccountsSnap.empty) {
+              const playerDoc = playerAccountsSnap.docs[0]
+              const data = playerDoc.data()
+              
+              const coach = {
+                id: playerDoc.id,
+                firstName: data.firstName,
+                lastName: data.lastName,
+                teamId: data.teamId,
+                teamName: data.teamName
+              }
+              setCoachData(coach)
+              teamId = data.teamId
+            }
           }
         }
 

@@ -68,7 +68,8 @@ export async function GET() {
           lastSignIn: authData?.lastSignIn || null,
           emailVerified: authData?.emailVerified || false,
           createdAt: authData?.createdAt || null,
-          lastResendDate: data.lastResendDate || null
+          lastResendDate: data.lastResendDate || null,
+          isActingCoach: data.isActingCoach || false
         }
       })
 

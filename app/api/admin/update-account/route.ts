@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
 
     if (updates.firstName !== undefined) updateData.firstName = updates.firstName
     if (updates.lastName !== undefined) updateData.lastName = updates.lastName
+    if (updates.name !== undefined) updateData.name = updates.name
     if (updates.email !== undefined) updateData.email = updates.email
     if (updates.phone !== undefined) updateData.phone = updates.phone
     if (updates.birthDate !== undefined) updateData.birthDate = updates.birthDate || null

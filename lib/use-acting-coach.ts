@@ -73,8 +73,9 @@ export function useActingCoach(playerEmail: string | null, teamId: string | null
         const coachAccountsSnap = await getDocs(coachAccountsQuery)
         const hasTeamCoach = !coachAccountsSnap.empty
 
-        // 3. Le capitaine devient coach intérimaire s'il n'y a pas de coach
-        const isActingCoach = isCaptain && !hasTeamCoach
+        // 3. Vérifier si le joueur a le statut de coach intérimaire (soit automatique via capitaine, soit manuel)
+        const isManuallySetActingCoach = playerData.isActingCoach === true
+        const isActingCoach = isManuallySetActingCoach || (isCaptain && !hasTeamCoach)
 
         setStatus({
           isActingCoach,
