@@ -91,35 +91,39 @@ export async function GET() {
       }
     })
 
-    // Liste complète des joueurs avec leurs comptes
-    const allPlayersWithAccounts = players.map(p => {
-      const account = playerAccounts.find(pa => pa.email === p.email)
-      const team = teams.find(t => t.id === p.teamId)
-      return {
-        id: p.id,
-        name: p.name,
-        email: p.email,
-        position: p.position,
-        number: p.number,
-        teamId: p.teamId,
-        teamName: team?.name || 'N/A',
-        isCaptain: p.isCaptain,
-        hasAccount: !!account,
-        isActingCoach: account?.isActingCoach || false
-      }
-    })
+    // Liste complète des joueurs avec leurs comptes (exclure contact@comebac.com)
+    const allPlayersWithAccounts = players
+      .filter(p => p.email !== 'contact@comebac.com')
+      .map(p => {
+        const account = playerAccounts.find(pa => pa.email === p.email)
+        const team = teams.find(t => t.id === p.teamId)
+        return {
+          id: p.id,
+          name: p.name,
+          email: p.email,
+          position: p.position,
+          number: p.number,
+          teamId: p.teamId,
+          teamName: team?.name || 'N/A',
+          isCaptain: p.isCaptain,
+          hasAccount: !!account,
+          isActingCoach: account?.isActingCoach || false
+        }
+      })
 
-    // Liste complète des coaches
-    const allCoaches = coachAccounts.map(c => {
-      const team = teams.find(t => t.id === c.teamId)
-      return {
-        id: c.id,
-        name: `${c.firstName} ${c.lastName}`,
-        email: c.email,
-        teamId: c.teamId,
-        teamName: team?.name || 'N/A'
-      }
-    })
+    // Liste complète des coaches (exclure contact@comebac.com)
+    const allCoaches = coachAccounts
+      .filter(c => c.email !== 'contact@comebac.com')
+      .map(c => {
+        const team = teams.find(t => t.id === c.teamId)
+        return {
+          id: c.id,
+          name: `${c.firstName} ${c.lastName}`,
+          email: c.email,
+          teamId: c.teamId,
+          teamName: team?.name || 'N/A'
+        }
+      })
 
     return NextResponse.json({
       success: true,

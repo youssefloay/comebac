@@ -8,20 +8,24 @@ export async function GET() {
       .limit(2000)
       .get()
 
-    const pageViews = pageViewsSnapshot.docs.map(doc => ({
-      ...doc.data(),
-      timestamp: doc.data().timestamp?.toDate().toISOString()
-    }))
+    const pageViews = pageViewsSnapshot.docs
+      .map(doc => ({
+        ...doc.data(),
+        timestamp: doc.data().timestamp?.toDate().toISOString()
+      }))
+      .filter((view: any) => view.userEmail !== 'contact@comebac.com')
 
     const timeSpentSnapshot = await adminDb.collection('timeSpent')
       .orderBy('timestamp', 'desc')
       .limit(2000)
       .get()
 
-    const timeSpentData = timeSpentSnapshot.docs.map(doc => ({
-      ...doc.data(),
-      timestamp: doc.data().timestamp?.toDate().toISOString()
-    }))
+    const timeSpentData = timeSpentSnapshot.docs
+      .map(doc => ({
+        ...doc.data(),
+        timestamp: doc.data().timestamp?.toDate().toISOString()
+      }))
+      .filter((time: any) => time.userEmail !== 'contact@comebac.com')
 
     const pageStats = pageViews.reduce((acc: any, view: any) => {
       if (!acc[view.page]) {

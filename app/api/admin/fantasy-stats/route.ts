@@ -14,27 +14,30 @@ export async function GET() {
       timestamp: doc.data().timestamp?.toDate().toISOString()
     }))
 
-    // Statistiques
-    const totalClicks = clicks.length
-    const uniqueUsers = new Set(clicks.map(c => c.userEmail)).size
-    const byUserType = clicks.reduce((acc: any, click: any) => {
+    // Statistiques (exclure contact@comebac.com)
+    const filteredClicks = clicks.filter((c: any) => c.userEmail !== 'contact@comebac.com')
+    const totalClicks = filteredClicks.length
+    const uniqueUsers = new Set(filteredClicks.map((c: any) => c.userEmail)).size
+    const byUserType = filteredClicks.reduce((acc: any, click: any) => {
       acc[click.userType] = (acc[click.userType] || 0) + 1
       return acc
     }, {})
-    const byPage = clicks.reduce((acc: any, click: any) => {
+    const byPage = filteredClicks.reduce((acc: any, click: any) => {
       acc[click.page] = (acc[click.page] || 0) + 1
       return acc
     }, {})
 
-    // Top utilisateurs
-    const userClicks = clicks.reduce((acc: any, click: any) => {
-      const key = click.userEmail
-      if (!acc[key]) {
-        acc[key] = { email: click.userEmail, type: click.userType, count: 0 }
-      }
-      acc[key].count++
-      return acc
-    }, {})
+    // Top utilisateurs (exclure contact@comebac.com)
+    const userClicks = clicks
+      .filter((click: any) => click.userEmail !== 'contact@comebac.com')
+      .reduce((acc: any, click: any) => {
+        const key = click.userEmail
+        if (!acc[key]) {
+          acc[key] = { email: click.userEmail, type: click.userType, count: 0 }
+        }
+        acc[key].count++
+        return acc
+      }, {})
     const topUsers = Object.values(userClicks)
       .sort((a: any, b: any) => b.count - a.count)
       .slice(0, 10)
@@ -48,7 +51,7 @@ export async function GET() {
         byPage,
         topUsers
       },
-      recentClicks: clicks.slice(0, 50)
+      recentClicks: filteredClicks.slice(0, 50)
     })
   } catch (error: any) {
     console.error('Erreur:', error)

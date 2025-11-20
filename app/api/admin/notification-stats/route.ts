@@ -21,6 +21,10 @@ export async function GET(request: NextRequest) {
       
       permissionsSnap.docs.forEach(doc => {
         const data = doc.data()
+        // Exclure contact@comebac.com des statistiques
+        if (data.userId === 'contact@comebac.com') {
+          return
+        }
         if (data.permission === 'granted') {
           stats.granted++
           usersWithNotifications.push({
