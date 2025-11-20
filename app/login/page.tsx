@@ -402,15 +402,6 @@ export default function LoginPage() {
                   : "Pas de compte ? Créer un compte"}
               </button>
 
-              <div className="pt-2 border-t border-gray-200">
-                <a
-                  href="/register-team"
-                  className="inline-flex items-center justify-center w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors shadow-lg hover:shadow-xl"
-                >
-                  REGISTER NOW
-                </a>
-              </div>
-
               <div className="text-xs text-gray-500">
                 En vous connectant, vous acceptez nos conditions d'utilisation
               </div>
