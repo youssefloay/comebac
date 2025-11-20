@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Bell, Sparkles, TrendingUp, Users, CheckCircle, XCircle, Trophy, X } from "lucide-react"
+import { Bell, Sparkles, TrendingUp, Users, CheckCircle, XCircle, Trophy, X, Clock } from "lucide-react"
 import Link from "next/link"
 
 export default function AdminStatsPage() {
@@ -529,6 +529,47 @@ export default function AdminStatsPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* User Time Stats */}
+        {pageStats && pageStats.userTimeStats && pageStats.userTimeStats.length > 0 && (
+          <div className="mb-8">
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Temps passé par utilisateur</h2>
+                  <p className="text-gray-600">Temps total passé sur le site par chaque utilisateur</p>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-4 max-h-96 overflow-y-auto">
+                <div className="space-y-2">
+                  {pageStats.userTimeStats.map((user: any, index: number) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center font-bold text-green-600">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{user.email}</p>
+                          <p className="text-xs text-gray-500">
+                            {user.visits} visite{user.visits > 1 ? 's' : ''} • {user.sessions} session{user.sessions > 1 ? 's' : ''} • {user.pages} page{user.pages > 1 ? 's' : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-green-600 text-lg">{formatTime(user.totalTime)}</p>
+                        <p className="text-xs text-gray-500">Moy: {formatTime(user.avgTimePerVisit)}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

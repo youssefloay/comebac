@@ -63,9 +63,42 @@ export async function GET() {
     })).sort((a, b) => b.views - a.views)
 
     const totalViews = pageViews.length
-    const uniqueUsers = new Set(pageViews.map(v => v.userEmail)).size
-    const totalSessions = new Set(pageViews.map(v => v.sessionId)).size
-    const totalTime = timeSpentData.reduce((sum, t) => sum + t.timeSpent, 0)
+    const uniqueUsers = new Set(pageViews.map((v: any) => v.userEmail)).size
+    const totalSessions = new Set(pageViews.map((v: any) => v.sessionId)).size
+    const totalTime = timeSpentData.reduce((sum: number, t: any) => sum + (t.timeSpent || 0), 0)
+
+    // Calculer le temps passé par utilisateur
+    const userTimeStats = timeSpentData.reduce((acc: any, timeData: any) => {
+      const time: any = timeData
+      const email = (time.userEmail as string) || 'anonymous'
+      if (!acc[email]) {
+        acc[email] = {
+          email,
+          totalTime: 0,
+          sessions: new Set(),
+          pages: new Set(),
+          visits: 0
+        }
+      }
+      acc[email].totalTime += (time.timeSpent as number) || 0
+      if (time.sessionId as string) {
+        acc[email].sessions.add(time.sessionId as string)
+      }
+      if (time.page as string) {
+        acc[email].pages.add(time.page as string)
+      }
+      acc[email].visits++
+      return acc
+    }, {})
+
+    const userTimeStatsArray = Object.values(userTimeStats).map((user: any) => ({
+      email: user.email,
+      totalTime: user.totalTime,
+      sessions: user.sessions.size,
+      pages: user.pages.size,
+      visits: user.visits,
+      avgTimePerVisit: user.visits > 0 ? Math.round(user.totalTime / user.visits) : 0
+    })).sort((a: any, b: any) => b.totalTime - a.totalTime)
 
     return NextResponse.json({
       success: true,
@@ -76,7 +109,8 @@ export async function GET() {
         totalTime,
         avgTimePerSession: totalSessions > 0 ? Math.round(totalTime / totalSessions) : 0
       },
-      pageStats: pageStatsArray
+      pageStats: pageStatsArray,
+      userTimeStats: userTimeStatsArray
     })
   } catch (error: any) {
     console.error('Erreur:', error)
