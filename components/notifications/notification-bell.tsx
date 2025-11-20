@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Bell, X } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 interface NotificationItem {
   id: string
@@ -11,10 +12,12 @@ interface NotificationItem {
   message?: string
   createdAt?: any
   read?: boolean
+  actionUrl?: string
 }
 
 export function NotificationBell() {
   const { user } = useAuth()
+  const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
@@ -58,6 +61,77 @@ export function NotificationBell() {
     return '/public/notifications'
   }
 
+  const formatDate = (dateValue: any): string | null => {
+    if (!dateValue) return null
+    
+    try {
+      // Si c'est un objet Firestore Timestamp avec _seconds et _nanoseconds (sérialisé)
+      if (typeof dateValue === 'object' && '_seconds' in dateValue) {
+        const timestamp = dateValue._seconds * 1000 + (dateValue._nanoseconds || 0) / 1000000
+        return new Date(timestamp).toLocaleString('fr-FR')
+      }
+      
+      // Si c'est un objet Firestore Timestamp avec méthode toDate()
+      if (typeof dateValue === 'object' && typeof dateValue.toDate === 'function') {
+        return dateValue.toDate().toLocaleString('fr-FR')
+      }
+      
+      // Si c'est déjà une string ISO
+      if (typeof dateValue === 'string') {
+        return new Date(dateValue).toLocaleString('fr-FR')
+      }
+      
+      // Si c'est une Date
+      if (dateValue instanceof Date) {
+        return dateValue.toLocaleString('fr-FR')
+      }
+      
+      return null
+    } catch (error) {
+      console.error('Erreur formatage date:', error)
+      return null
+    }
+  }
+
+  const handleNotificationClick = async (notification: NotificationItem) => {
+    try {
+      // Marquer comme lue si ce n'est pas déjà fait
+      if (!notification.read && user) {
+        try {
+          const { auth } = await import('@/lib/firebase')
+          const currentUser = auth.currentUser
+          if (currentUser) {
+            await fetch('/api/notifications', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                notificationId: notification.id, 
+                userId: currentUser.uid 
+              })
+            })
+          }
+        } catch (error) {
+          console.error('Erreur lors de la mise à jour:', error)
+        }
+      }
+
+      // Fermer le dropdown
+      setOpen(false)
+
+      // Rediriger vers actionUrl si présent, sinon vers la page des notifications
+      if (notification.actionUrl) {
+        router.push(notification.actionUrl)
+      } else {
+        router.push(getNotificationLink())
+      }
+    } catch (error) {
+      console.error('Erreur lors du clic sur la notification:', error)
+      // En cas d'erreur, rediriger vers la page des notifications
+      setOpen(false)
+      router.push(getNotificationLink())
+    }
+  }
+
   const preview = notifications
     .filter(n => !n.read)
     .slice(0, 3)
@@ -65,7 +139,8 @@ export function NotificationBell() {
       id: notif.id,
       title: notif.title || 'Notification',
       message: notif.message || '',
-      date: notif.createdAt?.toDate ? notif.createdAt.toDate().toLocaleString('fr-FR') : notif.createdAt
+      date: formatDate((notif as any).created_at || notif.createdAt),
+      actionUrl: notif.actionUrl
     }))
 
   return (
@@ -75,7 +150,7 @@ export function NotificationBell() {
           e.stopPropagation()
           setOpen(true)
         }}
-        className="relative flex items-center justify-center p-0"
+        className="relative flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
         aria-label="Notifications"
       >
         <Bell className="w-5 h-5 flex-shrink-0" />
@@ -112,17 +187,24 @@ export function NotificationBell() {
                   <p>Aucune notification</p>
                 </div>
               ) : (
-                preview.map((notif) => (
-                  <div key={notif.id || notif.title} className="p-4 border-b border-gray-100">
-                    <p className="font-semibold text-gray-900">{notif.title}</p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {notif.message || 'Consulte la page notifications pour plus de détails.'}
-                    </p>
-                    {notif.date && (
-                      <p className="text-xs text-gray-400 mt-2">{notif.date}</p>
-                    )}
-                  </div>
-                ))
+                preview.map((notif) => {
+                  const notification = notifications.find(n => n.id === notif.id)
+                  return (
+                    <div 
+                      key={notif.id || notif.title} 
+                      className="p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => notification && handleNotificationClick(notification)}
+                    >
+                      <p className="font-semibold text-gray-900">{notif.title}</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {notif.message || 'Consulte la page notifications pour plus de détails.'}
+                      </p>
+                      {notif.date && (
+                        <p className="text-xs text-gray-400 mt-2">{notif.date}</p>
+                      )}
+                    </div>
+                  )
+                })
               )}
             </div>
 

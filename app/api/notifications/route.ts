@@ -17,6 +17,13 @@ export async function GET(request: NextRequest) {
     // Import dynamique pour éviter les erreurs de build
     const { adminDb } = await import('@/lib/firebase-admin')
 
+    if (!adminDb) {
+      return NextResponse.json({
+        success: true,
+        notifications: []
+      })
+    }
+
     // Récupérer les notifications de l'utilisateur (sans orderBy pour éviter l'index)
     const notificationsSnapshot = await adminDb
       .collection('notifications')
@@ -27,11 +34,21 @@ export async function GET(request: NextRequest) {
     const notifications = notificationsSnapshot.docs
       .map(doc => {
         const data = doc.data()
+        // Convertir createdAt en string ISO pour éviter les problèmes de sérialisation
+        const createdAtDate = data.createdAt?.toDate?.()
+        const createdAtISO = createdAtDate?.toISOString() || new Date().toISOString()
+        const createdAtTimestamp = createdAtDate?.getTime() || 0
+        
         return {
           id: doc.id,
-          ...data,
-          created_at: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-          createdAtTimestamp: data.createdAt?.toDate?.()?.getTime() || 0
+          title: data.title || '',
+          message: data.message || '',
+          type: data.type || 'info',
+          read: data.read || false,
+          actionUrl: data.actionUrl || null,
+          priority: data.priority || 'normal',
+          created_at: createdAtISO,
+          createdAtTimestamp: createdAtTimestamp
         }
       })
       .sort((a, b) => b.createdAtTimestamp - a.createdAtTimestamp)
@@ -65,6 +82,13 @@ export async function PATCH(request: NextRequest) {
 
     // Import dynamique
     const { adminDb } = await import('@/lib/firebase-admin')
+
+    if (!adminDb) {
+      return NextResponse.json(
+        { error: 'Firebase Admin non initialisé' },
+        { status: 500 }
+      )
+    }
 
     // Marquer comme lue
     const notificationRef = adminDb.collection('notifications').doc(notificationId)

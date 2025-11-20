@@ -306,6 +306,9 @@ export default function CoachLayout({ children }: { children: React.ReactNode })
                 </h3>
                 <p className="text-sm text-gray-600">Entraîneur</p>
               </div>
+              <div className="flex-shrink-0">
+                <NotificationBell />
+              </div>
             </div>
             <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg mb-2">
               <CheckCircle className="w-4 h-4 text-orange-600" />
