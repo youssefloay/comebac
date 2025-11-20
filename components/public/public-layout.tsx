@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/auth-context'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { InstallPrompt } from '@/components/pwa/InstallPrompt'
 import { LanguageSelector } from '@/components/ui/language-selector'
+import { ConsentBanner } from '@/components/ads/ConsentBanner'
 import { usePathname } from 'next/navigation'
 import '@/styles/sofascore-theme.css'
 
@@ -117,13 +118,24 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       
       {/* Footer discret */}
       <footer className="py-4 px-4 border-t border-gray-100 mt-12">
-        <div className="max-w-7xl mx-auto flex items-center justify-center">
+        <div className="max-w-7xl mx-auto flex items-center justify-center gap-4 flex-wrap">
           <Link 
             href="/public/privacy" 
             className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
           >
             Politique de confidentialité
           </Link>
+          <span className="text-xs text-gray-400">•</span>
+          <button
+            onClick={() => {
+              localStorage.removeItem('cookie-consent')
+              localStorage.removeItem('cookie-consent-date')
+              window.location.reload()
+            }}
+            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            Gérer les cookies
+          </button>
         </div>
       </footer>
       
@@ -143,6 +155,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       
       {/* Page Analytics Tracker */}
       <PageTracker />
+      
+      {/* Consent Banner */}
+      <ConsentBanner />
     </div>
   )
 }
