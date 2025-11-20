@@ -3,6 +3,10 @@ import { adminDb } from '@/lib/firebase-admin'
 
 export async function GET() {
   try {
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Firebase Admin non initialisé' }, { status: 500 })
+    }
+
     const pageViewsSnapshot = await adminDb.collection('pageViews')
       .orderBy('timestamp', 'desc')
       .limit(2000)
