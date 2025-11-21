@@ -42,16 +42,51 @@ export async function POST(request: NextRequest) {
       const playerDoc = playerSnap.docs[0]
       const data = playerDoc.data() as any
       matchedType = 'player'
-      let teamName = data.teamName || 'votre équipe'
+      
+      // Récupérer le nom de l'équipe avec plusieurs fallbacks
+      let teamName = data.teamName || null
+      
+      // Si teamName n'existe pas ou est vide, chercher dans teams
       if (!teamName && data.teamId) {
-        const teamDoc = await adminDb.collection('teams').doc(data.teamId).get()
-        if (teamDoc.exists) {
-          teamName = teamDoc.data()?.name || teamName
+        try {
+          const teamDoc = await adminDb.collection('teams').doc(data.teamId).get()
+          if (teamDoc.exists) {
+            teamName = teamDoc.data()?.name || null
+            console.log(`✅ Nom d'équipe récupéré depuis teams: ${teamName}`)
+          } else {
+            // Si pas dans teams, chercher dans teamRegistrations
+            const regDoc = await adminDb.collection('teamRegistrations').doc(data.teamId).get()
+            if (regDoc.exists) {
+              teamName = regDoc.data()?.teamName || null
+              console.log(`✅ Nom d'équipe récupéré depuis teamRegistrations: ${teamName}`)
+            }
+          }
+        } catch (error) {
+          console.error('❌ Erreur lors de la récupération du nom d\'équipe:', error)
         }
       }
+      
+      // Fallback final
+      if (!teamName || teamName === 'votre équipe') {
+        teamName = 'ComeBac League'
+        console.log(`⚠️ Nom d'équipe non trouvé, utilisation du fallback: ${teamName}`)
+      } else {
+        // Si on a trouvé un nom d'équipe valide et qu'il n'était pas dans playerAccounts, le mettre à jour
+        if (data.teamName !== teamName && data.teamId) {
+          try {
+            await adminDb.collection('playerAccounts').doc(playerDoc.id).update({
+              teamName: teamName
+            })
+            console.log(`✅ Nom d'équipe mis à jour dans playerAccounts: ${teamName}`)
+          } catch (updateError) {
+            console.error('❌ Erreur lors de la mise à jour du nom d\'équipe:', updateError)
+          }
+        }
+      }
+      
       const playerName = `${data.firstName || ''} ${data.lastName || ''}`.trim() || name || user.displayName || 'Joueur'
       
-      console.log(`📧 Envoi email joueur à ${email} pour ${teamName}`)
+      console.log(`📧 Envoi email joueur à ${email} pour l'équipe "${teamName}"`)
       emailResult = await sendEmail(generateWelcomeEmail(playerName, teamName, resetLink, email))
       
       console.log(`📧 Résultat envoi email joueur:`, emailResult.success ? '✅ Succès' : `❌ Erreur: ${emailResult.error}`)
@@ -76,9 +111,49 @@ export async function POST(request: NextRequest) {
         matchedType = 'coach'
         const coachFirstName = data.firstName || name?.split(' ')[0] || user.displayName?.split(' ')[0] || 'Coach'
         const coachLastName = data.lastName || name?.split(' ').slice(1).join(' ') || user.displayName?.split(' ').slice(1).join(' ') || ''
-        const teamName = data.teamName || 'votre équipe'
         
-        console.log(`📧 Envoi email coach à ${email} pour ${teamName}`)
+        // Récupérer le nom de l'équipe avec plusieurs fallbacks
+        let teamName = data.teamName || null
+        
+        // Si teamName n'existe pas ou est vide, chercher dans teams
+        if (!teamName && data.teamId) {
+          try {
+            const teamDoc = await adminDb.collection('teams').doc(data.teamId).get()
+            if (teamDoc.exists) {
+              teamName = teamDoc.data()?.name || null
+              console.log(`✅ Nom d'équipe récupéré depuis teams: ${teamName}`)
+            } else {
+              // Si pas dans teams, chercher dans teamRegistrations
+              const regDoc = await adminDb.collection('teamRegistrations').doc(data.teamId).get()
+              if (regDoc.exists) {
+                teamName = regDoc.data()?.teamName || null
+                console.log(`✅ Nom d'équipe récupéré depuis teamRegistrations: ${teamName}`)
+              }
+            }
+          } catch (error) {
+            console.error('❌ Erreur lors de la récupération du nom d\'équipe:', error)
+          }
+        }
+        
+        // Fallback final
+        if (!teamName || teamName === 'votre équipe') {
+          teamName = 'ComeBac League'
+          console.log(`⚠️ Nom d'équipe non trouvé, utilisation du fallback: ${teamName}`)
+        } else {
+          // Si on a trouvé un nom d'équipe valide et qu'il n'était pas dans coachAccounts, le mettre à jour
+          if (data.teamName !== teamName && data.teamId) {
+            try {
+              await adminDb.collection('coachAccounts').doc(coachDoc.id).update({
+                teamName: teamName
+              })
+              console.log(`✅ Nom d'équipe mis à jour dans coachAccounts: ${teamName}`)
+            } catch (updateError) {
+              console.error('❌ Erreur lors de la mise à jour du nom d\'équipe:', updateError)
+            }
+          }
+        }
+        
+        console.log(`📧 Envoi email coach à ${email} pour l'équipe "${teamName}"`)
         emailResult = await sendCoachWelcomeEmail({
           email,
           firstName: coachFirstName,
