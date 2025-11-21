@@ -4,7 +4,7 @@ import type React from "react";
 import { useState, useEffect } from "react";
 // Removed old imports - using API endpoints instead
 import type { Team, Player } from "@/lib/types";
-import { Plus, Trash2, Edit2, AlertCircle, Users, Crown, UserCheck, Mail, Phone, Calendar, X, Save } from "lucide-react";
+import { Plus, Trash2, Edit2, AlertCircle, Users, Crown, UserCheck, Mail, Phone, Calendar, X, Save, Search, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import CaptainsCoachesManager from "@/components/admin/captains-coaches-manager";
 
 const POSITIONS = ["Gardien", "Défenseur", "Milieu", "Attaquant"] as const;
@@ -125,6 +125,23 @@ export default function PlayersTab() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<{ type: 'coach' | 'actingCoach' | 'captain' | 'player'; data: any } | null>(null);
   const [showCaptainsCoachesModal, setShowCaptainsCoachesModal] = useState(false);
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [searchFilters, setSearchFilters] = useState({
+    searchTerm: '',
+    position: '',
+    teamId: '',
+    schoolName: '',
+    teamGrade: '',
+    status: '' as 'active' | 'inactive' | 'neverLoggedIn' | '',
+    minGoals: '',
+    minAssists: '',
+    minMatches: '',
+    sortBy: 'name' as 'goals' | 'assists' | 'matches' | 'name' | 'team',
+    sortOrder: 'asc' as 'asc' | 'desc'
+  });
+  const [searchResults, setSearchResults] = useState<Player[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [useSearchMode, setUseSearchMode] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",

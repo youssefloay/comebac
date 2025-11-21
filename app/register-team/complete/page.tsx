@@ -394,7 +394,8 @@ export default function RegisterTeamPage() {
 
       // Envoyer une notification à l'admin
       try {
-        await fetch('/api/notify-admin', {
+        console.log('📧 Envoi de la notification admin...')
+        const notifyResponse = await fetch('/api/notify-admin', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -405,8 +406,17 @@ export default function RegisterTeamPage() {
             playersCount: players.length
           })
         })
+        
+        const notifyData = await notifyResponse.json()
+        
+        if (notifyResponse.ok && notifyData.success) {
+          console.log('✅ Notification admin envoyée avec succès')
+        } else {
+          console.error('❌ Échec notification admin:', notifyData.error || 'Erreur inconnue')
+          console.error('❌ Réponse complète:', notifyData)
+        }
       } catch (notifError) {
-        console.error('Erreur notification admin:', notifError)
+        console.error('❌ Erreur lors de l\'envoi de la notification admin:', notifError)
         // On continue même si la notification échoue
       }
 

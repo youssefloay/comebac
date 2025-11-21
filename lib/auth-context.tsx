@@ -519,8 +519,80 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resetPassword = async (email: string) => {
     try {
+      // Option 1: Utiliser Firebase (envoie depuis noreply@comebac.com)
+      // await sendPasswordResetEmail(auth, email, getPasswordResetActionCodeSettings(email))
+      
+      // Option 2: Utiliser Resend avec contact@comebac.com (si vous préférez)
+      // Décommentez cette partie et commentez la ligne ci-dessus si vous voulez utiliser Resend
+      const { adminAuth } = await import('@/lib/firebase-admin')
+      const { getPasswordResetActionCodeSettings } = await import('@/lib/password-reset')
+      const { sendEmail } = await import('@/lib/email-service')
+      
+      if (adminAuth) {
+        const resetLink = await adminAuth.generatePasswordResetLink(email, getPasswordResetActionCodeSettings(email))
+        
+        // Envoyer via Resend avec contact@comebac.com
+        const emailResult = await sendEmail({
+          to: email,
+          subject: '🔐 Réinitialisation de votre mot de passe - ComeBac League',
+          html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
+                .button { display: inline-block; background: #10b981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+                .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>🔐 Réinitialisation de mot de passe</h1>
+                </div>
+                <div class="content">
+                  <h2>Bonjour,</h2>
+                  <p>Vous avez demandé la réinitialisation de votre mot de passe pour votre compte ComeBac League.</p>
+                  
+                  <p>Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe:</p>
+                  
+                  <div style="text-align: center;">
+                    <a href="${resetLink}" class="button">Réinitialiser mon mot de passe</a>
+                  </div>
+                  
+                  <p><strong>Important:</strong></p>
+                  <ul>
+                    <li>Ce lien est valable pendant 1 heure</li>
+                    <li>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email</li>
+                    <li>Votre mot de passe actuel reste valide jusqu'à ce que vous en créiez un nouveau</li>
+                  </ul>
+                  
+                  <p>Si le bouton ne fonctionne pas, copiez-collez ce lien dans votre navigateur:</p>
+                  <p style="word-break: break-all; color: #3b82f6; font-size: 12px;">${resetLink}</p>
+                </div>
+                <div class="footer">
+                  <p>ComeBac League - Système de Gestion</p>
+                  <p>Cet email a été envoyé depuis contact@comebac.com</p>
+                </div>
+              </div>
+            </body>
+            </html>
+          `
+        })
+        
+        if (emailResult.success) {
+          console.log('Email de réinitialisation envoyé via Resend à:', email)
+          return
+        }
+      }
+      
+      // Fallback: utiliser Firebase si Resend échoue
       await sendPasswordResetEmail(auth, email, getPasswordResetActionCodeSettings(email))
-      console.log('Email de réinitialisation envoyé à:', email)
+      console.log('Email de réinitialisation envoyé via Firebase à:', email)
     } catch (error) {
       console.error('Error sending password reset email:', error)
       throw error

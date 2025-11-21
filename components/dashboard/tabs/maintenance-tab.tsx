@@ -19,6 +19,7 @@ export default function MaintenanceTab() {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [teams, setTeams] = useState<Team[]>([])
   const [showNotificationModal, setShowNotificationModal] = useState(false)
+  const [backupLoading, setBackupLoading] = useState(false)
 
   useEffect(() => {
     loadTeams()
@@ -1022,24 +1023,24 @@ export default function MaintenanceTab() {
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <span className="text-2xl">📤</span>
               </div>
-              <div>
+          <div>
                 <h3 className="font-bold text-gray-900">Export Équipes</h3>
                 <p className="text-xs text-gray-600">Format CSV</p>
-              </div>
-            </div>
+          </div>
+        </div>
             <p className="text-sm text-gray-600 mb-4">
               Télécharger toutes les équipes au format CSV
             </p>
-            <button
-              onClick={() => {
+              <button
+                onClick={() => {
                 window.location.href = '/api/admin/export/teams'
-              }}
+                }}
               className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm"
-            >
+              >
               Exporter CSV
-            </button>
-          </div>
-
+              </button>
+            </div>
+            
           {/* Export Joueurs */}
           <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-blue-300 transition-colors">
             <div className="flex items-center gap-3 mb-4">
@@ -1062,7 +1063,7 @@ export default function MaintenanceTab() {
             >
               Exporter CSV
             </button>
-          </div>
+            </div>
 
           {/* Export Matchs */}
           <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-purple-300 transition-colors">
@@ -1070,22 +1071,22 @@ export default function MaintenanceTab() {
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <span className="text-2xl">📤</span>
               </div>
-              <div>
+                  <div>
                 <h3 className="font-bold text-gray-900">Export Matchs</h3>
                 <p className="text-xs text-gray-600">Format CSV</p>
-              </div>
+                          </div>
             </div>
             <p className="text-sm text-gray-600 mb-4">
               Télécharger tous les matchs au format CSV
             </p>
-            <button
+                            <button
               onClick={() => {
                 window.location.href = '/api/admin/export/matches'
               }}
               className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium text-sm"
             >
               Exporter CSV
-            </button>
+                            </button>
           </div>
 
           {/* Export Résultats */}
@@ -1102,27 +1103,27 @@ export default function MaintenanceTab() {
             <p className="text-sm text-gray-600 mb-4">
               Télécharger tous les résultats au format CSV
             </p>
-            <button
+                            <button
               onClick={() => {
                 window.location.href = '/api/admin/export/results'
               }}
               className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium text-sm"
             >
               Exporter CSV
-            </button>
-          </div>
+                            </button>
+                          </div>
 
           {/* Export Complet */}
           <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-red-300 transition-colors">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
                 <span className="text-2xl">💾</span>
-              </div>
+                        </div>
               <div>
                 <h3 className="font-bold text-gray-900">Backup Complet</h3>
                 <p className="text-xs text-gray-600">Format JSON</p>
-              </div>
-            </div>
+                    </div>
+                  </div>
             <p className="text-sm text-gray-600 mb-4">
               Télécharger toutes les données (équipes, joueurs, matchs, résultats) en JSON
             </p>
@@ -1136,6 +1137,109 @@ export default function MaintenanceTab() {
             </button>
           </div>
 
+          {/* Backup Automatique avec Upload */}
+          <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-indigo-300 transition-colors">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">🔄</span>
+              </div>
+                  <div>
+                <h3 className="font-bold text-gray-900">Backup Automatique</h3>
+                <p className="text-xs text-gray-600">100% Gratuit</p>
+                          </div>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Créer un backup complet et le sauvegarder automatiquement (local ou email)
+            </p>
+            <div className="space-y-2">
+                            <button
+                              onClick={async () => {
+                  setBackupLoading(true)
+                  setMessage(null)
+                  try {
+                    const response = await fetch('/api/admin/backup', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ destination: 'local', upload: true })
+                    })
+                    const data = await response.json()
+                    if (response.ok) {
+                      setMessage({ 
+                        type: 'success', 
+                        text: `✅ Backup créé et sauvegardé localement!\n${data.backup?.sizeMB} MB - ${data.backup?.totalDocuments} documents` 
+                      })
+                    } else {
+                      setMessage({ type: 'error', text: data.error || 'Erreur lors du backup' })
+                                  }
+                                } catch (error) {
+                    setMessage({ type: 'error', text: 'Erreur de connexion' })
+                                } finally {
+                    setBackupLoading(false)
+                  }
+                }}
+                disabled={backupLoading}
+                className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {backupLoading ? (
+                  <>
+                    <Loader className="w-4 h-4 animate-spin" />
+                    Backup en cours...
+                  </>
+                ) : (
+                  '💾 Sauvegarder Localement'
+                )}
+                            </button>
+                            <button
+                              onClick={async () => {
+                  setBackupLoading(true)
+                  setMessage(null)
+                                try {
+                    const response = await fetch('/api/admin/backup', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ destination: 'email', upload: true })
+                                  })
+                                  const data = await response.json()
+                                  if (response.ok) {
+                      setMessage({ 
+                        type: 'success', 
+                        text: `✅ Backup envoyé par email!\nVérifiez votre boîte mail.` 
+                      })
+                                  } else {
+                      setMessage({ type: 'error', text: data.error || 'Erreur lors de l\'envoi' })
+                                  }
+                                } catch (error) {
+                    setMessage({ type: 'error', text: 'Erreur de connexion' })
+                                } finally {
+                    setBackupLoading(false)
+                  }
+                }}
+                disabled={backupLoading}
+                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {backupLoading ? (
+                  <>
+                    <Loader className="w-4 h-4 animate-spin" />
+                    Envoi en cours...
+                  </>
+                ) : (
+                  '📧 Envoyer par Email'
+                )}
+                  </button>
+                  <button
+                    onClick={() => {
+                  window.location.href = '/api/admin/backup'
+                }}
+                className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium text-sm"
+              >
+                📥 Télécharger Directement
+                  </button>
+                </div>
+            <p className="text-xs text-gray-500 mt-2">
+              💡 Tous les backups sont 100% gratuits
+                </p>
+              </div>
+
           {/* Import Joueurs */}
           <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-cyan-300 transition-colors">
             <div className="flex items-center gap-3 mb-4">
@@ -1146,11 +1250,11 @@ export default function MaintenanceTab() {
                 <h3 className="font-bold text-gray-900">Import Joueurs</h3>
                 <p className="text-xs text-gray-600">Format CSV</p>
               </div>
-            </div>
+                </div>
             <p className="text-sm text-gray-600 mb-4">
               Importer des joueurs depuis un fichier CSV
             </p>
-            <input
+                <input
               type="file"
               accept=".csv"
               onChange={async (e) => {
@@ -1159,17 +1263,17 @@ export default function MaintenanceTab() {
 
                 const formData = new FormData()
                 formData.append('file', file)
-
-                setLoading(true)
+                  
+                  setLoading(true)
                 setMessage(null)
-                try {
+                  try {
                   const response = await fetch('/api/admin/import/players', {
-                    method: 'POST',
+                        method: 'POST',
                     body: formData
-                  })
-
-                  const data = await response.json()
-                  if (response.ok) {
+                      })
+                      
+                      const data = await response.json()
+                      if (response.ok) {
                     let msg = `✅ Import réussi!\n`
                     msg += `${data.created} joueur(s) créé(s)\n`
                     msg += `${data.updated} joueur(s) mis à jour`
@@ -1180,13 +1284,13 @@ export default function MaintenanceTab() {
                       }
                     }
                     setMessage({ type: 'success', text: msg })
-                  } else {
+                    } else {
                     setMessage({ type: 'error', text: data.error || 'Erreur lors de l\'import' })
-                  }
-                } catch (error) {
+                    }
+                  } catch (error) {
                   setMessage({ type: 'error', text: 'Erreur de connexion' })
-                } finally {
-                  setLoading(false)
+                  } finally {
+                    setLoading(false)
                   // Reset input
                   e.target.value = ''
                 }
@@ -1212,8 +1316,8 @@ export default function MaintenanceTab() {
             </p>
           </div>
         </div>
-      </div>
-
+            </div>
+            
       {/* Avertissement */}
       <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
         <div className="flex items-start gap-3">
@@ -1223,9 +1327,9 @@ export default function MaintenanceTab() {
             <p className="text-sm text-orange-800">
               Ces outils modifient directement la base de données. Assurez-vous de comprendre ce que fait chaque outil avant de l'exécuter.
             </p>
+            </div>
           </div>
         </div>
-      </div>
 
       {/* Modal Notification personnalisée */}
       <CustomNotificationModal

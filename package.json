@@ -20,7 +20,8 @@
     "delete-test-notifications": "npx tsx scripts/delete-test-notifications.ts",
     "update-acting-coach-status": "npx tsx scripts/update-acting-coach-status.ts",
     "register-se7en-team": "npx tsx scripts/register-se7en-team.ts",
-    "update-se7en-team": "npx tsx scripts/update-se7en-team.ts"
+    "update-se7en-team": "npx tsx scripts/update-se7en-team.ts",
+    "backup:auto": "npx tsx scripts/backup-automatic.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -73,24 +73,35 @@ export async function POST(request: Request) {
       `
     }
 
+    // Récupérer l'email admin depuis les variables d'environnement ou utiliser la valeur par défaut
+    const adminEmail = process.env.ADMIN_EMAIL || 'contact@comebac.com'
+    
+    console.log('📧 Envoi notification admin à:', adminEmail)
+    console.log('📋 Détails inscription:', { teamName, schoolName, captainName, captainEmail, playersCount })
+
     // Envoyer l'email à l'admin
     const result = await sendEmail({
-      to: 'contact@comebac.com',
+      to: adminEmail,
       subject: emailContent.subject,
       html: emailContent.html
     })
 
     if (result.success) {
-      console.log('✅ Notification admin envoyée pour:', teamName)
+      console.log('✅ Notification admin envoyée avec succès pour:', teamName)
+      console.log('✅ Email ID:', result.data?.id)
       return NextResponse.json({ 
         success: true,
-        message: 'Notification envoyée'
+        message: 'Notification envoyée',
+        emailId: result.data?.id,
+        sentTo: adminEmail
       })
     } else {
       console.error('❌ Échec notification admin:', result.error)
+      console.error('❌ Détails erreur:', JSON.stringify(result, null, 2))
       return NextResponse.json({ 
         success: false,
-        error: 'Échec envoi notification'
+        error: result.error || 'Échec envoi notification',
+        details: result.error
       }, { status: 500 })
     }
   } catch (error) {
