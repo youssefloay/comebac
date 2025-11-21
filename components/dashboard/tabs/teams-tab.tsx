@@ -505,17 +505,17 @@ export default function TeamsTab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Gestion des Équipes</h2>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Gestion des Équipes</h2>
         <button
           onClick={() => {
             handleCancel()
             setShowForm(true)
           }}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition w-full sm:w-auto justify-center"
         >
           <Plus className="w-5 h-5" />
-          Nouvelle équipe
+          <span className="text-sm sm:text-base">Nouvelle équipe</span>
         </button>
       </div>
 
@@ -934,13 +934,13 @@ export default function TeamsTab() {
 
       {/* Team Details Modal */}
       {selectedTeam && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             {/* Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
-              <div className="flex items-center gap-4">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 sm:p-6 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                 <div
-                  className="w-16 h-16 rounded-lg flex items-center justify-center text-white font-bold text-2xl overflow-hidden"
+                  className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg flex items-center justify-center text-white font-bold text-xl sm:text-2xl overflow-hidden flex-shrink-0"
                   style={{ backgroundColor: selectedTeam.logo ? 'transparent' : selectedTeam.color }}
                 >
                   {selectedTeam.logo ? (
@@ -958,17 +958,17 @@ export default function TeamsTab() {
                     "⚽"
                   )}
                 </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{selectedTeam.name}</h2>
-                  <div className="flex items-center gap-4 mt-1">
-                    <p className="text-sm text-gray-600">Détails de l'équipe</p>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{selectedTeam.name}</h2>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1">
+                    <p className="text-xs sm:text-sm text-gray-600">Détails de l'équipe</p>
                     {(selectedTeam.schoolName || selectedTeam.school) && (
-                      <span className="text-sm text-gray-500">
+                      <span className="text-xs sm:text-sm text-gray-500 truncate">
                         • {(selectedTeam.schoolName || selectedTeam.school)}
                       </span>
                     )}
                     {selectedTeam.teamGrade && (
-                      <span className="text-sm text-gray-500">
+                      <span className="text-xs sm:text-sm text-gray-500">
                         • {selectedTeam.teamGrade}
                       </span>
                     )}
@@ -977,9 +977,9 @@ export default function TeamsTab() {
               </div>
               <button
                 onClick={closeTeamDetails}
-                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                className="p-2 hover:bg-gray-100 rounded-lg transition flex-shrink-0"
               >
-                <X className="w-6 h-6 text-gray-600" />
+                <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
               </button>
             </div>
 
@@ -1042,7 +1042,7 @@ export default function TeamsTab() {
                     <h3 className="text-lg font-semibold text-gray-900">Statistiques</h3>
                   </div>
                   {teamStats ? (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                       <div className="bg-blue-50 rounded-lg p-4">
                         <p className="text-sm text-gray-600">Matchs joués</p>
                         <p className="text-2xl font-bold text-blue-600">{teamStats.played}</p>
@@ -1108,7 +1108,7 @@ export default function TeamsTab() {
                     <h3 className="text-lg font-semibold text-gray-900">Joueurs ({teamPlayers.length})</h3>
                   </div>
                   {teamPlayers.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {teamPlayers.map((player: any) => (
                         <div key={player.id} className="bg-gray-50 rounded-lg p-4 relative">
                           {(player.isActingCoach) && (

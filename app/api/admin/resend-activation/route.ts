@@ -50,13 +50,18 @@ export async function POST(request: NextRequest) {
         }
       }
       const playerName = `${data.firstName || ''} ${data.lastName || ''}`.trim() || name || user.displayName || 'Joueur'
+      
+      console.log(`📧 Envoi email joueur à ${email} pour ${teamName}`)
       emailResult = await sendEmail(generateWelcomeEmail(playerName, teamName, resetLink, email))
+      
+      console.log(`📧 Résultat envoi email joueur:`, emailResult.success ? '✅ Succès' : `❌ Erreur: ${emailResult.error}`)
       
       // Enregistrer la date de dernière relance
       if (emailResult?.success || emailResult?.error === 'API key not configured') {
         await adminDb.collection('playerAccounts').doc(playerDoc.id).update({
           lastResendDate: new Date().toISOString()
         })
+        console.log(`✅ Date de relance enregistrée pour joueur ${email}`)
       }
     } else {
       const coachSnap = await adminDb
@@ -69,28 +74,37 @@ export async function POST(request: NextRequest) {
         const coachDoc = coachSnap.docs[0]
         const data = coachDoc.data() as any
         matchedType = 'coach'
-        await sendCoachWelcomeEmail({
+        const coachFirstName = data.firstName || name?.split(' ')[0] || user.displayName?.split(' ')[0] || 'Coach'
+        const coachLastName = data.lastName || name?.split(' ').slice(1).join(' ') || user.displayName?.split(' ').slice(1).join(' ') || ''
+        const teamName = data.teamName || 'votre équipe'
+        
+        console.log(`📧 Envoi email coach à ${email} pour ${teamName}`)
+        emailResult = await sendCoachWelcomeEmail({
           email,
-          firstName: data.firstName || name || user.displayName || 'Coach',
-          lastName: data.lastName || '',
-          teamName: data.teamName || 'votre équipe',
+          firstName: coachFirstName,
+          lastName: coachLastName,
+          teamName,
           resetLink
         })
-        emailResult = { success: true }
+        
+        console.log(`📧 Résultat envoi email coach:`, emailResult.success ? '✅ Succès' : `❌ Erreur: ${emailResult.error}`)
         
         // Enregistrer la date de dernière relance
-        if (emailResult.success) {
+        if (emailResult?.success || emailResult?.error === 'API key not configured') {
           await adminDb.collection('coachAccounts').doc(coachDoc.id).update({
             lastResendDate: new Date().toISOString()
           })
+          console.log(`✅ Date de relance enregistrée pour coach ${email}`)
         }
       }
     }
 
     if (!emailResult) {
       // Fallback sur un template générique mais avec logo
+      console.log(`⚠️ Aucun compte playerAccounts ou coachAccounts trouvé, utilisation du template générique`)
       const fallbackName = name || user.displayName || 'Joueur'
       emailResult = await sendEmail(generateWelcomeEmail(fallbackName, 'ComeBac League', resetLink, email))
+      console.log(`📧 Résultat envoi email générique:`, emailResult.success ? '✅ Succès' : `❌ Erreur: ${emailResult.error}`)
     }
 
     const isEmailSent = emailResult?.success || emailResult?.error === 'API key not configured'

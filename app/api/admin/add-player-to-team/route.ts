@@ -160,36 +160,42 @@ export async function POST(request: NextRequest) {
       console.log('✅ Document teams mis à jour avec les informations du coach')
     } else {
       // Créer compte joueur
-      const playerQuery = query(
-        collection(db, 'playerAccounts'),
-        where('email', '==', player.email)
-      )
-      const playerSnap = await getDocs(playerQuery)
-
-      if (playerSnap.empty) {
-        console.log('✅ Création compte joueur et envoi email...')
+      console.log(`📝 Traitement du joueur ${player.firstName} ${player.lastName} (${player.email})...`)
+      
+      try {
+        const { adminAuth } = await import('@/lib/firebase-admin')
+        const { adminDb } = await import('@/lib/firebase-admin')
         
+        // Vérifier si le compte playerAccounts existe déjà
+        const playerQuery = query(
+          collection(db, 'playerAccounts'),
+          where('email', '==', player.email)
+        )
+        const playerSnap = await getDocs(playerQuery)
+        
+        // Créer ou récupérer compte Firebase Auth
+        let userRecord
+        let isNewAuthAccount = false
         try {
-          const { adminAuth } = await import('@/lib/firebase-admin')
-          const { adminDb } = await import('@/lib/firebase-admin')
-          
-          // Créer compte Firebase Auth
-          let userRecord
-          try {
-            userRecord = await adminAuth.getUserByEmail(player.email)
-          } catch (error: any) {
-            if (error.code === 'auth/user-not-found') {
-              userRecord = await adminAuth.createUser({
-                email: player.email,
-                password: Math.random().toString(36).slice(-12) + 'Aa1!',
-                displayName: `${player.firstName} ${player.lastName}`
-              })
-            } else {
-              throw error
-            }
+          userRecord = await adminAuth.getUserByEmail(player.email)
+          console.log(`ℹ️ Compte Firebase Auth existant trouvé: ${userRecord.uid}`)
+        } catch (error: any) {
+          if (error.code === 'auth/user-not-found') {
+            userRecord = await adminAuth.createUser({
+              email: player.email,
+              password: Math.random().toString(36).slice(-12) + 'Aa1!',
+              displayName: `${player.firstName} ${player.lastName}`
+            })
+            isNewAuthAccount = true
+            console.log(`✅ Nouveau compte Firebase Auth créé: ${userRecord.uid}`)
+          } else {
+            throw error
           }
+        }
 
-          // Créer dans playerAccounts avec les infos de l'équipe
+        // Créer ou mettre à jour dans playerAccounts
+        if (playerSnap.empty) {
+          console.log('📝 Création du document playerAccounts...')
           await adminDb.collection('playerAccounts').doc(userRecord.uid).set({
             uid: userRecord.uid,
             email: player.email,
@@ -212,26 +218,65 @@ export async function POST(request: NextRequest) {
             createdAt: new Date(),
             updatedAt: new Date()
           })
+          console.log('✅ Document playerAccounts créé')
+        } else {
+          console.log('ℹ️ Document playerAccounts existe déjà, mise à jour...')
+          const existingDoc = playerSnap.docs[0]
+          await adminDb.collection('playerAccounts').doc(existingDoc.id).update({
+            teamId: teamId,
+            teamName: teamData.name,
+            schoolName: teamData.schoolName || teamData.school || '',
+            grade: teamData.teamGrade || '',
+            updatedAt: new Date()
+          })
+          console.log('✅ Document playerAccounts mis à jour')
+        }
 
-          // Générer lien de réinitialisation
+        // TOUJOURS envoyer l'email, même si le compte existe déjà
+        console.log('📧 Génération du lien de réinitialisation et envoi de l\'email...')
+        const resetLink = await adminAuth.generatePasswordResetLink(player.email, getPasswordResetActionCodeSettings(player.email))
+        console.log('✅ Lien de réinitialisation généré')
+
+        const playerName = `${player.firstName} ${player.lastName}`
+        const emailData = generateWelcomeEmail(playerName, teamData.name, resetLink, player.email)
+        const emailResult = await sendEmail(emailData)
+        
+        if (emailResult.success) {
+          console.log(`✅ Email envoyé avec succès à ${player.email}`)
+        } else {
+          console.error(`❌ Erreur lors de l'envoi de l'email à ${player.email}:`, emailResult.error)
+          // Ne pas faire échouer toute l'opération si l'email échoue
+        }
+      } catch (error: any) {
+        console.error('❌ Erreur lors de la création/mise à jour du compte joueur:', error)
+        // Essayer quand même d'envoyer l'email si possible
+        try {
+          const { adminAuth } = await import('@/lib/firebase-admin')
           const resetLink = await adminAuth.generatePasswordResetLink(player.email, getPasswordResetActionCodeSettings(player.email))
-
-          // Envoyer email avec le template professionnel
           const playerName = `${player.firstName} ${player.lastName}`
           const emailData = generateWelcomeEmail(playerName, teamData.name, resetLink, player.email)
           await sendEmail(emailData)
-          
-          console.log('✅ Email joueur envoyé avec le bon template')
+          console.log('✅ Email envoyé malgré l\'erreur précédente')
         } catch (emailError) {
-          console.error('❌ Erreur création compte joueur:', emailError)
-          throw emailError
+          console.error('❌ Impossible d\'envoyer l\'email:', emailError)
         }
+        throw error
       }
+    }
+
+    // Déterminer le message de retour
+    let emailStatus = ''
+    if (!isCoach) {
+      // Pour les joueurs, on a déjà loggé le statut de l'email dans le bloc try/catch
+      emailStatus = ' Email envoyé!'
+    } else {
+      // Pour les coaches, l'email est envoyé dans le bloc coach
+      emailStatus = ' Email envoyé!'
     }
 
     return NextResponse.json({ 
       success: true, 
-      message: `${isCoach ? 'Entraîneur' : 'Joueur'} ajouté avec succès et email envoyé!` 
+      message: `${isCoach ? 'Entraîneur' : 'Joueur'} ajouté avec succès.${emailStatus}` 
     })
 
   } catch (error: any) {
