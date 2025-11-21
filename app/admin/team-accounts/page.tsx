@@ -72,21 +72,28 @@ export default function TeamAccountsPage() {
   const sendActivationEmail = async (email: string, name: string) => {
     setSendingEmail(email)
     try {
+      console.log(`📧 Tentative d'envoi d'email à ${email}...`)
       const response = await fetch('/api/admin/resend-activation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, name })
       })
 
+      console.log(`📧 Réponse reçue:`, response.status, response.statusText)
+
       if (response.ok) {
+        const data = await response.json()
+        console.log(`✅ Email envoyé avec succès:`, data)
         alert(`✅ Email d'activation envoyé à ${email}`)
         await loadTeamAccounts() // Recharger pour afficher la nouvelle date de relance
       } else {
-        const data = await response.json()
-        alert(`❌ Erreur: ${data.error}`)
+        const data = await response.json().catch(() => ({ error: 'Erreur inconnue' }))
+        console.error(`❌ Erreur API:`, response.status, data)
+        alert(`❌ Erreur: ${data.error || `Erreur ${response.status}`}`)
       }
-    } catch (error) {
-      alert('❌ Erreur lors de l\'envoi')
+    } catch (error: any) {
+      console.error('❌ Erreur lors de l\'envoi:', error)
+      alert(`❌ Erreur lors de l'envoi: ${error.message || 'Erreur de connexion'}`)
     } finally {
       setSendingEmail(null)
     }
@@ -160,6 +167,7 @@ export default function TeamAccountsPage() {
 
     for (const player of targets) {
       try {
+        console.log(`📧 Relance pour ${player.name} (${player.email})...`)
         const response = await fetch('/api/admin/resend-activation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -167,11 +175,15 @@ export default function TeamAccountsPage() {
         })
 
         if (response.ok) {
+          console.log(`✅ Email envoyé à ${player.email}`)
           successCount++
         } else {
+          const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }))
+          console.error(`❌ Erreur pour ${player.email}:`, response.status, errorData)
           errorCount++
         }
-      } catch (error) {
+      } catch (error: any) {
+        console.error(`❌ Erreur réseau pour ${player.email}:`, error)
         errorCount++
       }
     }

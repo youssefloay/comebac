@@ -185,8 +185,13 @@ export async function POST(request: NextRequest) {
     const isEmailSent = emailResult?.success || emailResult?.error === 'API key not configured'
 
     if (!isEmailSent) {
+      console.error(`❌ Échec envoi email à ${email}:`, emailResult?.error)
       return NextResponse.json(
-        { error: 'Erreur lors de l\'envoi de l\'email' },
+        { 
+          success: false,
+          error: emailResult?.error || 'Erreur lors de l\'envoi de l\'email',
+          details: `Impossible d'envoyer l'email à ${email}`
+        },
         { status: 500 }
       )
     }
@@ -199,9 +204,17 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error: any) {
-    console.error('❌ Erreur:', error)
+    console.error('❌ Erreur dans resend-activation:', error)
+    console.error('❌ Stack:', error.stack)
+    console.error('❌ Email concerné:', email)
+    
+    // S'assurer de retourner toujours une réponse JSON valide
     return NextResponse.json(
-      { error: error.message || 'Erreur serveur' },
+      { 
+        success: false,
+        error: error.message || 'Erreur serveur',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     )
   }
