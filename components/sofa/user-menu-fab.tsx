@@ -19,7 +19,11 @@ import {
   Target,
   Award,
   Bell,
-  Activity
+  Activity,
+  Download,
+  Plus,
+  Share,
+  X
 } from 'lucide-react'
 
 interface PlayerData {
@@ -43,6 +47,30 @@ interface CoachData {
 
 export function UserMenuFAB() {
   const { user, userProfile, logout, isAdmin } = useAuth()
+  const [isIOS, setIsIOS] = useState(false)
+  const [isStandalone, setIsStandalone] = useState(false)
+  const [showIOSModal, setShowIOSModal] = useState(false)
+
+  useEffect(() => {
+    // Détecter iOS
+    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
+    setIsIOS(iOS)
+    
+    // Détecter si déjà installé
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone
+    setIsStandalone(standalone)
+  }, [])
+
+  const handleInstallClick = () => {
+    if (isIOS) {
+      setShowIOSModal(true)
+    } else {
+      // Pour Android/Desktop, déclencher le prompt natif
+      const event = new Event('beforeinstallprompt')
+      window.dispatchEvent(event)
+    }
+    setShowMenu(false)
+  }
   const [showMenu, setShowMenu] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [playerData, setPlayerData] = useState<PlayerData | null>(null)
@@ -428,6 +456,29 @@ export function UserMenuFAB() {
                   </Link>
                 </>
               )}
+
+              {/* Bouton d'installation PWA - Seulement si l'app n'est pas installée */}
+              {!isStandalone && (
+                <>
+                  <div className="my-2 border-t border-sofa-border"></div>
+                  <button
+                    onClick={handleInstallClick}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sofa-blue hover:bg-sofa-bg-hover rounded-lg transition-colors font-medium"
+                  >
+                    {isIOS ? (
+                      <>
+                        <Plus className="w-4 h-4" />
+                        Installer l'app
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4" />
+                        Installer l'app
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
               
               <div className="my-2 border-t border-sofa-border"></div>
               
@@ -478,6 +529,84 @@ export function UserMenuFAB() {
           </motion.div>
         )}
       </motion.button>
+
+      {/* Modal d'instructions iOS */}
+      <AnimatePresence>
+        {showIOSModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4"
+            onClick={() => setShowIOSModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-2xl font-bold text-gray-900">
+                  Installer ComeBac League
+                </h3>
+                <button
+                  onClick={() => setShowIOSModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4 mb-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                    1
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-gray-900 font-medium mb-1">
+                      Appuyez sur <Share className="w-4 h-4 inline" /> Partager
+                    </p>
+                    <p className="text-gray-600 text-sm">
+                      En bas de l'écran Safari
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                    2
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-gray-900 font-medium mb-1">
+                      Sélectionnez "Sur l'écran d'accueil"
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                    3
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-gray-900 font-medium mb-1">
+                      Appuyez sur "Ajouter"
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowIOSModal(false)}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition"
+              >
+                J'ai compris
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
