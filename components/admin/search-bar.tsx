@@ -20,6 +20,14 @@ export interface SearchResult {
   hasLoggedIn?: boolean
   uid?: string
   teamId?: string
+  // Informations supplémentaires pour les joueurs
+  nickname?: string
+  birthDate?: string
+  height?: number
+  foot?: string
+  tshirtSize?: string
+  grade?: string
+  schoolName?: string
 }
 
 interface SearchBarProps {
@@ -69,13 +77,17 @@ export function SearchBar({
       const team = item.teamName?.toLowerCase() || ''
       const position = item.position?.toLowerCase() || ''
       const role = item.role?.toLowerCase() || ''
+      const nickname = item.nickname?.toLowerCase() || ''
+      const phone = item.phone?.toLowerCase() || ''
       
       return (
         fullName.includes(searchLower) ||
         email.includes(searchLower) ||
         team.includes(searchLower) ||
         position.includes(searchLower) ||
-        role.includes(searchLower)
+        role.includes(searchLower) ||
+        nickname.includes(searchLower) ||
+        phone.includes(searchLower)
       )
     }).slice(0, maxSuggestions)
 
@@ -204,6 +216,11 @@ export function SearchBar({
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <span className="font-black text-black text-lg">
                     {result.firstName} {result.lastName}
+                    {result.type === 'player' && result.nickname && (
+                      <span className="text-sm text-blue-600 ml-2 font-normal">
+                        "{result.nickname}"
+                      </span>
+                    )}
                   </span>
                   {result.type === 'coach' ? (
                     <span className="px-2 py-0.5 bg-orange-500 text-white rounded text-xs font-bold">

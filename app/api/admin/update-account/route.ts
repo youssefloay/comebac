@@ -50,7 +50,35 @@ export async function POST(request: NextRequest) {
       updatedCollections.push('users')
     }
 
-    // 2. Mettre à jour dans userProfiles si l'utilisateur existe
+    // 2. Mettre à jour dans la collection players si c'est un joueur
+    if (accountType === 'player') {
+      const playersSnapshot = await adminDb.collection('players')
+        .where('email', '==', updates.email || '')
+        .get()
+      
+      if (!playersSnapshot.empty) {
+        playersSnapshot.forEach(doc => {
+          const playerUpdate: any = {
+            ...(updates.firstName && { firstName: updates.firstName }),
+            ...(updates.lastName && { lastName: updates.lastName }),
+            ...(updates.firstName && updates.lastName && { name: `${updates.firstName} ${updates.lastName}` }),
+            ...(updates.email && { email: updates.email }),
+            ...(updates.phone && { phone: updates.phone }),
+            ...(updates.position && { position: updates.position }),
+            ...(updates.jerseyNumber !== undefined && { number: updates.jerseyNumber, jerseyNumber: updates.jerseyNumber }),
+            ...(updates.nickname !== undefined && { nickname: updates.nickname || '' }),
+            ...(updates.birthDate !== undefined && { birthDate: updates.birthDate }),
+            ...(updates.height !== undefined && { height: updates.height })
+          }
+          if (Object.keys(playerUpdate).length > 0) {
+            batch.update(doc.ref, playerUpdate)
+          }
+        })
+        updatedCollections.push('players')
+      }
+    }
+
+    // 3. Mettre à jour dans userProfiles si l'utilisateur existe
     if (uid) {
       const profilesSnapshot = await adminDb.collection('userProfiles')
         .where('uid', '==', uid)
@@ -68,7 +96,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3. Mettre à jour dans l'équipe si teamId existe
+    // 4. Mettre à jour dans l'équipe si teamId existe
     if (teamId) {
       const teamRef = adminDb.collection('teams').doc(teamId)
       const teamDoc = await teamRef.get()
@@ -112,7 +140,7 @@ export async function POST(request: NextRequest) {
 
         // Mettre à jour le joueur dans l'équipe
         if (accountType === 'player' && teamData?.players) {
-          const playerIndex = teamData.players.findIndex((p: any) => p.id === accountId)
+          const playerIndex = teamData.players.findIndex((p: any) => p.id === accountId || p.email === updates.email)
           if (playerIndex !== -1) {
             const updatedPlayers = [...teamData.players]
             updatedPlayers[playerIndex] = {
@@ -121,7 +149,8 @@ export async function POST(request: NextRequest) {
               ...(updates.lastName && { lastName: updates.lastName }),
               ...(updates.email && { email: updates.email }),
               ...(updates.position && { position: updates.position }),
-              ...(updates.jerseyNumber !== undefined && { jerseyNumber: updates.jerseyNumber })
+              ...(updates.jerseyNumber !== undefined && { jerseyNumber: updates.jerseyNumber }),
+              ...(updates.nickname !== undefined && { nickname: updates.nickname || '' })
             }
             batch.update(teamRef, { players: updatedPlayers })
             updatedCollections.push('teams (players)')
@@ -130,7 +159,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 4. Mettre à jour dans toutes les équipes si le nom d'équipe a changé
+    // 5. Mettre à jour dans toutes les équipes si le nom d'équipe a changé
     if (updates.teamName) {
       const teamsSnapshot = await adminDb.collection('teams')
         .where('name', '==', updates.teamName)
@@ -172,7 +201,7 @@ export async function POST(request: NextRequest) {
           
           // Mettre à jour les joueurs
           if (accountType === 'player' && teamData.players) {
-            const playerIndex = teamData.players.findIndex((p: any) => p.id === accountId)
+            const playerIndex = teamData.players.findIndex((p: any) => p.id === accountId || p.email === updates.email)
             if (playerIndex !== -1) {
               const updatedPlayers = [...teamData.players]
               updatedPlayers[playerIndex] = {
@@ -181,7 +210,8 @@ export async function POST(request: NextRequest) {
                 ...(updates.lastName && { lastName: updates.lastName }),
                 ...(updates.email && { email: updates.email }),
                 ...(updates.position && { position: updates.position }),
-                ...(updates.jerseyNumber !== undefined && { jerseyNumber: updates.jerseyNumber })
+                ...(updates.jerseyNumber !== undefined && { jerseyNumber: updates.jerseyNumber }),
+                ...(updates.nickname !== undefined && { nickname: updates.nickname || '' })
               }
               batch.update(doc.ref, { players: updatedPlayers })
             }
@@ -190,7 +220,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 5. Mettre à jour dans les compositions (lineups)
+    // 6. Mettre à jour dans les compositions (lineups)
     if (accountType === 'player') {
       const lineupsSnapshot = await adminDb.collection('lineups').get()
       
@@ -245,7 +275,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 6. Mettre à jour dans les résultats (results)
+    // 7. Mettre à jour dans les résultats (results)
     const resultsSnapshot = await adminDb.collection('results').get()
     
     resultsSnapshot.forEach(doc => {
@@ -291,7 +321,7 @@ export async function POST(request: NextRequest) {
       updatedCollections.push('results')
     }
 
-    // 7. Mettre à jour dans les statistiques (statistics)
+    // 8. Mettre à jour dans les statistiques (statistics)
     if (accountType === 'player') {
       const statsSnapshot = await adminDb.collection('statistics')
         .where('playerId', '==', accountId)

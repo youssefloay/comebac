@@ -59,7 +59,16 @@ export default function AdminSearchPage() {
           createdAt: data.createdAt,
           lastLogin: data.lastLogin,
           hasLoggedIn: !!data.lastLogin,
-          emailVerified: true
+          emailVerified: true,
+          // Informations supplémentaires
+          nickname: data.nickname || '',
+          phone: data.phone || '',
+          birthDate: data.birthDate || '',
+          height: data.height || 0,
+          foot: data.foot || '',
+          tshirtSize: data.tshirtSize || '',
+          grade: data.grade || '',
+          schoolName: data.schoolName || ''
         }
       }) as SearchResult[]
 
@@ -249,6 +258,11 @@ export default function AdminSearchPage() {
                   {(isEditing ? editedData.firstName?.[0] : selectedResult.firstName[0])}
                   {(isEditing ? editedData.lastName?.[0] : selectedResult.lastName[0])}
                 </div>
+                {selectedResult.type === 'player' && (isEditing ? editedData.nickname : selectedResult.nickname) && (
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-blue-600 text-white text-xs font-bold rounded-full whitespace-nowrap">
+                    {(isEditing ? editedData.nickname : selectedResult.nickname)}
+                  </div>
+                )}
                 {selectedResult.type === 'player' && (isEditing ? editedData.jerseyNumber : selectedResult.jerseyNumber) && (
                   <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm border-2 border-white">
                     {isEditing ? editedData.jerseyNumber : selectedResult.jerseyNumber}
@@ -263,6 +277,11 @@ export default function AdminSearchPage() {
                     {!isEditing ? (
                       <h2 className="text-2xl font-bold text-gray-900">
                         {selectedResult.firstName} {selectedResult.lastName}
+                        {selectedResult.type === 'player' && selectedResult.nickname && (
+                          <span className="text-lg text-blue-600 ml-2 font-normal">
+                            "{selectedResult.nickname}"
+                          </span>
+                        )}
                       </h2>
                     ) : (
                       <div className="flex gap-2">
@@ -372,6 +391,25 @@ export default function AdminSearchPage() {
                     </div>
                   )}
 
+                  {/* Surnom (joueurs uniquement) */}
+                  {selectedResult.type === 'player' && (
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-700 w-32">Surnom:</span>
+                      {!isEditing ? (
+                        <span className="text-gray-900">{selectedResult.nickname || 'Non défini'}</span>
+                      ) : (
+                        <input
+                          type="text"
+                          value={editedData.nickname || ''}
+                          onChange={(e) => setEditedData({ ...editedData, nickname: e.target.value })}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                          placeholder="Surnom"
+                          maxLength={15}
+                        />
+                      )}
+                    </div>
+                  )}
+
                   {/* Numéro de maillot (joueurs uniquement) */}
                   {selectedResult.type === 'player' && (
                     <div className="flex items-center gap-2">
@@ -387,6 +425,145 @@ export default function AdminSearchPage() {
                           onChange={(e) => setEditedData({ ...editedData, jerseyNumber: parseInt(e.target.value) || undefined })}
                           className="w-24 px-3 py-2 border border-gray-300 rounded-lg"
                           placeholder="N°"
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Téléphone */}
+                  {(selectedResult.phone || isEditing) && (
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-700 w-32">Téléphone:</span>
+                      {!isEditing ? (
+                        <span className="text-gray-900">{selectedResult.phone || 'Non renseigné'}</span>
+                      ) : (
+                        <input
+                          type="tel"
+                          value={editedData.phone || ''}
+                          onChange={(e) => setEditedData({ ...editedData, phone: e.target.value })}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                          placeholder="Numéro de téléphone"
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Date de naissance (joueurs uniquement) */}
+                  {selectedResult.type === 'player' && (
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-700 w-32">Date de naissance:</span>
+                      {!isEditing ? (
+                        <span className="text-gray-900">{selectedResult.birthDate || 'Non renseignée'}</span>
+                      ) : (
+                        <input
+                          type="date"
+                          value={editedData.birthDate || ''}
+                          onChange={(e) => setEditedData({ ...editedData, birthDate: e.target.value })}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Taille (joueurs uniquement) */}
+                  {selectedResult.type === 'player' && (
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-700 w-32">Taille (cm):</span>
+                      {!isEditing ? (
+                        <span className="text-gray-900">{selectedResult.height ? `${selectedResult.height} cm` : 'Non renseignée'}</span>
+                      ) : (
+                        <input
+                          type="number"
+                          min="150"
+                          max="220"
+                          value={editedData.height || ''}
+                          onChange={(e) => setEditedData({ ...editedData, height: parseInt(e.target.value) || undefined })}
+                          className="w-32 px-3 py-2 border border-gray-300 rounded-lg"
+                          placeholder="Taille en cm"
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Pied (joueurs uniquement) */}
+                  {selectedResult.type === 'player' && (
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-700 w-32">Pied:</span>
+                      {!isEditing ? (
+                        <span className="text-gray-900">{selectedResult.foot || 'Non renseigné'}</span>
+                      ) : (
+                        <select
+                          value={editedData.foot || ''}
+                          onChange={(e) => setEditedData({ ...editedData, foot: e.target.value })}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                        >
+                          <option value="">Sélectionner</option>
+                          <option value="Droitier">Droitier</option>
+                          <option value="Gaucher">Gaucher</option>
+                          <option value="Ambidextre">Ambidextre</option>
+                        </select>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Taille de t-shirt (joueurs uniquement) */}
+                  {selectedResult.type === 'player' && (
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-700 w-32">Taille t-shirt:</span>
+                      {!isEditing ? (
+                        <span className="text-gray-900">{selectedResult.tshirtSize || 'Non renseignée'}</span>
+                      ) : (
+                        <select
+                          value={editedData.tshirtSize || ''}
+                          onChange={(e) => setEditedData({ ...editedData, tshirtSize: e.target.value })}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                        >
+                          <option value="">Sélectionner</option>
+                          <option value="XS">XS</option>
+                          <option value="S">S</option>
+                          <option value="M">M</option>
+                          <option value="L">L</option>
+                          <option value="XL">XL</option>
+                          <option value="XXL">XXL</option>
+                        </select>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Classe (joueurs uniquement) */}
+                  {selectedResult.type === 'player' && (
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-700 w-32">Classe:</span>
+                      {!isEditing ? (
+                        <span className="text-gray-900">{selectedResult.grade || 'Non renseignée'}</span>
+                      ) : (
+                        <select
+                          value={editedData.grade || ''}
+                          onChange={(e) => setEditedData({ ...editedData, grade: e.target.value })}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                        >
+                          <option value="">Sélectionner</option>
+                          <option value="1ère">1ère</option>
+                          <option value="Terminale">Terminale</option>
+                          <option value="Autre">Autre</option>
+                        </select>
+                      )}
+                    </div>
+                  )}
+
+                  {/* École (joueurs uniquement) */}
+                  {selectedResult.type === 'player' && selectedResult.schoolName && (
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-700 w-32">École:</span>
+                      {!isEditing ? (
+                        <span className="text-gray-900">{selectedResult.schoolName}</span>
+                      ) : (
+                        <input
+                          type="text"
+                          value={editedData.schoolName || ''}
+                          onChange={(e) => setEditedData({ ...editedData, schoolName: e.target.value })}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                          placeholder="Nom de l'école"
                         />
                       )}
                     </div>

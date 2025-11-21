@@ -176,8 +176,37 @@ export default function CoachTeamPage() {
           position: updatedData.position,
           number: updatedData.jerseyNumber,
           birthDate: updatedData.birthDate,
-          height: updatedData.height
+          height: updatedData.height,
+          nickname: updatedData.nickname
         })
+      }
+
+      // 2b. Synchroniser avec la collection teams
+      if (editingPlayer.teamId) {
+        const teamDoc = await getDoc(doc(db, 'teams', editingPlayer.teamId))
+        if (teamDoc.exists()) {
+          const teamData = teamDoc.data()
+          if (teamData.players && Array.isArray(teamData.players)) {
+            const updatedPlayers = teamData.players.map((p: any) => {
+              if (p.email === editingPlayer.email || p.id === editingPlayer.id) {
+                return {
+                  ...p,
+                  firstName: updatedData.firstName,
+                  lastName: updatedData.lastName,
+                  nickname: updatedData.nickname,
+                  email: updatedData.email,
+                  phone: updatedData.phone,
+                  position: updatedData.position,
+                  jerseyNumber: updatedData.jerseyNumber
+                }
+              }
+              return p
+            })
+            await updateDoc(doc(db, 'teams', editingPlayer.teamId), {
+              players: updatedPlayers
+            })
+          }
+        }
       }
 
       // 3. Synchroniser avec teamRegistrations

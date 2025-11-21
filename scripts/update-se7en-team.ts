@@ -186,7 +186,7 @@ async function main() {
       {
         firstName: 'Ali',
         lastName: 'Karim',
-        nickname: 'Kokobos',
+        nickname: 'Koko',
         email: 'eliali@gmail.com',
         phone: '01003290865',
         birthDate: '2008-08-15',

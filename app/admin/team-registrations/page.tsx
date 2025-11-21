@@ -226,6 +226,24 @@ export default function TeamRegistrationsPage() {
             }
           }
           
+          // Mettre à jour aussi les joueurs dans l'équipe pour synchroniser le nickname
+          const currentTeamData = teamDoc.data()
+          if (currentTeamData.players && Array.isArray(currentTeamData.players)) {
+            const updatedTeamPlayers = currentTeamData.players.map((teamPlayer: any) => {
+              const matchingPlayer = editedRegistration.players.find((p: any) => p.email === teamPlayer.email)
+              if (matchingPlayer) {
+                return {
+                  ...teamPlayer,
+                  nickname: matchingPlayer.nickname || '',
+                  firstName: matchingPlayer.firstName,
+                  lastName: matchingPlayer.lastName
+                }
+              }
+              return teamPlayer
+            })
+            teamUpdateData.players = updatedTeamPlayers
+          }
+
           await updateDoc(doc(db, 'teams', teamDoc.id), teamUpdateData)
 
           // Récupérer les joueurs existants de cette équipe
