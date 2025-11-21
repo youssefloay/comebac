@@ -5,6 +5,7 @@ export interface Team {
   color: string
   school?: string // Nom de l'école/établissement
   schoolName?: string // Alias pour school (pour compatibilité)
+  teamGrade?: string // Classe/Niveau (ex: "1ère", "Terminale")
   coach?: {
     firstName: string
     lastName: string

@@ -51,6 +51,8 @@ export default function TeamsTab() {
     name: "", 
     logo: "", 
     color: "#10b981",
+    schoolName: "",
+    teamGrade: "",
     coach: {
       firstName: "",
       lastName: "",
@@ -60,6 +62,8 @@ export default function TeamsTab() {
     }
   })
   const [showCoachForm, setShowCoachForm] = useState(false)
+  const [customGrade, setCustomGrade] = useState("")
+  const [isCustomGrade, setIsCustomGrade] = useState(false)
   const [loading, setLoading] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -161,6 +165,9 @@ export default function TeamsTab() {
             name: formData.name,
             logo: formData.logo,
             color: formData.color,
+            schoolName: formData.schoolName,
+            school: formData.schoolName, // Pour compatibilité
+            teamGrade: formData.teamGrade,
             coach: coachData,
           })
         })
@@ -176,6 +183,9 @@ export default function TeamsTab() {
             name: formData.name,
             logo: formData.logo,
             color: formData.color,
+            schoolName: formData.schoolName,
+            school: formData.schoolName, // Pour compatibilité
+            teamGrade: formData.teamGrade,
             coach: coachData,
           })
         })
@@ -188,6 +198,8 @@ export default function TeamsTab() {
         name: "", 
         logo: "", 
         color: "#10b981",
+        schoolName: "",
+        teamGrade: "",
         coach: {
           firstName: "",
           lastName: "",
@@ -196,6 +208,8 @@ export default function TeamsTab() {
           phone: ""
         }
       })
+      setCustomGrade("")
+      setIsCustomGrade(false)
       setShowForm(false)
       setShowCoachForm(false)
       setEditingId(null)
@@ -267,10 +281,14 @@ export default function TeamsTab() {
   }
 
   const handleEdit = (team: Team) => {
+    const grade = team.teamGrade || ""
+    const isCustom = grade && !["1ère", "Terminale"].includes(grade)
     setFormData({ 
       name: team.name, 
-      logo: team.logo, 
-      color: team.color,
+      logo: team.logo || "", 
+      color: team.color || "#10b981",
+      schoolName: team.schoolName || team.school || "",
+      teamGrade: grade,
       coach: team.coach || {
         firstName: "",
         lastName: "",
@@ -279,6 +297,8 @@ export default function TeamsTab() {
         phone: ""
       }
     })
+    setCustomGrade(isCustom ? grade : "")
+    setIsCustomGrade(!!isCustom)
     setShowCoachForm(!!team.coach)
     setEditingId(team.id)
     setShowForm(true)
@@ -289,10 +309,14 @@ export default function TeamsTab() {
     setShowForm(false)
     setEditingId(null)
     setShowCoachForm(false)
+    setCustomGrade("")
+    setIsCustomGrade(false)
     setFormData({ 
       name: "", 
       logo: "", 
       color: "#10b981",
+      schoolName: "",
+      teamGrade: "",
       coach: {
         firstName: "",
         lastName: "",
@@ -514,7 +538,7 @@ export default function TeamsTab() {
             {/* Team Info */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations de l'équipe</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Nom de l'équipe *
@@ -527,6 +551,60 @@ export default function TeamsTab() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     required
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    École
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Lycée Français du Caire..."
+                    value={formData.schoolName}
+                    onChange={(e) => setFormData({ ...formData, schoolName: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Classe
+                  </label>
+                  <select
+                    value={formData.teamGrade && ["1ère", "Terminale"].includes(formData.teamGrade) ? formData.teamGrade : (isCustomGrade || (formData.teamGrade && !["1ère", "Terminale"].includes(formData.teamGrade)) ? "Autre" : "")}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      if (value === "Autre") {
+                        setIsCustomGrade(true)
+                        setFormData({ ...formData, teamGrade: customGrade || "" })
+                      } else if (value === "") {
+                        setIsCustomGrade(false)
+                        setFormData({ ...formData, teamGrade: "" })
+                        setCustomGrade("")
+                      } else {
+                        setIsCustomGrade(false)
+                        setFormData({ ...formData, teamGrade: value })
+                        setCustomGrade("")
+                      }
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  >
+                    <option value="">Sélectionner une classe</option>
+                    <option value="1ère">1ère</option>
+                    <option value="Terminale">Terminale</option>
+                    <option value="Autre">Autre</option>
+                  </select>
+                  {isCustomGrade && (
+                    <input
+                      type="text"
+                      placeholder="Précisez la classe..."
+                      value={customGrade || formData.teamGrade || ""}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        setCustomGrade(value)
+                        setFormData({ ...formData, teamGrade: value })
+                      }}
+                      className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -564,18 +642,65 @@ export default function TeamsTab() {
                     </p>
                   </div>
                 </div>
-                <div>
+                <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Couleur de l'équipe
                   </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={formData.color}
-                      onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                      className="px-4 py-2 border border-gray-300 rounded-lg cursor-pointer h-10"
-                    />
-                    <span className="text-sm text-gray-600">{formData.color}</span>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <div
+                          className="w-16 h-16 rounded-lg border-2 border-gray-300 shadow-md hover:shadow-lg transition-shadow pointer-events-none"
+                          style={{ backgroundColor: formData.color }}
+                        />
+                        <input
+                          type="color"
+                          value={formData.color}
+                          onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          value={formData.color}
+                          onChange={(e) => {
+                            const color = e.target.value
+                            if (/^#[0-9A-Fa-f]{6}$/.test(color)) {
+                              setFormData({ ...formData, color })
+                            }
+                          }}
+                          placeholder="#10b981"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Format hexadécimal (#RRGGBB)</p>
+                      </div>
+                    </div>
+                    {/* Palette de couleurs prédéfinies */}
+                    <div>
+                      <p className="text-xs text-gray-600 mb-2">Couleurs prédéfinies :</p>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          '#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444',
+                          '#06b6d4', '#ec4899', '#84cc16', '#f97316', '#6366f1',
+                          '#14b8a6', '#a855f7', '#eab308', '#dc2626', '#0ea5e9',
+                          '#d946ef', '#22c55e', '#fb923c', '#64748b', '#1e293b'
+                        ].map((color) => (
+                          <button
+                            key={color}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, color })}
+                            className={`w-10 h-10 rounded-lg border-2 transition-all ${
+                              formData.color === color 
+                                ? 'border-gray-900 scale-110 shadow-lg' 
+                                : 'border-gray-300 hover:border-gray-500 hover:scale-105'
+                            }`}
+                            style={{ backgroundColor: color }}
+                            title={color}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -746,7 +871,19 @@ export default function TeamsTab() {
                 </button>
               </div>
             </div>
-            <p className="text-sm text-gray-600 mb-3">Créée le {team.createdAt.toLocaleDateString("fr-FR")}</p>
+            <div className="space-y-1 mb-3">
+              <p className="text-sm text-gray-600">Créée le {team.createdAt.toLocaleDateString("fr-FR")}</p>
+              {(team.schoolName || team.school) && (
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">École:</span> {team.schoolName || team.school}
+                </p>
+              )}
+              {team.teamGrade && (
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Classe:</span> {team.teamGrade}
+                </p>
+              )}
+            </div>
             
             {/* Informations Coach */}
             <div className="space-y-2 mt-3 pt-3 border-t border-gray-200">
@@ -823,7 +960,19 @@ export default function TeamsTab() {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">{selectedTeam.name}</h2>
-                  <p className="text-sm text-gray-600">Détails de l'équipe</p>
+                  <div className="flex items-center gap-4 mt-1">
+                    <p className="text-sm text-gray-600">Détails de l'équipe</p>
+                    {(selectedTeam.schoolName || selectedTeam.school) && (
+                      <span className="text-sm text-gray-500">
+                        • {(selectedTeam.schoolName || selectedTeam.school)}
+                      </span>
+                    )}
+                    {selectedTeam.teamGrade && (
+                      <span className="text-sm text-gray-500">
+                        • {selectedTeam.teamGrade}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <button
