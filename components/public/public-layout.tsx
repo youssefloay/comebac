@@ -2,7 +2,7 @@
 
 import type React from "react"
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion } from "framer-motion"
 import { SofaNavigation } from '@/components/sofa/navigation'
 import { BottomNavigation } from '@/components/sofa/bottom-navigation'
 import { UserMenuFAB } from '@/components/sofa/user-menu-fab'
