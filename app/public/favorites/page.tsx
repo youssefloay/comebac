@@ -1,6 +1,7 @@
 "use client"
 
 import { Star, Trash2, Bell } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useFavorites } from '@/hooks/use-favorites'
@@ -72,101 +73,138 @@ export default function FavoritesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
-            <Star className="w-8 h-8 text-yellow-500 fill-yellow-500" />
-            Mes Équipes Favorites
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Suivez vos équipes préférées et recevez des notifications sur leurs matchs
-          </p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
+        {/* Header - Modern 2025 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 sm:mb-8"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-lg">
+              <Star className="w-6 h-6 sm:w-7 sm:h-7 text-white fill-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">
+                Mes Équipes Favorites
+              </h1>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+                Suivez vos équipes préférées et recevez des notifications sur leurs matchs
+              </p>
+            </div>
+          </div>
+        </motion.div>
 
-        {/* Info Banner */}
-        <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        {/* Info Banner - Modern 2025 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-6 sm:mb-8 bg-gradient-to-br from-blue-50 via-blue-50/50 to-white dark:from-blue-900/20 dark:via-blue-900/10 dark:to-gray-800 border border-blue-200/50 dark:border-blue-800/50 rounded-xl sm:rounded-2xl backdrop-blur-sm shadow-lg p-4 sm:p-6"
+        >
           <div className="flex items-start gap-3">
-            <Bell className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-blue-800 dark:text-blue-300">
-              <p className="font-medium mb-1">Notifications automatiques</p>
+            <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg flex-shrink-0">
+              <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            </div>
+            <div className="text-sm sm:text-base text-blue-800 dark:text-blue-300">
+              <p className="font-semibold mb-1">Notifications automatiques</p>
               <p>Vous recevrez des notifications pour les matchs, résultats et actualités de vos équipes favorites.</p>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Favorites List */}
         {favorites.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 p-12 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gradient-to-br from-white via-gray-50/50 to-white dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-xl sm:rounded-2xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm shadow-lg p-12 text-center"
+          >
             <Star className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
             <p className="text-gray-500 dark:text-gray-400 text-lg mb-2">Aucune équipe favorite</p>
             <p className="text-gray-400 dark:text-gray-500 text-sm mb-6">
               Ajoutez des équipes à vos favoris pour suivre leurs actualités
             </p>
-            <Link
-              href="/public/teams"
-              className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-              Découvrir les équipes
+            <Link href="/public/teams">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg"
+              >
+                Découvrir les équipes
+              </motion.button>
             </Link>
-          </div>
+          </motion.div>
         ) : (
-          <div className="grid gap-4">
-            {favorites.map((favorite) => {
+          <div className="grid gap-4 sm:gap-6">
+            {favorites.map((favorite, index) => {
               const displayName = favorite.name || favorite.teamName || favorite.playerName || 'Sans nom'
               const linkHref = favorite.type === 'team' 
                 ? `/public/team/${favorite.itemId}` 
-                : `/public/players` // Adapter selon ta structure
+                : `/public/players`
               const typeLabel = favorite.type === 'team' ? 'Équipe' : 'Joueur'
               
               return (
-                <div
+                <motion.div
                   key={favorite.id}
-                  className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ y: -4, scale: 1.01 }}
+                  className="bg-gradient-to-br from-white via-gray-50/50 to-white dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-xl sm:rounded-2xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-6"
                 >
                   <div className="flex items-center justify-between">
                     <Link
                       href={linkHref}
-                      className="flex items-center gap-4 flex-1 hover:opacity-80 transition-opacity"
+                      className="flex items-center gap-3 sm:gap-4 flex-1 hover:opacity-80 transition-opacity"
                     >
-                      <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
+                      <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-md">
+                        <Star className="w-4 h-4 sm:w-5 sm:h-5 text-white fill-white" />
+                      </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold text-gray-900 dark:text-white text-lg">
+                          <h3 className="font-bold text-gray-900 dark:text-white text-base sm:text-lg">
                             {displayName}
                           </h3>
-                          <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full">
+                          <span className="text-xs px-2 py-1 bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 text-blue-700 dark:text-blue-300 rounded-full font-semibold">
                             {typeLabel}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                           Ajouté le {new Date(favorite.createdAt?.seconds * 1000 || Date.now()).toLocaleDateString('fr-FR')}
                         </p>
                       </div>
                     </Link>
                     
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                       onClick={() => removeFavorite(favorite)}
                       className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                       title="Retirer des favoris"
                     >
                       <Trash2 className="w-5 h-5" />
-                    </button>
+                    </motion.button>
                   </div>
-                </div>
+                </motion.div>
               )
             })}
           </div>
         )}
 
-        {/* Stats */}
+        {/* Stats - Modern 2025 */}
         {favorites.length > 0 && (
-          <div className="mt-8 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-            <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-              Vous suivez <strong className="text-gray-900 dark:text-white">{favorites.length}</strong> équipe{favorites.length > 1 ? 's' : ''}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-6 sm:mt-8 p-4 sm:p-6 bg-gradient-to-br from-gray-100 via-gray-50/50 to-white dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-xl sm:rounded-2xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm shadow-lg"
+          >
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 text-center">
+              Vous suivez <strong className="text-gray-900 dark:text-white font-bold">{favorites.length}</strong> équipe{favorites.length > 1 ? 's' : ''}
             </p>
-          </div>
+          </motion.div>
         )}
       </div>
     </div>
