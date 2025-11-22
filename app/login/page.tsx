@@ -2,18 +2,10 @@
 
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { AlertCircle, Mail, Lock, Chrome } from "lucide-react";
+import { AlertCircle, Mail, Lock } from "lucide-react";
 import { SimpleLogo } from "@/components/ui/logo";
 import { motion } from "framer-motion";
 import { DomainError } from "@/components/auth/domain-error";
@@ -136,7 +128,7 @@ export default function LoginPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -161,58 +153,86 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="sofa-theme min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 relative overflow-hidden">
+      {/* Animated background pattern */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md relative z-10"
       >
-        <Card className="shadow-xl border-0">
-          <CardHeader className="text-center pb-6">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
+          className="bg-gradient-to-br from-white via-white to-gray-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-2xl sm:rounded-3xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl shadow-2xl overflow-hidden"
+        >
+          {/* Header with gradient */}
+          <div className="relative bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-6 sm:p-8 pb-8 sm:pb-10">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-400/20 rounded-full blur-xl"></div>
+            
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className="mx-auto mb-4 w-16 h-16 flex items-center justify-center"
+              className="relative mx-auto mb-4 sm:mb-6 w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/30 shadow-lg"
             >
               <SimpleLogo
-                className="w-16 h-16 object-contain rounded-lg"
+                className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
                 alt="ComeBac League"
               />
             </motion.div>
-            <CardTitle className="text-2xl font-bold text-sofa-text-primary">
+            
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-2xl sm:text-3xl font-bold text-white text-center mb-2"
+            >
               ComeBac League
-            </CardTitle>
-            <CardDescription className="text-sofa-text-secondary">
+            </motion.h1>
+            
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-blue-100 text-center text-sm sm:text-base"
+            >
               {isSignUp
                 ? "Créez votre compte"
                 : "Connectez-vous au championnat scolaire"}
-            </CardDescription>
-          </CardHeader>
+            </motion.p>
+          </div>
 
-          <CardContent className="space-y-6">
+          <div className="p-6 sm:p-8 space-y-6">
+
             {error && (
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="flex flex-col gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+                className="flex flex-col gap-2 p-3 sm:p-4 bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-900/20 dark:to-red-800/20 border border-red-200/50 dark:border-red-800/50 rounded-xl backdrop-blur-sm text-red-700 dark:text-red-300 text-sm"
               >
                 <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" />
-                  {error}
+                  <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                  <span className="font-medium">{error}</span>
                 </div>
                 {showResendButton && (
-                  <Button
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     type="button"
-                    variant="outline"
-                    size="sm"
                     onClick={handleResendVerification}
                     disabled={isLoading}
-                    className="mt-2 text-xs"
+                    className="mt-2 text-xs px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50"
                   >
                     Renvoyer l'email de vérification
-                  </Button>
+                  </motion.button>
                 )}
               </motion.div>
             )}
@@ -221,32 +241,34 @@ export default function LoginPage() {
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm"
+                className="p-4 sm:p-5 bg-gradient-to-br from-green-50 to-emerald-50/50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200/50 dark:border-green-800/50 rounded-xl backdrop-blur-sm text-green-700 dark:text-green-300 text-sm"
               >
                 <div className="flex items-start gap-3">
-                  <Mail className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  <div className="p-2 bg-green-500/20 rounded-lg flex-shrink-0">
+                    <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" />
+                  </div>
                   <div className="flex-1">
-                    <p className="font-semibold text-green-800 mb-2">
+                    <p className="font-bold text-green-800 dark:text-green-300 mb-2 text-base">
                       ✅ Compte créé avec succès !
                     </p>
-                    <p className="mb-2 font-medium text-orange-700">
+                    <p className="mb-2 font-semibold text-orange-600 dark:text-orange-400">
                       ⚠️ Vous devez vérifier votre email avant de pouvoir vous
                       connecter.
                     </p>
                     <p className="mb-2">
                       Un email de vérification a été envoyé à :
                     </p>
-                    <p className="font-medium bg-green-100 px-2 py-1 rounded text-green-800 mb-3">
+                    <p className="font-semibold bg-green-100 dark:bg-green-900/30 px-3 py-2 rounded-lg text-green-800 dark:text-green-200 mb-3 border border-green-200 dark:border-green-800">
                       {email}
                     </p>
-                    <div className="text-xs space-y-1">
+                    <div className="text-xs sm:text-sm space-y-1.5">
                       <p>
                         📧 <strong>Étapes suivantes :</strong>
                       </p>
                       <p>1. Vérifiez votre boîte mail (et le dossier spam)</p>
                       <p>2. Cliquez sur le lien de vérification</p>
                       <p>3. Revenez ici pour vous connecter</p>
-                      <p className="font-medium text-orange-700 mt-2">
+                      <p className="font-semibold text-orange-600 dark:text-orange-400 mt-2">
                         🚫 Vous ne pouvez pas accéder à la plateforme sans
                         vérification !
                       </p>
@@ -256,23 +278,23 @@ export default function LoginPage() {
               </motion.div>
             )}
 
-            <form onSubmit={handleEmailAuth} className="space-y-4">
+            <form onSubmit={handleEmailAuth} className="space-y-4 sm:space-y-5">
               <div className="space-y-2">
                 <Label
                   htmlFor="email"
-                  className="text-sm font-medium text-gray-700"
+                  className="text-sm font-semibold text-gray-700 dark:text-gray-300"
                 >
                   Email
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="votre@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    className="pl-10 sm:pl-12 h-12 sm:h-14 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl transition-all"
                     required
                   />
                 </div>
@@ -282,7 +304,7 @@ export default function LoginPage() {
                 <div className="flex items-center justify-between">
                   <Label
                     htmlFor="password"
-                    className="text-sm font-medium text-gray-700"
+                    className="text-sm font-semibold text-gray-700 dark:text-gray-300"
                   >
                     Mot de passe
                   </Label>
@@ -290,21 +312,21 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowForgotPassword(true)}
-                      className="text-xs text-sofa-text-accent hover:text-sofa-green underline"
+                      className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
                     >
                       Mot de passe oublié?
                     </button>
                   )}
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Lock className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500" />
                   <Input
                     id="password"
                     type="password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    className="pl-10 sm:pl-12 h-12 sm:h-14 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl transition-all"
                     required
                   />
                 </div>
@@ -314,7 +336,7 @@ export default function LoginPage() {
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm"
+                  className="p-3 sm:p-4 bg-gradient-to-br from-green-50 to-emerald-50/50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200/50 dark:border-green-800/50 rounded-xl backdrop-blur-sm text-green-700 dark:text-green-300 text-sm"
                 >
                   ✅ Email de réinitialisation envoyé à <strong>{email}</strong>. Vérifiez votre boîte mail!
                 </motion.div>
@@ -324,36 +346,41 @@ export default function LoginPage() {
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  className="p-4 bg-blue-50 border border-blue-200 rounded-lg"
+                  className="p-4 sm:p-5 bg-gradient-to-br from-blue-50 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200/50 dark:border-blue-800/50 rounded-xl backdrop-blur-sm"
                 >
-                  <p className="text-sm text-blue-800 mb-3">
+                  <p className="text-sm sm:text-base text-blue-800 dark:text-blue-300 mb-4 font-medium">
                     Entrez votre email pour recevoir un lien de réinitialisation
                   </p>
-                  <div className="flex gap-2">
-                    <Button
+                  <div className="flex gap-2 sm:gap-3">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       type="button"
                       onClick={handleForgotPassword}
                       disabled={isLoading}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700"
+                      className="flex-1 px-4 py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
                     >
                       Envoyer
-                    </Button>
-                    <Button
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       type="button"
                       onClick={() => setShowForgotPassword(false)}
-                      variant="outline"
-                      className="flex-1"
+                      className="flex-1 px-4 py-2.5 sm:py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-colors border border-gray-200 dark:border-gray-600"
                     >
                       Annuler
-                    </Button>
+                    </motion.button>
                   </div>
                 </motion.div>
               )}
 
-              <Button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-12 sofa-btn"
+                className="w-full h-12 sm:h-14 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <LoadingSpinner size="sm" className="text-white" />
@@ -362,52 +389,61 @@ export default function LoginPage() {
                 ) : (
                   "Se connecter"
                 )}
-              </Button>
+              </motion.button>
             </form>
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+                <div className="w-full border-t border-gray-200 dark:border-gray-700" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">ou</span>
+                <span className="px-3 sm:px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-medium">ou</span>
               </div>
             </div>
 
-            <Button
+            <motion.button
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
               type="button"
-              variant="outline"
               onClick={handleGoogleLogin}
               disabled={isLoading}
-              className="w-full h-12 border-sofa-border hover:bg-sofa-bg-hover"
+              className="w-full h-12 sm:h-14 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 rounded-xl font-semibold text-gray-700 dark:text-gray-300 shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
             >
               {isLoading ? (
                 <LoadingSpinner size="sm" />
               ) : (
                 <>
-                  <Chrome className="w-5 h-5 mr-2 text-sofa-blue" />
-                  Continuer avec Google
+                  {/* Google Logo SVG */}
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                  <span className="text-sm sm:text-base">Continuer avec Google</span>
                 </>
               )}
-            </Button>
+            </motion.button>
 
-            <div className="text-center space-y-3">
-              <button
+            <div className="text-center space-y-3 sm:space-y-4 pt-2">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 type="button"
                 onClick={() => setIsSignUp(!isSignUp)}
-                className="text-sm text-sofa-text-accent hover:text-sofa-green underline"
+                className="text-sm sm:text-base text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold transition-colors"
               >
                 {isSignUp
                   ? "Déjà un compte ? Se connecter"
                   : "Pas de compte ? Créer un compte"}
-              </button>
+              </motion.button>
 
-              <div className="text-xs text-gray-500">
+              <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 En vous connectant, vous acceptez nos conditions d'utilisation
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </motion.div>
       </motion.div>
     </div>
   );
