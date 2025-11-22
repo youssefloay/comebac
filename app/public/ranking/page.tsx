@@ -18,8 +18,6 @@ interface RankingTeam extends TeamStatistics {
 export default function RankingPage() {
   const [ranking, setRanking] = useState<RankingTeam[]>([])
   const [loading, setLoading] = useState(true)
-  const [showDebug, setShowDebug] = useState(false)
-  const [cleaning, setCleaning] = useState(false)
 
   useEffect(() => {
     const fetchRanking = async () => {
@@ -29,34 +27,10 @@ export default function RankingPage() {
           getDocs(collection(db, "teams"))
         ])
         
-        console.log('🔍 RANKING DEBUG:')
-        console.log('Total teamStatistics documents:', statsSnap.docs.length)
-        console.log('Total teams:', teamsSnap.docs.length)
-        
         const teamsMap = new Map()
         teamsSnap.docs.forEach((doc) => {
           teamsMap.set(doc.id, { id: doc.id, ...doc.data() })
         })
-
-        // Check for duplicates
-        const teamIds = statsSnap.docs.map(doc => doc.data().teamId)
-        const uniqueTeamIds = [...new Set(teamIds)]
-        
-        if (teamIds.length !== uniqueTeamIds.length) {
-          console.warn('🚨 DUPLICATES DETECTED in teamStatistics!')
-          console.log('Total documents:', teamIds.length)
-          console.log('Unique teams:', uniqueTeamIds.length)
-          
-          // Find duplicates
-          const duplicates = teamIds.filter((id, index) => teamIds.indexOf(id) !== index)
-          console.log('Duplicate team IDs:', [...new Set(duplicates)])
-          
-          // Show all documents for debugging
-          statsSnap.docs.forEach(doc => {
-            const data = doc.data()
-            console.log(`Doc ${doc.id}: Team ${data.teamId}, Points: ${data.points || 0}`)
-          })
-        }
 
         // Remove duplicates by keeping only the latest/best entry per team
         const teamStatsMap = new Map()
@@ -75,7 +49,6 @@ export default function RankingPage() {
             const shouldReplace = (data.points || 0) > (existing.points || 0)
             
             if (shouldReplace) {
-              console.log(`Replacing stats for team ${data.teamId}: ${existing.points || 0} -> ${data.points || 0} points`)
               teamStatsMap.set(data.teamId, {
                 ...data,
                 docId: doc.id
@@ -114,7 +87,6 @@ export default function RankingPage() {
           statsData = filterParticipatingTeams(statsData, participatingTeamIds)
         }
 
-        console.log('✅ Final ranking entries:', statsData.length)
         setRanking(statsData)
       } catch (error) {
         console.error("Error fetching ranking:", error)
@@ -125,40 +97,6 @@ export default function RankingPage() {
 
     fetchRanking()
   }, [])
-
-  const handleCleanupDuplicates = async () => {
-    if (!confirm('Nettoyer les doublons dans la base de données? Cette action va supprimer les entrées dupliquées.')) {
-      return
-    }
-    
-    setCleaning(true)
-    try {
-      const response = await fetch('/api/cleanup-duplicates', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      
-      const result = await response.json()
-      
-      if (result.success) {
-        console.log('🎉 Cleanup successful:', result)
-        alert(`Nettoyage réussi! ${result.stats.deletedCount} doublons supprimés. ${result.stats.finalCount} équipes restantes.`)
-        
-        // Reload the page data
-        window.location.reload()
-      } else {
-        console.error('Cleanup failed:', result)
-        alert(`Erreur: ${result.error}`)
-      }
-    } catch (error) {
-      console.error('Error calling cleanup API:', error)
-      alert('Erreur lors du nettoyage')
-    } finally {
-      setCleaning(false)
-    }
-  }
 
   // Get top 3 for podium
   const topThree = ranking.slice(0, 3)
@@ -171,23 +109,6 @@ export default function RankingPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-sofa-text-primary mb-2">{t('ranking.title')}</h1>
           <p className="text-sofa-text-secondary">{t('ranking.subtitle')}</p>
-        </div>
-        <div className="flex flex-wrap gap-2 sm:gap-3">
-          {ranking.length > 4 && (
-            <button
-              onClick={handleCleanupDuplicates}
-              disabled={cleaning}
-              className="sofa-btn bg-sofa-red hover:bg-red-600 text-xs sm:text-sm"
-            >
-              {cleaning ? t('ranking.cleanup') : t('ranking.cleanupDuplicates')}
-            </button>
-          )}
-          <button
-            onClick={() => setShowDebug(!showDebug)}
-            className="sofa-btn-secondary sofa-btn text-xs sm:text-sm"
-          >
-            {showDebug ? t('ranking.hideDebug') : t('ranking.debugInfo')}
-          </button>
         </div>
       </div>
 
@@ -318,21 +239,6 @@ export default function RankingPage() {
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {showDebug && (
-        <div className="sofa-card p-6 mb-8 border-l-4 border-sofa-orange">
-          <h3 className="font-semibold text-sofa-text-accent mb-3">Informations de Debug</h3>
-          <p className="text-sm text-sofa-text-secondary mb-2">
-            {t('ranking.teamsDisplayed')}: {ranking.length} | 
-            Ouvrez la console du navigateur (F12) pour plus de détails sur les doublons
-          </p>
-          {ranking.length > 4 && (
-            <p className="text-sm text-sofa-red">
-              ⚠️ Plus de 4 équipes détectées - il y a probablement des doublons dans la base de données
-            </p>
-          )}
         </div>
       )}
 

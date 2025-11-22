@@ -73,7 +73,6 @@ export default function PublicHome() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        console.log('🔄 Chargement des données...')
         
         // Charger toutes les données en parallèle pour améliorer les performances
         const [teamsSnap, playersSnap, matchesSnap, statsSnap, resultsSnap] = await Promise.all([
@@ -84,7 +83,6 @@ export default function PublicHome() {
           getDocs(collection(db, 'matchResults'))
         ])
         
-        console.log(`✅ ${teamsSnap.docs.length} équipes, ${playersSnap.docs.length} joueurs, ${matchesSnap.docs.length} matchs chargés`)
         
         const teamsData = teamsSnap.docs.map(doc => ({
           id: doc.id,
@@ -136,7 +134,6 @@ export default function PublicHome() {
         })
 
         // Process match results (déjà chargés en parallèle)
-        console.log(`✅ ${resultsSnap.docs.length} résultats trouvés`)
         const resultsMap = new Map()
         let totalGoals = 0
         resultsSnap.docs.forEach(doc => {
@@ -180,8 +177,6 @@ export default function PublicHome() {
         setRecentMatches(recentMatchesFiltered)
 
         // Process standings from teamStatistics (déjà chargés en parallèle)
-        console.log(`[Public Home] Raw statistics count: ${statsSnap.docs.length}`)
-        
         // Remove duplicates by keeping only the best entry per team
         const teamStatsMap = new Map()
         
@@ -200,14 +195,12 @@ export default function PublicHome() {
                (existing.updatedAt?.toDate?.() || new Date(existing.updatedAt || 0)))
             
             if (shouldReplace) {
-              console.log(`[Public Home] Replacing duplicate stats for team ${data.teamId}`)
               teamStatsMap.set(data.teamId, { id: doc.id, ...data })
             }
           }
         })
         
         const uniqueStats = Array.from(teamStatsMap.values())
-        console.log(`[Public Home] Unique statistics count: ${uniqueStats.length}`)
         
         const standingsData = uniqueStats
           .map(data => {
@@ -237,8 +230,6 @@ export default function PublicHome() {
           completed: matchesWithResults.filter(m => m.status === 'completed').length
         })
 
-        console.log('✅ Toutes les données chargées avec succès')
-        
       } catch (error) {
         console.error('❌ Erreur lors du chargement des données:', error)
         console.error('Détails de l\'erreur:', error instanceof Error ? error.message : 'Erreur inconnue')
