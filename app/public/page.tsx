@@ -229,7 +229,7 @@ export default function PublicHome() {
           goals: totalGoals,
           completed: matchesWithResults.filter(m => m.status === 'completed').length
         })
-
+        
       } catch (error) {
         console.error('❌ Erreur lors du chargement des données:', error)
         console.error('Détails de l\'erreur:', error instanceof Error ? error.message : 'Erreur inconnue')
@@ -285,50 +285,74 @@ export default function PublicHome() {
 
   return (
     <div className="space-y-6 pb-8">
-      {/* Compact Hero Section */}
-      <div className="relative overflow-hidden hero-section">
-        <div className="absolute inset-0 bg-gradient-to-br from-sofa-bg-secondary via-sofa-bg-tertiary to-sofa-bg-card"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      {/* Modern Hero Section 2025 */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-emerald-600/10"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1),transparent_50%)]"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center"
           >
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 text-sofa-text-primary">
+            <motion.h1 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent"
+            >
               {t('home.title')}
-            </h1>
-            <p className="text-sm sm:text-base text-sofa-text-secondary mb-6 max-w-xl mx-auto">
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-6 max-w-2xl mx-auto"
+            >
               {t('home.subtitle')}
-            </p>
+            </motion.p>
           </motion.div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
-        {/* Priority 1: Featured Match (Live or Next) */}
+        {/* Priority 1: Featured Match (Live or Next) - Modern 2025 */}
         {featuredMatch && (
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-sofa-text-primary flex items-center gap-3">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
                 {liveMatch ? (
                   <>
-                    <div className="w-3 h-3 bg-sofa-red rounded-full animate-pulse"></div>
+                    <div className="relative">
+                      <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                      <div className="absolute inset-0 w-3 h-3 bg-red-500 rounded-full animate-ping opacity-75"></div>
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                     {t('home.liveMatch')}
+                    </h2>
                   </>
                 ) : (
                   <>
-                    <Clock className="w-6 h-6 text-sofa-blue" />
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+                      <Clock className="w-5 h-5 text-white" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                     {t('home.nextMatch')}
+                    </h2>
                   </>
                 )}
-              </h2>
-              <Link href="/public/matches" className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium">
-                {t('home.allMatches')} →
+              </div>
+              <Link 
+                href="/public/matches" 
+                className="group flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-700 hover:from-gray-200 hover:to-gray-100 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-300 text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                {t('home.allMatches')}
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
               </Link>
             </div>
             
@@ -341,34 +365,49 @@ export default function PublicHome() {
           </motion.section>
         )}
 
-        {/* Priority 2: Top 3 Teams Podium */}
+        {/* Priority 2: Top 3 Teams Podium - Modern 2025 */}
         {topThreeTeams.length >= 3 && (
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-sofa-text-primary flex items-center gap-3">
-                <Trophy className="w-6 h-6 text-sofa-green" />
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-lg">
+                  <Trophy className="w-6 h-6 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                 {t('home.podium')}
               </h2>
-              <Link href="/public/ranking" className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium">
-                {t('home.fullRanking')} →
+              </div>
+              <Link 
+                href="/public/ranking" 
+                className="group flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-700 hover:from-gray-200 hover:to-gray-100 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-300 text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                {t('home.fullRanking')}
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
               </Link>
             </div>
             
-            {/* Podium Layout */}
+            {/* Podium Layout - Modern 2025 */}
             <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto overflow-visible">
               {/* 2nd Place */}
-              <div className="order-1 pt-8" style={{ overflow: 'visible' }}>
-                <div className="sofa-card p-4 text-center relative bg-gradient-to-br from-sofa-bg-card to-sofa-bg-secondary" style={{ overflow: 'visible' }}>
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center font-bold text-sm z-50 shadow-xl border-2 border-white">
+              <motion.div 
+                className="order-1 pt-8" 
+                style={{ overflow: 'visible' }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + 0.1 }}
+                whileHover={{ y: -4 }}
+              >
+                <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 via-gray-100/50 to-white dark:from-gray-800/50 dark:via-gray-700/30 dark:to-gray-900 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300 text-center" style={{ overflow: 'visible' }}>
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-500 text-white rounded-full flex items-center justify-center font-bold text-sm z-50 shadow-xl border-2 border-white">
                     2
                   </div>
-                  <div className="mb-3">
+                  <div className="mb-4 flex justify-center">
                     {topThreeTeams[1].teamLogo ? (
-                      <div className="w-16 h-16 mx-auto rounded-full overflow-hidden bg-sofa-bg-secondary border-2 border-gray-400">
+                      <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 shadow-lg flex items-center justify-center">
                         <img 
                           src={topThreeTeams[1].teamLogo} 
                           alt={topThreeTeams[1].teamName}
@@ -376,39 +415,46 @@ export default function PublicHome() {
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             if (e.currentTarget.parentElement) {
-                              e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-400 text-lg font-bold">🥈</div>'
+                              e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-400 text-2xl font-bold">🥈</div>'
                             }
                           }}
                         />
                       </div>
                     ) : (
-                      <div className="text-4xl">🥈</div>
+                      <div className="text-5xl flex items-center justify-center">🥈</div>
                     )}
                   </div>
                   <TeamLink 
                     teamId={topThreeTeams[1].teamId} 
                     teamName={topThreeTeams[1].teamName}
-                    className="font-semibold text-sofa-text-primary hover:text-sofa-text-accent transition-colors text-sm block mb-2"
+                    className="font-semibold text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition-colors text-sm block mb-3"
                   />
-                  <div className="text-lg font-bold text-sofa-text-accent">{topThreeTeams[1].points} pts</div>
-                  <div className="text-xs text-sofa-text-muted">
+                  <div className="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">{topThreeTeams[1].points} pts</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
                     {topThreeTeams[1].wins}V - {topThreeTeams[1].draws}N - {topThreeTeams[1].losses}D
                   </div>
-                  <div className="text-xs text-sofa-text-muted mt-1">
+                  <div className="text-xs font-semibold text-gray-500 dark:text-gray-500">
                     Diff: {topThreeTeams[1].goalDifference > 0 ? '+' : ''}{topThreeTeams[1].goalDifference}
                   </div>
                 </div>
-              </div>
+              </motion.div>
               
               {/* 1st Place */}
-              <div className="order-2" style={{ overflow: 'visible' }}>
-                <div className="sofa-card p-4 text-center relative bg-gradient-to-br from-sofa-green/10 to-sofa-bg-secondary" style={{ overflow: 'visible' }}>
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 text-white rounded-full flex items-center justify-center font-bold z-50 shadow-xl border-2 border-white">
+              <motion.div 
+                className="order-2" 
+                style={{ overflow: 'visible' }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + 0.15 }}
+                whileHover={{ y: -4 }}
+              >
+                <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-yellow-50 via-amber-50/50 to-white dark:from-yellow-900/20 dark:via-amber-900/10 dark:to-gray-900 border-2 border-yellow-300/50 dark:border-yellow-700/30 backdrop-blur-sm p-6 shadow-xl hover:shadow-2xl transition-all duration-300 text-center" style={{ overflow: 'visible' }}>
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 text-white rounded-full flex items-center justify-center font-bold text-base z-50 shadow-xl border-2 border-white">
                     1
                   </div>
-                  <div className="mb-3">
+                  <div className="mb-4 flex justify-center">
                     {topThreeTeams[0].teamLogo ? (
-                      <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-sofa-bg-secondary border-2 border-sofa-green">
+                      <div className="w-24 h-24 rounded-full overflow-hidden bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-400 dark:border-yellow-600 shadow-xl flex items-center justify-center">
                         <img 
                           src={topThreeTeams[0].teamLogo} 
                           alt={topThreeTeams[0].teamName}
@@ -416,39 +462,46 @@ export default function PublicHome() {
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             if (e.currentTarget.parentElement) {
-                              e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-sofa-green text-2xl font-bold">👑</div>'
+                              e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-yellow-600 text-3xl font-bold">👑</div>'
                             }
                           }}
                         />
                       </div>
                     ) : (
-                      <div className="text-5xl">👑</div>
+                      <div className="text-6xl flex items-center justify-center">👑</div>
                     )}
                   </div>
                   <TeamLink 
                     teamId={topThreeTeams[0].teamId} 
                     teamName={topThreeTeams[0].teamName}
-                    className="font-bold text-sofa-text-primary hover:text-sofa-text-accent transition-colors block mb-2"
+                    className="font-bold text-gray-900 dark:text-white hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors block mb-3 text-base"
                   />
-                  <div className="text-xl font-bold text-sofa-green">{topThreeTeams[0].points} pts</div>
-                  <div className="text-xs text-sofa-text-muted">
+                  <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-2">{topThreeTeams[0].points} pts</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
                     {topThreeTeams[0].wins}V - {topThreeTeams[0].draws}N - {topThreeTeams[0].losses}D
                   </div>
-                  <div className="text-xs text-sofa-text-muted mt-1">
+                  <div className="text-xs font-semibold text-gray-500 dark:text-gray-500">
                     Diff: {topThreeTeams[0].goalDifference > 0 ? '+' : ''}{topThreeTeams[0].goalDifference}
                   </div>
                 </div>
-              </div>
+              </motion.div>
               
               {/* 3rd Place */}
-              <div className="order-3 pt-12" style={{ overflow: 'visible' }}>
-                <div className="sofa-card p-4 text-center relative bg-gradient-to-br from-sofa-bg-card to-sofa-bg-secondary" style={{ overflow: 'visible' }}>
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm z-50 shadow-xl border-2 border-white">
+              <motion.div 
+                className="order-3 pt-12" 
+                style={{ overflow: 'visible' }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + 0.2 }}
+                whileHover={{ y: -4 }}
+              >
+                <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-50 via-amber-50/50 to-white dark:from-orange-900/20 dark:via-amber-900/10 dark:to-gray-900 border border-orange-200/50 dark:border-orange-700/30 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300 text-center" style={{ overflow: 'visible' }}>
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-full flex items-center justify-center font-bold text-sm z-50 shadow-xl border-2 border-white">
                     3
                   </div>
-                  <div className="mb-3">
+                  <div className="mb-4 flex justify-center">
                     {topThreeTeams[2].teamLogo ? (
-                      <div className="w-16 h-16 mx-auto rounded-full overflow-hidden bg-sofa-bg-secondary border-2 border-orange-500">
+                      <div className="w-20 h-20 rounded-full overflow-hidden bg-orange-100 dark:bg-orange-900/30 border-2 border-orange-400 dark:border-orange-600 shadow-lg flex items-center justify-center">
                         <img 
                           src={topThreeTeams[2].teamLogo} 
                           alt={topThreeTeams[2].teamName}
@@ -456,109 +509,211 @@ export default function PublicHome() {
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             if (e.currentTarget.parentElement) {
-                              e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-orange-500 text-lg font-bold">🥉</div>'
+                              e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-orange-500 text-2xl font-bold">🥉</div>'
                             }
                           }}
                         />
                       </div>
                     ) : (
-                      <div className="text-4xl">🥉</div>
+                      <div className="text-5xl flex items-center justify-center">🥉</div>
                     )}
                   </div>
                   <TeamLink 
                     teamId={topThreeTeams[2].teamId} 
                     teamName={topThreeTeams[2].teamName}
-                    className="font-semibold text-sofa-text-primary hover:text-sofa-text-accent transition-colors text-sm block mb-2"
+                    className="font-semibold text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors text-sm block mb-3"
                   />
-                  <div className="text-lg font-bold text-sofa-text-accent">{topThreeTeams[2].points} pts</div>
-                  <div className="text-xs text-sofa-text-muted">
+                  <div className="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">{topThreeTeams[2].points} pts</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
                     {topThreeTeams[2].wins}V - {topThreeTeams[2].draws}N - {topThreeTeams[2].losses}D
                   </div>
-                  <div className="text-xs text-sofa-text-muted mt-1">
+                  <div className="text-xs font-semibold text-gray-500 dark:text-gray-500">
                     Diff: {topThreeTeams[2].goalDifference > 0 ? '+' : ''}{topThreeTeams[2].goalDifference}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </motion.section>
         )}
 
-        {/* Priority 3: Quick Stats - More Compact */}
+        {/* Priority 3: League Stats - Modern 2025 Design */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
-          <h2 className="text-xl font-bold text-sofa-text-primary mb-4">{t('home.leagueStats')}</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-            <SofaStatCard
-              title={t('home.teamsCount')}
-              value={stats.teams}
-              icon={Users}
-              color="blue"
-              index={0}
-            />
-            <SofaStatCard
-              title={t('nav.matches')}
-              value={stats.matches}
-              icon={Calendar}
-              color="green"
-              index={1}
-            />
-            <SofaStatCard
-              title={t('stats.goals')}
-              value={stats.goals}
-              icon={Target}
-              color="purple"
-              index={2}
-            />
-            <SofaStatCard
-              title={t('match.completed')}
-              value={stats.completed}
-              icon={Trophy}
-              color="orange"
-              index={3}
-            />
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-sofa-text-primary mb-1">{t('home.leagueStats')}</h2>
+              <p className="text-sm text-sofa-text-secondary">Vue d'ensemble de la ligue</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {/* Teams Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 + 0.1 * 0 }}
+              whileHover={{ scale: 1.02, y: -4 }}
+              className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-50 via-blue-100/50 to-white dark:from-blue-950/20 dark:via-blue-900/10 dark:to-gray-900 border border-blue-200/50 dark:border-blue-800/30 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-blue-500/0 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg group-hover:shadow-blue-500/50 transition-shadow duration-300">
+                    <Users className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <motion.div
+                      initial={{ scale: 0.8 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.3 + 0.1 * 0 + 0.2 }}
+                      className="text-3xl font-bold text-blue-600 dark:text-blue-400"
+                    >
+                      {stats.teams}
+                    </motion.div>
+                  </div>
+                </div>
+                <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('home.teamsCount')}</div>
+              </div>
+            </motion.div>
+
+            {/* Matches Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 + 0.1 * 1 }}
+              whileHover={{ scale: 1.02, y: -4 }}
+              className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-white dark:from-emerald-950/20 dark:via-emerald-900/10 dark:to-gray-900 border border-emerald-200/50 dark:border-emerald-800/30 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 via-emerald-500/0 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg group-hover:shadow-emerald-500/50 transition-shadow duration-300">
+                    <Calendar className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <motion.div
+                      initial={{ scale: 0.8 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.3 + 0.1 * 1 + 0.2 }}
+                      className="text-3xl font-bold text-emerald-600 dark:text-emerald-400"
+                    >
+                      {stats.matches}
+                    </motion.div>
+                  </div>
+                </div>
+                <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('nav.matches')}</div>
+              </div>
+            </motion.div>
+
+            {/* Goals Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 + 0.1 * 2 }}
+              whileHover={{ scale: 1.02, y: -4 }}
+              className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-50 via-purple-100/50 to-white dark:from-purple-950/20 dark:via-purple-900/10 dark:to-gray-900 border border-purple-200/50 dark:border-purple-800/30 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 via-purple-500/0 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg group-hover:shadow-purple-500/50 transition-shadow duration-300">
+                    <Target className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <motion.div
+                      initial={{ scale: 0.8 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.3 + 0.1 * 2 + 0.2 }}
+                      className="text-3xl font-bold text-purple-600 dark:text-purple-400"
+                    >
+                      {stats.goals}
+                    </motion.div>
+                  </div>
+                </div>
+                <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('stats.goals')}</div>
+              </div>
+            </motion.div>
+
+            {/* Completed Matches Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 + 0.1 * 3 }}
+              whileHover={{ scale: 1.02, y: -4 }}
+              className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 via-amber-100/50 to-white dark:from-amber-950/20 dark:via-amber-900/10 dark:to-gray-900 border border-amber-200/50 dark:border-amber-800/30 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 via-amber-500/0 to-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg group-hover:shadow-orange-500/50 transition-shadow duration-300">
+                    <Trophy className="w-6 h-6 text-white" strokeWidth={2.5} />
+                  </div>
+                  <div className="text-right">
+                    <motion.div
+                      initial={{ scale: 0.8 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.3 + 0.1 * 3 + 0.2 }}
+                      className="text-3xl font-bold text-amber-600 dark:text-amber-400"
+                    >
+                      {stats.completed}
+                    </motion.div>
+                  </div>
+                </div>
+                <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('match.completed')}</div>
+              </div>
+            </motion.div>
           </div>
         </motion.section>
 
-        {/* Priority 4: Recent Results - Compact List */}
+        {/* Priority 4: Recent Results - Modern 2025 */}
         {recentMatches.length > 0 && (
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-sofa-text-primary flex items-center gap-3">
-                <Trophy className="w-5 h-5 text-sofa-green" />
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg">
+                  <Trophy className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                 {t('matches.lastResults')}
               </h2>
-              <Link href="/public/matches" className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium">
-                {t('matches.allResults')} →
+              </div>
+              <Link 
+                href="/public/matches" 
+                className="group flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-700 hover:from-gray-200 hover:to-gray-100 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-300 text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                {t('matches.allResults')}
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
               </Link>
             </div>
             
-            {/* Compact Results List */}
-            <div className="sofa-card p-4 space-y-3">
+            {/* Modern Results List */}
+            <div className="rounded-2xl bg-gradient-to-br from-white via-gray-50/50 to-white dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm p-6 shadow-lg space-y-4">
               {recentMatches.slice(0, 3).map((match, index) => (
                 <motion.div 
                   key={match.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="flex items-center justify-between py-2 border-b border-sofa-border last:border-b-0"
+                  whileHover={{ x: 4 }}
+                  className="group flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-gray-50/50 to-transparent dark:from-gray-800/30 dark:to-transparent border border-gray-200/30 dark:border-gray-700/30 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300"
                 >
-                  <div className="flex items-center space-x-3 flex-1">
-                    <div className="text-sm font-medium text-sofa-text-primary">
-                      {match.homeTeam?.name} vs {match.awayTeam?.name}
+                  <div className="flex items-center space-x-4 flex-1">
+                    <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                      {match.homeTeam?.name} <span className="text-gray-500 dark:text-gray-400">vs</span> {match.awayTeam?.name}
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="text-lg font-bold text-sofa-text-primary">
+                  <div className="flex items-center space-x-4">
+                    <div className="text-xl font-bold text-gray-900 dark:text-white">
                       {match.homeTeamScore} - {match.awayTeamScore}
                     </div>
-                    <div className="text-xs text-sofa-text-muted">
+                    <div className="text-xs font-medium text-gray-500 dark:text-gray-400 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800">
                       {new Intl.DateTimeFormat('fr-FR', { 
                         day: 'numeric', 
                         month: 'short' 
@@ -571,20 +726,28 @@ export default function PublicHome() {
           </motion.section>
         )}
 
-        {/* Priority 5: Upcoming Matches - Compact */}
+        {/* Priority 5: Upcoming Matches - Modern 2025 */}
         {upcomingMatches.length > 1 && (
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5 }}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-sofa-text-primary flex items-center gap-3">
-                <Calendar className="w-5 h-5 text-sofa-blue" />
-                {t('matches.upcomingMatches')}
-              </h2>
-              <Link href="/public/matches" className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium">
-                {t('matches.fullSchedule')} →
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+                  <Calendar className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {t('matches.upcomingMatches')}
+                </h2>
+              </div>
+              <Link 
+                href="/public/matches" 
+                className="group flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-700 hover:from-gray-200 hover:to-gray-100 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-300 text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                {t('matches.fullSchedule')}
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
               </Link>
             </div>
             
@@ -595,6 +758,7 @@ export default function PublicHome() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
+                  whileHover={{ y: -4 }}
                 >
                   <SofaMatchCard 
                     match={convertMatchFormat(match)} 
@@ -606,20 +770,28 @@ export default function PublicHome() {
           </motion.section>
         )}
 
-        {/* Priority 6: Teams Overview - Simplified */}
+        {/* Priority 6: Teams Overview - Modern 2025 */}
         {teams.length > 0 && (
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-sofa-text-primary flex items-center gap-3">
-                <Users className="w-5 h-5 text-sofa-blue" />
-                {t('home.teamsCount')} ({teams.length})
-              </h2>
-              <Link href="/public/teams" className="text-sofa-text-accent hover:text-sofa-green transition-colors text-sm font-medium">
-                {t('teams.viewAll')} →
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 shadow-lg">
+                  <Users className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {t('home.teamsCount')} <span className="text-gray-500 dark:text-gray-400">({teams.length})</span>
+                </h2>
+              </div>
+              <Link 
+                href="/public/teams" 
+                className="group flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-700 hover:from-gray-200 hover:to-gray-100 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-300 text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                {t('teams.viewAll')}
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
               </Link>
             </div>
             
@@ -630,6 +802,7 @@ export default function PublicHome() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
+                  whileHover={{ scale: 1.02, y: -4 }}
                 >
                   <SofaTeamCard 
                     team={{
