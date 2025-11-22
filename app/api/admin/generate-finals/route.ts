@@ -7,7 +7,7 @@ import type { Match, MatchResult } from '@/lib/types'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { finalDate, time, isTest = false } = body
+    const { finalDate, time } = body
 
     if (!finalDate || !time) {
       return NextResponse.json({ 

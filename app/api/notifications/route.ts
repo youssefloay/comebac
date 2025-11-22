@@ -36,6 +36,16 @@ export async function GET(request: NextRequest) {
         .limit(100)
         .get()
     } catch (error: any) {
+      // Si le quota est dépassé, retourner immédiatement
+      if (error.code === 8 || error.message?.includes('Quota exceeded') || error.message?.includes('RESOURCE_EXHAUSTED')) {
+        console.warn('⚠️ Quota Firestore dépassé - Retour d\'un tableau vide')
+        return NextResponse.json({
+          success: true,
+          notifications: [],
+          quotaExceeded: true
+        })
+      }
+      
       // Si l'index n'existe pas, récupérer sans orderBy et limiter
       if (error.code === 9 || error.message?.includes('index')) {
         const allNotifications = await adminDb
@@ -78,8 +88,19 @@ export async function GET(request: NextRequest) {
       notifications
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Erreur API notifications:', error)
+    
+    // Si le quota est dépassé, retourner immédiatement un tableau vide
+    if (error.code === 8 || error.message?.includes('Quota exceeded') || error.message?.includes('RESOURCE_EXHAUSTED')) {
+      console.warn('⚠️ Quota Firestore dépassé - Retour d\'un tableau vide pour éviter d\'autres appels')
+      return NextResponse.json({
+        success: true,
+        notifications: [],
+        quotaExceeded: true
+      })
+    }
+    
     // Retourner un tableau vide au lieu d'une erreur pour ne pas casser l'UI
     return NextResponse.json({
       success: true,

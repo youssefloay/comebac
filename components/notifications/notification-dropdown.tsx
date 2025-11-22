@@ -1,7 +1,7 @@
 "use client"
 
 import { Bell, CheckCircle, AlertCircle, Info, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { AnimatePresence, motion } from 'framer-motion'
 
@@ -21,35 +21,58 @@ export function NotificationDropdown() {
   const [loading, setLoading] = useState(false)
   const { user } = useAuth()
 
+  const quotaState = useRef({ exceeded: false, retryCount: 0 })
+  const maxRetries = 3
+
   useEffect(() => {
     if (user) {
+      const fetchNotifications = async () => {
+        // Si le quota est dépassé, ne pas faire d'autres appels
+        if (quotaState.current.exceeded && quotaState.current.retryCount >= maxRetries) {
+          console.warn('Quota dépassé - Arrêt des appels notifications')
+          return
+        }
+
+        if (!user) return
+        
+        try {
+          const { auth } = await import('@/lib/firebase')
+          const currentUser = auth.currentUser
+          if (!currentUser) return
+
+          const response = await fetch(`/api/notifications?userId=${currentUser.uid}`)
+          const data = await response.json()
+          
+          if (data.success) {
+            setNotifications(data.notifications.slice(0, 5)) // Limiter à 5
+            const unread = data.notifications.filter((n: any) => !n.read).length
+            setUnreadCount(unread)
+            
+            // Si le quota est dépassé, marquer pour arrêter les appels
+            if (data.quotaExceeded) {
+              quotaState.current.exceeded = true
+              quotaState.current.retryCount++
+              console.warn('Quota dépassé détecté - Réduction des appels')
+            } else {
+              quotaState.current.exceeded = false
+              quotaState.current.retryCount = 0
+            }
+          }
+        } catch (error) {
+          console.error('Erreur:', error)
+          quotaState.current.retryCount++
+        }
+      }
+
       fetchNotifications()
-      // Augmenter l'intervalle à 2 minutes pour réduire les appels API et éviter le quota
-      const interval = setInterval(fetchNotifications, 120000)
+      // Augmenter l'intervalle à 5 minutes si le quota est dépassé, sinon 2 minutes
+      const interval = setInterval(() => {
+        fetchNotifications()
+      }, quotaState.current.exceeded ? 300000 : 120000)
+      
       return () => clearInterval(interval)
     }
   }, [user])
-
-  const fetchNotifications = async () => {
-    if (!user) return
-    
-    try {
-      const { auth } = await import('@/lib/firebase')
-      const currentUser = auth.currentUser
-      if (!currentUser) return
-
-      const response = await fetch(`/api/notifications?userId=${currentUser.uid}`)
-      const data = await response.json()
-      
-      if (data.success) {
-        setNotifications(data.notifications.slice(0, 5)) // Limiter à 5
-        const unread = data.notifications.filter((n: any) => !n.read).length
-        setUnreadCount(unread)
-      }
-    } catch (error) {
-      console.error('Erreur:', error)
-    }
-  }
 
   const markAsRead = async (notificationId: string) => {
     try {

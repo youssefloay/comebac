@@ -12,9 +12,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'userId requis' }, { status: 400 })
     }
 
+    // Limiter à 200 favoris pour éviter le quota
     const favoritesSnapshot = await adminDb
       .collection('userFavorites')
       .where('userId', '==', userId)
+      .limit(200)
       .get()
     
     const favorites = favoritesSnapshot.docs.map(doc => ({

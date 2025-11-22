@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Bell, X } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import Link from 'next/link'
@@ -27,10 +27,19 @@ export function NotificationBell() {
     setMounted(true)
   }, [])
 
+  const quotaState = useRef({ exceeded: false, retryCount: 0 })
+  const maxRetries = 3
+
   useEffect(() => {
     if (!user || !mounted) return
 
     const loadNotifications = async () => {
+      // Si le quota est dépassé, ne pas faire d'autres appels
+      if (quotaState.current.exceeded && quotaState.current.retryCount >= maxRetries) {
+        console.warn('Quota dépassé - Arrêt des appels notifications')
+        return
+      }
+
       try {
         const { auth } = await import('@/lib/firebase')
         const currentUser = auth.currentUser
@@ -42,15 +51,30 @@ export function NotificationBell() {
         if (data.success) {
           setNotifications(data.notifications || [])
           setUnreadCount((data.notifications || []).filter((n: NotificationItem) => !n.read).length)
+          
+          // Si le quota est dépassé, marquer pour arrêter les appels
+          if (data.quotaExceeded) {
+            quotaState.current.exceeded = true
+            quotaState.current.retryCount++
+            console.warn('Quota dépassé détecté - Réduction des appels')
+          } else {
+            // Réinitialiser le compteur si ça fonctionne
+            quotaState.current.exceeded = false
+            quotaState.current.retryCount = 0
+          }
         }
       } catch (error) {
         console.error('Erreur chargement notifications:', error)
+        quotaState.current.retryCount++
       }
     }
 
     loadNotifications()
-    // Augmenter l'intervalle à 2 minutes pour réduire les appels API et éviter le quota
-    const interval = setInterval(loadNotifications, 120000)
+    // Augmenter l'intervalle à 5 minutes si le quota est dépassé, sinon 2 minutes
+    const interval = setInterval(() => {
+      loadNotifications()
+    }, quotaState.current.exceeded ? 300000 : 120000)
+    
     return () => clearInterval(interval)
   }, [user, mounted])
 

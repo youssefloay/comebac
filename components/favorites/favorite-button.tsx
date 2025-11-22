@@ -1,8 +1,9 @@
 "use client"
 
 import { Star } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
+import { useFavorites } from '@/hooks/use-favorites'
 
 interface FavoriteButtonProps {
   teamId?: string
@@ -21,41 +22,15 @@ export function FavoriteButton({
   type,
   size = 'md' 
 }: FavoriteButtonProps) {
-  const [isFavorite, setIsFavorite] = useState(false)
   const [loading, setLoading] = useState(false)
   const { user } = useAuth()
+  const { isFavorite: checkIsFavorite, invalidateCache, refresh } = useFavorites()
 
   const favoriteType = type || (teamId ? 'team' : 'player')
   const itemId = teamId || playerId
   const itemName = teamName || playerName
 
-  useEffect(() => {
-    if (user && itemId) {
-      checkIfFavorite()
-    }
-  }, [user, itemId])
-
-  const checkIfFavorite = async () => {
-    if (!user || !itemId) return
-
-    try {
-      const { auth } = await import('@/lib/firebase')
-      const currentUser = auth.currentUser
-      if (!currentUser) return
-
-      const response = await fetch(`/api/favorites?userId=${currentUser.uid}`)
-      const data = await response.json()
-      
-      if (data.success) {
-        const isFav = data.favorites.some((f: any) => 
-          f.itemId === itemId && f.type === favoriteType
-        )
-        setIsFavorite(isFav)
-      }
-    } catch (error) {
-      console.error('Erreur:', error)
-    }
-  }
+  const isFavorite = checkIsFavorite(itemId || '', favoriteType)
 
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -87,7 +62,8 @@ export function FavoriteButton({
         })
 
         if (response.ok) {
-          setIsFavorite(false)
+          invalidateCache()
+          refresh()
         }
       } else {
         // Ajouter aux favoris
@@ -104,7 +80,8 @@ export function FavoriteButton({
         })
 
         if (response.ok) {
-          setIsFavorite(true)
+          invalidateCache()
+          refresh()
         }
       }
     } catch (error) {

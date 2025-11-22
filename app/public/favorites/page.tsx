@@ -3,18 +3,19 @@
 import { Star, Trash2, Bell } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
+import { useFavorites } from '@/hooks/use-favorites'
 import Link from 'next/link'
 
 interface Favorite {
   id: string
   itemId: string
   type: 'team' | 'player'
-  name: string
+  name?: string
   teamId?: string
   teamName?: string
   playerId?: string
   playerName?: string
-  createdAt: any
+  createdAt?: any
 }
 
 export default function FavoritesPage() {
@@ -22,30 +23,16 @@ export default function FavoritesPage() {
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
 
+  const { favorites: favoritesData, loading: favoritesLoading, refresh } = useFavorites()
+
   useEffect(() => {
-    if (user) {
-      fetchFavorites()
-    }
-  }, [user])
-
-  const fetchFavorites = async () => {
-    try {
-      const { auth } = await import('@/lib/firebase')
-      const currentUser = auth.currentUser
-      if (!currentUser) return
-
-      const response = await fetch(`/api/favorites?userId=${currentUser.uid}`)
-      const data = await response.json()
-      
-      if (data.success) {
-        setFavorites(data.favorites)
-      }
-    } catch (error) {
-      console.error('Erreur:', error)
-    } finally {
+    if (favoritesData) {
+      setFavorites(favoritesData)
+      setLoading(false)
+    } else if (!favoritesLoading) {
       setLoading(false)
     }
-  }
+  }, [favoritesData, favoritesLoading])
 
   const removeFavorite = async (favorite: Favorite) => {
     try {
@@ -66,6 +53,7 @@ export default function FavoritesPage() {
 
       if (response.ok) {
         setFavorites(favorites.filter(f => f.id !== favorite.id))
+        refresh() // Rafraîchir le cache
       }
     } catch (error) {
       console.error('Erreur:', error)
