@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { AlertCircle, Mail, Lock } from "lucide-react";
+import { AlertCircle, Mail, Lock, UserPlus } from "lucide-react";
 import { SimpleLogo } from "@/components/ui/logo";
 import { motion } from "framer-motion";
 import { DomainError } from "@/components/auth/domain-error";
@@ -438,7 +439,31 @@ export default function LoginPage() {
                   : "Pas de compte ? Créer un compte"}
               </motion.button>
 
-              <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200 dark:border-gray-700" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-3 sm:px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-medium">ou</span>
+                </div>
+              </div>
+
+              <Link href="/register-team">
+                <motion.button
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="button"
+                  className="w-full h-12 sm:h-14 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 hover:from-green-700 hover:via-emerald-700 hover:to-green-700 text-white rounded-xl font-bold text-sm sm:text-base shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                >
+                  <UserPlus className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <span>Inscrire une Équipe</span>
+                </motion.button>
+              </Link>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Aucun compte requis pour l'inscription d'équipe
+              </p>
+
+              <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 pt-2">
                 En vous connectant, vous acceptez nos conditions d'utilisation
               </div>
             </div>

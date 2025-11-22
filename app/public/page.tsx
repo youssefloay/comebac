@@ -308,10 +308,31 @@ export default function PublicHome() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-6 max-w-2xl mx-auto"
+              className="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto"
             >
               {t('home.subtitle')}
             </motion.p>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            >
+              <Link href="/register-team">
+                <motion.button
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 hover:from-green-700 hover:via-emerald-700 hover:to-green-700 text-white rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all"
+                >
+                  <UserPlus className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <span>Inscrire une Équipe</span>
+                </motion.button>
+              </Link>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                Aucun compte requis
+              </p>
+            </motion.div>
           </motion.div>
         </div>
       </div>

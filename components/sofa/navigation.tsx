@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 import { useTheme } from "@/lib/theme-context";
-import { Home, Trophy, Calendar, BarChart3, Users, Sun, Moon } from "lucide-react";
+import { Home, Trophy, Calendar, BarChart3, Users, Sun, Moon, UserPlus } from "lucide-react";
 import { NotificationDropdown } from "@/components/notifications/notification-dropdown";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { FantasyButton } from "@/components/fantasy/fantasy-button";
@@ -25,19 +25,30 @@ export function SofaNavigation() {
   const isAdminPage = pathname?.startsWith('/admin');
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href={user ? "/public" : "/"} className="flex items-center gap-3">
-            <img 
-              src="/comebac.png" 
-              alt="ComeBac League" 
-              className="w-10 h-10 object-contain rounded"
-            />
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-white/95 via-white/95 to-white/95 dark:from-gray-900/95 dark:via-gray-900/95 dark:to-gray-900/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4">
+        <div className="flex items-center justify-between h-14 sm:h-16">
+          {/* Logo - Modern 2025 */}
+          <Link href={user ? "/public" : "/"} className="flex items-center gap-2 sm:gap-3 group">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl blur-sm group-hover:blur-md transition-all"></div>
+              <img 
+                src="/comebac.png" 
+                alt="ComeBac League" 
+                className="relative w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-lg sm:rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-md"
+              />
+            </motion.div>
             <div className="hidden sm:block">
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white">ComeBac League</h1>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Championnat Scolaire</p>
+              <h1 className="text-base sm:text-lg font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">
+                ComeBac League
+              </h1>
+              <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 font-medium">
+                Championnat Scolaire
+              </p>
             </div>
           </Link>
 
@@ -67,31 +78,49 @@ export function SofaNavigation() {
             </div>
           )}
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-2">
+          {/* Right Actions - Modern 2025 */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Language Selector - Only for non-admin pages */}
             {!isAdminPage && <LanguageSelector />}
 
             {/* Fantasy Button - Only for non-admin pages */}
             {!isAdminPage && <FantasyButton href="/public/fantasy" page="header" />}
 
-            {/* Theme Toggle */}
-            <button
+            {/* Theme Toggle - Modern 2025 */}
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-700 hover:from-gray-200 hover:to-gray-100 dark:hover:from-gray-700 dark:hover:to-gray-600 border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all"
             >
-              {theme === "light" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-            </button>
+              {theme === "light" ? <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-gray-300" /> : <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-gray-300" />}
+            </motion.button>
 
             {/* NOTIFICATION DROPDOWN */}
             <NotificationDropdown />
 
-            {/* Login Button */}
+            {/* Register Team Button - Visible for all users */}
+            <Link href="/register-team">
+              <motion.button
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                className="hidden sm:flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 hover:from-green-700 hover:via-emerald-700 hover:to-green-700 text-white rounded-xl sm:rounded-lg text-xs sm:text-sm font-bold shadow-lg hover:shadow-xl transition-all"
+              >
+                <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>Inscrire une Équipe</span>
+              </motion.button>
+            </Link>
+
+            {/* Login Button - Modern 2025 */}
             {!user && (
               <Link href="/login">
-                <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl sm:rounded-lg text-xs sm:text-sm font-bold shadow-lg hover:shadow-xl transition-all"
+                >
                   Connexion
-                </button>
+                </motion.button>
               </Link>
             )}
           </div>
