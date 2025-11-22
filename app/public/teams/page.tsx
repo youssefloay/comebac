@@ -37,19 +37,32 @@ export default function TeamsPage() {
           ...doc.data(),
         })) as Player[]
 
-        // Fetch all player accounts (for accurate count)
-        const playerAccountsSnap = await getDocs(collection(db, "playerAccounts"))
+        // Fetch all player accounts and coach accounts (for accurate count)
+        const [playerAccountsSnap, coachAccountsSnap] = await Promise.all([
+          getDocs(collection(db, "playerAccounts")),
+          getDocs(collection(db, "coachAccounts"))
+        ])
         const allPlayerAccounts = playerAccountsSnap.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }))
+        const allCoachAccounts = coachAccountsSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+
+        // Créer un Set des emails des entraîneurs pour exclusion rapide
+        const coachEmails = new Set(allCoachAccounts.map((coach: any) => coach.email))
 
         // Group players by team
         const teamsWithPlayers = teamsData.map(team => {
           const teamPlayers = allPlayers.filter(player => player.teamId === team.id)
-          // Count from playerAccounts for accurate number
+          // Count from playerAccounts for accurate number - exclure les entraîneurs
           const teamPlayerAccounts = allPlayerAccounts.filter(
-            (account: any) => account.teamId === team.id
+            (account: any) => 
+              account.teamId === team.id && 
+              !coachEmails.has(account.email) && 
+              !account.isActingCoach
           )
           const actualPlayerCount = teamPlayerAccounts.length
           

@@ -77,21 +77,40 @@ export default function TeamDetailPage() {
           teamsMap.set(doc.id, { id: doc.id, ...doc.data() })
         })
 
-        // Fetch players (exclude coaches)
-        const playersQuery = query(collection(db, "players"), where("teamId", "==", teamId))
-        const playersSnap = await getDocs(playersQuery)
+        // Fetch players, playerAccounts, and coachAccounts (exclude coaches)
+        const [playersSnap, playerAccountsSnap, coachAccountsSnap] = await Promise.all([
+          getDocs(query(collection(db, "players"), where("teamId", "==", teamId))),
+          getDocs(query(collection(db, "playerAccounts"), where("teamId", "==", teamId))),
+          getDocs(query(collection(db, "coachAccounts"), where("teamId", "==", teamId)))
+        ])
+        
         const allPlayersData = playersSnap.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         })) as Player[]
         
-        // Filter out coaches
+        const allPlayerAccounts = playerAccountsSnap.docs.map((doc) => doc.data())
+        const allCoachAccounts = coachAccountsSnap.docs.map((doc) => doc.data())
+        
+        // Créer un Set des emails des entraîneurs pour exclusion rapide
+        const coachEmails = new Set(allCoachAccounts.map((coach: any) => coach.email))
+        const actingCoachEmails = new Set(
+          allPlayerAccounts
+            .filter((account: any) => account.isActingCoach === true)
+            .map((account: any) => account.email)
+        )
+        
+        // Filter out coaches - exclude coachAccounts and acting coaches
         const playersData = allPlayersData.filter((player) => {
-          // Exclude coaches - check isCoach flag or position "Entraîneur"
-          const isCoach = (player as any).isCoach === true || 
-                         player.position?.toLowerCase().includes('entraîneur') ||
-                         player.position?.toLowerCase().includes('entraineur') ||
-                         player.position?.toLowerCase().includes('coach')
+          const playerEmail = player.email || (player as any).email
+          // Exclude coaches - check multiple conditions
+          const isCoach = 
+            (player as any).isCoach === true || 
+            player.position?.toLowerCase().includes('entraîneur') ||
+            player.position?.toLowerCase().includes('entraineur') ||
+            player.position?.toLowerCase().includes('coach') ||
+            (playerEmail && coachEmails.has(playerEmail)) ||
+            (playerEmail && actingCoachEmails.has(playerEmail))
           return !isCoach
         })
         

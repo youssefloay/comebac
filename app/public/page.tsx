@@ -76,9 +76,11 @@ export default function PublicHome() {
       try {
         
         // Charger toutes les données en parallèle pour améliorer les performances
-        const [teamsSnap, playersSnap, matchesSnap, statsSnap, resultsSnap] = await Promise.all([
+        const [teamsSnap, playersSnap, playerAccountsSnap, coachAccountsSnap, matchesSnap, statsSnap, resultsSnap] = await Promise.all([
           getDocs(collection(db, 'teams')),
           getDocs(collection(db, 'players')),
+          getDocs(collection(db, 'playerAccounts')),
+          getDocs(collection(db, 'coachAccounts')),
           getDocs(collection(db, 'matches')),
           getDocs(query(collection(db, 'teamStatistics'), orderBy('points', 'desc'))),
           getDocs(collection(db, 'matchResults'))
@@ -91,12 +93,26 @@ export default function PublicHome() {
         })) as Team[]
         
         const allPlayers = playersSnap.docs.map(doc => doc.data())
+        const allPlayerAccounts = playerAccountsSnap.docs.map(doc => doc.data())
+        const allCoachAccounts = coachAccountsSnap.docs.map(doc => doc.data())
         
-        // Add player counts to teams
-        let teamsWithPlayerCounts = teamsData.map(team => ({
-          ...team,
-          playerCount: allPlayers.filter(player => player.teamId === team.id).length
-        }))
+        // Créer un Set des emails des entraîneurs pour exclusion rapide
+        const coachEmails = new Set(allCoachAccounts.map((coach: any) => coach.email))
+        
+        // Add player counts to teams - exclure les entraîneurs
+        let teamsWithPlayerCounts = teamsData.map(team => {
+          // Compter uniquement les playerAccounts qui ne sont pas des entraîneurs
+          const teamPlayerAccounts = allPlayerAccounts.filter((account: any) => 
+            account.teamId === team.id && 
+            !coachEmails.has(account.email) && 
+            !account.isActingCoach
+          )
+          
+          return {
+            ...team,
+            playerCount: teamPlayerAccounts.length
+          }
+        })
         
         // Filtrer pour ne garder que les équipes participantes (pages publiques uniquement)
         const participatingTeamIds = await getParticipatingTeamIds()
