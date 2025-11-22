@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react"
 import { motion } from "framer-motion"
 import { db } from "@/lib/firebase"
-import { collection, getDocs, query, orderBy } from "firebase/firestore"
+import { collection, getDocs, query, orderBy, limit, where } from "firebase/firestore"
 import type { Match, Team, MatchResult } from "@/lib/types"
 import { SofaMatchCard } from "@/components/sofa/match-card"
 import { t } from "@/lib/i18n"
@@ -32,37 +32,23 @@ export default function MatchesPage() {
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        console.log("Starting to fetch data...")
-        
-        // Fetch matches
+        // Fetch matches - limit to recent matches for performance
         const matchesRef = collection(db, "matches")
-        console.log("Matches collection reference created")
-        
-        const matchesQuery = query(matchesRef, orderBy("date", "asc"))
-        console.log("Matches query created with orderBy date ascending")
-        
+        const matchesQuery = query(
+          matchesRef, 
+          where("isTest", "==", false), // Exclude test matches
+          orderBy("date", "asc"),
+          limit(200) // Limit to 200 most recent matches
+        )
         const matchesSnap = await getDocs(matchesQuery)
-        console.log(`Found ${matchesSnap.docs.length} matches`)
-        
-        if (matchesSnap.empty) {
-          console.log("No matches found in the collection")
-        } else {
-          console.log("Matches data:", matchesSnap.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            date: doc.data().date?.toDate?.()?.toISOString() || 'Invalid Date'
-          })))
-        }
         
         // Fetch teams
         const teamsRef = collection(db, "teams")
         const teamsSnap = await getDocs(teamsRef)
-        console.log(`Found ${teamsSnap.docs.length} teams`)
         
         // Fetch results
         const resultsRef = collection(db, "matchResults")
         const resultsSnap = await getDocs(resultsRef)
-        console.log(`Found ${resultsSnap.docs.length} match results`)
 
         const teamsMap = new Map()
         teamsSnap.docs.forEach((doc) => {
@@ -76,22 +62,11 @@ export default function MatchesPage() {
             ...resultData,
             id: doc.id  // This will override any id in the data
           })
-          console.log(`Mapped result for match ${resultData.matchId}:`, {
-            id: doc.id,
-            homeScore: resultData.homeTeamScore,
-            awayScore: resultData.awayTeamScore
-          })
         })
 
         let matchesData = matchesSnap.docs.map((doc) => {
           const data = doc.data()
           const matchId = doc.id
-          
-          // Debug logging
-          console.log('Raw match data:', {
-            id: matchId,
-            ...data,
-          })
           
           // Convert various possible date representations to a JS Date
           const parseDateValue = (value: any): Date | null => {
@@ -154,19 +129,6 @@ export default function MatchesPage() {
             isTest: data.isTest || false
           }
           
-          // Debug logging for match data
-          console.log('Match details:', {
-            id: matchId,
-            status: processedMatch.status,
-            hasResult: !!resultsMap.get(matchId),
-            homeTeam: processedMatch.homeTeam?.name,
-            awayTeam: processedMatch.awayTeam?.name,
-            isTest: processedMatch.isTest
-          });
-
-          // Debug logging
-          console.log('Processed match:', processedMatch)
-          
           return processedMatch as Match & { homeTeam?: Team; awayTeam?: Team; result?: MatchResult }
         })
 
@@ -220,12 +182,6 @@ export default function MatchesPage() {
 
 
 
-  // Debug log when component renders
-  console.log('Rendering matches page with:', {
-    numberOfMatches: matches.length,
-    loading,
-    matchesWithResults: matches.filter(m => m.result).length
-  })
 
   // Organize matches by priority - optimisé avec useMemo
   const { liveMatches, todayMatches, upcomingMatches, recentMatches } = useMemo(() => {

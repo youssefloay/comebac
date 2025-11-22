@@ -39,7 +39,6 @@ export default function TeamDetailPage() {
   useEffect(() => {
     const fetchTeamDetails = async () => {
       try {
-        console.log('🔄 Chargement des détails de l\'équipe...')
         
         // Fetch team
         const teamDoc = await getDoc(doc(db, "teams", teamId))
@@ -156,7 +155,6 @@ export default function TeamDetailPage() {
           setTeamStats({ id: statsSnap.docs[0].id, ...statsSnap.docs[0].data() } as TeamStatistics)
         }
 
-        console.log('✅ Détails de l\'équipe chargés')
       } catch (error) {
         console.error("Error fetching team details:", error)
       } finally {
