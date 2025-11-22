@@ -12,6 +12,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'userId requis' }, { status: 400 })
     }
 
+    if (!adminDb) {
+      return NextResponse.json({ success: true, favorites: [] })
+    }
+
     // Limiter à 200 favoris pour éviter le quota
     const favoritesSnapshot = await adminDb
       .collection('userFavorites')
@@ -25,8 +29,19 @@ export async function GET(request: NextRequest) {
     }))
 
     return NextResponse.json({ success: true, favorites })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erreur:', error)
+    
+    // Si le quota est dépassé, retourner immédiatement un tableau vide
+    if (error.code === 8 || error.message?.includes('Quota exceeded') || error.message?.includes('RESOURCE_EXHAUSTED')) {
+      console.warn('⚠️ Quota Firestore dépassé - Retour d\'un tableau vide pour favorites')
+      return NextResponse.json({
+        success: true,
+        favorites: [],
+        quotaExceeded: true
+      })
+    }
+    
     return NextResponse.json({ success: true, favorites: [] })
   }
 }
@@ -38,6 +53,10 @@ export async function POST(request: NextRequest) {
 
     if (!userId || (!teamId && !playerId)) {
       return NextResponse.json({ error: 'userId et (teamId ou playerId) requis' }, { status: 400 })
+    }
+
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Firebase Admin non initialisé' }, { status: 500 })
     }
 
     const favoriteType = type || (teamId ? 'team' : 'player')
@@ -85,6 +104,10 @@ export async function DELETE(request: NextRequest) {
 
     if (!userId || (!teamId && !playerId)) {
       return NextResponse.json({ error: 'userId et (teamId ou playerId) requis' }, { status: 400 })
+    }
+
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Firebase Admin non initialisé' }, { status: 500 })
     }
 
     const favoriteType = type || (teamId ? 'team' : 'player')

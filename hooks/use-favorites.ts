@@ -63,10 +63,17 @@ export function useFavorites() {
       if (data.success) {
         const favs = data.favorites || []
         setFavorites(favs)
-        // Mettre à jour le cache
-        favoritesCache = favs
-        cacheUserId = currentUser.uid
-        cacheTimestamp = now
+        
+        // Si le quota est dépassé, ne pas mettre en cache et augmenter la durée du cache
+        if (data.quotaExceeded) {
+          console.warn('⚠️ Quota dépassé pour favorites - Pas de mise à jour du cache')
+          // Ne pas mettre à jour le cache si le quota est dépassé
+        } else {
+          // Mettre à jour le cache
+          favoritesCache = favs
+          cacheUserId = currentUser.uid
+          cacheTimestamp = now
+        }
       }
     } catch (error) {
       console.error('Erreur chargement favoris:', error)
