@@ -18,7 +18,8 @@ import {
   Clock, 
   Trophy, 
   Users, 
-  Target
+  Target,
+  UserPlus
 } from 'lucide-react'
 
 interface Match {
