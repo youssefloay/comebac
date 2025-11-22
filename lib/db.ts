@@ -202,18 +202,47 @@ export async function createMatch(
   matchData: Omit<Match, "id" | "createdAt" | "updatedAt">
 ) {
   try {
-    const docRef = await addDoc(collection(db, "matches"), {
-      ...matchData,
-      date:
-        matchData.date instanceof Date
-          ? Timestamp.fromDate(matchData.date)
-          : matchData.date,
+    // Nettoyer les données avant de les envoyer à Firestore
+    const cleanData: any = {
+      homeTeamId: matchData.homeTeamId,
+      awayTeamId: matchData.awayTeamId,
+      date: matchData.date instanceof Date
+        ? Timestamp.fromDate(matchData.date)
+        : matchData.date,
+      round: matchData.round,
+      status: matchData.status,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
-    });
+    }
+
+    // Ajouter les champs optionnels seulement s'ils sont définis
+    if (matchData.tournamentId) {
+      cleanData.tournamentId = matchData.tournamentId
+    }
+    if (matchData.tournamentMode) {
+      cleanData.tournamentMode = matchData.tournamentMode
+    }
+    if (matchData.isFinal !== undefined) {
+      cleanData.isFinal = matchData.isFinal
+    }
+    if (matchData.finalType) {
+      cleanData.finalType = matchData.finalType
+    }
+    if (matchData.participatingTeamIds && Array.isArray(matchData.participatingTeamIds) && matchData.participatingTeamIds.length > 0) {
+      cleanData.participatingTeamIds = matchData.participatingTeamIds
+    }
+    if (matchData.isTest !== undefined) {
+      cleanData.isTest = matchData.isTest
+    }
+    if (matchData.isPublished !== undefined) {
+      cleanData.isPublished = matchData.isPublished
+    }
+
+    const docRef = await addDoc(collection(db, "matches"), cleanData);
     return docRef.id;
   } catch (error) {
     console.error("Error creating match:", error);
+    console.error("Match data that failed:", matchData);
     throw error;
   }
 }

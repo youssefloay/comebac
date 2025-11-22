@@ -115,9 +115,6 @@ export function InstallPrompt() {
   // Ne pas afficher si l'utilisateur a déjà fermé le prompt (sauf si le modal iOS est ouvert)
   if (dismissed && !showIOSModal) return null
 
-  // Détecter si on est sur mobile
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
-
   return (
     <>
       {/* Bouton d'installation flottant pour mobile (iOS et Android) */}

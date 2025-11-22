@@ -70,6 +70,13 @@ export interface Match {
   date: Date
   round: number
   status: "scheduled" | "in_progress" | "completed" | "cancelled"
+  tournamentId?: string // ID du tournoi si le match fait partie d'un tournoi
+  tournamentMode?: TournamentMode // Mode du tournoi (CLASSIC ou MINI_LEAGUE)
+  isFinal?: boolean // Si c'est un match de finale (pour MINI_LEAGUE)
+  finalType?: "grande_finale" | "petite_finale" // Type de finale
+  participatingTeamIds?: string[] // IDs des équipes participantes au tournoi
+  isTest?: boolean // Si c'est un match de test (ne s'affiche pas publiquement)
+  isPublished?: boolean // Si c'est un match de finale publié (visible publiquement)
   createdAt: Date
   updatedAt: Date
 }
@@ -133,6 +140,19 @@ export interface User {
   id: string
   email: string
   role: "admin" | "viewer"
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type TournamentMode = "CLASSIC" | "MINI_LEAGUE"
+
+export interface Tournament {
+  id: string
+  name: string
+  mode: TournamentMode
+  startDate: Date
+  endDate?: Date
+  teams: string[] // Array of team IDs
   createdAt: Date
   updatedAt: Date
 }

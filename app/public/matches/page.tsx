@@ -82,7 +82,7 @@ export default function MatchesPage() {
           })
         })
 
-        const matchesData = matchesSnap.docs.map((doc) => {
+        let matchesData = matchesSnap.docs.map((doc) => {
           const data = doc.data()
           const matchId = doc.id
           
@@ -149,7 +149,8 @@ export default function MatchesPage() {
             status: data.status || "scheduled", // Keep existing status or default to scheduled
             homeTeam: teamsMap.get(data.homeTeamId),
             awayTeam: teamsMap.get(data.awayTeamId),
-            result: resultsMap.get(matchId)
+            result: resultsMap.get(matchId),
+            isTest: data.isTest || false
           }
           
           // Debug logging for match data
@@ -158,7 +159,8 @@ export default function MatchesPage() {
             status: processedMatch.status,
             hasResult: !!resultsMap.get(matchId),
             homeTeam: processedMatch.homeTeam?.name,
-            awayTeam: processedMatch.awayTeam?.name
+            awayTeam: processedMatch.awayTeam?.name,
+            isTest: processedMatch.isTest
           });
 
           // Debug logging
@@ -167,7 +169,15 @@ export default function MatchesPage() {
           return processedMatch as Match & { homeTeam?: Team; awayTeam?: Team; result?: MatchResult }
         })
 
-        setMatches(matchesData)
+        // Filtrer les matchs de test et les finales non publiées (ne pas les afficher publiquement)
+        const publicMatches = matchesData.filter(match => {
+          if (match.isTest) return false
+          // Si c'est une finale, vérifier qu'elle est publiée
+          if ((match as any).isFinal && !(match as any).isPublished) return false
+          return true
+        })
+
+        setMatches(publicMatches)
         
         // Extract unique rounds for filtering
         const uniqueRounds = [...new Set(matchesData.map(m => m.round))].sort((a, b) => a - b)

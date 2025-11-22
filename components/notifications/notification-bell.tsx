@@ -49,7 +49,8 @@ export function NotificationBell() {
     }
 
     loadNotifications()
-    const interval = setInterval(loadNotifications, 30000)
+    // Augmenter l'intervalle à 2 minutes pour réduire les appels API et éviter le quota
+    const interval = setInterval(loadNotifications, 120000)
     return () => clearInterval(interval)
   }, [user, mounted])
 

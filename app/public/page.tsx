@@ -11,6 +11,8 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import Link from 'next/link'
 import { t } from '@/lib/i18n'
 import { AdBanner } from '@/components/ads/AdBanner'
+import { getParticipatingTeamIds, filterParticipatingTeams } from '@/lib/tournament-utils'
+import { TeamLink } from '@/components/ui/team-link'
 import { 
   Calendar, 
   Clock, 
@@ -31,6 +33,7 @@ interface Match {
   status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
   round: number
   result?: any
+  isTest?: boolean
 }
 
 interface Team {
@@ -54,6 +57,8 @@ interface Standing {
   goalsFor: number
   goalsAgainst: number
   matchesPlayed: number
+  goalDifference: number
+  teamLogo?: string
 }
 
 export default function PublicHome() {
@@ -89,10 +94,16 @@ export default function PublicHome() {
         const allPlayers = playersSnap.docs.map(doc => doc.data())
         
         // Add player counts to teams
-        const teamsWithPlayerCounts = teamsData.map(team => ({
+        let teamsWithPlayerCounts = teamsData.map(team => ({
           ...team,
           playerCount: allPlayers.filter(player => player.teamId === team.id).length
         }))
+        
+        // Filtrer pour ne garder que les équipes participantes (pages publiques uniquement)
+        const participatingTeamIds = await getParticipatingTeamIds()
+        if (participatingTeamIds) {
+          teamsWithPlayerCounts = filterParticipatingTeams(teamsWithPlayerCounts, participatingTeamIds)
+        }
         
         setTeams(teamsWithPlayerCounts)
 
@@ -105,16 +116,24 @@ export default function PublicHome() {
           const data = doc.data()
           return {
             id: doc.id,
-            ...data,
+            homeTeamId: data.homeTeamId,
+            awayTeamId: data.awayTeamId,
             date: data.date?.toDate() || new Date(),
+            round: data.round || 1,
+            status: data.status || 'scheduled',
             homeTeam: teamsMap.get(data.homeTeamId),
-            awayTeam: teamsMap.get(data.awayTeamId)
+            awayTeam: teamsMap.get(data.awayTeamId),
+            isTest: data.isTest || false
           }
         }) as Match[]
 
-        // Load standings from teamStatistics (with duplicate filtering)
-        // statsSnap est déjà chargé en parallèle ci-dessus
-        allMatches.sort((a, b) => b.date.getTime() - a.date.getTime())
+        // Filtrer les matchs de test et les finales non publiées (ne pas les afficher publiquement)
+        const publicMatches = allMatches.filter(match => {
+          if (match.isTest) return false
+          // Si c'est une finale, vérifier qu'elle est publiée
+          if ((match as any).isFinal && !(match as any).isPublished) return false
+          return true
+        })
 
         // Process match results (déjà chargés en parallèle)
         console.log(`✅ ${resultsSnap.docs.length} résultats trouvés`)
@@ -139,16 +158,21 @@ export default function PublicHome() {
         const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
         const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000)
 
-        const todayMatchesFiltered = matchesWithResults.filter(match => 
-          match.date >= todayStart && match.date < todayEnd
-        )
+        // Matchs d'aujourd'hui - trier par heure croissante (le plus proche en premier)
+        const todayMatchesFiltered = matchesWithResults
+          .filter(match => match.date >= todayStart && match.date < todayEnd)
+          .sort((a, b) => a.date.getTime() - b.date.getTime())
         
+        // Matchs à venir - trier par date/heure croissante (le plus proche en premier)
         const upcomingMatchesFiltered = matchesWithResults
           .filter(match => match.date > todayEnd && match.status === 'scheduled')
+          .sort((a, b) => a.date.getTime() - b.date.getTime())
           .slice(0, 6)
 
+        // Matchs récents - trier par date décroissante (les plus récents en premier)
         const recentMatchesFiltered = matchesWithResults
           .filter(match => match.status === 'completed')
+          .sort((a, b) => b.date.getTime() - a.date.getTime())
           .slice(0, 6)
 
         setTodayMatches(todayMatchesFiltered)
@@ -188,15 +212,18 @@ export default function PublicHome() {
         const standingsData = uniqueStats
           .map(data => {
             const team = teamsMap.get(data.teamId)
+            const goalDifference = (data.goalsFor || 0) - (data.goalsAgainst || 0)
             return {
               ...data,
-              teamName: team?.name || 'Équipe inconnue'
+              teamName: team?.name || 'Équipe inconnue',
+              goalDifference: goalDifference,
+              teamLogo: team?.logo
             }
           })
           .sort((a, b) => {
             if (b.points !== a.points) return b.points - a.points
-            const aDiff = a.goalsFor - a.goalsAgainst
-            const bDiff = b.goalsFor - b.goalsAgainst
+            const aDiff = a.goalDifference
+            const bDiff = b.goalDifference
             return bDiff - aDiff
           }) as Standing[]
           
@@ -250,9 +277,17 @@ export default function PublicHome() {
   }
 
   // Get next match (most important info)
-  const nextMatch = upcomingMatches.length > 0 ? upcomingMatches[0] : null
+  // Priorité 1: Match en cours aujourd'hui
   const liveMatch = todayMatches.find(match => match.status === 'in_progress')
-  const featuredMatch = liveMatch || nextMatch
+  
+  // Priorité 2: Prochain match d'aujourd'hui (programmé mais pas encore commencé)
+  const nextTodayMatch = todayMatches.find(match => match.status === 'scheduled')
+  
+  // Priorité 3: Prochain match à venir (après aujourd'hui)
+  const nextMatch = upcomingMatches.length > 0 ? upcomingMatches[0] : null
+  
+  // Le match en vedette est le match en cours, ou le prochain match d'aujourd'hui, ou le prochain match à venir
+  const featuredMatch = liveMatch || nextTodayMatch || nextMatch
 
   // Get top 3 teams for podium display
   const topThreeTeams = standings.slice(0, 3)
@@ -333,41 +368,124 @@ export default function PublicHome() {
             </div>
             
             {/* Podium Layout */}
-            <div className="grid grid-cols-3 gap-4 max-w-2xl">
+            <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto overflow-visible">
               {/* 2nd Place */}
-              <div className="order-1 pt-8">
-                <div className="sofa-card p-4 text-center relative">
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center font-bold text-sm">
+              <div className="order-1 pt-8" style={{ overflow: 'visible' }}>
+                <div className="sofa-card p-4 text-center relative bg-gradient-to-br from-sofa-bg-card to-sofa-bg-secondary" style={{ overflow: 'visible' }}>
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center font-bold text-sm z-50 shadow-xl border-2 border-white">
                     2
                   </div>
-                  <h3 className="font-semibold text-sofa-text-primary mb-2 text-sm">{topThreeTeams[1].teamName}</h3>
+                  <div className="mb-3">
+                    {topThreeTeams[1].teamLogo ? (
+                      <div className="w-16 h-16 mx-auto rounded-full overflow-hidden bg-sofa-bg-secondary border-2 border-gray-400">
+                        <img 
+                          src={topThreeTeams[1].teamLogo} 
+                          alt={topThreeTeams[1].teamName}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                            if (e.currentTarget.parentElement) {
+                              e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-400 text-lg font-bold">🥈</div>'
+                            }
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="text-4xl">🥈</div>
+                    )}
+                  </div>
+                  <TeamLink 
+                    teamId={topThreeTeams[1].teamId} 
+                    teamName={topThreeTeams[1].teamName}
+                    className="font-semibold text-sofa-text-primary hover:text-sofa-text-accent transition-colors text-sm block mb-2"
+                  />
                   <div className="text-lg font-bold text-sofa-text-accent">{topThreeTeams[1].points} pts</div>
-                  <div className="text-xs text-sofa-text-muted">{topThreeTeams[1].wins}V - {topThreeTeams[1].draws}N - {topThreeTeams[1].losses}D</div>
+                  <div className="text-xs text-sofa-text-muted">
+                    {topThreeTeams[1].wins}V - {topThreeTeams[1].draws}N - {topThreeTeams[1].losses}D
+                  </div>
+                  <div className="text-xs text-sofa-text-muted mt-1">
+                    Diff: {topThreeTeams[1].goalDifference > 0 ? '+' : ''}{topThreeTeams[1].goalDifference}
+                  </div>
                 </div>
               </div>
               
               {/* 1st Place */}
-              <div className="order-2">
-                <div className="sofa-card p-4 text-center relative bg-gradient-to-br from-sofa-bg-card to-sofa-bg-secondary">
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-sofa-green text-white rounded-full flex items-center justify-center font-bold">
+              <div className="order-2" style={{ overflow: 'visible' }}>
+                <div className="sofa-card p-4 text-center relative bg-gradient-to-br from-sofa-green/10 to-sofa-bg-secondary" style={{ overflow: 'visible' }}>
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 text-white rounded-full flex items-center justify-center font-bold z-50 shadow-xl border-2 border-white">
                     1
                   </div>
-                  <div className="mb-2">👑</div>
-                  <h3 className="font-bold text-sofa-text-primary mb-2">{topThreeTeams[0].teamName}</h3>
+                  <div className="mb-3">
+                    {topThreeTeams[0].teamLogo ? (
+                      <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-sofa-bg-secondary border-2 border-sofa-green">
+                        <img 
+                          src={topThreeTeams[0].teamLogo} 
+                          alt={topThreeTeams[0].teamName}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                            if (e.currentTarget.parentElement) {
+                              e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-sofa-green text-2xl font-bold">👑</div>'
+                            }
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="text-5xl">👑</div>
+                    )}
+                  </div>
+                  <TeamLink 
+                    teamId={topThreeTeams[0].teamId} 
+                    teamName={topThreeTeams[0].teamName}
+                    className="font-bold text-sofa-text-primary hover:text-sofa-text-accent transition-colors block mb-2"
+                  />
                   <div className="text-xl font-bold text-sofa-green">{topThreeTeams[0].points} pts</div>
-                  <div className="text-xs text-sofa-text-muted">{topThreeTeams[0].wins}V - {topThreeTeams[0].draws}N - {topThreeTeams[0].losses}D</div>
+                  <div className="text-xs text-sofa-text-muted">
+                    {topThreeTeams[0].wins}V - {topThreeTeams[0].draws}N - {topThreeTeams[0].losses}D
+                  </div>
+                  <div className="text-xs text-sofa-text-muted mt-1">
+                    Diff: {topThreeTeams[0].goalDifference > 0 ? '+' : ''}{topThreeTeams[0].goalDifference}
+                  </div>
                 </div>
               </div>
               
               {/* 3rd Place */}
-              <div className="order-3 pt-12">
-                <div className="sofa-card p-4 text-center relative">
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+              <div className="order-3 pt-12" style={{ overflow: 'visible' }}>
+                <div className="sofa-card p-4 text-center relative bg-gradient-to-br from-sofa-bg-card to-sofa-bg-secondary" style={{ overflow: 'visible' }}>
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm z-50 shadow-xl border-2 border-white">
                     3
                   </div>
-                  <h3 className="font-semibold text-sofa-text-primary mb-2 text-sm">{topThreeTeams[2].teamName}</h3>
+                  <div className="mb-3">
+                    {topThreeTeams[2].teamLogo ? (
+                      <div className="w-16 h-16 mx-auto rounded-full overflow-hidden bg-sofa-bg-secondary border-2 border-orange-500">
+                        <img 
+                          src={topThreeTeams[2].teamLogo} 
+                          alt={topThreeTeams[2].teamName}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                            if (e.currentTarget.parentElement) {
+                              e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-orange-500 text-lg font-bold">🥉</div>'
+                            }
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="text-4xl">🥉</div>
+                    )}
+                  </div>
+                  <TeamLink 
+                    teamId={topThreeTeams[2].teamId} 
+                    teamName={topThreeTeams[2].teamName}
+                    className="font-semibold text-sofa-text-primary hover:text-sofa-text-accent transition-colors text-sm block mb-2"
+                  />
                   <div className="text-lg font-bold text-sofa-text-accent">{topThreeTeams[2].points} pts</div>
-                  <div className="text-xs text-sofa-text-muted">{topThreeTeams[2].wins}V - {topThreeTeams[2].draws}N - {topThreeTeams[2].losses}D</div>
+                  <div className="text-xs text-sofa-text-muted">
+                    {topThreeTeams[2].wins}V - {topThreeTeams[2].draws}N - {topThreeTeams[2].losses}D
+                  </div>
+                  <div className="text-xs text-sofa-text-muted mt-1">
+                    Diff: {topThreeTeams[2].goalDifference > 0 ? '+' : ''}{topThreeTeams[2].goalDifference}
+                  </div>
                 </div>
               </div>
             </div>

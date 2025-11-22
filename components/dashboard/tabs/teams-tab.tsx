@@ -386,6 +386,7 @@ export default function TeamsTab() {
       // Charger les données de l'équipe avec playerAccounts et coachAccounts
       const accountsRes = await fetch('/api/admin/team-accounts')
       let playersLoaded = false
+      let updatedTeam = team
       
       if (accountsRes.ok) {
         const accountsData = await accountsRes.json()
@@ -394,6 +395,22 @@ export default function TeamsTab() {
         if (teamData) {
           // Vérifier si l'équipe a un coach
           setHasCoach(teamData.coaches && teamData.coaches.length > 0)
+          
+          // Si le coach n'est pas rempli dans team, charger depuis coachAccounts
+          if ((!team.coach || !team.coach.firstName || !team.coach.lastName) && teamData.coaches && teamData.coaches.length > 0) {
+            const coach = teamData.coaches[0]
+            updatedTeam = {
+              ...team,
+              coach: {
+                firstName: coach.firstName || coach.name?.split(' ')[0] || '',
+                lastName: coach.lastName || coach.name?.split(' ').slice(1).join(' ') || '',
+                birthDate: coach.birthDate || '',
+                email: coach.email || '',
+                phone: coach.phone || ''
+              }
+            }
+            setSelectedTeam(updatedTeam)
+          }
           
           // Charger les joueurs avec leurs comptes playerAccounts
           const playersRes = await fetch(`/api/admin/players?teamId=${team.id}`)

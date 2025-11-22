@@ -24,11 +24,30 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Récupérer les notifications de l'utilisateur (sans orderBy pour éviter l'index)
-    const notificationsSnapshot = await adminDb
-      .collection('notifications')
-      .where('userId', '==', userId)
-      .get()
+    // Récupérer les notifications de l'utilisateur avec limite pour éviter le quota
+    // Limiter à 100 notifications les plus récentes
+    let notificationsSnapshot
+    try {
+      // Essayer avec orderBy si l'index existe
+      notificationsSnapshot = await adminDb
+        .collection('notifications')
+        .where('userId', '==', userId)
+        .orderBy('createdAt', 'desc')
+        .limit(100)
+        .get()
+    } catch (error: any) {
+      // Si l'index n'existe pas, récupérer sans orderBy et limiter
+      if (error.code === 9 || error.message?.includes('index')) {
+        const allNotifications = await adminDb
+          .collection('notifications')
+          .where('userId', '==', userId)
+          .limit(200) // Récupérer plus pour avoir assez après tri
+          .get()
+        notificationsSnapshot = allNotifications
+      } else {
+        throw error
+      }
+    }
     
     // Trier côté serveur
     const notifications = notificationsSnapshot.docs
@@ -52,6 +71,7 @@ export async function GET(request: NextRequest) {
         }
       })
       .sort((a, b) => b.createdAtTimestamp - a.createdAtTimestamp)
+      .slice(0, 100) // Limiter à 100 même si on en a récupéré plus
 
     return NextResponse.json({
       success: true,

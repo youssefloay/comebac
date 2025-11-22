@@ -33,6 +33,8 @@ export default function ResultsTab() {
     loadData()
   }, [])
 
+  const [isMiniLeague, setIsMiniLeague] = useState(false)
+
   const loadData = async () => {
     try {
       setError(null)
@@ -40,13 +42,21 @@ export default function ResultsTab() {
       setTeams(teamsData)
       setMatches(matchesData)
 
+      // Check if we're in MINI_LEAGUE mode
+      const hasMiniLeagueMatches = matchesData.some(m => (m as any).tournamentMode === 'MINI_LEAGUE')
+      setIsMiniLeague(hasMiniLeagueMatches)
+
       // Load all results
       const allResults = await Promise.all(matchesData.map((m) => getMatchResult(m.id)))
       setResults(allResults.filter((r) => r !== null) as MatchResult[])
 
-      // Calculate ranking
+      // Calculate ranking (only from qualification matches for MINI_LEAGUE)
+      const matchesForRanking = hasMiniLeagueMatches 
+        ? matchesData.filter(m => !(m as any).isFinal) // Exclude finals for ranking
+        : matchesData
+
       const stats = calculateTeamStats(
-        matchesData,
+        matchesForRanking,
         allResults
           .filter((r) => r !== null)
           .map((r) => ({
@@ -196,6 +206,7 @@ export default function ResultsTab() {
       }
 
       setShowResultForm(false)
+      const savedMatch = selectedMatch
       setSelectedMatch(null)
       setResultData({
         homeScore: "",
@@ -205,7 +216,22 @@ export default function ResultsTab() {
       })
       await loadData()
 
-      setTimeout(() => setSuccess(null), 3000)
+      // Vérifier si c'est un match Mini-League et si on peut générer les finales
+      if (savedMatch && (savedMatch as any).tournamentMode === 'MINI_LEAGUE' && (savedMatch as any).isFinal === false && savedMatch.round <= 5) {
+        console.log("🔍 Vérification automatique pour générer les finales...")
+        const { checkAndGenerateFinals } = await import("@/lib/auto-generate-finals")
+        const isTest = (savedMatch as any).isTest === true
+        const finalsResult = await checkAndGenerateFinals(isTest)
+        
+        if (finalsResult.generated) {
+          console.log("✅ " + finalsResult.message)
+          setSuccess(`🎉 ${finalsResult.message}`)
+        } else {
+          console.log("ℹ️ " + finalsResult.message)
+        }
+      }
+
+      setTimeout(() => setSuccess(null), 5000)
     } catch (err) {
       setError("Erreur lors de l'enregistrement du résultat")
       console.error("Error saving result:", err)
@@ -291,6 +317,21 @@ export default function ResultsTab() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {isMiniLeague && (
+        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-start gap-3">
+            <Trophy className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-blue-900 font-semibold mb-1">Mode Mini-League</p>
+              <p className="text-blue-800 text-sm">
+                Les 4 premières équipes du classement (sur fond bleu) sont qualifiées pour les finales du Jour 6.
+                Le vainqueur sera déterminé par le match "1er vs 2ème" (Grande Finale).
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -503,9 +544,25 @@ export default function ResultsTab() {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {ranking.length > 0 ? (
-              ranking.map((team) => (
-                <tr key={team.teamId} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm font-semibold text-gray-900">{team.rank}</td>
+              ranking.map((team) => {
+                const isTop4 = isMiniLeague && team.rank <= 4
+                return (
+                <tr 
+                  key={team.teamId} 
+                  className={`hover:bg-gray-50 ${
+                    isTop4 ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                  }`}
+                >
+                  <td className="px-6 py-4 text-sm font-semibold text-gray-900">
+                    <div className="flex items-center gap-2">
+                      {team.rank}
+                      {isTop4 && (
+                        <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full font-medium">
+                          Qualifié
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-6 py-4 text-sm text-gray-900">{getTeamName(team.teamId)}</td>
                   <td className="px-6 py-4 text-sm text-center text-gray-600">{team.matchesPlayed}</td>
                   <td className="px-6 py-4 text-sm text-center text-gray-600">{team.wins}</td>
@@ -519,7 +576,8 @@ export default function ResultsTab() {
                   </td>
                   <td className="px-6 py-4 text-sm font-semibold text-center text-primary">{team.points}</td>
                 </tr>
-              ))
+              )
+              })
             ) : (
               <tr>
                 <td colSpan={10} className="px-6 py-8 text-center text-gray-500">

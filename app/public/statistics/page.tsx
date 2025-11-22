@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { getTeams } from "@/lib/db"
 import { t } from "@/lib/i18n"
+import { getParticipatingTeamIds, filterParticipatingTeams } from "@/lib/tournament-utils"
 import { 
   getCurrentRanking, 
   getTopScorers, 
@@ -99,13 +100,20 @@ export default function PublicStatisticsPage() {
         getDetailedMatchHistory(),
       ])
 
-      setTeams(teamsData)
+      // Filtrer pour ne garder que les équipes participantes (pages publiques uniquement)
+      const participatingTeamIds = await getParticipatingTeamIds()
+      let filteredTeams = teamsData
+      if (participatingTeamIds) {
+        filteredTeams = filterParticipatingTeams(teamsData, participatingTeamIds)
+      }
+
+      setTeams(filteredTeams)
       setRanking(rankingData)
       setTopScorers(scorersData)
       setMatchHistory(matchHistoryData)
 
-      if (teamsData.length > 0) {
-        setSelectedTeamId(teamsData[0].id)
+      if (filteredTeams.length > 0) {
+        setSelectedTeamId(filteredTeams[0].id)
       }
     } catch (error) {
       console.error("Error loading statistics:", error)

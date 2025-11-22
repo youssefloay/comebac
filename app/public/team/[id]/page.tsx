@@ -43,7 +43,29 @@ export default function TeamDetailPage() {
         // Fetch team
         const teamDoc = await getDoc(doc(db, "teams", teamId))
         if (teamDoc.exists()) {
-          setTeam({ id: teamDoc.id, ...teamDoc.data() } as Team)
+          let teamData = { id: teamDoc.id, ...teamDoc.data() } as Team
+          
+          // Si le coach n'est pas rempli dans teams, chercher dans coachAccounts
+          if (!teamData.coach || !teamData.coach.firstName || !teamData.coach.lastName) {
+            const coachQuery = query(collection(db, 'coachAccounts'), where('teamId', '==', teamId))
+            const coachSnap = await getDocs(coachQuery)
+            
+            if (!coachSnap.empty) {
+              const coachData = coachSnap.docs[0].data()
+              teamData = {
+                ...teamData,
+                coach: {
+                  firstName: coachData.firstName || '',
+                  lastName: coachData.lastName || '',
+                  birthDate: coachData.birthDate || '',
+                  email: coachData.email || '',
+                  phone: coachData.phone || ''
+                }
+              }
+            }
+          }
+          
+          setTeam(teamData)
         }
 
         // Fetch all teams for match display

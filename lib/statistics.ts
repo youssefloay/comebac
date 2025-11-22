@@ -13,11 +13,19 @@ export async function recalculateAllStatistics(): Promise<void> {
       getAllMatchResults(),
     ])
 
+    // Filtrer les matchs de test et les finales non publiées (ne pas les inclure dans les statistiques publiques)
+    const publicMatches = matches.filter(m => {
+      if (m.isTest) return false
+      // Si c'est une finale, vérifier qu'elle est publiée
+      if (m.isFinal && !m.isPublished) return false
+      return true
+    })
+
     const completedResults = allResults
 
-    // Calculate stats
+    // Calculate stats (uniquement avec les matchs publics)
     const stats = calculateTeamStats(
-      matches,
+      publicMatches,
       completedResults.map((r) => ({
         matchId: r.matchId,
         homeScore: r.homeTeamScore,
@@ -124,11 +132,19 @@ export async function getTeamDetailedStats(teamId: string) {
       getAllMatchResults(),
     ])
 
-    const teamMatches = matches.filter((m) => m.homeTeamId === teamId || m.awayTeamId === teamId)
+    // Filtrer les matchs de test et les finales non publiées (ne pas les inclure dans les statistiques publiques)
+    const publicMatches = matches.filter(m => {
+      if (m.isTest) return false
+      // Si c'est une finale, vérifier qu'elle est publiée
+      if (m.isFinal && !m.isPublished) return false
+      return true
+    })
+
+    const teamMatches = publicMatches.filter((m) => m.homeTeamId === teamId || m.awayTeamId === teamId)
     const completedResults = allResults
 
     const teamResults = completedResults.filter((r) => {
-      const match = matches.find((m) => m.id === r.matchId)
+      const match = publicMatches.find((m) => m.id === r.matchId)
       return match && (match.homeTeamId === teamId || match.awayTeamId === teamId)
     })
 
@@ -177,7 +193,19 @@ export async function getTeamDetailedStats(teamId: string) {
  */
 export async function getTopScorers() {
   try {
-    const allResults = await getAllMatchResults()
+    const [matches, allResults] = await Promise.all([
+      getMatches(),
+      getAllMatchResults()
+    ])
+
+    // Filtrer les matchs de test et les finales non publiées (ne pas les inclure dans les statistiques publiques)
+    const publicMatches = matches.filter(m => {
+      if (m.isTest) return false
+      // Si c'est une finale, vérifier qu'elle est publiée
+      if (m.isFinal && !m.isPublished) return false
+      return true
+    })
+    const publicMatchIds = new Set(publicMatches.map(m => m.id))
 
     const scorerStats: Record<string, { 
       name: string; 
@@ -187,7 +215,10 @@ export async function getTopScorers() {
       goalsPerMatch: number;
     }> = {}
 
-    allResults.forEach((result) => {
+    // Filtrer les résultats pour ne garder que ceux des matchs publics
+    const publicResults = allResults.filter(r => publicMatchIds.has(r.matchId))
+
+    publicResults.forEach((result) => {
       // Track matches for each player
       const matchPlayers = new Set<string>()
 
@@ -264,7 +295,10 @@ export async function getDetailedMatchHistory() {
       getAllMatchResults()
     ])
 
-    const detailedMatches = matches
+    // Filtrer les matchs de test (ne pas les inclure dans l'historique public)
+    const publicMatches = matches.filter(m => !m.isTest)
+
+    const detailedMatches = publicMatches
       .filter(match => match.status === "completed")
       .map(match => {
         const result = results.find(r => r.matchId === match.id)
@@ -293,7 +327,15 @@ export async function getComprehensiveTeamStats(teamId: string) {
       getAllMatchResults()
     ])
 
-    const teamMatches = matches.filter(m => m.homeTeamId === teamId || m.awayTeamId === teamId)
+    // Filtrer les matchs de test et les finales non publiées (ne pas les inclure dans les statistiques publiques)
+    const publicMatches = matches.filter(m => {
+      if (m.isTest) return false
+      // Si c'est une finale, vérifier qu'elle est publiée
+      if (m.isFinal && !m.isPublished) return false
+      return true
+    })
+
+    const teamMatches = publicMatches.filter(m => m.homeTeamId === teamId || m.awayTeamId === teamId)
     const completedMatches = teamMatches.filter(m => m.status === "completed")
     
     const teamResults = results.filter(r => {
@@ -412,14 +454,24 @@ export async function getAdvancedAnalytics() {
       getTeams()
     ])
 
-    const completedMatches = matches.filter(m => m.status === "completed")
-    const totalGoals = results.reduce((sum, r) => sum + r.homeTeamScore + r.awayTeamScore, 0)
+    // Filtrer les matchs de test et les finales non publiées (ne pas les inclure dans les statistiques publiques)
+    const publicMatches = matches.filter(m => {
+      if (m.isTest) return false
+      // Si c'est une finale, vérifier qu'elle est publiée
+      if (m.isFinal && !m.isPublished) return false
+      return true
+    })
+    const publicMatchIds = new Set(publicMatches.map(m => m.id))
+    const publicResults = results.filter(r => publicMatchIds.has(r.matchId))
+
+    const completedMatches = publicMatches.filter(m => m.status === "completed")
+    const totalGoals = publicResults.reduce((sum, r) => sum + r.homeTeamScore + r.awayTeamScore, 0)
     const avgGoalsPerMatch = completedMatches.length > 0 ? Number((totalGoals / completedMatches.length).toFixed(1)) : 0
 
     // Calculate team performance metrics
     const teamMetrics = teams.map(team => {
-      const teamResults = results.filter(r => {
-        const match = matches.find(m => m.id === r.matchId)
+      const teamResults = publicResults.filter(r => {
+        const match = publicMatches.find(m => m.id === r.matchId)
         return match && (match.homeTeamId === team.id || match.awayTeamId === team.id)
       })
 
@@ -598,10 +650,21 @@ export async function getMatchPredictions() {
  */
 export async function getPlayerAwards() {
   try {
-    const [results, teams] = await Promise.all([
+    const [matches, results, teams] = await Promise.all([
+      getMatches(),
       getAllMatchResults(),
       getTeams()
     ])
+
+    // Filtrer les matchs de test et les finales non publiées (ne pas les inclure dans les statistiques publiques)
+    const publicMatches = matches.filter(m => {
+      if (m.isTest) return false
+      // Si c'est une finale, vérifier qu'elle est publiée
+      if (m.isFinal && !m.isPublished) return false
+      return true
+    })
+    const publicMatchIds = new Set(publicMatches.map(m => m.id))
+    const publicResults = results.filter(r => publicMatchIds.has(r.matchId))
 
     // Calculate player statistics
     const playerStats: Record<string, {
@@ -613,7 +676,7 @@ export async function getPlayerAwards() {
       team?: string
     }> = {}
 
-    results.forEach(result => {
+    publicResults.forEach(result => {
       const homeTeam = teams.find(t => t.id === result.matchId.split('-')[0])
       const awayTeam = teams.find(t => t.id === result.matchId.split('-')[1])
 

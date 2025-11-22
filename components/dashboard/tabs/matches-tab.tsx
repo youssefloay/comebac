@@ -18,14 +18,19 @@ import {
   CheckCircle,
   PlayCircle,
   XCircle,
-  Filter
+  Filter,
+  Edit2,
+  Save,
+  X,
+  Trash2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { MatchResultForm } from "@/components/matches/match-result-form"
-import { collection, doc, updateDoc, addDoc, getDocs, query, where, Timestamp } from "firebase/firestore"
+import { collection, doc, updateDoc, addDoc, getDocs, getDoc, query, where, Timestamp, deleteDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { recalculateAllStatistics } from "@/lib/statistics"
+import { checkAndGenerateFinals } from "@/lib/auto-generate-finals"
 
 export default function MatchesTab() {
   const [teams, setTeams] = useState<Team[]>([])
@@ -34,6 +39,13 @@ export default function MatchesTab() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [editingMatchId, setEditingMatchId] = useState<string | null>(null)
+  const [editDate, setEditDate] = useState<string>("")
+  const [editTime, setEditTime] = useState<string>("")
+  const [deletingMatchId, setDeletingMatchId] = useState<string | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null)
+  const [deletingAll, setDeletingAll] = useState(false)
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false)
   
   const handleSubmitResult = async (match: Match & { result?: MatchResult }, result: MatchResult) => {
     try {
@@ -183,8 +195,27 @@ export default function MatchesTab() {
       await recalculateAllStatistics()
       console.log("✅ All statistics recalculated")
 
-      setSuccess("Résultat enregistré avec succès")
-      setTimeout(() => setSuccess(null), 3000)
+      // Vérifier si c'est un match Mini-League et si on peut générer les finales
+      const matchData = await getDoc(doc(db, "matches", match.id))
+      const matchDoc = matchData.data()
+      
+      if (matchDoc?.tournamentMode === 'MINI_LEAGUE' && matchDoc?.isFinal === false && matchDoc?.round <= 5) {
+        console.log("🔍 Vérification automatique pour générer les finales...")
+        const isTest = matchDoc.isTest === true
+        const finalsResult = await checkAndGenerateFinals(isTest)
+        
+        if (finalsResult.generated) {
+          console.log("✅ " + finalsResult.message)
+          setSuccess(`🎉 ${finalsResult.message}`)
+        } else {
+          console.log("ℹ️ " + finalsResult.message)
+          setSuccess("Résultat enregistré avec succès")
+        }
+      } else {
+        setSuccess("Résultat enregistré avec succès")
+      }
+      
+      setTimeout(() => setSuccess(null), 5000)
       
       // Refresh matches
       await loadMatches()
@@ -307,6 +338,66 @@ export default function MatchesTab() {
       hour: "2-digit",
       minute: "2-digit",
     }).format(date)
+  }
+
+  const handleDeleteMatch = async (matchId: string) => {
+    try {
+      setDeletingMatchId(matchId)
+      setError(null)
+
+      // Supprimer le résultat du match s'il existe
+      const resultsQuery = query(collection(db, "matchResults"), where("matchId", "==", matchId))
+      const resultsSnap = await getDocs(resultsQuery)
+      
+      const deletePromises = resultsSnap.docs.map(doc => deleteDoc(doc.ref))
+      await Promise.all(deletePromises)
+
+      // Supprimer le match
+      await deleteDoc(doc(db, "matches", matchId))
+
+      setSuccess("Match supprimé avec succès")
+      setShowDeleteConfirm(null)
+      await loadMatches()
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err) {
+      setError("Erreur lors de la suppression du match")
+      console.error("Error deleting match:", err)
+    } finally {
+      setDeletingMatchId(null)
+    }
+  }
+
+  const handleDeleteAllMatches = async () => {
+    try {
+      setDeletingAll(true)
+      setError(null)
+      setShowDeleteAllConfirm(false)
+
+      // Récupérer tous les matchs
+      const matchesSnapshot = await getDocs(collection(db, "matches"))
+      const matchIds = matchesSnapshot.docs.map(doc => doc.id)
+
+      // Récupérer tous les résultats de matchs
+      const resultsSnapshot = await getDocs(collection(db, "matchResults"))
+      const resultIds = resultsSnapshot.docs.map(doc => doc.id)
+
+      // Supprimer tous les résultats
+      const deleteResultsPromises = resultIds.map(id => deleteDoc(doc(db, "matchResults", id)))
+      await Promise.all(deleteResultsPromises)
+
+      // Supprimer tous les matchs
+      const deleteMatchesPromises = matchIds.map(id => deleteDoc(doc(db, "matches", id)))
+      await Promise.all(deleteMatchesPromises)
+
+      setSuccess(`${matchIds.length} match(s) et ${resultIds.length} résultat(s) supprimé(s) avec succès`)
+      await loadMatches()
+      setTimeout(() => setSuccess(null), 5000)
+    } catch (err) {
+      setError("Erreur lors de la suppression des matchs")
+      console.error("Error deleting all matches:", err)
+    } finally {
+      setDeletingAll(false)
+    }
   }
 
   const getStatusBadge = (status: string) => {
@@ -447,6 +538,32 @@ export default function MatchesTab() {
         </div>
       )}
 
+      {/* Header avec bouton de suppression globale */}
+      {matches.length > 0 && (
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <p className="text-gray-600">{matches.length} match(s) au total</p>
+          </div>
+          <button
+            onClick={() => setShowDeleteAllConfirm(true)}
+            disabled={deletingAll}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {deletingAll ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Suppression...
+              </>
+            ) : (
+              <>
+                <Trash2 className="w-5 h-5" />
+                Supprimer tous les matchs
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
       <div className="space-y-6">
         {matches.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm border p-12 text-center">
@@ -482,12 +599,89 @@ export default function MatchesTab() {
                       <div className="bg-blue-50 p-2 rounded-lg">
                         <Calendar className="w-5 h-5 text-blue-600" />
                       </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">{formatDate(match.date)}</p>
-                        <p className="text-sm text-gray-600 flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          {new Date(match.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-                        </p>
+                      <div className="flex-1">
+                        {editingMatchId === match.id ? (
+                          <div className="space-y-2">
+                            <div>
+                              <label className="block text-xs text-gray-600 mb-1">Date</label>
+                              <input
+                                type="date"
+                                value={editDate}
+                                onChange={(e) => setEditDate(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-600 mb-1">Heure</label>
+                              <input
+                                type="time"
+                                value={editTime}
+                                onChange={(e) => setEditTime(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    setLoading(true)
+                                    const newDate = new Date(`${editDate}T${editTime}`)
+                                    await updateDoc(doc(db, "matches", match.id), {
+                                      date: Timestamp.fromDate(newDate),
+                                      updatedAt: Timestamp.now()
+                                    })
+                                    setEditingMatchId(null)
+                                    setSuccess("Date et heure mises à jour avec succès")
+                                    await loadMatches()
+                                    setTimeout(() => setSuccess(null), 3000)
+                                  } catch (err) {
+                                    setError("Erreur lors de la mise à jour")
+                                    console.error("Error updating match date:", err)
+                                  } finally {
+                                    setLoading(false)
+                                  }
+                                }}
+                                className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition flex items-center gap-1"
+                              >
+                                <Save className="w-3 h-3" />
+                                Enregistrer
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingMatchId(null)
+                                  setEditDate("")
+                                  setEditTime("")
+                                }}
+                                className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs rounded-lg hover:bg-gray-300 transition flex items-center gap-1"
+                              >
+                                <X className="w-3 h-3" />
+                                Annuler
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="font-semibold text-gray-900">{formatDate(match.date)}</p>
+                            <p className="text-sm text-gray-600 flex items-center gap-2">
+                              <Clock className="w-4 h-4" />
+                              {new Date(match.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                            <button
+                              onClick={() => {
+                                const matchDate = new Date(match.date)
+                                const dateStr = matchDate.toISOString().split('T')[0]
+                                const timeStr = `${String(matchDate.getHours()).padStart(2, '0')}:${String(matchDate.getMinutes()).padStart(2, '0')}`
+                                setEditDate(dateStr)
+                                setEditTime(timeStr)
+                                setEditingMatchId(match.id)
+                              }}
+                              className="mt-2 px-2 py-1 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition flex items-center gap-1"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                              Modifier
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                     
@@ -636,30 +830,50 @@ export default function MatchesTab() {
                       </span>
                     </div>
                     
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="bg-white hover:bg-gray-50"
-                        >
-                          {match.result ? 'Modifier le résultat' : 'Ajouter le résultat'}
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle className="flex items-center gap-2">
-                            <Trophy className="w-5 h-5" />
-                            Résultat du match
-                          </DialogTitle>
-                        </DialogHeader>
-                        <MatchResultForm 
-                          match={match} 
-                          onSubmit={handleSubmitResult}
-                          isSubmitting={loading}
-                        />
-                      </DialogContent>
-                    </Dialog>
+                    <div className="flex items-center gap-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="bg-white hover:bg-gray-50"
+                          >
+                            {match.result ? 'Modifier le résultat' : 'Ajouter le résultat'}
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                              <Trophy className="w-5 h-5" />
+                              Résultat du match
+                            </DialogTitle>
+                          </DialogHeader>
+                          <MatchResultForm 
+                            match={match} 
+                            onSubmit={handleSubmitResult}
+                            isSubmitting={loading}
+                          />
+                        </DialogContent>
+                      </Dialog>
+                      
+                      <button
+                        onClick={() => setShowDeleteConfirm(match.id)}
+                        disabled={deletingMatchId === match.id}
+                        className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        {deletingMatchId === match.id ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Suppression...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="w-4 h-4" />
+                            Supprimer
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -667,6 +881,113 @@ export default function MatchesTab() {
           })
         )}
       </div>
+
+      {/* Modal de confirmation de suppression d'un match */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowDeleteConfirm(null)}>
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Supprimer le match</h3>
+                <p className="text-sm text-gray-600">Cette action est irréversible</p>
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <p className="text-sm text-gray-700">
+                Êtes-vous sûr de vouloir supprimer ce match ? Cette action supprimera également tous les résultats associés.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => handleDeleteMatch(showDeleteConfirm)}
+                disabled={deletingMatchId === showDeleteConfirm}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {deletingMatchId === showDeleteConfirm ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Suppression...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-5 h-5" />
+                    Supprimer
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmation de suppression de tous les matchs */}
+      {showDeleteAllConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowDeleteAllConfirm(false)}>
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Supprimer tous les matchs</h3>
+                <p className="text-sm text-gray-600">Cette action est irréversible</p>
+              </div>
+            </div>
+            
+            <div className="mb-4 space-y-2">
+              <p className="text-sm text-gray-700">
+                Vous allez supprimer :
+              </p>
+              <ul className="list-disc list-inside text-sm text-gray-600 space-y-1 ml-2">
+                <li>{matches.length} match(s)</li>
+                <li>Tous les résultats associés</li>
+              </ul>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-3">
+                <p className="text-sm text-red-800">
+                  <strong>⚠️ Attention :</strong> Cette action supprimera définitivement tous les matchs et leurs résultats. Cette opération ne peut pas être annulée.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteAllConfirm(false)}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleDeleteAllMatches}
+                disabled={deletingAll}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {deletingAll ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Suppression...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-5 h-5" />
+                    Supprimer tout
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -5,10 +5,44 @@ import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, Timestamp, quer
 export async function GET() {
   try {
     const teamsSnapshot = await getDocs(collection(db, 'teams'))
-    const teams = teamsSnapshot.docs.map(doc => ({
+    const teamsData = teamsSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }))
+    
+    // Charger tous les coaches depuis coachAccounts
+    const coachesSnapshot = await getDocs(collection(db, 'coachAccounts'))
+    const coachesMap = new Map<string, any>()
+    coachesSnapshot.docs.forEach(coachDoc => {
+      const coachData = coachDoc.data()
+      if (coachData.teamId) {
+        coachesMap.set(coachData.teamId, {
+          firstName: coachData.firstName || '',
+          lastName: coachData.lastName || '',
+          birthDate: coachData.birthDate || '',
+          email: coachData.email || '',
+          phone: coachData.phone || ''
+        })
+      }
+    })
+    
+    // Enrichir les équipes avec les données du coach si manquantes
+    const teams = teamsData.map(team => {
+      const teamData = team as any
+      
+      // Si le coach n'est pas rempli dans teams, chercher dans coachAccounts
+      if (!teamData.coach || !teamData.coach.firstName || !teamData.coach.lastName) {
+        const coachFromAccounts = coachesMap.get(teamData.id)
+        if (coachFromAccounts) {
+          return {
+            ...teamData,
+            coach: coachFromAccounts
+          }
+        }
+      }
+      
+      return teamData
+    })
     
     return NextResponse.json(teams)
   } catch (error) {

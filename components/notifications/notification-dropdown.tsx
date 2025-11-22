@@ -24,7 +24,8 @@ export function NotificationDropdown() {
   useEffect(() => {
     if (user) {
       fetchNotifications()
-      const interval = setInterval(fetchNotifications, 30000)
+      // Augmenter l'intervalle à 2 minutes pour réduire les appels API et éviter le quota
+      const interval = setInterval(fetchNotifications, 120000)
       return () => clearInterval(interval)
     }
   }, [user])
