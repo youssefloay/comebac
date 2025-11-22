@@ -1,18 +1,107 @@
 "use client"
 
-import { useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { Users, Link as LinkIcon, FileText, ArrowRight } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Users, Link as LinkIcon, FileText, ArrowRight, Clock, AlertCircle, X } from 'lucide-react'
 import Link from 'next/link'
 import { SimpleLogo } from '@/components/ui/logo'
 
 export default function RegisterTeamPage() {
+  const [isWaitingListEnabled, setIsWaitingListEnabled] = useState(false)
+  const [waitingListMessage, setWaitingListMessage] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [showWaitingListModal, setShowWaitingListModal] = useState(false)
+
   useEffect(() => {
     document.documentElement.classList.remove('dark')
+    
+    // Vérifier le statut de la waiting list
+    const checkWaitingListStatus = async () => {
+      try {
+        const response = await fetch('/api/admin/waiting-list')
+        const data = await response.json()
+        const enabled = data.isWaitingListEnabled || false
+        setIsWaitingListEnabled(enabled)
+        setWaitingListMessage(data.message || 'Nous sommes au complet pour le moment. Inscrivez-vous en liste d\'attente.')
+        // Afficher le modal si la waiting list est activée
+        if (enabled) {
+          setShowWaitingListModal(true)
+        }
+      } catch (error) {
+        console.error('Error checking waiting list status:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    checkWaitingListStatus()
   }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+      {/* Waiting List Modal */}
+      <AnimatePresence>
+        {showWaitingListModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            onClick={() => setShowWaitingListModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+            >
+              <div className="flex items-start gap-4 mb-6">
+                <div className="flex-shrink-0">
+                  <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center">
+                    <Clock className="w-7 h-7 text-white" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                      <AlertCircle className="w-6 h-6 text-amber-600" />
+                      Inscriptions complètes
+                    </h2>
+                    <button
+                      onClick={() => setShowWaitingListModal(false)}
+                      className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <X className="w-5 h-5 text-gray-500" />
+                    </button>
+                  </div>
+                  <p className="text-gray-700 mb-4">
+                    {waitingListMessage}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Les inscriptions en cours peuvent continuer à ajouter des joueurs via leurs liens d'invitation.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowWaitingListModal(false)}
+                  className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                >
+                  Fermer
+                </button>
+                <button
+                  onClick={() => setShowWaitingListModal(false)}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-colors font-medium"
+                >
+                  Continuer quand même
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -39,6 +128,7 @@ export default function RegisterTeamPage() {
             Choisissez le mode d'inscription qui vous convient le mieux
           </p>
         </motion.div>
+
 
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           <motion.div

@@ -11,6 +11,7 @@ import ResultsTab from "./tabs/results-tab"
 import LineupsTab from "./tabs/lineups-tab"
 import ActivityTab from "./tabs/activity-tab"
 import MiniLeagueTab from "./tabs/mini-league-tab"
+import WaitingListTab from "./tabs/waiting-list-tab"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 // Lazy load des composants lourds pour améliorer les performances
@@ -18,7 +19,7 @@ const StatisticsTab = lazy(() => import("./tabs/statistics-tab"))
 const MaintenanceTab = lazy(() => import("./tabs/maintenance-tab"))
 const AccountsTab = lazy(() => import("./tabs/accounts-tab"))
 
-type TabType = "teams" | "players" | "matches" | "results" | "statistics" | "lineups" | "registrations" | "archives" | "activity" | "accounts" | "maintenance" | "test-matches" | "mini-league"
+type TabType = "teams" | "players" | "matches" | "results" | "statistics" | "lineups" | "registrations" | "archives" | "activity" | "accounts" | "maintenance" | "test-matches" | "mini-league" | "waiting-list"
 
 export default function Dashboard({ user }: { user: any }) {
   const [activeTab, setActiveTab] = useState<TabType>("teams")
@@ -268,6 +269,7 @@ export default function Dashboard({ user }: { user: any }) {
     { id: "activity", label: "Activité", icon: "🔔" },
     { id: "accounts", label: "Comptes", icon: "👤" },
     { id: "registrations", label: "Inscriptions", icon: "📝" },
+    { id: "waiting-list", label: "Waiting List", icon: "⏳" },
     { id: "archives", label: "Archives", icon: "📦" },
     { id: "maintenance", label: "Réparations", icon: "🔧" },
     { id: "test-matches", label: "Matchs Test", icon: "🧪" },
@@ -549,6 +551,7 @@ export default function Dashboard({ user }: { user: any }) {
               <MiniLeagueTab />
             </Suspense>
           )}
+          {activeTab === "waiting-list" && <WaitingListTab />}
           {activeTab === "registrations" && (
             <div className="text-center py-8 md:py-12">
               <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Inscriptions d'Équipes</h2>

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { Users, Plus, Trash2, Check, AlertCircle, ArrowLeft } from 'lucide-react'
+import { Users, Plus, Trash2, Check, AlertCircle, ArrowLeft, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { SimpleLogo } from '@/components/ui/logo'
 
@@ -47,6 +47,24 @@ export default function RegisterTeamPage() {
     }
   }, [])
 
+  // Vérifier le statut de la waiting list
+  useEffect(() => {
+    const checkWaitingListStatus = async () => {
+      try {
+        const response = await fetch('/api/admin/waiting-list')
+        const data = await response.json()
+        setIsWaitingListEnabled(data.isWaitingListEnabled || false)
+        setWaitingListMessage(data.message || 'Nous sommes au complet pour le moment.')
+      } catch (error) {
+        console.error('Error checking waiting list status:', error)
+      } finally {
+        setCheckingStatus(false)
+      }
+    }
+    
+    checkWaitingListStatus()
+  }, [])
+
   const [registrationMode, setRegistrationMode] = useState<'choice' | 'complete' | 'collaborative'>('choice')
   const [teamName, setTeamName] = useState('')
   const [schoolName, setSchoolName] = useState('')
@@ -79,6 +97,9 @@ export default function RegisterTeamPage() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
+  const [isWaitingListEnabled, setIsWaitingListEnabled] = useState(false)
+  const [waitingListMessage, setWaitingListMessage] = useState('')
+  const [checkingStatus, setCheckingStatus] = useState(true)
 
   // Charger les données sauvegardées au montage
   useEffect(() => {
@@ -373,6 +394,7 @@ export default function RegisterTeamPage() {
           }
         }),
         status: 'pending',
+        isWaitingList: isWaitingListEnabled, // Marquer si c'est une inscription en waiting list
         submittedAt: serverTimestamp(),
         createdAt: serverTimestamp()
       }
@@ -490,6 +512,37 @@ export default function RegisterTeamPage() {
             💾 Vos données sont sauvegardées automatiquement
           </p>
         </motion.div>
+
+        {/* Waiting List Banner */}
+        {!checkingStatus && isWaitingListEnabled && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-4xl mx-auto mb-6"
+          >
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-6 shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center">
+                    <Clock className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-amber-600" />
+                    Inscriptions complètes
+                  </h2>
+                  <p className="text-gray-700 mb-2">
+                    {waitingListMessage}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Votre inscription sera ajoutée à la liste d'attente et traitée dès qu'une place se libère.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Success Popup Modal */}
         <AnimatePresence>

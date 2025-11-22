@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { Users, ArrowLeft, Loader, Check } from 'lucide-react'
+import { Users, ArrowLeft, Loader, Check, Clock, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { SimpleLogo } from '@/components/ui/logo'
 import { useRouter } from 'next/navigation'
@@ -55,6 +55,27 @@ export default function CollaborativeRegistrationPage() {
   
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isWaitingListEnabled, setIsWaitingListEnabled] = useState(false)
+  const [waitingListMessage, setWaitingListMessage] = useState('')
+  const [checkingStatus, setCheckingStatus] = useState(true)
+
+  // Vérifier le statut de la waiting list
+  useEffect(() => {
+    const checkWaitingListStatus = async () => {
+      try {
+        const response = await fetch('/api/admin/waiting-list')
+        const data = await response.json()
+        setIsWaitingListEnabled(data.isWaitingListEnabled || false)
+        setWaitingListMessage(data.message || 'Nous sommes au complet pour le moment.')
+      } catch (error) {
+        console.error('Error checking waiting list status:', error)
+      } finally {
+        setCheckingStatus(false)
+      }
+    }
+    
+    checkWaitingListStatus()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -144,6 +165,7 @@ export default function CollaborativeRegistrationPage() {
         inviteToken: token,
         minPlayers: 7,
         maxPlayers: 10,
+        isWaitingList: isWaitingListEnabled, // Marquer si c'est une inscription en waiting list
         submittedAt: serverTimestamp(),
         createdAt: serverTimestamp()
       }
@@ -240,6 +262,37 @@ export default function CollaborativeRegistrationPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
+          {/* Waiting List Banner */}
+          {!checkingStatus && isWaitingListEnabled && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6"
+            >
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-6 shadow-lg">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center">
+                      <Clock className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5 text-amber-600" />
+                      Inscriptions complètes
+                    </h2>
+                    <p className="text-gray-700 mb-2">
+                      {waitingListMessage}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Votre inscription sera ajoutée à la liste d'attente et traitée dès qu'une place se libère.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* Contact Instagram */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center mb-6">
             <p className="text-sm text-gray-700 mb-2">

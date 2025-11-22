@@ -6,7 +6,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useRouter } from 'next/navigation'
 import { collection, query, where, getDocs, doc, getDoc, updateDoc, addDoc, deleteDoc, serverTimestamp, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { Check, X, Eye, Users, Clock, CheckCircle, XCircle, Link } from 'lucide-react'
+import { Check, X, Eye, Users, Clock, CheckCircle, XCircle, Link as LinkIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { capitalizeWords } from '@/lib/text-utils'
 
@@ -48,9 +48,12 @@ interface Registration {
   status: 'pending' | 'approved' | 'rejected' | 'pending_players' | 'pending_validation'
   registrationMode?: 'collaborative' | 'complete'
   inviteToken?: string
+  isWaitingList?: boolean
   submittedAt: any
+  createdAt?: any
   processedAt?: any
   processedBy?: string
+  adminNotifiedAt10PlayersAt?: string
 }
 
 export default function TeamRegistrationsPage() {
@@ -63,7 +66,8 @@ export default function TeamRegistrationsPage() {
   const [editedRegistration, setEditedRegistration] = useState<Registration | null>(null)
   const [processing, setProcessing] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending')
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'waiting-list'>('pending')
+  const [activeTab, setActiveTab] = useState<'registrations' | 'waiting-list'>('registrations')
 
   // Vérifier les paramètres URL pour les actions depuis l'email
   useEffect(() => {
@@ -126,6 +130,48 @@ export default function TeamRegistrationsPage() {
       loadRegistrations()
     }
   }, [user, isAdmin])
+
+  // Helper function pour formater les dates/heures
+  const formatDateTime = (dateValue: any): string => {
+    if (!dateValue) return 'N/A'
+    
+    try {
+      let date: Date | null = null
+      
+      // Si c'est un objet Firestore Timestamp avec méthode toDate()
+      if (typeof dateValue === 'object' && typeof dateValue.toDate === 'function') {
+        date = dateValue.toDate()
+      }
+      // Si c'est un objet Firestore Timestamp avec _seconds (sérialisé)
+      else if (typeof dateValue === 'object' && '_seconds' in dateValue) {
+        const timestamp = dateValue._seconds * 1000 + (dateValue._nanoseconds || 0) / 1000000
+        date = new Date(timestamp)
+      }
+      // Si c'est une string ISO
+      else if (typeof dateValue === 'string') {
+        date = new Date(dateValue)
+      }
+      // Si c'est déjà une Date
+      else if (dateValue instanceof Date) {
+        date = dateValue
+      }
+      
+      if (date && !isNaN(date.getTime())) {
+        return date.toLocaleString('fr-FR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      }
+      
+      return 'N/A'
+    } catch (error) {
+      console.error('Erreur formatage date:', error)
+      return 'N/A'
+    }
+  }
 
   const loadRegistrations = async () => {
     try {
@@ -886,14 +932,16 @@ export default function TeamRegistrationsPage() {
 
   const filteredRegistrations = registrations.filter(reg => {
     if (filter === 'all') return true
-    if (filter === 'pending') return reg.status === 'pending' || reg.status === 'pending_players' || reg.status === 'pending_validation'
+    if (filter === 'waiting-list') return reg.isWaitingList === true
+    if (filter === 'pending') return (reg.status === 'pending' || reg.status === 'pending_players' || reg.status === 'pending_validation') && !reg.isWaitingList
     return reg.status === filter
   })
 
   const stats = {
-    pending: registrations.filter(r => r.status === 'pending' || r.status === 'pending_players' || r.status === 'pending_validation').length,
+    pending: registrations.filter(r => (r.status === 'pending' || r.status === 'pending_players' || r.status === 'pending_validation') && !r.isWaitingList).length,
     approved: registrations.filter(r => r.status === 'approved').length,
-    rejected: registrations.filter(r => r.status === 'rejected').length
+    rejected: registrations.filter(r => r.status === 'rejected').length,
+    waitingList: registrations.filter(r => r.isWaitingList === true).length
   }
 
   return (
@@ -906,6 +954,40 @@ export default function TeamRegistrationsPage() {
             Validation des Inscriptions d'Équipes
           </h1>
           <p className="text-gray-600">Gérez les demandes d'inscription des équipes</p>
+        </div>
+
+        {/* Tabs */}
+        <div className="bg-white rounded-lg border border-gray-200 mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="flex">
+              <button
+                onClick={() => setActiveTab('registrations')}
+                className={`flex-1 px-6 py-4 text-center font-medium transition-colors border-b-2 ${
+                  activeTab === 'registrations'
+                    ? 'border-blue-600 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Inscriptions
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('waiting-list')}
+                className={`flex-1 px-6 py-4 text-center font-medium transition-colors border-b-2 ${
+                  activeTab === 'waiting-list'
+                    ? 'border-amber-600 text-amber-600 bg-amber-50'
+                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  Waiting List
+                </div>
+              </button>
+            </nav>
+          </div>
         </div>
 
         {/* Message */}
@@ -922,8 +1004,18 @@ export default function TeamRegistrationsPage() {
           </motion.div>
         )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* Waiting List Tab Content */}
+        {activeTab === 'waiting-list' && (
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <WaitingListContent />
+          </div>
+        )}
+
+        {/* Registrations Tab Content */}
+        {activeTab === 'registrations' && (
+          <>
+            {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white p-6 rounded-lg border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
@@ -949,6 +1041,15 @@ export default function TeamRegistrationsPage() {
                 <p className="text-3xl font-bold text-red-600">{stats.rejected}</p>
               </div>
               <XCircle className="w-12 h-12 text-red-600 opacity-20" />
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Waiting List</p>
+                <p className="text-3xl font-bold text-amber-600">{stats.waitingList}</p>
+              </div>
+              <Clock className="w-12 h-12 text-amber-600 opacity-20" />
             </div>
           </div>
         </div>
@@ -987,6 +1088,14 @@ export default function TeamRegistrationsPage() {
               }`}
             >
               Rejetées ({stats.rejected})
+            </button>
+            <button
+              onClick={() => setFilter('waiting-list')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                filter === 'waiting-list' ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              ⏳ Waiting List ({stats.waitingList})
             </button>
           </div>
         </div>
@@ -1077,9 +1186,16 @@ export default function TeamRegistrationsPage() {
                   )}
                 </div>
 
-                <p className="text-xs text-gray-500 mb-4">
-                  Soumis le {registration.submittedAt?.toDate?.()?.toLocaleDateString('fr-FR') || 'N/A'}
-                </p>
+                <div className="text-xs text-gray-500 mb-4 space-y-1">
+                  <p>
+                    📅 Inscrit le : {formatDateTime(registration.submittedAt || registration.createdAt)}
+                  </p>
+                  {registration.registrationMode === 'collaborative' && registration.players.length >= 10 && registration.adminNotifiedAt10PlayersAt && (
+                    <p className="text-green-600 font-medium">
+                      ✅ 10 joueurs atteints le : {formatDateTime(registration.adminNotifiedAt10PlayersAt)}
+                    </p>
+                  )}
+                </div>
 
                 <div className="flex gap-2">
                   <button
@@ -1097,7 +1213,7 @@ export default function TeamRegistrationsPage() {
                         className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
                         title="Générer un lien pour que le capitaine mette à jour les infos"
                       >
-                        <Link className="w-4 h-4" />
+                        <LinkIcon className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => approveRegistration(registration)}
@@ -1186,6 +1302,16 @@ export default function TeamRegistrationsPage() {
                       {selectedRegistration.teamGrade && (
                         <p className="text-sm text-purple-600 font-medium">📚 Classe: {selectedRegistration.teamGrade}</p>
                       )}
+                      <div className="mt-2 space-y-1 text-xs text-gray-600">
+                        <p>
+                          📅 <strong>Inscrit le :</strong> {formatDateTime(selectedRegistration.submittedAt || selectedRegistration.createdAt)}
+                        </p>
+                        {selectedRegistration.registrationMode === 'collaborative' && selectedRegistration.players.length >= 10 && selectedRegistration.adminNotifiedAt10PlayersAt && (
+                          <p className="text-green-600 font-medium">
+                            ✅ <strong>10 joueurs atteints le :</strong> {formatDateTime(selectedRegistration.adminNotifiedAt10PlayersAt)}
+                          </p>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-600">Détails de l'inscription</p>
                     </>
                   )}
@@ -1775,6 +1901,226 @@ export default function TeamRegistrationsPage() {
             </motion.div>
           )}
         </AnimatePresence>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Waiting List Component
+function WaitingListContent() {
+  const [status, setStatus] = useState<{ isWaitingListEnabled: boolean; message: string }>({
+    isWaitingListEnabled: false,
+    message: ''
+  })
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [customMessage, setCustomMessage] = useState('')
+
+  useEffect(() => {
+    loadStatus()
+  }, [])
+
+  const loadStatus = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/admin/waiting-list')
+      const data = await response.json()
+      setStatus(data)
+      setCustomMessage(data.message || 'Nous sommes au complet pour le moment. Inscrivez-vous en liste d\'attente.')
+    } catch (error) {
+      console.error('Error loading waiting list status:', error)
+      setMessage({ type: 'error', text: 'Erreur lors du chargement du statut' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const toggleWaitingList = async (enabled: boolean) => {
+    try {
+      setSaving(true)
+      setMessage(null)
+      
+      const response = await fetch('/api/admin/waiting-list', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isWaitingListEnabled: enabled,
+          waitingListMessage: customMessage
+        })
+      })
+
+      const data = await response.json()
+      
+      if (response.ok) {
+        setStatus({
+          isWaitingListEnabled: enabled,
+          message: customMessage
+        })
+        setMessage({ 
+          type: 'success', 
+          text: enabled 
+            ? 'Waiting list activée avec succès' 
+            : 'Inscriptions normales activées avec succès'
+        })
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Erreur lors de la mise à jour' })
+      }
+    } catch (error) {
+      console.error('Error updating waiting list status:', error)
+      setMessage({ type: 'error', text: 'Erreur lors de la mise à jour' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const saveMessage = async () => {
+    await toggleWaitingList(status.isWaitingListEnabled)
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+            <Clock className="w-7 h-7 text-amber-600" />
+            Gestion de la Liste d'Attente
+          </h2>
+          <p className="text-gray-600 mt-1">
+            Activez ou désactivez le système de waiting list pour les inscriptions d'équipes
+          </p>
+        </div>
+      </div>
+
+      {/* Message */}
+      {message && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`p-4 rounded-lg flex items-center gap-3 ${
+            message.type === 'success'
+              ? 'bg-green-50 border border-green-200'
+              : 'bg-red-50 border border-red-200'
+          }`}
+        >
+          {message.type === 'success' ? (
+            <Check className="w-5 h-5 text-green-600" />
+          ) : (
+            <X className="w-5 h-5 text-red-600" />
+          )}
+          <span className={message.type === 'success' ? 'text-green-700' : 'text-red-700'}>
+            {message.text}
+          </span>
+        </motion.div>
+      )}
+
+      {/* Status Card */}
+      <div className="bg-gray-50 rounded-xl border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+              Statut actuel
+            </h3>
+            <p className="text-sm text-gray-600">
+              {status.isWaitingListEnabled 
+                ? 'Les nouvelles inscriptions sont en mode waiting list'
+                : 'Les inscriptions normales sont activées'}
+            </p>
+          </div>
+          <button
+            onClick={() => toggleWaitingList(!status.isWaitingListEnabled)}
+            disabled={saving}
+            className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              status.isWaitingListEnabled
+                ? 'bg-blue-600'
+                : 'bg-gray-300'
+            } ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <span
+              className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                status.isWaitingListEnabled ? 'translate-x-9' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Info Box */}
+        <div className={`p-4 rounded-lg border ${
+          status.isWaitingListEnabled
+            ? 'bg-amber-50 border-amber-200'
+            : 'bg-blue-50 border-blue-200'
+        }`}>
+          <div className="flex items-start gap-3">
+            <CheckCircle className={`w-5 h-5 mt-0.5 ${
+              status.isWaitingListEnabled
+                ? 'text-amber-600'
+                : 'text-blue-600'
+            }`} />
+            <div className="flex-1">
+              <p className={`text-sm font-medium ${
+                status.isWaitingListEnabled
+                  ? 'text-amber-800'
+                  : 'text-blue-800'
+              }`}>
+                {status.isWaitingListEnabled ? (
+                  <>
+                    <strong>Mode Waiting List activé :</strong> Les nouvelles inscriptions seront ajoutées à la liste d'attente. 
+                    Les inscriptions en cours (avec lien collaboratif) peuvent continuer à ajouter des joueurs normalement.
+                  </>
+                ) : (
+                  <>
+                    <strong>Inscriptions normales :</strong> Toutes les nouvelles équipes peuvent s'inscrire normalement.
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Message Customization */}
+      <div className="bg-gray-50 rounded-xl border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Message personnalisé
+        </h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Ce message sera affiché aux équipes qui tentent de s'inscrire lorsque la waiting list est activée.
+        </p>
+        <textarea
+          value={customMessage}
+          onChange={(e) => setCustomMessage(e.target.value)}
+          rows={4}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
+          placeholder="Nous sommes au complet pour le moment. Inscrivez-vous en liste d'attente."
+        />
+        <button
+          onClick={saveMessage}
+          disabled={saving || customMessage === status.message}
+          className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          {saving ? (
+            <>
+              <LoadingSpinner size="sm" />
+              Enregistrement...
+            </>
+          ) : (
+            <>
+              <Check className="w-4 h-4" />
+              Enregistrer le message
+            </>
+          )}
+        </button>
       </div>
     </div>
   )
