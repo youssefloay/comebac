@@ -264,6 +264,84 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 3. Si c'est un joueur (pas un coach), mettre à jour les inscriptions validées
+    if (!isCoach) {
+      try {
+        // Chercher les inscriptions validées pour cette équipe
+        const registrationsQuery = query(
+          collection(db, 'teamRegistrations'),
+          where('teamName', '==', teamData.name),
+          where('status', '==', 'approved')
+        )
+        const registrationsSnap = await getDocs(registrationsQuery)
+
+        if (!registrationsSnap.empty) {
+          console.log(`📝 Mise à jour de ${registrationsSnap.docs.length} inscription(s) validée(s)...`)
+          
+          // Calculer l'âge
+          const calculateAge = (birthDate: string): number => {
+            if (!birthDate) return 0
+            const today = new Date()
+            const birth = new Date(birthDate)
+            let age = today.getFullYear() - birth.getFullYear()
+            const monthDiff = today.getMonth() - birth.getMonth()
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+              age--
+            }
+            return age
+          }
+
+          // Préparer les données du joueur pour l'inscription
+          const playerDataForRegistration = {
+            firstName: player.firstName,
+            lastName: player.lastName,
+            nickname: player.nickname || '',
+            email: player.email,
+            phone: player.phone || '',
+            birthDate: player.birthDate || '',
+            age: calculateAge(player.birthDate || ''),
+            height: player.height || 0,
+            tshirtSize: player.tshirtSize || 'M',
+            position: player.position,
+            foot: player.foot || 'Droitier',
+            jerseyNumber: parseInt(player.jerseyNumber) || 0,
+            isCaptain: false
+          }
+
+          // Mettre à jour chaque inscription validée
+          for (const registrationDoc of registrationsSnap.docs) {
+            const registrationData = registrationDoc.data()
+            const existingPlayers = registrationData.players || []
+            
+            // Vérifier si le joueur n'existe pas déjà (par email)
+            const playerExists = existingPlayers.some((p: any) => p.email === player.email)
+            
+            if (!playerExists) {
+              // Ajouter le joueur à la liste
+              const updatedPlayers = [...existingPlayers, playerDataForRegistration]
+              
+              await updateDoc(registrationDoc.ref, {
+                players: updatedPlayers,
+                lastUpdatedAt: serverTimestamp(),
+                lastUpdatedBy: 'admin'
+              })
+              
+              console.log(`✅ Joueur ajouté à l'inscription ${registrationDoc.id}`)
+            } else {
+              console.log(`ℹ️ Joueur déjà présent dans l'inscription ${registrationDoc.id}`)
+            }
+          }
+          
+          console.log('✅ Mise à jour des inscriptions validées terminée')
+        } else {
+          console.log('ℹ️ Aucune inscription validée trouvée pour cette équipe')
+        }
+      } catch (registrationError) {
+        console.error('❌ Erreur lors de la mise à jour des inscriptions validées:', registrationError)
+        // Ne pas faire échouer toute l'opération si la mise à jour des inscriptions échoue
+      }
+    }
+
     // Déterminer le message de retour
     let emailStatus = ''
     if (!isCoach) {
