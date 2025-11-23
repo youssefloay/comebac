@@ -77,6 +77,7 @@ export default function TeamDetailPage() {
         })
 
         // Fetch players, playerAccounts, and coachAccounts (exclude coaches)
+        // Use playerAccounts as source of truth for count (same as teams page)
         const [playersSnap, playerAccountsSnap, coachAccountsSnap] = await Promise.all([
           getDocs(query(collection(db, "players"), where("teamId", "==", teamId))),
           getDocs(query(collection(db, "playerAccounts"), where("teamId", "==", teamId))),
@@ -92,28 +93,50 @@ export default function TeamDetailPage() {
         const allCoachAccounts = coachAccountsSnap.docs.map((doc) => doc.data())
         
         // Créer un Set des emails des entraîneurs pour exclusion rapide
-        const coachEmails = new Set(allCoachAccounts.map((coach: any) => coach.email))
-        const actingCoachEmails = new Set(
+        const coachEmails = new Set(allCoachAccounts.map((coach: any) => coach.email?.toLowerCase().trim()).filter(Boolean))
+        
+        // Use playerAccounts as source of truth (same logic as teams page)
+        const validPlayerEmails = new Set(
           allPlayerAccounts
-            .filter((account: any) => account.isActingCoach === true)
-            .map((account: any) => account.email)
+            .filter((account: any) => {
+              const email = account.email?.toLowerCase().trim()
+              return email && 
+                     !coachEmails.has(email) && 
+                     !account.isActingCoach
+            })
+            .map((account: any) => account.email?.toLowerCase().trim())
         )
         
-        // Filter out coaches - exclude coachAccounts and acting coaches
+        // Filter players to match playerAccounts (exclude coaches and duplicates)
+        const seenEmails = new Set<string>()
         const playersData = allPlayersData.filter((player) => {
-          const playerEmail = player.email || (player as any).email
-          // Exclude coaches - check multiple conditions
-          const isCoach = 
+          const playerEmail = (player.email || (player as any).email)?.toLowerCase().trim()
+          
+          // Skip if no email
+          if (!playerEmail) return false
+          
+          // Skip duplicates
+          if (seenEmails.has(playerEmail)) {
+            return false
+          }
+          seenEmails.add(playerEmail)
+          
+          // Only include if in validPlayerEmails (from playerAccounts)
+          // This ensures consistency with teams page
+          const isValidPlayer = validPlayerEmails.has(playerEmail)
+          
+          // Also exclude coaches by position
+          const isCoachByPosition = 
             (player as any).isCoach === true || 
             player.position?.toLowerCase().includes('entraîneur') ||
             player.position?.toLowerCase().includes('entraineur') ||
-            player.position?.toLowerCase().includes('coach') ||
-            (playerEmail && coachEmails.has(playerEmail)) ||
-            (playerEmail && actingCoachEmails.has(playerEmail))
-          return !isCoach
+            player.position?.toLowerCase().includes('coach')
+          
+          return isValidPlayer && !isCoachByPosition
         })
         
         playersData.sort((a, b) => (a.number || 0) - (b.number || 0))
+        console.log(`📊 Équipe ${teamId}: ${playersData.length} joueurs (playerAccounts: ${validPlayerEmails.size}, players collection: ${allPlayersData.length})`)
         setPlayers(playersData)
 
         // Fetch team matches (home and away)
