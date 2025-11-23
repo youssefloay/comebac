@@ -262,6 +262,20 @@ export default function UpdateRegistrationPage() {
                   required
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Classe
+                </label>
+                <select
+                  value={registration?.teamGrade || '1ère'}
+                  onChange={(e) => setRegistration(registration ? {...registration, teamGrade: e.target.value} : null)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="1ère">1ère</option>
+                  <option value="Terminale">Terminale</option>
+                  <option value="Autre">Autre</option>
+                </select>
+              </div>
             </div>
           </div>
 

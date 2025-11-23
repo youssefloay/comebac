@@ -1227,15 +1227,15 @@ export default function TeamRegistrationsPage() {
                     Détails
                   </button>
                   
+                  <button
+                    onClick={() => generateUpdateLink(registration)}
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                    title="Générer un lien pour que le capitaine mette à jour les infos"
+                  >
+                    <LinkIcon className="w-4 h-4" />
+                  </button>
                   {(registration.status === 'pending' || registration.status === 'pending_players' || registration.status === 'pending_validation') && (
                     <>
-                      <button
-                        onClick={() => generateUpdateLink(registration)}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-                        title="Générer un lien pour que le capitaine mette à jour les infos"
-                      >
-                        <LinkIcon className="w-4 h-4" />
-                      </button>
                       <button
                         onClick={() => approveRegistration(registration)}
                         disabled={processing}

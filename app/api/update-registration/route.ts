@@ -45,7 +45,9 @@ export async function POST(request: Request) {
     await adminDb.collection('teamRegistrations').doc(doc.id).update({
       teamName: registration.teamName,
       schoolName: registration.schoolName,
+      teamGrade: registration.teamGrade,
       captain: registration.captain,
+      coach: registration.coach || null,
       players: registration.players.map((p: any) => ({
         ...p,
         age: calculateAge(p.birthDate),
@@ -56,6 +58,64 @@ export async function POST(request: Request) {
       lastUpdatedBy: 'captain',
       needsAdminValidation: true // Flag pour que l'admin valide les modifications
     })
+
+    // Si l'inscription est approuvée, mettre à jour aussi l'équipe dans la collection teams
+    if (data.status === 'approved') {
+      try {
+        // Chercher l'équipe correspondante dans teams
+        const teamsSnap = await adminDb.collection('teams')
+          .where('name', '==', data.teamName)
+          .limit(1)
+          .get()
+
+        if (!teamsSnap.empty) {
+          const teamDoc = teamsSnap.docs[0]
+          const teamUpdateData: any = {
+            name: registration.teamName,
+            schoolName: registration.schoolName,
+            teamGrade: registration.teamGrade,
+            captain: registration.captain,
+            updatedAt: Timestamp.now()
+          }
+
+          // Ajouter ou mettre à jour l'entraîneur
+          if (registration.coach && registration.coach.firstName && registration.coach.lastName) {
+            teamUpdateData.coach = {
+              firstName: registration.coach.firstName,
+              lastName: registration.coach.lastName,
+              email: registration.coach.email || '',
+              phone: registration.coach.phone || '',
+              birthDate: registration.coach.birthDate || ''
+            }
+          }
+
+          // Mettre à jour les joueurs dans l'équipe
+          const updatedPlayers = registration.players.map((p: any) => ({
+            name: `${p.firstName} ${p.lastName}`,
+            firstName: p.firstName,
+            lastName: p.lastName,
+            nickname: p.nickname || '',
+            number: parseInt(p.jerseyNumber) || 0,
+            position: p.position,
+            email: p.email,
+            phone: p.phone,
+            birthDate: p.birthDate || '',
+            age: calculateAge(p.birthDate),
+            height: parseFloat(p.height) || 0,
+            tshirtSize: p.tshirtSize || 'M',
+            strongFoot: p.foot === 'Droitier' ? 'Droit' : p.foot === 'Gaucher' ? 'Gauche' : 'Ambidextre',
+            isCaptain: p.isCaptain || false
+          }))
+
+          teamUpdateData.players = updatedPlayers
+
+          await adminDb.collection('teams').doc(teamDoc.id).update(teamUpdateData)
+        }
+      } catch (teamError) {
+        console.error('Erreur lors de la mise à jour de l\'équipe:', teamError)
+        // On continue même si la mise à jour de l'équipe échoue
+      }
+    }
 
     return NextResponse.json({
       success: true,
