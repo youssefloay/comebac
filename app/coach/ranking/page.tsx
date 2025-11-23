@@ -201,9 +201,7 @@ export default function CoachRankingPage() {
                     </div>
                     <div className="text-center">
                       <div className="text-xs text-gray-600 mb-1">Diff</div>
-                      <div className={`font-semibold flex items-center gap-1 ${
-                        goalDiff > 0 ? 'text-green-600' : goalDiff < 0 ? 'text-red-600' : 'text-gray-600'
-                      }`}>
+                      <div className={`font-semibold flex items-center gap-1 ${goalDiff > 0 ? 'text-green-600' : goalDiff < 0 ? 'text-red-600' : 'text-gray-600'}`}>
                         {goalDiff > 0 && <TrendingUp className="w-4 h-4" />}
                         {goalDiff < 0 && <TrendingDown className="w-4 h-4" />}
                         {goalDiff === 0 && <Minus className="w-4 h-4" />}
@@ -252,6 +250,7 @@ export default function CoachRankingPage() {
           })}
         </div>
       )}
+      </div>
     </div>
   )
 }
