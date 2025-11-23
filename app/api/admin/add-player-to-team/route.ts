@@ -267,16 +267,32 @@ export async function POST(request: NextRequest) {
     // 3. Si c'est un joueur (pas un coach), mettre à jour les inscriptions validées
     if (!isCoach) {
       try {
-        // Chercher les inscriptions validées pour cette équipe
-        const registrationsQuery = query(
-          collection(db, 'teamRegistrations'),
-          where('teamName', '==', teamData.name),
-          where('status', '==', 'approved')
+        console.log(`🔍 Recherche des inscriptions validées pour l'équipe: "${teamData.name}" (ID: ${teamId})`)
+        
+        // Chercher toutes les inscriptions validées (on ne peut pas faire de recherche case-insensitive avec Firestore)
+        const allRegistrationsSnap = await getDocs(
+          query(collection(db, 'teamRegistrations'), where('status', '==', 'approved'))
         )
-        const registrationsSnap = await getDocs(registrationsQuery)
+        
+        // Filtrer par nom d'équipe (case-insensitive) et aussi par ID d'équipe si disponible
+        const matchingRegistrations = allRegistrationsSnap.docs.filter(doc => {
+          const data = doc.data()
+          const registrationTeamName = (data.teamName || '').trim()
+          const teamName = (teamData.name || '').trim()
+          
+          // Comparaison case-insensitive
+          const nameMatches = registrationTeamName.toLowerCase() === teamName.toLowerCase()
+          
+          // Vérifier aussi si l'inscription a un lien avec l'équipe (via teamId si stocké)
+          const hasTeamId = data.teamId === teamId
+          
+          return nameMatches || hasTeamId
+        })
 
-        if (!registrationsSnap.empty) {
-          console.log(`📝 Mise à jour de ${registrationsSnap.docs.length} inscription(s) validée(s)...`)
+        console.log(`📊 Trouvé ${matchingRegistrations.length} inscription(s) validée(s) sur ${allRegistrationsSnap.docs.length} total`)
+
+        if (matchingRegistrations.length > 0) {
+          console.log(`📝 Mise à jour de ${matchingRegistrations.length} inscription(s) validée(s)...`)
           
           // Calculer l'âge
           const calculateAge = (birthDate: string): number => {
@@ -309,12 +325,18 @@ export async function POST(request: NextRequest) {
           }
 
           // Mettre à jour chaque inscription validée
-          for (const registrationDoc of registrationsSnap.docs) {
+          for (const registrationDoc of matchingRegistrations) {
             const registrationData = registrationDoc.data()
             const existingPlayers = registrationData.players || []
             
-            // Vérifier si le joueur n'existe pas déjà (par email)
-            const playerExists = existingPlayers.some((p: any) => p.email === player.email)
+            console.log(`📋 Inscription ${registrationDoc.id}: "${registrationData.teamName}" - ${existingPlayers.length} joueur(s) actuel(s)`)
+            
+            // Vérifier si le joueur n'existe pas déjà (par email, case-insensitive)
+            const playerEmail = (player.email || '').toLowerCase().trim()
+            const playerExists = existingPlayers.some((p: any) => {
+              const existingEmail = (p.email || '').toLowerCase().trim()
+              return existingEmail === playerEmail
+            })
             
             if (!playerExists) {
               // Ajouter le joueur à la liste
@@ -326,18 +348,20 @@ export async function POST(request: NextRequest) {
                 lastUpdatedBy: 'admin'
               })
               
-              console.log(`✅ Joueur ajouté à l'inscription ${registrationDoc.id}`)
+              console.log(`✅ Joueur "${player.firstName} ${player.lastName}" ajouté à l'inscription ${registrationDoc.id} (${updatedPlayers.length} joueurs maintenant)`)
             } else {
-              console.log(`ℹ️ Joueur déjà présent dans l'inscription ${registrationDoc.id}`)
+              console.log(`ℹ️ Joueur "${player.firstName} ${player.lastName}" déjà présent dans l'inscription ${registrationDoc.id}`)
             }
           }
           
           console.log('✅ Mise à jour des inscriptions validées terminée')
         } else {
-          console.log('ℹ️ Aucune inscription validée trouvée pour cette équipe')
+          console.log(`⚠️ Aucune inscription validée trouvée pour l'équipe "${teamData.name}"`)
+          console.log(`   Vérifiez que le nom correspond exactement dans teamRegistrations`)
         }
       } catch (registrationError) {
         console.error('❌ Erreur lors de la mise à jour des inscriptions validées:', registrationError)
+        console.error('   Détails:', registrationError)
         // Ne pas faire échouer toute l'opération si la mise à jour des inscriptions échoue
       }
     }
