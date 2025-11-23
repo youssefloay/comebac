@@ -18,6 +18,7 @@ import {
   Camera
 } from 'lucide-react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 
 interface CoachData {
   id: string
@@ -246,7 +247,7 @@ export default function CoachProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20">
         <LoadingSpinner size="lg" />
       </div>
     )
@@ -254,34 +255,51 @@ export default function CoachProfilePage() {
 
   if (!coachData) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="text-center">
-          <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center bg-gradient-to-br from-white via-white to-blue-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-8 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl"
+        >
+          <AlertCircle className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             Profil non trouvé
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
             Aucun profil coach n'est associé à votre compte.
           </p>
-          <Link href="/coach" className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+          <Link href="/coach" className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl font-semibold inline-block">
             Retour au tableau de bord
           </Link>
-        </div>
+        </motion.div>
       </div>
     )
   }
 
   return (
-    <div className="p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 p-4 md:p-8 relative overflow-hidden">
+      {/* Animated background pattern */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-400/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-red-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      <div className="max-w-4xl mx-auto relative z-10">
         {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8 flex items-center justify-between"
+        >
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Mon Profil</h1>
-            <p className="text-gray-600">Mes informations personnelles</p>
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent mb-2">Mon Profil</h1>
+            <p className="text-gray-600 dark:text-gray-400 text-lg">Mes informations personnelles</p>
           </div>
           {!editing ? (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => {
                 // Réinitialiser editData avec les valeurs actuelles
                 setEditData({
@@ -290,14 +308,16 @@ export default function CoachProfilePage() {
                 })
                 setEditing(true)
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl font-semibold"
             >
               <Edit className="w-4 h-4" />
               Modifier
-            </button>
+            </motion.button>
           ) : (
             <div className="flex gap-2">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => {
                   setEditing(false)
                   setEditData({
@@ -305,28 +325,38 @@ export default function CoachProfilePage() {
                     photo: coachData.photo
                   })
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-all font-semibold"
               >
                 <X className="w-4 h-4" />
                 Annuler
-              </button>
-              <button
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl font-semibold disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
                 {saving ? 'Enregistrement...' : 'Enregistrer'}
-              </button>
+              </motion.button>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Photo et infos principales */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-gradient-to-br from-white via-white to-blue-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl p-6 mb-6"
+        >
           <div className="flex items-center gap-6 mb-6">
-            <div className="relative group">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-600 to-green-600 flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
+            <motion.div
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              className="relative group"
+            >
+              <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-orange-600 via-red-600 to-pink-600 flex items-center justify-center text-white text-3xl md:text-4xl font-bold overflow-hidden shadow-xl border-4 border-white dark:border-gray-800">
                 {(editData.photo || coachData.photo) ? (
                   <img 
                     src={editData.photo || coachData.photo} 
@@ -346,25 +376,27 @@ export default function CoachProfilePage() {
                 onChange={handlePhotoUpload}
                 className="hidden"
               />
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadingPhoto}
-                className="absolute top-0 right-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed z-20 border-2 border-white"
+                className="absolute top-0 right-0 w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-full flex items-center justify-center hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed z-20 border-2 border-white dark:border-gray-800"
                 title="Changer la photo"
               >
                 {uploadingPhoto ? (
                   <LoadingSpinner size="sm" />
                 ) : (
-                  <span className="text-lg font-bold leading-none">+</span>
+                  <Camera className="w-4 h-4 md:w-5 md:h-5" />
                 )}
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
             
             <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">
+              <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-1">
                 {coachData.firstName} {coachData.lastName}
               </h2>
-              <div className="flex items-center gap-2 text-gray-600">
+              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                 <Users className="w-4 h-4" />
                 <span>Coach</span>
               </div>
@@ -373,61 +405,88 @@ export default function CoachProfilePage() {
 
           {/* Équipe */}
           {coachData.teamName && (
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl"
+            >
               <div className="flex items-center gap-3">
-                <Shield className="w-6 h-6 text-blue-600" />
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <Shield className="w-6 h-6 text-white" />
+                </div>
                 <div>
-                  <p className="text-sm text-gray-600">Mon Équipe</p>
-                  <p className="font-bold text-gray-900">{coachData.teamName}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Mon Équipe</p>
+                  <p className="font-bold text-gray-900 dark:text-white">{coachData.teamName}</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
 
         {/* Informations personnelles */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <User className="w-5 h-5 text-blue-600" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-gradient-to-br from-white via-white to-blue-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl p-6"
+        >
+          <h3 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-4 flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+              <User className="w-5 h-5 text-white" />
+            </div>
             Informations Personnelles
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <Mail className="w-5 h-5 text-gray-600" />
-              <div>
-                <p className="text-sm text-gray-600">Email</p>
-                <p className="font-medium text-gray-900">{coachData.email}</p>
+            <motion.div
+              whileHover={{ scale: 1.02, x: 5 }}
+              className="flex items-center gap-3 p-4 bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-700"
+            >
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Mail className="w-5 h-5 text-white" />
               </div>
-            </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Email</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{coachData.email}</p>
+              </div>
+            </motion.div>
 
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <Phone className="w-5 h-5 text-gray-600" />
+            <motion.div
+              whileHover={{ scale: 1.02, x: 5 }}
+              className="flex items-center gap-3 p-4 bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-700"
+            >
+              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Phone className="w-5 h-5 text-white" />
+              </div>
               <div className="flex-1">
-                <p className="text-sm text-gray-600">Téléphone</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Téléphone</p>
                 {editing ? (
                   <input
                     type="tel"
                     value={editData.phone || ''}
                     onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
-                    className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    className="w-full px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white bg-white dark:bg-gray-700"
                     placeholder="Numéro de téléphone"
                   />
                 ) : (
-                  <p className="font-medium text-gray-900">{coachData.phone || 'Non renseigné'}</p>
+                  <p className="font-semibold text-gray-900 dark:text-white">{coachData.phone || 'Non renseigné'}</p>
                 )}
               </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Note d'information */}
         {!editing && (
-          <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-800">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4"
+          >
+            <p className="text-sm text-blue-800 dark:text-blue-300">
               💡 Vous pouvez modifier votre téléphone et photo de profil en cliquant sur "Modifier".
             </p>
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

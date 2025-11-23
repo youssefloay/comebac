@@ -26,6 +26,7 @@ import {
 import Link from 'next/link'
 import { calculatePlayerBadges } from '@/lib/player-badges'
 import { PlayerBadges } from '@/components/player/player-badges'
+import { motion } from 'framer-motion'
 
 interface PlayerData {
   id: string
@@ -332,7 +333,7 @@ export default function PlayerProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20">
         <LoadingSpinner size="lg" />
       </div>
     )
@@ -340,16 +341,16 @@ export default function PlayerProfilePage() {
 
   if (!playerData) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20">
         <div className="text-center">
-          <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <AlertCircle className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             Profil non trouvé
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
             Aucun profil joueur n'est associé à votre compte.
           </p>
-          <Link href="/player" className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+          <Link href="/player" className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg font-semibold">
             Retour au tableau de bord
           </Link>
         </div>
@@ -358,16 +359,29 @@ export default function PlayerProfilePage() {
   }
 
   return (
-    <div className="p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 p-4 md:p-8 relative overflow-hidden">
+      {/* Animated background pattern */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      <div className="max-w-4xl mx-auto relative z-10">
         {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8 flex items-center justify-between flex-wrap gap-4"
+        >
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Mon Profil</h1>
-            <p className="text-gray-600">Mes informations personnelles</p>
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">Mon Profil</h1>
+            <p className="text-gray-600 dark:text-gray-400 text-lg">Mes informations personnelles</p>
           </div>
           {!editing ? (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => {
                 // Réinitialiser editData avec les valeurs actuelles du profil
                 setEditData({
@@ -381,14 +395,16 @@ export default function PlayerProfilePage() {
                 })
                 setEditing(true)
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg font-semibold"
             >
               <Edit className="w-4 h-4" />
               Modifier
-            </button>
+            </motion.button>
           ) : (
             <div className="flex gap-2">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => {
                   setEditing(false)
                   setEditData({
@@ -401,25 +417,32 @@ export default function PlayerProfilePage() {
                     height: playerData.height
                   })
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-all font-semibold"
               >
                 <X className="w-4 h-4" />
                 Annuler
-              </button>
-              <button
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 shadow-lg font-semibold"
               >
                 <Save className="w-4 h-4" />
                 {saving ? 'Enregistrement...' : 'Enregistrer'}
-              </button>
+              </motion.button>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Photo et infos principales */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-gradient-to-br from-white via-white to-gray-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl p-6 md:p-8 mb-6"
+        >
           <div className="flex items-center gap-6 mb-6">
             <div className="relative group">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-600 to-green-600 flex items-center justify-center text-white text-3xl font-bold overflow-hidden">

@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Users, Mail, Phone, Calendar, Ruler, Shield, Target, TrendingUp, Award, BarChart3, Edit, X, Save } from 'lucide-react'
 import { capitalizeWords } from '@/lib/text-utils'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface Player {
   id: string
@@ -282,79 +283,137 @@ export default function CoachTeamPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20">
         <LoadingSpinner size="lg" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 p-4 md:p-8 relative overflow-hidden">
+      {/* Animated background pattern */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-400/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-red-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-            <Users className="w-8 h-8 text-blue-600" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent mb-2 flex items-center gap-3">
+            <Users className="w-8 h-8 md:w-10 md:h-10 text-orange-600" />
             Mon Équipe
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400 text-lg">
             {players.length} joueur{players.length > 1 ? 's' : ''} dans votre équipe
           </p>
-        </div>
+        </motion.div>
 
         {/* Statistiques globales de l'équipe */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6 mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            whileHover={{ scale: 1.05, y: -5 }}
+            className="bg-gradient-to-br from-white via-white to-blue-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl p-4 md:p-6"
+          >
             <div className="flex flex-col items-center text-center">
-              <BarChart3 className="w-8 h-8 text-blue-600 mb-2" />
-              <span className="text-2xl font-bold text-gray-900">{teamStats.totalMatches}</span>
-              <p className="text-xs text-gray-600">Matchs</p>
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-3 shadow-lg">
+                <BarChart3 className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{teamStats.totalMatches}</span>
+              <p className="text-xs text-gray-600 dark:text-gray-400 font-medium mt-1">Matchs</p>
             </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200">
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            whileHover={{ scale: 1.05, y: -5 }}
+            className="bg-gradient-to-br from-white via-white to-green-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl p-4 md:p-6"
+          >
             <div className="flex flex-col items-center text-center">
-              <Target className="w-8 h-8 text-green-600 mb-2" />
-              <span className="text-2xl font-bold text-gray-900">{teamStats.totalGoals}</span>
-              <p className="text-xs text-gray-600">Buts</p>
+              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-3 shadow-lg">
+                <Target className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{teamStats.totalGoals}</span>
+              <p className="text-xs text-gray-600 dark:text-gray-400 font-medium mt-1">Buts</p>
             </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200">
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            whileHover={{ scale: 1.05, y: -5 }}
+            className="bg-gradient-to-br from-white via-white to-purple-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl p-4 md:p-6"
+          >
             <div className="flex flex-col items-center text-center">
-              <TrendingUp className="w-8 h-8 text-purple-600 mb-2" />
-              <span className="text-2xl font-bold text-gray-900">{teamStats.totalAssists}</span>
-              <p className="text-xs text-gray-600">Passes</p>
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-3 shadow-lg">
+                <TrendingUp className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{teamStats.totalAssists}</span>
+              <p className="text-xs text-gray-600 dark:text-gray-400 font-medium mt-1">Passes</p>
             </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200">
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            whileHover={{ scale: 1.05, y: -5 }}
+            className="bg-gradient-to-br from-white via-white to-yellow-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl p-4 md:p-6"
+          >
             <div className="flex flex-col items-center text-center">
-              <Award className="w-8 h-8 text-yellow-600 mb-2" />
-              <span className="text-2xl font-bold text-gray-900">{teamStats.totalYellowCards}</span>
-              <p className="text-xs text-gray-600">Cartons J.</p>
+              <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center mb-3 shadow-lg">
+                <Award className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">{teamStats.totalYellowCards}</span>
+              <p className="text-xs text-gray-600 dark:text-gray-400 font-medium mt-1">Cartons J.</p>
             </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200">
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            whileHover={{ scale: 1.05, y: -5 }}
+            className="bg-gradient-to-br from-white via-white to-red-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl p-4 md:p-6"
+          >
             <div className="flex flex-col items-center text-center">
-              <Award className="w-8 h-8 text-red-600 mb-2" />
-              <span className="text-2xl font-bold text-gray-900">{teamStats.totalRedCards}</span>
-              <p className="text-xs text-gray-600">Cartons R.</p>
+              <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center mb-3 shadow-lg">
+                <Award className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">{teamStats.totalRedCards}</span>
+              <p className="text-xs text-gray-600 dark:text-gray-400 font-medium mt-1">Cartons R.</p>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Players Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {players.map((player) => {
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          {players.map((player, index) => {
             const statusBadge = getStatusBadge(player.status)
             const stats = player.stats || { matchesPlayed: 0, minutesPlayed: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0 }
             
             return (
-              <div
+              <motion.div
                 key={player.id}
-                className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + index * 0.05 }}
+                whileHover={{ scale: 1.02, y: -5 }}
+                className="bg-gradient-to-br from-white via-white to-blue-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-6 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl"
               >
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-green-600 flex items-center justify-center text-white text-xl font-bold">
+                  <motion.div
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    className="relative"
+                  >
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white text-xl font-bold shadow-xl border-4 border-white dark:border-gray-800">
                       {player.photo ? (
                         <img 
                           src={player.photo} 
@@ -365,33 +424,41 @@ export default function CoachTeamPage() {
                         `${player.firstName[0]}${player.lastName[0]}`
                       )}
                     </div>
-                    <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm border-2 border-white">
+                    <div className="absolute -bottom-1 -right-1 w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm border-4 border-white dark:border-gray-800 shadow-lg">
                       {player.jerseyNumber}
                     </div>
-                  </div>
+                  </motion.div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-gray-900 text-lg">
+                    <h3 className="font-bold text-gray-900 dark:text-white text-lg md:text-xl">
                       {player.firstName} {player.lastName}
                     </h3>
                     {player.nickname && (
-                      <p className="text-sm text-gray-500 italic">"{player.nickname}"</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 italic">"{player.nickname}"</p>
                     )}
                     <div className="flex items-center gap-2 mt-1">
-                      <Shield className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-600">{player.position}</span>
+                      <Shield className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <span className="text-sm font-medium text-blue-600 dark:text-blue-400">{player.position}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Statut du joueur */}
                 <div className="mb-4">
-                  <label className="block text-xs font-medium text-gray-700 mb-2">Statut</label>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Statut</label>
                   <select
                     value={player.status || 'starter'}
                     onChange={(e) => handleStatusChange(player.id, e.target.value as Player['status'])}
                     disabled={updatingPlayer === player.id}
-                    className={`w-full px-3 py-2 border rounded-lg text-sm font-medium ${statusBadge.color} ${
-                      updatingPlayer === player.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                    className={`w-full px-3 py-2 border rounded-xl text-sm font-semibold transition-all ${
+                      player.status === 'starter' 
+                        ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
+                        : player.status === 'substitute'
+                        ? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400'
+                        : player.status === 'injured'
+                        ? 'bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-400'
+                        : 'bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400'
+                    } ${
+                      updatingPlayer === player.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-md'
                     }`}
                   >
                     <option value="starter">✅ Titulaire</option>
@@ -402,38 +469,38 @@ export default function CoachTeamPage() {
                 </div>
 
                 {/* Statistiques du joueur */}
-                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                  <h4 className="text-xs font-bold text-gray-700 mb-2">Statistiques</h4>
+                <div className="mb-4 p-3 md:p-4 bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-700">
+                  <h4 className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">Statistiques</h4>
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div>
-                      <p className="text-lg font-bold text-gray-900">{stats.goals}</p>
-                      <p className="text-xs text-gray-600">Buts</p>
+                      <p className="text-lg md:text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{stats.goals}</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Buts</p>
                     </div>
                     <div>
-                      <p className="text-lg font-bold text-gray-900">{stats.assists}</p>
-                      <p className="text-xs text-gray-600">Passes</p>
+                      <p className="text-lg md:text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{stats.assists}</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Passes</p>
                     </div>
                     <div>
-                      <p className="text-lg font-bold text-gray-900">{stats.matchesPlayed}</p>
-                      <p className="text-xs text-gray-600">Matchs</p>
+                      <p className="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{stats.matchesPlayed}</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Matchs</p>
                     </div>
                   </div>
-                  <div className="mt-2 pt-2 border-t border-gray-200">
+                  <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-600">Minutes jouées:</span>
-                      <span className="font-bold text-gray-900">{stats.minutesPlayed}'</span>
+                      <span className="text-gray-600 dark:text-gray-400">Minutes jouées:</span>
+                      <span className="font-bold text-gray-900 dark:text-white">{stats.minutesPlayed}'</span>
                     </div>
                     {(stats.yellowCards > 0 || stats.redCards > 0) && (
                       <div className="flex items-center justify-between text-xs mt-1">
-                        <span className="text-gray-600">Cartons:</span>
+                        <span className="text-gray-600 dark:text-gray-400">Cartons:</span>
                         <div className="flex gap-2">
                           {stats.yellowCards > 0 && (
-                            <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded font-bold">
+                            <span className="px-2 py-0.5 bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 text-yellow-800 dark:text-yellow-400 rounded-full font-bold border border-yellow-200 dark:border-yellow-800">
                               {stats.yellowCards} 🟨
                             </span>
                           )}
                           {stats.redCards > 0 && (
-                            <span className="px-2 py-0.5 bg-red-100 text-red-800 rounded font-bold">
+                            <span className="px-2 py-0.5 bg-gradient-to-r from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30 text-red-800 dark:text-red-400 rounded-full font-bold border border-red-200 dark:border-red-800">
                               {stats.redCards} 🟥
                             </span>
                           )}
@@ -445,53 +512,74 @@ export default function CoachTeamPage() {
 
                 {/* Contact */}
                 <div className="space-y-1 text-xs mb-4">
-                  <div className="flex items-center gap-2 text-gray-600">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <Mail className="w-3 h-3" />
                     <span className="truncate">{player.email}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <Phone className="w-3 h-3" />
                     <span>{player.phone}</span>
                   </div>
                 </div>
 
                 {/* Bouton d'édition */}
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => handleEditPlayer(player)}
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                  className="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-sm font-semibold"
                 >
                   <Edit className="w-4 h-4" />
                   Modifier les infos
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
             )
           })}
         </div>
 
         {players.length === 0 && (
-          <div className="text-center py-12">
-            <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Aucun joueur dans votre équipe</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-12"
+          >
+            <Users className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-500 dark:text-gray-400">Aucun joueur dans votre équipe</p>
+          </motion.div>
         )}
       </div>
 
       {/* Modal d'édition */}
-      {showEditModal && editingPlayer && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowEditModal(false)}>
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Modifier {editingPlayer.firstName} {editingPlayer.lastName}
-                </h2>
-                <button
-                  onClick={() => setShowEditModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <X className="w-6 h-6 text-gray-600" />
-                </button>
-              </div>
+      <AnimatePresence>
+        {showEditModal && editingPlayer && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            onClick={() => setShowEditModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-gradient-to-br from-white via-white to-gray-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 md:p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                    Modifier {editingPlayer.firstName} {editingPlayer.lastName}
+                  </h2>
+                  <motion.button
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setShowEditModal(false)}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                  >
+                    <X className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                  </motion.button>
+                </div>
 
               <div className="space-y-4">
                 {/* Nom et Prénom */}
@@ -623,17 +711,21 @@ export default function CoachTeamPage() {
               </div>
 
               {/* Boutons d'action */}
-              <div className="flex gap-3 mt-6 pt-6 border-t border-gray-200">
-                <button
+              <div className="flex gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setShowEditModal(false)}
-                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-semibold"
                 >
                   Annuler
-                </button>
-                <button
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={handleSavePlayer}
                   disabled={updatingPlayer === editingPlayer.id}
-                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {updatingPlayer === editingPlayer.id ? (
                     <>
@@ -646,12 +738,13 @@ export default function CoachTeamPage() {
                       Enregistrer
                     </>
                   )}
-                </button>
+                </motion.button>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

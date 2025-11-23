@@ -11,6 +11,10 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Configuration Turbopack pour résoudre le problème de workspace root
+  turbopack: {
+    root: __dirname,
+  },
   images: {
     // Optimisation des images activée pour de meilleures performances
     formats: ['image/avif', 'image/webp'],
@@ -23,9 +27,6 @@ const nextConfig = {
   env: {
     MATCH_SCHEDULE_ENABLED: "true",
   },
-  // Configuration Turbopack pour résoudre le problème de workspace root
-  // Note: La configuration turbo.root n'est pas encore supportée dans Next.js 16
-  // Le warning peut être ignoré, ou vous pouvez mettre à jour vers Next.js 17+
   async headers() {
     return [
       {

@@ -300,7 +300,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Error signing in with email:', error)
       
       // Améliorer les messages d'erreur
-      if (error.code === 'auth/user-not-found') {
+      if (error.code === 'auth/invalid-credential') {
+        // Firebase a consolidé auth/wrong-password et auth/user-not-found en auth/invalid-credential
+        throw new Error('Email ou mot de passe incorrect. Vérifiez vos identifiants et réessayez.')
+      } else if (error.code === 'auth/user-not-found') {
         throw new Error('Aucun compte trouvé avec cet email. Créez un compte d\'abord.')
       } else if (error.code === 'auth/wrong-password') {
         throw new Error('Mot de passe incorrect. Vérifiez votre mot de passe.')
@@ -308,6 +311,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('L\'adresse email n\'est pas valide.')
       } else if (error.code === 'auth/too-many-requests') {
         throw new Error('Trop de tentatives de connexion. Réessayez plus tard.')
+      } else if (error.code === 'auth/user-disabled') {
+        throw new Error('Ce compte a été désactivé. Contactez le support.')
       }
       
       throw error

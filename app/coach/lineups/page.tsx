@@ -6,6 +6,7 @@ import { collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, serv
 import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Clipboard, Check, AlertCircle, Lock } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface Player {
   id: string
@@ -254,7 +255,7 @@ export default function CoachLineupsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20">
         <LoadingSpinner size="lg" />
       </div>
     )
@@ -264,33 +265,53 @@ export default function CoachLineupsPage() {
   const locked = isLineupLocked()
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 p-4 md:p-8 relative overflow-hidden">
+      {/* Animated background pattern */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-400/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-red-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-            <Clipboard className="w-8 h-8 text-blue-600" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent mb-2 flex items-center gap-3">
+            <Clipboard className="w-8 h-8 md:w-10 md:h-10 text-orange-600" />
             Compositions d'Équipe
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400 text-lg">
             Créez et validez vos compositions officielles
           </p>
-        </div>
+        </motion.div>
 
         {/* Success Message */}
-        {showSuccess && (
-          <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg animate-pulse">
-            <div className="flex items-center gap-3">
-              <Check className="w-6 h-6 text-green-600" />
-              <div>
-                <h3 className="font-bold text-green-900">Composition validée ✅</h3>
-                <p className="text-green-700 text-sm">
-                  Votre composition a été enregistrée avec succès
-                </p>
+        <AnimatePresence>
+          {showSuccess && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-l-4 border-green-500 rounded-xl shadow-lg backdrop-blur-xl"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+                  <Check className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-green-900 dark:text-green-400">Composition validée ✅</h3>
+                  <p className="text-green-700 dark:text-green-300 text-sm">
+                    Votre composition a été enregistrée avec succès
+                  </p>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Match Selection */}
         {matches.length > 0 ? (
@@ -328,24 +349,35 @@ export default function CoachLineupsPage() {
           <>
             {/* Locked Warning */}
             {locked && (
-              <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-lg">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="mb-6 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-l-4 border-yellow-500 rounded-xl shadow-lg backdrop-blur-xl"
+              >
                 <div className="flex items-start gap-3">
-                  <Lock className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                    <Lock className="w-6 h-6 text-white" />
+                  </div>
                   <div>
-                    <h3 className="font-bold text-yellow-900">Composition verrouillée</h3>
-                    <p className="text-yellow-700 text-sm">
+                    <h3 className="font-bold text-yellow-900 dark:text-yellow-400">Composition verrouillée</h3>
+                    <p className="text-yellow-700 dark:text-yellow-300 text-sm">
                       Cette composition est verrouillée car le match est dans moins de 24h
                     </p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Terrain */}
               <div className="lg:col-span-2">
-                <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-gradient-to-br from-white via-white to-blue-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-6 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl"
+                >
+                  <h3 className="text-lg md:text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-4">
                     Formation 2-2-1
                   </h3>
                   
@@ -454,12 +486,14 @@ export default function CoachLineupsPage() {
 
                   {/* Validation Button */}
                   <div className="mt-6">
-                    <button
+                    <motion.button
+                      whileHover={canValidate() && !saving ? { scale: 1.02 } : {}}
+                      whileTap={canValidate() && !saving ? { scale: 0.98 } : {}}
                       onClick={validateLineup}
                       disabled={!canValidate() || saving}
-                      className={`w-full px-6 py-4 rounded-lg font-bold text-white transition flex items-center justify-center gap-2 ${
+                      className={`w-full px-6 py-4 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-2 shadow-lg ${
                         canValidate() && !saving
-                          ? 'bg-green-600 hover:bg-green-700'
+                          ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 hover:shadow-xl'
                           : 'bg-gray-400 cursor-not-allowed'
                       }`}
                     >
@@ -479,80 +513,100 @@ export default function CoachLineupsPage() {
                           Valider la composition
                         </>
                       )}
-                    </button>
+                    </motion.button>
                     {!locked && (
-                      <p className="text-xs text-gray-500 text-center mt-2">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
                         {selectedStarters.length}/5 titulaires • {selectedSubstitutes.length}/3 remplaçants
                       </p>
                     )}
                   </div>
-                </div>
+                </motion.div>
               </div>
 
               {/* Liste des joueurs */}
               <div>
-                <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-gradient-to-br from-white via-white to-blue-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-6 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl"
+                >
+                  <h3 className="text-lg md:text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-4">
                     Joueurs Disponibles
                   </h3>
                   <div className="space-y-2 max-h-[800px] overflow-y-auto">
-                    {players.filter(p => p.status !== 'injured' && p.status !== 'suspended').map(player => {
+                    {players.filter(p => p.status !== 'injured' && p.status !== 'suspended').map((player, index) => {
                       const isStarter = selectedStarters.includes(player.id)
                       const isSubstitute = selectedSubstitutes.includes(player.id)
                       const isSelected = isStarter || isSubstitute
                       
                       return (
-                        <div
+                        <motion.div
                           key={player.id}
-                          className={`p-3 rounded-lg border-2 transition ${
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.05 * index }}
+                          whileHover={!locked ? { scale: 1.02, x: 5 } : {}}
+                          className={`p-3 rounded-xl border-2 transition-all backdrop-blur-sm ${
                             isSelected
                               ? isStarter
-                                ? 'bg-green-50 border-green-500'
-                                : 'bg-blue-50 border-blue-500'
-                              : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                                ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-500 shadow-lg'
+                                : 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-500 shadow-lg'
+                              : 'bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-700/50 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                           } ${locked ? 'opacity-50' : 'cursor-pointer'}`}
                         >
                           <div className="flex items-center gap-3">
-                            <div 
-                              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                              style={{ backgroundColor: teamColor }}
+                            <motion.div
+                              whileHover={{ scale: 1.1, rotate: 5 }}
+                              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg"
+                              style={{ 
+                                background: isSelected && isStarter
+                                  ? 'linear-gradient(135deg, #10b981, #059669)'
+                                  : isSelected && isSubstitute
+                                  ? 'linear-gradient(135deg, #3b82f6, #2563eb)'
+                                  : teamColor
+                              }}
                             >
                               {player.jerseyNumber}
-                            </div>
+                            </motion.div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-bold text-gray-900 truncate">
+                              <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
                                 {player.firstName} {player.lastName}
                               </p>
-                              <p className="text-xs text-gray-600">{player.position}</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">{player.position}</p>
                             </div>
                           </div>
                           {!locked && (
                             <div className="mt-2 flex gap-2">
-                              <button
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() => toggleStarter(player.id)}
                                 disabled={selectedStarters.length >= 5 && !isStarter}
-                                className={`flex-1 px-3 py-1 text-xs font-medium rounded ${
+                                className={`flex-1 px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
                                   isStarter
-                                    ? 'bg-green-600 text-white'
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50'
+                                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-md'
+                                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50'
                                 }`}
                               >
                                 Titulaire
-                              </button>
-                              <button
+                              </motion.button>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() => toggleSubstitute(player.id)}
                                 disabled={selectedSubstitutes.length >= 3 && !isSubstitute}
-                                className={`flex-1 px-3 py-1 text-xs font-medium rounded ${
+                                className={`flex-1 px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
                                   isSubstitute
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50'
+                                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+                                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50'
                                 }`}
                               >
                                 Remplaçant
-                              </button>
+                              </motion.button>
                             </div>
                           )}
-                        </div>
+                        </motion.div>
                       )
                     })}
                   </div>
@@ -582,7 +636,7 @@ export default function CoachLineupsPage() {
                       </div>
                     </div>
                   )}
-                </div>
+                </motion.div>
               </div>
             </div>
           </>

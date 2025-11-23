@@ -31,7 +31,7 @@ export function LoadingSpinner({ className, size = "md", text }: LoadingSpinnerP
           )}
         />
         
-        {/* Spinner with gradient border */}
+        {/* Spinner with gradient border - Pure CSS, no Framer Motion */}
         <div
           className={cn(
             "relative rounded-full",

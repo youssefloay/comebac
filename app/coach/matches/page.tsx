@@ -6,6 +6,7 @@ import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firesto
 import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Calendar, Trophy, Clock, MapPin } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 interface Match {
   id: string
@@ -87,7 +88,7 @@ export default function CoachMatchesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20">
         <LoadingSpinner size="lg" />
       </div>
     )
@@ -97,33 +98,50 @@ export default function CoachMatchesPage() {
   const pastMatches = matches.filter(m => m.status === 'finished')
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 p-4 md:p-8 relative overflow-hidden">
+      {/* Animated background pattern */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-400/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-red-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-            <Calendar className="w-8 h-8 text-blue-600" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent mb-2 flex items-center gap-3">
+            <Calendar className="w-8 h-8 md:w-10 md:h-10 text-orange-600" />
             Calendrier des Matchs
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400 text-lg">
             Gérez vos matchs et consultez les résultats
           </p>
-        </div>
+        </motion.div>
 
         {/* Upcoming Matches */}
         <div className="mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Matchs à Venir</h2>
+          <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-4">Matchs à Venir</h2>
           {upcomingMatches.length > 0 ? (
             <div className="space-y-4">
-              {upcomingMatches.map((match) => (
-                <div
+              {upcomingMatches.map((match, index) => (
+                <motion.div
                   key={match.id}
-                  className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                  whileHover={{ scale: 1.02, y: -5 }}
+                  className="bg-gradient-to-br from-white via-white to-blue-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-6 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2 text-blue-600">
-                      <Clock className="w-5 h-5" />
-                      <span className="font-medium">
+                    <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <Clock className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="font-semibold">
                         {match.date.toLocaleDateString('fr-FR', { 
                           weekday: 'long', 
                           year: 'numeric', 
@@ -132,84 +150,104 @@ export default function CoachMatchesPage() {
                         })}
                       </span>
                     </div>
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                    <span className="px-3 py-1 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-400 rounded-full text-sm font-semibold border border-blue-200 dark:border-blue-800">
                       À venir
                     </span>
                   </div>
                   
                   <div className="flex items-center justify-between mb-4">
                     <div className="text-center flex-1">
-                      <p className="font-bold text-gray-900 text-lg">{match.homeTeam}</p>
+                      <p className="font-bold text-gray-900 dark:text-white text-lg md:text-xl">{match.homeTeam}</p>
                     </div>
-                    <div className="px-6 text-gray-400 font-bold text-xl">VS</div>
+                    <div className="px-6">
+                      <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center shadow-lg">
+                        <span className="text-white font-bold text-sm">VS</span>
+                      </div>
+                    </div>
                     <div className="text-center flex-1">
-                      <p className="font-bold text-gray-900 text-lg">{match.awayTeam}</p>
+                      <p className="font-bold text-gray-900 dark:text-white text-lg md:text-xl">{match.awayTeam}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 text-gray-600 text-sm">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 text-sm">
                     <MapPin className="w-4 h-4" />
                     <span>{match.location}</span>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           ) : (
-            <div className="bg-white p-8 rounded-lg shadow-md border border-gray-200 text-center">
-              <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">Aucun match à venir</p>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-gradient-to-br from-white via-white to-blue-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-8 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl text-center"
+            >
+              <Calendar className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+              <p className="text-gray-500 dark:text-gray-400">Aucun match à venir</p>
+            </motion.div>
           )}
         </div>
 
         {/* Past Matches */}
         <div>
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Matchs Passés</h2>
+          <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-4">Matchs Passés</h2>
           {pastMatches.length > 0 ? (
             <div className="space-y-4">
-              {pastMatches.map((match) => (
-                <div
+              {pastMatches.map((match, index) => (
+                <motion.div
                   key={match.id}
-                  className="bg-white p-6 rounded-lg shadow-md border border-gray-200"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                  whileHover={{ scale: 1.02, y: -5 }}
+                  className="bg-gradient-to-br from-white via-white to-blue-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-6 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Calendar className="w-5 h-5" />
-                      <span className="font-medium">
+                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                      <div className="w-10 h-10 bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <Calendar className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="font-semibold">
                         {match.date.toLocaleDateString('fr-FR')}
                       </span>
                     </div>
-                    <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
+                    <span className="px-3 py-1 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm font-semibold border border-gray-300 dark:border-gray-600">
                       Terminé
                     </span>
                   </div>
                   
                   <div className="flex items-center justify-between mb-4">
                     <div className="text-center flex-1">
-                      <p className="font-bold text-gray-900 text-lg mb-2">{match.homeTeam}</p>
-                      <p className="text-3xl font-black text-gray-900">{match.homeScore ?? '-'}</p>
+                      <p className="font-bold text-gray-900 dark:text-white text-lg md:text-xl mb-2">{match.homeTeam}</p>
+                      <p className="text-3xl md:text-4xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{match.homeScore ?? '-'}</p>
                     </div>
                     <div className="px-6">
-                      <Trophy className="w-8 h-8 text-yellow-500" />
+                      <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                        <Trophy className="w-6 h-6 text-white" />
+                      </div>
                     </div>
                     <div className="text-center flex-1">
-                      <p className="font-bold text-gray-900 text-lg mb-2">{match.awayTeam}</p>
-                      <p className="text-3xl font-black text-gray-900">{match.awayScore ?? '-'}</p>
+                      <p className="font-bold text-gray-900 dark:text-white text-lg md:text-xl mb-2">{match.awayTeam}</p>
+                      <p className="text-3xl md:text-4xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{match.awayScore ?? '-'}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 text-gray-600 text-sm">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 text-sm">
                     <MapPin className="w-4 h-4" />
                     <span>{match.location}</span>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           ) : (
-            <div className="bg-white p-8 rounded-lg shadow-md border border-gray-200 text-center">
-              <Trophy className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">Aucun match passé</p>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-gradient-to-br from-white via-white to-blue-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-8 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl text-center"
+            >
+              <Trophy className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+              <p className="text-gray-500 dark:text-gray-400">Aucun match passé</p>
+            </motion.div>
           )}
         </div>
       </div>

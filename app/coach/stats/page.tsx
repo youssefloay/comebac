@@ -6,6 +6,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { BarChart3, Target, TrendingUp, Award, Users } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 interface PlayerStats {
   id: string
@@ -100,7 +101,7 @@ export default function CoachStatsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20">
         <LoadingSpinner size="lg" />
       </div>
     )
@@ -119,176 +120,249 @@ export default function CoachStatsPage() {
   const topAssister = [...players].sort((a, b) => b.stats.assists - a.stats.assists)[0]
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 p-4 md:p-8 relative overflow-hidden">
+      {/* Animated background pattern */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-400/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-red-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-            <BarChart3 className="w-8 h-8 text-blue-600" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent mb-2 flex items-center gap-3">
+            <BarChart3 className="w-8 h-8 md:w-10 md:h-10 text-orange-600" />
             Statistiques de l'Équipe
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400 text-lg">
             Analysez les performances de vos joueurs
           </p>
-        </div>
+        </motion.div>
 
         {/* Team Overview */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            whileHover={{ scale: 1.05, y: -5 }}
+            className="bg-gradient-to-br from-white via-white to-blue-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-6 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl"
+          >
             <div className="flex flex-col items-center text-center">
-              <Users className="w-10 h-10 text-blue-600 mb-3" />
-              <span className="text-3xl font-bold text-gray-900 mb-1">{players.length}</span>
-              <p className="text-sm text-gray-600">Joueurs</p>
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mb-3 shadow-lg">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-1">{players.length}</span>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Joueurs</p>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            whileHover={{ scale: 1.05, y: -5 }}
+            className="bg-gradient-to-br from-white via-white to-green-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-6 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl"
+          >
             <div className="flex flex-col items-center text-center">
-              <Target className="w-10 h-10 text-green-600 mb-3" />
-              <span className="text-3xl font-bold text-gray-900 mb-1">{teamStats.goals}</span>
-              <p className="text-sm text-gray-600">Buts Totaux</p>
+              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mb-3 shadow-lg">
+                <Target className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-1">{teamStats.goals}</span>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Buts Totaux</p>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            whileHover={{ scale: 1.05, y: -5 }}
+            className="bg-gradient-to-br from-white via-white to-purple-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-6 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl"
+          >
             <div className="flex flex-col items-center text-center">
-              <TrendingUp className="w-10 h-10 text-purple-600 mb-3" />
-              <span className="text-3xl font-bold text-gray-900 mb-1">{teamStats.assists}</span>
-              <p className="text-sm text-gray-600">Passes Décisives</p>
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mb-3 shadow-lg">
+                <TrendingUp className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">{teamStats.assists}</span>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Passes Décisives</p>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            whileHover={{ scale: 1.05, y: -5 }}
+            className="bg-gradient-to-br from-white via-white to-yellow-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-6 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl"
+          >
             <div className="flex flex-col items-center text-center">
-              <Award className="w-10 h-10 text-yellow-600 mb-3" />
-              <span className="text-3xl font-bold text-gray-900 mb-1">
+              <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center mb-3 shadow-lg">
+                <Award className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent mb-1">
                 {teamStats.yellowCards + teamStats.redCards}
               </span>
-              <p className="text-sm text-gray-600">Cartons</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Cartons</p>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Top Performers */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8">
           {topScorer && (
-            <div className="bg-gradient-to-br from-green-600 to-green-700 text-white p-6 rounded-lg shadow-lg">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6 }}
+              whileHover={{ scale: 1.02, y: -5 }}
+              className="bg-gradient-to-br from-green-600 via-emerald-600 to-green-700 text-white p-6 rounded-2xl shadow-2xl border border-green-500/50"
+            >
               <div className="flex items-center gap-3 mb-3">
-                <Target className="w-8 h-8" />
-                <h3 className="text-xl font-bold">Meilleur Buteur</h3>
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <Target className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold">Meilleur Buteur</h3>
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold">{topScorer.firstName} {topScorer.lastName}</p>
-                  <p className="text-green-100">#{topScorer.jerseyNumber} • {topScorer.position}</p>
+                  <p className="text-2xl md:text-3xl font-bold">{topScorer.firstName} {topScorer.lastName}</p>
+                  <p className="text-green-100 text-sm md:text-base">#{topScorer.jerseyNumber} • {topScorer.position}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-4xl font-black">{topScorer.stats.goals}</p>
-                  <p className="text-green-100 text-sm">Buts</p>
+                  <p className="text-4xl md:text-5xl font-black">{topScorer.stats.goals}</p>
+                  <p className="text-green-100 text-sm md:text-base">Buts</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {topAssister && (
-            <div className="bg-gradient-to-br from-purple-600 to-purple-700 text-white p-6 rounded-lg shadow-lg">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.7 }}
+              whileHover={{ scale: 1.02, y: -5 }}
+              className="bg-gradient-to-br from-purple-600 via-pink-600 to-purple-700 text-white p-6 rounded-2xl shadow-2xl border border-purple-500/50"
+            >
               <div className="flex items-center gap-3 mb-3">
-                <TrendingUp className="w-8 h-8" />
-                <h3 className="text-xl font-bold">Meilleur Passeur</h3>
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold">Meilleur Passeur</h3>
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold">{topAssister.firstName} {topAssister.lastName}</p>
-                  <p className="text-purple-100">#{topAssister.jerseyNumber} • {topAssister.position}</p>
+                  <p className="text-2xl md:text-3xl font-bold">{topAssister.firstName} {topAssister.lastName}</p>
+                  <p className="text-purple-100 text-sm md:text-base">#{topAssister.jerseyNumber} • {topAssister.position}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-4xl font-black">{topAssister.stats.assists}</p>
-                  <p className="text-purple-100 text-sm">Passes</p>
+                  <p className="text-4xl md:text-5xl font-black">{topAssister.stats.assists}</p>
+                  <p className="text-purple-100 text-sm md:text-base">Passes</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
         </div>
 
         {/* Players Stats Table */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900">Statistiques Détaillées</h3>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="bg-gradient-to-br from-white via-white to-blue-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl overflow-hidden"
+        >
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg md:text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">Statistiques Détaillées</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gradient-to-r from-gray-50 to-gray-100/50 dark:from-gray-800 dark:to-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     Joueur
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     Position
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     Matchs
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     Buts
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     Passes
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     Cartons
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {players.map((player) => (
-                  <tr key={player.id} className="hover:bg-gray-50">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {players.map((player, index) => (
+                  <motion.tr
+                    key={player.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm mr-3">
+                        <motion.div
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                          className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm mr-3 shadow-lg"
+                        >
                           {player.jerseyNumber}
-                        </div>
+                        </motion.div>
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-semibold text-gray-900 dark:text-white">
                             {player.firstName} {player.lastName}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span className="text-sm text-gray-900">{player.position}</span>
+                      <span className="text-sm text-gray-900 dark:text-white">{player.position}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span className="text-sm font-medium text-gray-900">{player.stats.matchesPlayed}</span>
+                      <span className="text-sm font-semibold text-gray-900 dark:text-white">{player.stats.matchesPlayed}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span className="text-sm font-bold text-green-600">{player.stats.goals}</span>
+                      <span className="text-sm font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{player.stats.goals}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span className="text-sm font-bold text-purple-600">{player.stats.assists}</span>
+                      <span className="text-sm font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{player.stats.assists}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <div className="flex items-center justify-center gap-2">
                         {player.stats.yellowCards > 0 && (
-                          <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                          <span className="px-2 py-1 bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 text-yellow-800 dark:text-yellow-400 text-xs font-semibold rounded-full border border-yellow-200 dark:border-yellow-800">
                             {player.stats.yellowCards} 🟨
                           </span>
                         )}
                         {player.stats.redCards > 0 && (
-                          <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded">
+                          <span className="px-2 py-1 bg-gradient-to-r from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30 text-red-800 dark:text-red-400 text-xs font-semibold rounded-full border border-red-200 dark:border-red-800">
                             {player.stats.redCards} 🟥
                           </span>
                         )}
                         {player.stats.yellowCards === 0 && player.stats.redCards === 0 && (
-                          <span className="text-gray-400 text-sm">-</span>
+                          <span className="text-gray-400 dark:text-gray-500 text-sm">-</span>
                         )}
                       </div>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   )
