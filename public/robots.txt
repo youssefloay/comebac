@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+Allow: /public/
+Allow: /public/teams
+Allow: /public/matches
+Allow: /public/ranking
+Allow: /public/players
+Allow: /public/statistics
+
+Disallow: /admin/
+Disallow: /api/
+Disallow: /player/
+Disallow: /coach/
+Disallow: /register-team/
+Disallow: /update-registration/
+Disallow: /join-team/
+Disallow: /join-team-coach/
+
+# Sitemap
+Sitemap: https://comebac.com/sitemap.xml
+

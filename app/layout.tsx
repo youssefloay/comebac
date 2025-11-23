@@ -25,9 +25,22 @@ export const viewport = {
 }
 
 export const metadata: Metadata = {
-  title: "ComeBac League - Championnat Scolaire",
-  description: "Application de gestion du championnat scolaire ComeBac League",
-  generator: "v0.app",
+  title: {
+    default: "ComeBac League - Championnat Scolaire de Football",
+    template: "%s | ComeBac League"
+  },
+  description: "Suivez le championnat scolaire ComeBac League : résultats de matchs, classements, statistiques des équipes et joueurs. Championnat de football inter-écoles en temps réel.",
+  keywords: ["football", "championnat scolaire", "sport", "matchs", "classement", "statistiques", "équipes", "joueurs", "ComeBac League"],
+  authors: [{ name: "ComeBac League" }],
+  creator: "ComeBac League",
+  publisher: "ComeBac League",
+  generator: "Next.js",
+  applicationName: "ComeBac League",
+  referrer: "origin-when-cross-origin",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://comebac.com'),
+  alternates: {
+    canonical: '/',
+  },
   icons: {
     icon: [
       { url: '/comebac.png', sizes: '32x32', type: 'image/png' },
@@ -66,23 +79,37 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
+    locale: 'fr_FR',
+    url: '/',
     siteName: 'ComeBac League',
-    title: 'ComeBac League - Championnat Scolaire',
-    description: 'Application de gestion du championnat scolaire ComeBac League',
+    title: 'ComeBac League - Championnat Scolaire de Football',
+    description: 'Suivez le championnat scolaire ComeBac League : résultats de matchs, classements, statistiques des équipes et joueurs en temps réel.',
     images: [
       {
         url: '/comebac.png',
         width: 1200,
         height: 630,
-        alt: 'ComeBac League Logo',
+        alt: 'ComeBac League - Championnat Scolaire de Football',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ComeBac League - Championnat Scolaire',
-    description: 'Application de gestion du championnat scolaire ComeBac League',
+    title: 'ComeBac League - Championnat Scolaire de Football',
+    description: 'Suivez le championnat scolaire ComeBac League : résultats, classements et statistiques en temps réel.',
     images: ['/comebac.png'],
+    creator: '@comebac_league',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 }
 
