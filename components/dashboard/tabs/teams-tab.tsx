@@ -77,6 +77,7 @@ export default function TeamsTab() {
   const [hasCoach, setHasCoach] = useState(false)
   const [promotingPlayerId, setPromotingPlayerId] = useState<string | null>(null)
   const [teamsCoachInfo, setTeamsCoachInfo] = useState<Map<string, TeamCoachInfo>>(new Map())
+  const [teamsPlayerCount, setTeamsPlayerCount] = useState<Map<string, number>>(new Map())
 
   useEffect(() => {
     loadTeams()
@@ -95,11 +96,12 @@ export default function TeamsTab() {
       }))
       setTeams(teamsWithDates)
 
-      // Charger les informations sur les coaches et coaches intérimaires
+      // Charger les informations sur les coaches, coaches intérimaires et le nombre de joueurs
       const accountsRes = await fetch('/api/admin/team-accounts')
       if (accountsRes.ok) {
         const accountsData = await accountsRes.json()
         const coachInfoMap = new Map<string, TeamCoachInfo>()
+        const playerCountMap = new Map<string, number>()
 
         accountsData.teams?.forEach((teamData: any) => {
           const coachInfo: TeamCoachInfo = {
@@ -121,12 +123,17 @@ export default function TeamsTab() {
               coachInfo.hasActingCoach = true
               coachInfo.actingCoachName = actingCoach.name
             }
+            
+            // Compter les joueurs (exclure les coaches intérimaires)
+            const playerCount = teamData.players.filter((p: any) => !p.isActingCoach).length
+            playerCountMap.set(teamData.id, playerCount)
           }
 
           coachInfoMap.set(teamData.id, coachInfo)
         })
 
         setTeamsCoachInfo(coachInfoMap)
+        setTeamsPlayerCount(playerCountMap)
       }
     } catch (err) {
       setError("Erreur lors du chargement des équipes")
@@ -900,6 +907,12 @@ export default function TeamsTab() {
                   <span className="font-medium">Classe:</span> {team.teamGrade}
                 </p>
               )}
+              <div className="flex items-center gap-2 text-sm">
+                <Users className="w-4 h-4 text-blue-600" />
+                <span className="text-gray-700">
+                  <span className="font-medium">Joueurs:</span> {teamsPlayerCount.get(team.id) ?? '...'}
+                </span>
+              </div>
             </div>
             
             {/* Informations Coach */}

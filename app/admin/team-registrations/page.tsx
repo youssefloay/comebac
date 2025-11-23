@@ -1900,6 +1900,34 @@ export default function TeamRegistrationsPage() {
                         <Eye className="w-5 h-5" />
                         Modifier
                       </button>
+                      {selectedRegistration.status === 'approved' && selectedRegistration.teamName === 'Road To Glory' && (
+                        <button
+                          onClick={async () => {
+                            if (!confirm('Corriger l\'inscription Road To Glory avec les 10 joueurs?')) return
+                            setProcessing(true)
+                            try {
+                              const res = await fetch('/api/admin/fix-road-to-glory', { method: 'POST' })
+                              const data = await res.json()
+                              if (res.ok) {
+                                setMessage({ type: 'success', text: data.message || 'Correction effectuée' })
+                                loadRegistrations()
+                                const updated = registrations.find(r => r.id === selectedRegistration.id)
+                                if (updated) setSelectedRegistration(updated)
+                              } else {
+                                setMessage({ type: 'error', text: data.error || 'Erreur' })
+                              }
+                            } catch (error) {
+                              setMessage({ type: 'error', text: 'Erreur de connexion' })
+                            } finally {
+                              setProcessing(false)
+                            }
+                          }}
+                          disabled={processing}
+                          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 disabled:bg-gray-400 transition font-medium"
+                        >
+                          🔧 Corriger (10 joueurs)
+                        </button>
+                      )}
                       {selectedRegistration.status === 'approved' && (
                         <button
                           onClick={() => resendEmails(selectedRegistration)}
