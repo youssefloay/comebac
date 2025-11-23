@@ -499,6 +499,72 @@ export default function AdminStatsPage() {
                 </div>
               </div>
 
+              {/* Anonymous vs Authenticated Stats */}
+              <div className="mb-6">
+                <h3 className="font-bold text-gray-900 mb-3">👥 Visiteurs anonymes vs Utilisateurs connectés</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Anonymous Stats */}
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
+                        <Users className="w-4 h-4 text-gray-600" />
+                      </div>
+                      <h4 className="font-bold text-gray-900">Visiteurs anonymes</h4>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Vues:</span>
+                        <span className="font-bold text-gray-900">{pageStats.globalStats.anonymous?.views || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Sessions:</span>
+                        <span className="font-bold text-gray-900">{pageStats.globalStats.anonymous?.sessions || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Temps total:</span>
+                        <span className="font-bold text-gray-900">{formatTime(pageStats.globalStats.anonymous?.time || 0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Temps moyen/session:</span>
+                        <span className="font-bold text-gray-900">{formatTime(pageStats.globalStats.anonymous?.avgTimePerSession || 0)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Authenticated Stats */}
+                  <div className="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-8 bg-green-200 rounded-lg flex items-center justify-center">
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                      </div>
+                      <h4 className="font-bold text-gray-900">Utilisateurs connectés</h4>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Vues:</span>
+                        <span className="font-bold text-gray-900">{pageStats.globalStats.authenticated?.views || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Utilisateurs:</span>
+                        <span className="font-bold text-gray-900">{pageStats.globalStats.authenticated?.users || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Sessions:</span>
+                        <span className="font-bold text-gray-900">{pageStats.globalStats.authenticated?.sessions || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Temps total:</span>
+                        <span className="font-bold text-gray-900">{formatTime(pageStats.globalStats.authenticated?.time || 0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Temps moyen/session:</span>
+                        <span className="font-bold text-gray-900">{formatTime(pageStats.globalStats.authenticated?.avgTimePerSession || 0)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Pages Stats Table */}
               <div>
                 <h3 className="font-bold text-gray-900 mb-3">Statistiques par page</h3>

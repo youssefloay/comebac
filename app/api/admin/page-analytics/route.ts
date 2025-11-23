@@ -66,6 +66,21 @@ export async function GET() {
     const uniqueUsers = new Set(pageViews.map((v: any) => v.userEmail)).size
     const totalSessions = new Set(pageViews.map((v: any) => v.sessionId)).size
     const totalTime = timeSpentData.reduce((sum: number, t: any) => sum + (t.timeSpent || 0), 0)
+    
+    // Statistiques pour utilisateurs anonymes
+    const anonymousViews = pageViews.filter((v: any) => v.userEmail === 'anonymous' || v.userId === 'anonymous')
+    const anonymousSessions = new Set(anonymousViews.map((v: any) => v.sessionId)).size
+    const anonymousTime = timeSpentData
+      .filter((t: any) => t.userEmail === 'anonymous' || t.userId === 'anonymous')
+      .reduce((sum: number, t: any) => sum + (t.timeSpent || 0), 0)
+    
+    // Statistiques pour utilisateurs connectés
+    const authenticatedViews = pageViews.filter((v: any) => v.userEmail !== 'anonymous' && v.userId !== 'anonymous')
+    const authenticatedUsers = new Set(authenticatedViews.map((v: any) => v.userEmail)).size
+    const authenticatedSessions = new Set(authenticatedViews.map((v: any) => v.sessionId)).size
+    const authenticatedTime = timeSpentData
+      .filter((t: any) => t.userEmail !== 'anonymous' && t.userId !== 'anonymous')
+      .reduce((sum: number, t: any) => sum + (t.timeSpent || 0), 0)
 
     // Calculer le temps passé par utilisateur
     const userTimeStats = timeSpentData.reduce((acc: any, timeData: any) => {
@@ -107,7 +122,21 @@ export async function GET() {
         uniqueUsers,
         totalSessions,
         totalTime,
-        avgTimePerSession: totalSessions > 0 ? Math.round(totalTime / totalSessions) : 0
+        avgTimePerSession: totalSessions > 0 ? Math.round(totalTime / totalSessions) : 0,
+        // Statistiques anonymes vs connectés
+        anonymous: {
+          views: anonymousViews.length,
+          sessions: anonymousSessions,
+          time: anonymousTime,
+          avgTimePerSession: anonymousSessions > 0 ? Math.round(anonymousTime / anonymousSessions) : 0
+        },
+        authenticated: {
+          views: authenticatedViews.length,
+          users: authenticatedUsers,
+          sessions: authenticatedSessions,
+          time: authenticatedTime,
+          avgTimePerSession: authenticatedSessions > 0 ? Math.round(authenticatedTime / authenticatedSessions) : 0
+        }
       },
       pageStats: pageStatsArray,
       userTimeStats: userTimeStatsArray
