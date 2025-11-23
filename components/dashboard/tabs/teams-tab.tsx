@@ -116,6 +116,11 @@ export default function TeamsTab() {
             coachInfo.coachName = coach.name || `${coach.firstName || ''} ${coach.lastName || ''}`.trim() || coach.email
           }
 
+          // Créer un Set des emails des coaches pour exclure les joueurs qui sont aussi coaches principaux
+          const coachEmails = new Set(
+            (teamData.coaches || []).map((c: any) => c.email?.toLowerCase().trim()).filter(Boolean)
+          )
+          
           // Vérifier si l'équipe a un coach intérimaire
           if (teamData.players) {
             const actingCoach = teamData.players.find((p: any) => p.isActingCoach === true)
@@ -124,8 +129,12 @@ export default function TeamsTab() {
               coachInfo.actingCoachName = actingCoach.name
             }
             
-            // Compter les joueurs (exclure les coaches intérimaires)
-            const playerCount = teamData.players.filter((p: any) => !p.isActingCoach).length
+            // Compter les joueurs (inclure les coaches intérimaires, exclure uniquement les coaches principaux)
+            const playerCount = teamData.players.filter((p: any) => {
+              const playerEmail = p.email?.toLowerCase().trim()
+              // Inclure tous les joueurs sauf ceux qui sont des coaches principaux (pas intérimaires)
+              return !coachEmails.has(playerEmail)
+            }).length
             playerCountMap.set(teamData.id, playerCount)
           }
 
@@ -928,33 +937,31 @@ export default function TeamsTab() {
                   )
                 }
 
-                if (coachInfo.hasCoach) {
-                  return (
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle className="w-4 h-4 text-green-600" />
-                      <span className="text-gray-700">
-                        <span className="font-medium text-green-700">Coach:</span> {coachInfo.coachName}
-                      </span>
-                    </div>
-                  )
-                }
-
-                if (coachInfo.hasActingCoach) {
-                  return (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Crown className="w-4 h-4 text-orange-600" />
-                      <span className="text-gray-700">
-                        <span className="font-medium text-orange-700">Coach Intérimaire:</span> {coachInfo.actingCoachName}
-                      </span>
-                    </div>
-                  )
-                }
-
                 return (
-                  <div className="flex items-center gap-2 text-sm">
-                    <XCircle className="w-4 h-4 text-red-600" />
-                    <span className="text-red-700 font-medium">Besoin d'un coach</span>
-                  </div>
+                  <>
+                    {coachInfo.hasCoach && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                        <span className="text-gray-700">
+                          <span className="font-medium text-green-700">Coach:</span> {coachInfo.coachName}
+                        </span>
+                      </div>
+                    )}
+                    {coachInfo.hasActingCoach && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Crown className="w-4 h-4 text-orange-600" />
+                        <span className="text-gray-700">
+                          <span className="font-medium text-orange-700">Coach Intérimaire:</span> {coachInfo.actingCoachName}
+                        </span>
+                      </div>
+                    )}
+                    {!coachInfo.hasCoach && !coachInfo.hasActingCoach && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <XCircle className="w-4 h-4 text-red-600" />
+                        <span className="text-red-700 font-medium">Besoin d'un coach</span>
+                      </div>
+                    )}
+                  </>
                 )
               })()}
             </div>

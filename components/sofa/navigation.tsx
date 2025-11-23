@@ -52,31 +52,29 @@ export function SofaNavigation() {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          {user && (
-            <div className="hidden md:flex items-center gap-2">
-              {navigationItems.map((item) => {
-                const isActive = pathname === item.href;
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`px-4 py-2 rounded-lg transition-all ${
-                      isActive 
-                        ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300" 
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Icon className="w-4 h-4" />
-                      <span className="text-sm font-medium">{item.label}</span>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
+          {/* Desktop Navigation - Accessible without auth */}
+          <div className="hidden md:flex items-center gap-2">
+            {navigationItems.map((item) => {
+              const isActive = pathname === item.href;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`px-4 py-2 rounded-lg transition-all ${
+                    isActive 
+                      ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300" 
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Icon className="w-4 h-4" />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
 
           {/* Right Actions - Modern 2025 */}
           <div className="flex items-center gap-1.5 sm:gap-2">
@@ -96,8 +94,8 @@ export function SofaNavigation() {
               {theme === "light" ? <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-gray-300" /> : <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-gray-300" />}
             </motion.button>
 
-            {/* NOTIFICATION DROPDOWN */}
-            <NotificationDropdown />
+            {/* NOTIFICATION DROPDOWN - Only if user is logged in */}
+            {user && <NotificationDropdown />}
 
             {/* Register Team Button - Visible for all users */}
             <Link href="/register-team">

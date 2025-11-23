@@ -12,9 +12,9 @@ export default function HomePage() {
   useEffect(() => {
     if (!loading) {
       // If user is logged in, they will be redirected by AuthProvider
-      // For non-authenticated users, redirect directly to login
+      // For non-authenticated users, redirect to public page (no login required)
       if (!user) {
-        router.push("/login");
+        router.push("/public");
       }
     }
   }, [user, loading, router]);

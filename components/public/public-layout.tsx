@@ -32,21 +32,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
     )
   }
 
-  if (!user) {
-    return (
-      <div className="sofa-theme min-h-screen flex items-center justify-center">
-        <div className="text-center text-sofa-text-primary">
-          <h2 className="text-2xl font-bold mb-4">Accès Restreint</h2>
-          <p className="text-sofa-text-secondary mb-6">Vous devez être connecté pour accéder à cette page.</p>
-          <a href="/login" className="sofa-btn">
-            Se Connecter
-          </a>
-        </div>
-        {/* User Menu FAB - Shows login button for non-authenticated users */}
-        <UserMenuFAB />
-      </div>
-    )
-  }
+  // Permettre l'accès même sans authentification - version publique en lecture seule
 
   return (
     <div className="sofa-theme">
@@ -107,8 +93,21 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                 </svg>
               </motion.button>
               
-              {/* Notification Dropdown */}
-              <NotificationDropdown />
+              {/* Login Button - Only if user is not logged in */}
+              {!user && (
+                <Link href="/login">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-3 py-1.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg text-xs font-bold shadow-lg hover:shadow-xl transition-all"
+                  >
+                    Connexion
+                  </motion.button>
+                </Link>
+              )}
+              
+              {/* Notification Dropdown - Only if user is logged in */}
+              {user && <NotificationDropdown />}
             </div>
           </div>
         </div>
