@@ -1117,8 +1117,16 @@ export default function TeamRegistrationsPage() {
                 className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition"
               >
                 <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">{registration.teamName}</h3>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-xl font-bold text-gray-900">{registration.teamName}</h3>
+                      {registration.registrationMode === 'collaborative' && (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold flex items-center gap-1">
+                          <LinkIcon className="w-3 h-3" />
+                          Collaboratif
+                        </span>
+                      )}
+                    </div>
                     {registration.schoolName && (
                       <p className="text-sm text-blue-600 font-medium">
                         🏫 {registration.schoolName}
@@ -1187,12 +1195,25 @@ export default function TeamRegistrationsPage() {
                 </div>
 
                 <div className="text-xs text-gray-500 mb-4 space-y-1">
-                  <p>
-                    📅 Inscrit le : {formatDateTime(registration.submittedAt || registration.createdAt)}
-                  </p>
-                  {registration.registrationMode === 'collaborative' && registration.players.length >= 10 && registration.adminNotifiedAt10PlayersAt && (
-                    <p className="text-green-600 font-medium">
-                      ✅ 10 joueurs atteints le : {formatDateTime(registration.adminNotifiedAt10PlayersAt)}
+                  {registration.registrationMode === 'collaborative' ? (
+                    <>
+                      <p className="text-blue-600 font-semibold">
+                        🔗 Lien collaboratif créé le : {formatDateTime(registration.submittedAt || registration.createdAt)}
+                      </p>
+                      {registration.players.length >= 10 && registration.adminNotifiedAt10PlayersAt && (
+                        <p className="text-green-600 font-medium">
+                          ✅ 10 joueurs atteints le : {formatDateTime(registration.adminNotifiedAt10PlayersAt)}
+                        </p>
+                      )}
+                      {registration.players.length < 10 && (
+                        <p className="text-orange-600">
+                          ⏳ En attente de {10 - registration.players.length} joueur{10 - registration.players.length > 1 ? 's' : ''} supplémentaire{10 - registration.players.length > 1 ? 's' : ''}
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p>
+                      📅 Inscrit le : {formatDateTime(registration.submittedAt || registration.createdAt)}
                     </p>
                   )}
                 </div>
@@ -1302,13 +1323,31 @@ export default function TeamRegistrationsPage() {
                       {selectedRegistration.teamGrade && (
                         <p className="text-sm text-purple-600 font-medium">📚 Classe: {selectedRegistration.teamGrade}</p>
                       )}
+                      {selectedRegistration.registrationMode === 'collaborative' && (
+                        <div className="mt-2 mb-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                          <div className="flex items-center gap-2 mb-1">
+                            <LinkIcon className="w-4 h-4 text-blue-600" />
+                            <span className="text-sm font-semibold text-blue-700">Inscription Collaborative</span>
+                          </div>
+                          <p className="text-xs text-blue-600">
+                            🔗 Lien collaboratif créé le : {formatDateTime(selectedRegistration.submittedAt || selectedRegistration.createdAt)}
+                          </p>
+                        </div>
+                      )}
                       <div className="mt-2 space-y-1 text-xs text-gray-600">
-                        <p>
-                          📅 <strong>Inscrit le :</strong> {formatDateTime(selectedRegistration.submittedAt || selectedRegistration.createdAt)}
-                        </p>
+                        {selectedRegistration.registrationMode !== 'collaborative' && (
+                          <p>
+                            📅 <strong>Inscrit le :</strong> {formatDateTime(selectedRegistration.submittedAt || selectedRegistration.createdAt)}
+                          </p>
+                        )}
                         {selectedRegistration.registrationMode === 'collaborative' && selectedRegistration.players.length >= 10 && selectedRegistration.adminNotifiedAt10PlayersAt && (
                           <p className="text-green-600 font-medium">
                             ✅ <strong>10 joueurs atteints le :</strong> {formatDateTime(selectedRegistration.adminNotifiedAt10PlayersAt)}
+                          </p>
+                        )}
+                        {selectedRegistration.registrationMode === 'collaborative' && selectedRegistration.players.length < 10 && (
+                          <p className="text-orange-600 font-medium">
+                            ⏳ <strong>En attente de {10 - selectedRegistration.players.length} joueur{10 - selectedRegistration.players.length > 1 ? 's' : ''} supplémentaire{10 - selectedRegistration.players.length > 1 ? 's' : ''}</strong>
                           </p>
                         )}
                       </div>
