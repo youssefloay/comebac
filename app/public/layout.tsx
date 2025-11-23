@@ -4,11 +4,11 @@ import PublicLayout from "@/components/public/public-layout"
 
 export const metadata: Metadata = {
   title: "Championnat Scolaire - ComeBac League",
-  description: "Suivez le championnat scolaire ComeBac League : résultats de matchs, classements, statistiques des équipes et joueurs. Championnat de football inter-écoles en temps réel.",
+  description: "Application de ligue scolaire ComeBac League : suivez votre ligue, équipes et joueurs en temps réel. Résultats de matchs, classements, statistiques détaillées et performances individuelles.",
   keywords: ["championnat scolaire", "football", "résultats matchs", "classement", "statistiques", "équipes", "joueurs"],
   openGraph: {
     title: "ComeBac League - Championnat Scolaire de Football",
-    description: "Suivez tous les matchs, résultats et classements du championnat scolaire ComeBac League en temps réel.",
+    description: "Suivez votre ligue scolaire ComeBac League : matchs, résultats, classements, équipes et joueurs en temps réel.",
     type: "website",
     locale: "fr_FR",
   },

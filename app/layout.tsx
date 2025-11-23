@@ -29,8 +29,8 @@ export const metadata: Metadata = {
     default: "ComeBac League - Championnat Scolaire de Football",
     template: "%s | ComeBac League"
   },
-  description: "Suivez le championnat scolaire ComeBac League : résultats de matchs, classements, statistiques des équipes et joueurs. Championnat de football inter-écoles en temps réel.",
-  keywords: ["football", "championnat scolaire", "sport", "matchs", "classement", "statistiques", "équipes", "joueurs", "ComeBac League"],
+  description: "Application de ligue scolaire ComeBac League : suivez votre ligue, équipes et joueurs en temps réel. Résultats de matchs, classements, statistiques détaillées et performances individuelles.",
+  keywords: ["ligue scolaire", "football scolaire", "suivi ligue", "application ligue", "équipes scolaires", "joueurs scolaires", "matchs", "classement", "statistiques", "ComeBac League"],
   authors: [{ name: "ComeBac League" }],
   creator: "ComeBac League",
   publisher: "ComeBac League",
@@ -83,7 +83,7 @@ export const metadata: Metadata = {
     url: '/',
     siteName: 'ComeBac League',
     title: 'ComeBac League - Championnat Scolaire de Football',
-    description: 'Suivez le championnat scolaire ComeBac League : résultats de matchs, classements, statistiques des équipes et joueurs en temps réel.',
+    description: 'Application de ligue scolaire ComeBac League : suivez votre ligue, équipes et joueurs. Résultats, classements et statistiques en temps réel.',
     images: [
       {
         url: '/comebac.png',
@@ -96,7 +96,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'ComeBac League - Championnat Scolaire de Football',
-    description: 'Suivez le championnat scolaire ComeBac League : résultats, classements et statistiques en temps réel.',
+    description: 'Application de ligue scolaire ComeBac League : suivez votre ligue, équipes et joueurs. Résultats et statistiques en temps réel.',
     images: ['/comebac.png'],
     creator: '@comebac_league',
   },
