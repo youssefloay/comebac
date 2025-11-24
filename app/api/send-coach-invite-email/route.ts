@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/join-team-coach/${token}`
+    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.comebac.com'}/join-team-coach/${token}`
 
     const emailHtml = `
 <!DOCTYPE html>

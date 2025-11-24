@@ -54,7 +54,7 @@ export async function POST(request: Request) {
               </ul>
               
               <div style="text-align: center;">
-                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/team-registrations" class="button">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://www.comebac.com'}/admin/team-registrations" class="button">
                   Voir les inscriptions
                 </a>
               </div>

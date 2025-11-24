@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.comebac.com'
     const inviteLink = `${appUrl}/join-team/${token}`
     const coachLink = `${appUrl}/join-team-coach/${token}`
     const statusLink = `${appUrl}/team-registration/${token}/status`
