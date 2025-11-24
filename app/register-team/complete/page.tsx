@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { Users, Plus, Trash2, Check, AlertCircle, ArrowLeft, Clock } from 'lucide-react'
 import Link from 'next/link'
@@ -295,6 +295,142 @@ export default function RegisterTeamPage() {
     )
   }
 
+  // Fonction pour vérifier si un joueur existe déjà dans une autre équipe
+  const checkPlayerExists = async (firstName: string, lastName: string, email: string, nickname?: string) => {
+    const normalizedEmail = email.trim().toLowerCase()
+    const normalizedFirstName = firstName.trim().toLowerCase()
+    const normalizedLastName = lastName.trim().toLowerCase()
+    const normalizedNickname = nickname?.trim().toLowerCase() || ''
+
+    try {
+      // 1. Vérifier dans playerAccounts (comptes de joueurs validés)
+      const playerAccountsQuery = query(
+        collection(db, 'playerAccounts'),
+        where('email', '==', normalizedEmail)
+      )
+      const playerAccountsSnap = await getDocs(playerAccountsQuery)
+      
+      if (!playerAccountsSnap.empty) {
+        const existingPlayer = playerAccountsSnap.docs[0].data()
+        return {
+          exists: true,
+          message: `Le joueur ${firstName} ${lastName} (${email}) est déjà inscrit dans une autre équipe (${existingPlayer.teamName || 'équipe inconnue'})`
+        }
+      }
+
+      // 2. Vérifier dans teamRegistrations (inscriptions en attente)
+      const registrationsQuery = query(collection(db, 'teamRegistrations'))
+      const registrationsSnap = await getDocs(registrationsQuery)
+      
+      for (const regDoc of registrationsSnap.docs) {
+        const regData = regDoc.data()
+        
+        // Vérifier le capitaine
+        if (regData.captain) {
+          const captainEmail = (regData.captain.email || '').toLowerCase()
+          const captainFirstName = (regData.captain.firstName || '').toLowerCase()
+          const captainLastName = (regData.captain.lastName || '').toLowerCase()
+          
+          if (captainEmail === normalizedEmail) {
+            return {
+              exists: true,
+              message: `Le joueur ${firstName} ${lastName} (${email}) est déjà inscrit comme capitaine dans l'équipe "${regData.teamName}"`
+            }
+          }
+          
+          // Vérifier nom + prénom
+          if (captainFirstName === normalizedFirstName && captainLastName === normalizedLastName) {
+            return {
+              exists: true,
+              message: `Un joueur avec le nom ${firstName} ${lastName} est déjà inscrit comme capitaine dans l'équipe "${regData.teamName}"`
+            }
+          }
+        }
+        
+        // Vérifier les joueurs
+        if (regData.players && Array.isArray(regData.players)) {
+          for (const player of regData.players) {
+            const playerEmail = (player.email || '').toLowerCase()
+            const playerFirstName = (player.firstName || '').toLowerCase()
+            const playerLastName = (player.lastName || '').toLowerCase()
+            const playerNickname = (player.nickname || '').toLowerCase()
+            
+            // Vérifier par email
+            if (playerEmail === normalizedEmail) {
+              return {
+                exists: true,
+                message: `Le joueur ${firstName} ${lastName} (${email}) est déjà inscrit dans l'équipe "${regData.teamName}"`
+              }
+            }
+            
+            // Vérifier par nom + prénom
+            if (playerFirstName === normalizedFirstName && playerLastName === normalizedLastName) {
+              return {
+                exists: true,
+                message: `Un joueur avec le nom ${firstName} ${lastName} est déjà inscrit dans l'équipe "${regData.teamName}"`
+              }
+            }
+            
+            // Vérifier par surnom si fourni
+            if (normalizedNickname && playerNickname === normalizedNickname && playerNickname !== '') {
+              return {
+                exists: true,
+                message: `Un joueur avec le surnom "${nickname}" est déjà inscrit dans l'équipe "${regData.teamName}"`
+              }
+            }
+          }
+        }
+      }
+
+      // 3. Vérifier dans teams (équipes validées)
+      const teamsQuery = query(collection(db, 'teams'))
+      const teamsSnap = await getDocs(teamsQuery)
+      
+      for (const teamDoc of teamsSnap.docs) {
+        const teamData = teamDoc.data()
+        
+        if (teamData.players && Array.isArray(teamData.players)) {
+          for (const player of teamData.players) {
+            const playerEmail = (player.email || '').toLowerCase()
+            const playerFirstName = (player.firstName || '').toLowerCase()
+            const playerLastName = (player.lastName || '').toLowerCase()
+            const playerNickname = (player.nickname || '').toLowerCase()
+            
+            // Vérifier par email
+            if (playerEmail === normalizedEmail) {
+              return {
+                exists: true,
+                message: `Le joueur ${firstName} ${lastName} (${email}) est déjà membre de l'équipe "${teamData.name}"`
+              }
+            }
+            
+            // Vérifier par nom + prénom
+            if (playerFirstName === normalizedFirstName && playerLastName === normalizedLastName) {
+              return {
+                exists: true,
+                message: `Un joueur avec le nom ${firstName} ${lastName} est déjà membre de l'équipe "${teamData.name}"`
+              }
+            }
+            
+            // Vérifier par surnom si fourni
+            if (normalizedNickname && playerNickname === normalizedNickname && playerNickname !== '') {
+              return {
+                exists: true,
+                message: `Un joueur avec le surnom "${nickname}" est déjà membre de l'équipe "${teamData.name}"`
+              }
+            }
+          }
+        }
+      }
+
+      return { exists: false, message: '' }
+    } catch (error) {
+      console.error('Erreur lors de la vérification du joueur:', error)
+      // En cas d'erreur, on continue (ne pas bloquer l'inscription)
+      return { exists: false, message: '' }
+    }
+  }
+
   const validateForm = () => {
     if (!teamName.trim()) return 'Le nom de l\'équipe est requis'
     if (!schoolName) return 'L\'école est requise'
@@ -361,9 +497,44 @@ export default function RegisterTeamPage() {
       return
     }
 
-    console.log('✅ Validation réussie, envoi en cours...')
+    console.log('✅ Validation réussie, vérification des joueurs existants...')
     setLoading(true)
     setError('')
+
+    // Vérifier si le capitaine existe déjà dans une autre équipe
+    try {
+      const captainCheck = await checkPlayerExists(
+        captainFirstName,
+        captainLastName,
+        captainEmail
+      )
+      if (captainCheck.exists) {
+        setError(captainCheck.message)
+        setLoading(false)
+        return
+      }
+    } catch (err) {
+      console.error('Erreur lors de la vérification du capitaine:', err)
+    }
+
+    // Vérifier si les joueurs existent déjà dans une autre équipe
+    try {
+      for (const player of players) {
+        const playerCheck = await checkPlayerExists(
+          player.firstName,
+          player.lastName,
+          player.email,
+          player.nickname
+        )
+        if (playerCheck.exists) {
+          setError(playerCheck.message)
+          setLoading(false)
+          return
+        }
+      }
+    } catch (err) {
+      console.error('Erreur lors de la vérification des joueurs:', err)
+    }
 
     try {
       const registrationData: any = {

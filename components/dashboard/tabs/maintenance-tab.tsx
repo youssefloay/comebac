@@ -412,6 +412,50 @@ export default function MaintenanceTab() {
           </button>
         </div>
 
+        {/* Joueurs dans plusieurs équipes */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-orange-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">👥</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Joueurs dans 2 équipes</h3>
+              <p className="text-xs text-gray-600">Détection & réparation</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Détecte les joueurs inscrits dans plusieurs équipes et permet de les retirer d'une équipe
+          </p>
+          <button
+            onClick={() => router.push('/admin/duplicate-players')}
+            className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium text-sm"
+          >
+            Voir et réparer
+          </button>
+        </div>
+
+        {/* Comparer deux équipes */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-purple-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">🔍</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Comparer deux équipes</h3>
+              <p className="text-xs text-gray-600">Joueurs communs</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Compare deux équipes pour trouver les joueurs présents dans les deux équipes
+          </p>
+          <button
+            onClick={() => router.push('/admin/compare-teams')}
+            className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium text-sm"
+          >
+            Comparer
+          </button>
+        </div>
+
         {/* Mettre à jour infos appareils */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-blue-300 transition-colors">
           <div className="flex items-center gap-3 mb-4">

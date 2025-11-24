@@ -91,6 +91,145 @@ export default function JoinTeamPage() {
     loadRegistration()
   }, [token])
 
+  // Fonction pour vérifier si un joueur existe déjà dans une autre équipe
+  const checkPlayerExists = async (firstName: string, lastName: string, email: string, nickname?: string) => {
+    const normalizedEmail = email.trim().toLowerCase()
+    const normalizedFirstName = firstName.trim().toLowerCase()
+    const normalizedLastName = lastName.trim().toLowerCase()
+    const normalizedNickname = nickname?.trim().toLowerCase() || ''
+
+    try {
+      // 1. Vérifier dans playerAccounts (comptes de joueurs validés)
+      const playerAccountsQuery = query(
+        collection(db, 'playerAccounts'),
+        where('email', '==', normalizedEmail)
+      )
+      const playerAccountsSnap = await getDocs(playerAccountsQuery)
+      
+      if (!playerAccountsSnap.empty) {
+        const existingPlayer = playerAccountsSnap.docs[0].data()
+        return {
+          exists: true,
+          message: `Vous êtes déjà inscrit dans une autre équipe (${existingPlayer.teamName || 'équipe inconnue'})`
+        }
+      }
+
+      // 2. Vérifier dans teamRegistrations (inscriptions en attente)
+      const registrationsQuery = query(collection(db, 'teamRegistrations'))
+      const registrationsSnap = await getDocs(registrationsQuery)
+      
+      for (const regDoc of registrationsSnap.docs) {
+        const regData = regDoc.data()
+        
+        // Ignorer l'inscription actuelle
+        if (regData.inviteToken === token) continue
+        
+        // Vérifier le capitaine
+        if (regData.captain) {
+          const captainEmail = (regData.captain.email || '').toLowerCase()
+          const captainFirstName = (regData.captain.firstName || '').toLowerCase()
+          const captainLastName = (regData.captain.lastName || '').toLowerCase()
+          
+          if (captainEmail === normalizedEmail) {
+            return {
+              exists: true,
+              message: `Vous êtes déjà inscrit comme capitaine dans l'équipe "${regData.teamName}"`
+            }
+          }
+          
+          // Vérifier nom + prénom
+          if (captainFirstName === normalizedFirstName && captainLastName === normalizedLastName) {
+            return {
+              exists: true,
+              message: `Un joueur avec votre nom est déjà inscrit comme capitaine dans l'équipe "${regData.teamName}"`
+            }
+          }
+        }
+        
+        // Vérifier les joueurs
+        if (regData.players && Array.isArray(regData.players)) {
+          for (const player of regData.players) {
+            const playerEmail = (player.email || '').toLowerCase()
+            const playerFirstName = (player.firstName || '').toLowerCase()
+            const playerLastName = (player.lastName || '').toLowerCase()
+            const playerNickname = (player.nickname || '').toLowerCase()
+            
+            // Vérifier par email
+            if (playerEmail === normalizedEmail) {
+              return {
+                exists: true,
+                message: `Vous êtes déjà inscrit dans l'équipe "${regData.teamName}"`
+              }
+            }
+            
+            // Vérifier par nom + prénom
+            if (playerFirstName === normalizedFirstName && playerLastName === normalizedLastName) {
+              return {
+                exists: true,
+                message: `Un joueur avec votre nom est déjà inscrit dans l'équipe "${regData.teamName}"`
+              }
+            }
+            
+            // Vérifier par surnom si fourni
+            if (normalizedNickname && playerNickname === normalizedNickname && playerNickname !== '') {
+              return {
+                exists: true,
+                message: `Un joueur avec le surnom "${nickname}" est déjà inscrit dans l'équipe "${regData.teamName}"`
+              }
+            }
+          }
+        }
+      }
+
+      // 3. Vérifier dans teams (équipes validées)
+      const teamsQuery = query(collection(db, 'teams'))
+      const teamsSnap = await getDocs(teamsQuery)
+      
+      for (const teamDoc of teamsSnap.docs) {
+        const teamData = teamDoc.data()
+        
+        if (teamData.players && Array.isArray(teamData.players)) {
+          for (const player of teamData.players) {
+            const playerEmail = (player.email || '').toLowerCase()
+            const playerFirstName = (player.firstName || '').toLowerCase()
+            const playerLastName = (player.lastName || '').toLowerCase()
+            const playerNickname = (player.nickname || '').toLowerCase()
+            
+            // Vérifier par email
+            if (playerEmail === normalizedEmail) {
+              return {
+                exists: true,
+                message: `Vous êtes déjà membre de l'équipe "${teamData.name}"`
+              }
+            }
+            
+            // Vérifier par nom + prénom
+            if (playerFirstName === normalizedFirstName && playerLastName === normalizedLastName) {
+              return {
+                exists: true,
+                message: `Un joueur avec votre nom est déjà membre de l'équipe "${teamData.name}"`
+              }
+            }
+            
+            // Vérifier par surnom si fourni
+            if (normalizedNickname && playerNickname === normalizedNickname && playerNickname !== '') {
+              return {
+                exists: true,
+                message: `Un joueur avec le surnom "${nickname}" est déjà membre de l'équipe "${teamData.name}"`
+              }
+            }
+          }
+        }
+      }
+
+      return { exists: false, message: '' }
+    } catch (error) {
+      console.error('Erreur lors de la vérification du joueur:', error)
+      // En cas d'erreur, on continue (ne pas bloquer l'inscription)
+      return { exists: false, message: '' }
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!registration) return
@@ -116,20 +255,31 @@ export default function JoinTeamPage() {
         throw new Error('Le numéro de maillot est requis')
       }
 
-      // Check if email already exists
+      // Check if email already exists in current registration
       const emailExists = registration.players.some(
         p => p.email.toLowerCase() === email.trim().toLowerCase()
       )
       if (emailExists) {
-        throw new Error('Cet email est déjà utilisé par un autre joueur')
+        throw new Error('Cet email est déjà utilisé par un autre joueur de cette équipe')
       }
 
-      // Check if jersey number already exists
+      // Check if jersey number already exists in current registration
       const numberExists = registration.players.some(
         p => p.jerseyNumber === jerseyNumber.trim()
       )
       if (numberExists) {
-        throw new Error('Ce numéro de maillot est déjà pris')
+        throw new Error('Ce numéro de maillot est déjà pris dans cette équipe')
+      }
+
+      // Vérifier si le joueur existe déjà dans une autre équipe
+      const playerCheck = await checkPlayerExists(
+        firstName.trim(),
+        lastName.trim(),
+        email.trim(),
+        nickname.trim()
+      )
+      if (playerCheck.exists) {
+        throw new Error(playerCheck.message)
       }
 
       // Add player
