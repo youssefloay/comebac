@@ -90,6 +90,11 @@ export async function POST(request: NextRequest) {
       emailResult = await sendEmail(generateWelcomeEmail(playerName, teamName, resetLink, email))
       
       console.log(`📧 Résultat envoi email joueur:`, emailResult.success ? '✅ Succès' : `❌ Erreur: ${emailResult.error}`)
+      console.log(`📧 Détails complets:`, JSON.stringify(emailResult, null, 2))
+      if (emailResult.data?.id) {
+        console.log(`📧 Email ID Resend: ${emailResult.data.id}`)
+        console.log(`📧 Vérifiez le statut sur: https://resend.com/emails/${emailResult.data.id}`)
+      }
       
       // Enregistrer la date de dernière relance
       if (emailResult?.success || emailResult?.error === 'API key not configured') {
@@ -209,7 +214,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: emailResult?.success ? 'Email d\'activation envoyé' : 'Aucun email envoyé (mode local)'
+      message: emailResult?.success ? 'Email d\'activation envoyé' : 'Aucun email envoyé (mode local)',
+      emailId: emailResult?.data?.id || null,
+      resendStatus: emailResult?.data ? 'sent' : 'unknown',
+      checkStatusUrl: emailResult?.data?.id ? `https://resend.com/emails/${emailResult.data.id}` : null
     })
 
   } catch (error: any) {

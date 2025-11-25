@@ -90,7 +90,16 @@ export default function TeamAccountsPage() {
 
       if (response.ok && data.success) {
         console.log(`✅ Email envoyé avec succès:`, data)
-        alert(`✅ Email d'activation envoyé à ${email}`)
+        let message = `✅ Email d'activation envoyé à ${email}`
+        if (data.emailId) {
+          message += `\n\n📧 Email ID: ${data.emailId}`
+          message += `\n🔍 Vérifiez le statut: https://resend.com/emails/${data.emailId}`
+          message += `\n\n💡 Si l'email n'arrive pas:`
+          message += `\n- Vérifiez les spams`
+          message += `\n- Vérifiez le statut sur Resend`
+          message += `\n- Attendez quelques minutes (greylisting possible)`
+        }
+        alert(message)
         await loadTeamAccounts() // Recharger pour afficher la nouvelle date de relance
       } else {
         console.error(`❌ Erreur API:`, response.status, data)
