@@ -9,12 +9,23 @@ function LanguageButton() {
   const { language, setLanguage } = useAdminI18n()
   const [showMenu, setShowMenu] = useState(false)
 
+  const handleLanguageChange = (newLang: 'fr' | 'en') => {
+    console.log('🌐 Changement de langue:', newLang)
+    setLanguage(newLang)
+    setShowMenu(false)
+    // Force re-render
+    window.location.reload()
+  }
+
   return (
     <div className="relative">
       <button
-        onClick={() => setShowMenu(!showMenu)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors touch-manipulation shadow-md border border-gray-200 dark:border-gray-700"
-        style={{ minHeight: '40px' }}
+        onClick={() => {
+          console.log('🌐 Bouton langue cliqué, menu:', !showMenu)
+          setShowMenu(!showMenu)
+        }}
+        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors touch-manipulation shadow-lg border border-blue-700"
+        style={{ minHeight: '44px', zIndex: 10000 }}
         title={language === 'fr' ? 'Switch to English' : 'Passer en français'}
       >
         <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -29,10 +40,7 @@ function LanguageButton() {
           />
           <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20">
             <button
-              onClick={() => {
-                setLanguage('fr')
-                setShowMenu(false)
-              }}
+              onClick={() => handleLanguageChange('fr')}
               className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
                 language === 'fr' ? 'bg-blue-50 dark:bg-blue-900/20 font-semibold' : ''
               }`}
@@ -40,10 +48,7 @@ function LanguageButton() {
               🇫🇷 Français
             </button>
             <button
-              onClick={() => {
-                setLanguage('en')
-                setShowMenu(false)
-              }}
+              onClick={() => handleLanguageChange('en')}
               className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
                 language === 'en' ? 'bg-blue-50 dark:bg-blue-900/20 font-semibold' : ''
               }`}
@@ -59,17 +64,17 @@ function LanguageButton() {
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Language Button - Fixed top right */}
-      <div className="fixed top-4 right-4 z-[9999]">
+    <>
+      {/* Language Button - Fixed top right - Always visible */}
+      <div className="fixed top-4 right-4 z-[9999]" style={{ position: 'fixed', top: '16px', right: '16px' }}>
         <LanguageButton />
       </div>
       
       {/* Content */}
-      <div className="pt-16 sm:pt-4">
+      <div style={{ paddingTop: '80px' }}>
         {children}
       </div>
-    </div>
+    </>
   )
 }
 
