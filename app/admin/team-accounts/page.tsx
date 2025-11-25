@@ -81,19 +81,32 @@ export default function TeamAccountsPage() {
 
       console.log(`📧 Réponse reçue:`, response.status, response.statusText)
 
-      if (response.ok) {
-        const data = await response.json()
+      const data = await response.json().catch(() => ({ 
+        error: 'Erreur lors de la lecture de la réponse',
+        success: false
+      }))
+
+      console.log(`📧 Données reçues:`, data)
+
+      if (response.ok && data.success) {
         console.log(`✅ Email envoyé avec succès:`, data)
         alert(`✅ Email d'activation envoyé à ${email}`)
         await loadTeamAccounts() // Recharger pour afficher la nouvelle date de relance
       } else {
-        const data = await response.json().catch(() => ({ error: 'Erreur inconnue' }))
         console.error(`❌ Erreur API:`, response.status, data)
-        alert(`❌ Erreur: ${data.error || `Erreur ${response.status}`}`)
+        const errorMessage = data.error || data.details || `Erreur ${response.status}`
+        
+        // Message spécial pour les erreurs de configuration
+        if (data.isConfigError) {
+          alert(`❌ Configuration manquante:\n\n${errorMessage}\n\n⚠️ Action requise: Configurez RESEND_API_KEY dans les variables d'environnement de Vercel.`)
+        } else {
+          alert(`❌ Erreur: ${errorMessage}\n\nVérifiez la console du navigateur (F12) pour plus de détails.`)
+        }
       }
     } catch (error: any) {
       console.error('❌ Erreur lors de l\'envoi:', error)
-      alert(`❌ Erreur lors de l'envoi: ${error.message || 'Erreur de connexion'}`)
+      console.error('❌ Stack:', error.stack)
+      alert(`❌ Erreur lors de l'envoi: ${error.message || 'Erreur de connexion'}\n\nVérifiez la console du navigateur (F12) pour plus de détails.`)
     } finally {
       setSendingEmail(null)
     }

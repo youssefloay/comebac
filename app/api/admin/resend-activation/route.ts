@@ -186,11 +186,20 @@ export async function POST(request: NextRequest) {
 
     if (!isEmailSent) {
       console.error(`❌ Échec envoi email à ${email}:`, emailResult?.error)
+      
+      // Vérifier si c'est un problème de configuration
+      const isConfigError = emailResult?.error === 'API key not configured' || !process.env.RESEND_API_KEY
+      
       return NextResponse.json(
         { 
           success: false,
-          error: emailResult?.error || 'Erreur lors de l\'envoi de l\'email',
-          details: `Impossible d'envoyer l'email à ${email}`
+          error: isConfigError 
+            ? 'RESEND_API_KEY non configurée en production. Vérifiez les variables d\'environnement sur Vercel.'
+            : emailResult?.error || 'Erreur lors de l\'envoi de l\'email',
+          details: isConfigError
+            ? 'La clé API Resend n\'est pas configurée. Ajoutez RESEND_API_KEY dans les variables d\'environnement de Vercel.'
+            : `Impossible d'envoyer l'email à ${email}`,
+          isConfigError
         },
         { status: 500 }
       )
@@ -207,13 +216,16 @@ export async function POST(request: NextRequest) {
     console.error('❌ Erreur dans resend-activation:', error)
     console.error('❌ Stack:', error.stack)
     console.error('❌ Email concerné:', email)
+    console.error('❌ Code erreur:', error.code)
+    console.error('❌ Message:', error.message)
     
     // S'assurer de retourner toujours une réponse JSON valide
     return NextResponse.json(
       { 
         success: false,
         error: error.message || 'Erreur serveur',
-        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+        code: error.code || 'UNKNOWN_ERROR'
       },
       { status: 500 }
     )
