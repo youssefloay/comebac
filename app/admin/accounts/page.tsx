@@ -8,6 +8,7 @@ import { collection, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { Users, Shield, User, Edit, Save, X, Trash2, Mail } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useAdminI18n } from '@/lib/i18n/admin-i18n-context'
 
 interface Account {
   id: string
@@ -34,6 +35,7 @@ interface Team {
 export default function AccountsManagementPage() {
   const { user, loading: authLoading, isAdmin } = useAuth()
   const router = useRouter()
+  const { t } = useAdminI18n()
   const [accounts, setAccounts] = useState<Account[]>([])
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
@@ -364,9 +366,9 @@ export default function AccountsManagementPage() {
         <div className="mb-4 sm:mb-6 md:mb-8">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 flex items-center gap-2 sm:gap-3">
             <Users className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-blue-600" />
-            <span className="leading-tight">Gestion des Comptes</span>
+            <span className="leading-tight">{t.accounts.title}</span>
           </h1>
-          <p className="text-sm sm:text-base text-gray-600">Gérez les rôles et les équipes des utilisateurs</p>
+          <p className="text-sm sm:text-base text-gray-600">{t.accounts.subtitle}</p>
         </div>
 
         {/* Message */}
@@ -388,7 +390,7 @@ export default function AccountsManagementPage() {
           <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Total</p>
+                <p className="text-xs sm:text-sm text-gray-600">{t.common.total}</p>
                 <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{stats.total}</p>
               </div>
               <Users className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-gray-400 opacity-20 hidden sm:block" />
@@ -397,7 +399,7 @@ export default function AccountsManagementPage() {
           <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Utilisateurs</p>
+                <p className="text-xs sm:text-sm text-gray-600">{t.accounts.users}</p>
                 <p className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600">{stats.users}</p>
               </div>
               <User className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-blue-600 opacity-20 hidden sm:block" />
@@ -406,7 +408,7 @@ export default function AccountsManagementPage() {
           <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Joueurs</p>
+                <p className="text-xs sm:text-sm text-gray-600">{t.accounts.players}</p>
                 <p className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600">{stats.players}</p>
               </div>
               <Users className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-green-600 opacity-20 hidden sm:block" />
@@ -415,7 +417,7 @@ export default function AccountsManagementPage() {
           <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Admins</p>
+                <p className="text-xs sm:text-sm text-gray-600">{t.accounts.admins}</p>
                 <p className="text-xl sm:text-2xl md:text-3xl font-bold text-purple-600">{stats.admins}</p>
               </div>
               <Shield className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-purple-600 opacity-20 hidden sm:block" />
@@ -433,7 +435,7 @@ export default function AccountsManagementPage() {
               }`}
               style={{ minHeight: '44px' }}
             >
-              Tous ({stats.total})
+              {t.accounts.all} ({stats.total})
             </button>
             <button
               onClick={() => setFilter('user')}
@@ -442,7 +444,7 @@ export default function AccountsManagementPage() {
               }`}
               style={{ minHeight: '44px' }}
             >
-              Utilisateurs ({stats.users})
+              {t.accounts.users} ({stats.users})
             </button>
             <button
               onClick={() => setFilter('player')}
@@ -451,7 +453,7 @@ export default function AccountsManagementPage() {
               }`}
               style={{ minHeight: '44px' }}
             >
-              Joueurs ({stats.players})
+              {t.accounts.players} ({stats.players})
             </button>
             <button
               onClick={() => setFilter('admin')}
@@ -460,7 +462,7 @@ export default function AccountsManagementPage() {
               }`}
               style={{ minHeight: '44px' }}
             >
-              Admins ({stats.admins})
+              {t.accounts.admins} ({stats.admins})
             </button>
           </div>
         </div>
@@ -472,19 +474,19 @@ export default function AccountsManagementPage() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Utilisateur
+                    {t.accounts.user}
                   </th>
                   <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Email
                   </th>
                   <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Rôle
+                    {t.accounts.role}
                   </th>
                   <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Équipe
+                    {t.accounts.team}
                   </th>
                   <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    {t.common.actions}
                   </th>
                 </tr>
               </thead>
@@ -538,9 +540,9 @@ export default function AccountsManagementPage() {
                           onChange={(e) => setEditForm({ ...editForm, role: e.target.value as any })}
                           className="px-3 py-1 border border-gray-300 rounded text-sm"
                         >
-                          <option value="user">Utilisateur</option>
-                          <option value="player">Joueur</option>
-                          <option value="admin">Admin</option>
+                          <option value="user">{t.accounts.user}</option>
+                          <option value="player">{t.accounts.player}</option>
+                          <option value="admin">{t.accounts.admin}</option>
                         </select>
                       ) : (
                         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -548,7 +550,7 @@ export default function AccountsManagementPage() {
                           account.role === 'player' ? 'bg-green-100 text-green-800' :
                           'bg-blue-100 text-blue-800'
                         }`}>
-                          {account.role === 'admin' ? 'Admin' : account.role === 'player' ? 'Joueur' : 'Utilisateur'}
+                          {account.role === 'admin' ? t.accounts.admin : account.role === 'player' ? t.accounts.player : t.accounts.user}
                         </span>
                       )}
                     </td>
@@ -577,21 +579,21 @@ export default function AccountsManagementPage() {
                             onClick={() => saveAccount(account.id)}
                             disabled={saving}
                             className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 disabled:bg-gray-400 transition font-medium text-sm touch-manipulation flex items-center justify-center gap-1.5"
-                            title="Sauvegarder"
+                            title={t.common.save}
                             style={{ minHeight: '40px' }}
                           >
                             <Save className="w-4 h-4" />
-                            <span className="hidden xs:inline">Sauvegarder</span>
+                            <span className="hidden xs:inline">{t.common.save}</span>
                           </button>
                           <button
                             onClick={cancelEdit}
                             disabled={saving}
                             className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:bg-red-800 disabled:bg-gray-400 transition font-medium text-sm touch-manipulation flex items-center justify-center gap-1.5"
-                            title="Annuler"
+                            title={t.common.cancel}
                             style={{ minHeight: '40px' }}
                           >
                             <X className="w-4 h-4" />
-                            <span className="hidden xs:inline">Annuler</span>
+                            <span className="hidden xs:inline">{t.common.cancel}</span>
                           </button>
                         </div>
                       ) : (
@@ -599,7 +601,7 @@ export default function AccountsManagementPage() {
                           <button
                             onClick={() => startEdit(account)}
                             className="px-2.5 sm:px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition touch-manipulation flex items-center justify-center"
-                            title="Modifier"
+                            title={t.common.edit}
                             style={{ minHeight: '40px', minWidth: '40px' }}
                           >
                             <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -608,7 +610,7 @@ export default function AccountsManagementPage() {
                             onClick={() => sendPasswordReset(account)}
                             disabled={saving}
                             className="px-2.5 sm:px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 active:bg-orange-800 disabled:bg-gray-400 transition touch-manipulation flex items-center justify-center"
-                            title="Réinitialiser mot de passe"
+                            title={t.accounts.resetPassword}
                             style={{ minHeight: '40px', minWidth: '40px' }}
                           >
                             <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -617,7 +619,7 @@ export default function AccountsManagementPage() {
                             onClick={() => deleteAccount(account)}
                             disabled={saving}
                             className="px-2.5 sm:px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:bg-red-800 disabled:bg-gray-400 transition touch-manipulation flex items-center justify-center"
-                            title="Supprimer"
+                            title={t.common.delete}
                             style={{ minHeight: '40px', minWidth: '40px' }}
                           >
                             <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
