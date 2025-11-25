@@ -1724,12 +1724,24 @@ export default function TeamRegistrationsPage() {
                                 }}
                                 className="px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
                               >
+                                <option value="4XXS">4XXS</option>
+                                <option value="3XXS">3XXS</option>
+                                <option value="2XXS">2XXS</option>
+                                <option value="XXS">XXS</option>
                                 <option value="XS">XS</option>
                                 <option value="S">S</option>
                                 <option value="M">M</option>
                                 <option value="L">L</option>
                                 <option value="XL">XL</option>
                                 <option value="XXL">XXL</option>
+                                <option value="3XL">3XL</option>
+                                <option value="4XL">4XL</option>
+                                <option value="5XL">5XL</option>
+                                <option value="6XL">6XL</option>
+                                <option value="3XXL">3XXL</option>
+                                <option value="4XXL">4XXL</option>
+                                <option value="5XXL">5XXL</option>
+                                <option value="6XXL">6XXL</option>
                               </select>
                               <div className="space-y-2">
                                 <select

@@ -456,6 +456,53 @@ export default function MaintenanceTab() {
           </button>
         </div>
 
+        {/* Envoyer liens mise à jour max joueurs */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-green-300 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">📧</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Mise à jour max joueurs</h3>
+              <p className="text-xs text-gray-600">Passer à 11 joueurs</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Envoie un lien de mise à jour aux équipes déjà enregistrées pour passer le maximum de 10 à 11 joueurs
+          </p>
+          <button
+            onClick={async () => {
+              if (!confirm('Envoyer un lien de mise à jour à toutes les équipes enregistrées ?\n\nCela permettra aux équipes de mettre à jour leur inscription pour passer de 10 à 11 joueurs maximum.')) return
+              setLoading(true)
+              setMessage(null)
+              try {
+                const response = await fetch('/api/admin/send-update-links', { method: 'POST' })
+                const data = await response.json()
+                if (response.ok) {
+                  setMessage({ type: 'success', text: data.message })
+                } else {
+                  setMessage({ type: 'error', text: data.error })
+                }
+              } catch (error) {
+                setMessage({ type: 'error', text: 'Erreur de connexion' })
+              } finally {
+                setLoading(false)
+              }
+            }}
+            disabled={loading}
+            className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition font-medium text-sm"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader className="w-4 h-4 animate-spin" />
+                Envoi en cours...
+              </span>
+            ) : (
+              "Envoyer les liens"
+            )}
+          </button>
+        </div>
+
         {/* Mettre à jour infos appareils */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-blue-300 transition-colors">
           <div className="flex items-center gap-3 mb-4">

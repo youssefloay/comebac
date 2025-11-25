@@ -44,21 +44,166 @@ export default function CoachProfilePage() {
   useEffect(() => {
     const loadCoachData = async () => {
       try {
-        if (!user?.email) {
+        if (!user?.email && !isAdmin) {
+          console.log('❌ Pas d\'email utilisateur')
           setLoading(false)
           return
         }
 
-        // Trouver le coach par email dans coachAccounts
+        // Si c'est un admin, utiliser des données de démo
+        if (isAdmin) {
+          // Vérifier si on est en mode impersonation
+          const impersonateCoachId = sessionStorage.getItem('impersonateCoachId')
+          
+          if (impersonateCoachId) {
+            // Charger les données du coach impersonné
+            const coachDoc = await getDoc(doc(db, 'coachAccounts', impersonateCoachId))
+            if (coachDoc.exists()) {
+              const data = coachDoc.data()
+              const coach: CoachData = {
+                id: coachDoc.id,
+                firstName: data.firstName,
+                lastName: data.lastName,
+                email: data.email,
+                phone: data.phone || '',
+                teamId: data.teamId,
+                teamName: data.teamName,
+                photo: data.photo
+              }
+              setCoachData(coach)
+              setEditData({
+                phone: coach.phone || '',
+                photo: coach.photo || ''
+              })
+              setLoading(false)
+              return
+            }
+          }
+          
+          // Admin sans impersonation: données de démo
+          const coach: CoachData = {
+            id: 'admin',
+            firstName: 'Admin',
+            lastName: 'Comebac',
+            email: user?.email || 'contact@comebac.com',
+            phone: '',
+            teamId: 'demo',
+            teamName: 'Équipe Demo',
+            photo: ''
+          }
+          setCoachData(coach)
+          setEditData({
+            phone: '',
+            photo: ''
+          })
+          setLoading(false)
+          return
+        }
+
+        // Normaliser l'email (trim et lowercase pour la recherche)
+        const normalizedEmail = user.email.trim().toLowerCase()
+        console.log('🔍 Recherche du coach avec email:', user.email, '(normalisé:', normalizedEmail + ')')
+        // Essayer d'abord avec l'email exact, puis avec l'email normalisé
         const coachAccountsQuery = query(
           collection(db, 'coachAccounts'),
-          where('email', '==', user.email)
+          where('email', '==', normalizedEmail)
         )
         const coachAccountsSnap = await getDocs(coachAccountsQuery)
 
+        console.log('📊 Résultats de la requête:', {
+          empty: coachAccountsSnap.empty,
+          size: coachAccountsSnap.size,
+          docs: coachAccountsSnap.docs.map(d => ({
+            id: d.id,
+            email: d.data().email,
+            name: `${d.data().firstName} ${d.data().lastName}`
+          }))
+        })
+
         if (coachAccountsSnap.empty) {
-          console.log('Aucun coach trouvé pour cet email')
+          // Ne pas logger comme erreur si c'est normal (admin ou coach intérimaire)
+          console.log('ℹ️ Aucun coach trouvé pour cet email:', user.email)
+          // Essayer aussi avec l'email en lowercase au cas où
+          const coachAccountsQueryLower = query(
+            collection(db, 'coachAccounts'),
+            where('email', '==', user.email.toLowerCase())
+          )
+          const coachAccountsSnapLower = await getDocs(coachAccountsQueryLower)
+          if (!coachAccountsSnapLower.empty) {
+            console.log('✅ Trouvé avec email en lowercase')
+            const coachDoc = coachAccountsSnapLower.docs[0]
+            const coachDataRaw = coachDoc.data()
+            
+            const coach: CoachData = {
+              id: coachDoc.id,
+              firstName: coachDataRaw.firstName,
+              lastName: coachDataRaw.lastName,
+              email: coachDataRaw.email,
+              phone: coachDataRaw.phone || '',
+              teamId: coachDataRaw.teamId,
+              teamName: coachDataRaw.teamName,
+              photo: coachDataRaw.photo
+            }
+
+            if (coach.teamId && !coach.teamName) {
+              const teamDoc = await getDoc(doc(db, 'teams', coach.teamId))
+              if (teamDoc.exists()) {
+                const teamData = teamDoc.data()
+                coach.teamName = teamData.name
+              }
+            }
+
+            setCoachData(coach)
+            setEditData({
+              phone: coach.phone || '',
+              photo: coach.photo || ''
+            })
           setLoading(false)
+          return
+        }
+        
+        // Si pas de compte coach, vérifier si c'est un coach intérimaire (joueur avec isActingCoach)
+        const playerAccountsQuery = query(
+          collection(db, 'playerAccounts'),
+          where('email', '==', normalizedEmail),
+          where('isActingCoach', '==', true)
+        )
+        const playerAccountsSnap = await getDocs(playerAccountsQuery)
+        
+        if (!playerAccountsSnap.empty) {
+          console.log('✅ Coach intérimaire trouvé')
+          const playerDoc = playerAccountsSnap.docs[0]
+          const playerDataRaw = playerDoc.data()
+          
+          const coach: CoachData = {
+            id: playerDoc.id,
+            firstName: playerDataRaw.firstName,
+            lastName: playerDataRaw.lastName,
+            email: playerDataRaw.email,
+            phone: playerDataRaw.phone || '',
+            teamId: playerDataRaw.teamId,
+            teamName: playerDataRaw.teamName,
+            photo: playerDataRaw.photo
+          }
+
+          if (coach.teamId && !coach.teamName) {
+            const teamDoc = await getDoc(doc(db, 'teams', coach.teamId))
+            if (teamDoc.exists()) {
+              const teamData = teamDoc.data()
+              coach.teamName = teamData.name
+            }
+          }
+
+          setCoachData(coach)
+          setEditData({
+            phone: coach.phone || '',
+            photo: coach.photo || ''
+          })
+          setLoading(false)
+          return
+        }
+        
+        setLoading(false)
           return
         }
 

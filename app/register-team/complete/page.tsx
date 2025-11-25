@@ -17,7 +17,7 @@ interface Player {
   phone: string
   birthDate: string
   height: string
-  tshirtSize: 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL'
+  tshirtSize: '4XXS' | '3XXS' | '2XXS' | 'XXS' | 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | '3XXL' | '4XXL' | '5XXL' | '6XXL' | string
   position: 'Gardien' | 'Défenseur' | 'Milieu' | 'Attaquant'
   foot: 'Droitier' | 'Gaucher' | 'Ambidextre'
   jerseyNumber: string
@@ -1255,12 +1255,24 @@ export default function RegisterTeamPage() {
                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                         required
                       >
+                        <option value="4XXS">4XXS</option>
+                        <option value="3XXS">3XXS</option>
+                        <option value="2XXS">2XXS</option>
+                        <option value="XXS">XXS</option>
                         <option value="XS">XS</option>
                         <option value="S">S</option>
                         <option value="M">M</option>
                         <option value="L">L</option>
                         <option value="XL">XL</option>
                         <option value="XXL">XXL</option>
+                        <option value="3XL">3XL</option>
+                        <option value="4XL">4XL</option>
+                        <option value="5XL">5XL</option>
+                        <option value="6XL">6XL</option>
+                        <option value="3XXL">3XXL</option>
+                        <option value="4XXL">4XXL</option>
+                        <option value="5XXL">5XXL</option>
+                        <option value="6XXL">6XXL</option>
                       </select>
                     </div>
 

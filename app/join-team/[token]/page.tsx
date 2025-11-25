@@ -38,7 +38,7 @@ export default function JoinTeamPage() {
   const [phone, setPhone] = useState('')
   const [birthDate, setBirthDate] = useState('')
   const [height, setHeight] = useState('')
-  const [tshirtSize, setTshirtSize] = useState<'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL'>('M')
+  const [tshirtSize, setTshirtSize] = useState<string>('M')
   const [position, setPosition] = useState<'Gardien' | 'Défenseur' | 'Milieu' | 'Attaquant' | ''>('')
   const [foot, setFoot] = useState<'Droitier' | 'Gaucher' | 'Ambidextre' | ''>('')
   const [jerseyNumber, setJerseyNumber] = useState('')
@@ -582,12 +582,24 @@ export default function JoinTeamPage() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     required
                   >
+                    <option value="4XXS">4XXS</option>
+                    <option value="3XXS">3XXS</option>
+                    <option value="2XXS">2XXS</option>
+                    <option value="XXS">XXS</option>
                     <option value="XS">XS</option>
                     <option value="S">S</option>
                     <option value="M">M</option>
                     <option value="L">L</option>
                     <option value="XL">XL</option>
                     <option value="XXL">XXL</option>
+                    <option value="3XL">3XL</option>
+                    <option value="4XL">4XL</option>
+                    <option value="5XL">5XL</option>
+                    <option value="6XL">6XL</option>
+                    <option value="3XXL">3XXL</option>
+                    <option value="4XXL">4XXL</option>
+                    <option value="5XXL">5XXL</option>
+                    <option value="6XXL">6XXL</option>
                   </select>
                 </div>
 

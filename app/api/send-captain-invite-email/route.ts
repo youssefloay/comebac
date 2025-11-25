@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
 
             <div class="steps">
               <ol>
-                <li>Partagez le lien d'invitation à vos joueurs (max 10)</li>
+                <li>Partagez le lien d'invitation à vos joueurs (max 11)</li>
                 <li>Chaque joueur remplit ses informations</li>
                 <li>Une fois que vous avez au moins 7 joueurs, soumettez pour validation</li>
                 <li>L'admin validera votre équipe</li>
