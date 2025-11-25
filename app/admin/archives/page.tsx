@@ -68,31 +68,31 @@ export default function ArchivesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-            <Archive className="w-8 h-8 text-blue-600" />
-            Archives des Saisons
+        <div className="mb-4 sm:mb-6 md:mb-8">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 flex items-center gap-2 sm:gap-3">
+            <Archive className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-blue-600" />
+            <span className="leading-tight">Archives des Saisons</span>
           </h1>
-          <p className="text-gray-600">Consultez les statistiques des saisons passées</p>
+          <p className="text-sm sm:text-base text-gray-600">Consultez les statistiques des saisons passées</p>
         </div>
 
         {archives.length === 0 ? (
-          <div className="bg-white p-12 rounded-lg border border-gray-200 text-center">
-            <Archive className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Aucune saison archivée pour le moment</p>
+          <div className="bg-white p-8 sm:p-12 rounded-lg border border-gray-200 text-center shadow-sm">
+            <Archive className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-sm sm:text-base text-gray-500">Aucune saison archivée pour le moment</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
             {archives.map((archive, index) => (
               <motion.div
                 key={archive.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition"
+                className="bg-white p-4 sm:p-5 md:p-6 rounded-lg border border-gray-200 hover:shadow-lg transition shadow-sm"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div>

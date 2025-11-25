@@ -91,49 +91,49 @@ export default function AdminStatsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <Link href="/admin" className="text-blue-600 hover:text-blue-700 mb-4 inline-block">
+        <div className="mb-4 sm:mb-6 md:mb-8">
+          <Link href="/admin" className="text-sm sm:text-base text-blue-600 hover:text-blue-700 mb-2 sm:mb-4 inline-block">
             ← Retour Admin
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">📊 Statistiques</h1>
-          <p className="text-gray-600">Vue d'ensemble de la plateforme</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">📊 Statistiques</h1>
+          <p className="text-sm sm:text-base text-gray-600">Vue d'ensemble de la plateforme</p>
         </div>
 
         {/* General Stats - Overview */}
         {generalStats && (
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">📈 Vue d'ensemble</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">📈 Vue d'ensemble</h2>
             
             {/* Main Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
               {/* Teams */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <Users className="w-6 h-6 text-blue-600" />
+              <div className="bg-white rounded-xl shadow-lg p-4 sm:p-5 md:p-6">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                   </div>
-                  <span className="text-3xl font-bold text-blue-600">{generalStats.stats.teams.total}</span>
+                  <span className="text-2xl sm:text-3xl font-bold text-blue-600">{generalStats.stats.teams.total}</span>
                 </div>
-                <h3 className="font-bold text-gray-900 mb-2">Équipes</h3>
-                <div className="space-y-1 text-sm">
+                <h3 className="font-bold text-gray-900 mb-2 text-sm sm:text-base">Équipes</h3>
+                <div className="space-y-1 text-xs sm:text-sm">
                   <p className="text-gray-600">✅ Avec coach: {generalStats.stats.teams.withCoach}</p>
                   <p className="text-gray-600">⚠️ Sans coach: {generalStats.stats.teams.withoutCoach}</p>
                 </div>
               </div>
 
               {/* Players */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                    <Users className="w-6 h-6 text-green-600" />
+              <div className="bg-white rounded-xl shadow-lg p-4 sm:p-5 md:p-6">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Users className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                   </div>
-                  <span className="text-3xl font-bold text-green-600">{generalStats.stats.players.total}</span>
+                  <span className="text-2xl sm:text-3xl font-bold text-green-600">{generalStats.stats.players.total}</span>
                 </div>
-                <h3 className="font-bold text-gray-900 mb-2">Joueurs</h3>
-                <div className="space-y-1 text-sm">
+                <h3 className="font-bold text-gray-900 mb-2 text-sm sm:text-base">Joueurs</h3>
+                <div className="space-y-1 text-xs sm:text-sm">
                   <p className="text-gray-600">👑 Capitaines: {generalStats.stats.players.captains}</p>
                   <p className="text-gray-600">🏆 Coaches intérimaires: {generalStats.stats.players.actingCoaches}</p>
                 </div>
@@ -171,7 +171,7 @@ export default function AdminStatsPage() {
             </div>
 
             {/* Auth Stats */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-5 md:p-6 mb-4 sm:mb-6">
               <h3 className="font-bold text-gray-900 mb-4">🔐 Comptes utilisateurs</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
@@ -194,7 +194,7 @@ export default function AdminStatsPage() {
             </div>
 
             {/* Teams Details */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-5 md:p-6 mb-4 sm:mb-6">
               <h3 className="font-bold text-gray-900 mb-4">📋 Détails des équipes</h3>
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -241,7 +241,7 @@ export default function AdminStatsPage() {
             </div>
 
             {/* All Players List */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-5 md:p-6 mb-4 sm:mb-6">
               <h3 className="font-bold text-gray-900 mb-4">👥 Tous les joueurs ({generalStats.allPlayers.length})</h3>
               <div className="max-h-96 overflow-y-auto">
                 <div className="space-y-2">

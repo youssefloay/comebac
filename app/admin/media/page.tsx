@@ -96,61 +96,65 @@ export default function AdminMediaPage() {
 
   return (
     <div className="min-h-screen bg-sofa-bg-primary">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
         {/* Header avec actions */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-sofa-text-primary">Gestion des Médias</h1>
-            <p className="text-sofa-text-secondary mt-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
+          <div className="flex-1">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-sofa-text-primary">Gestion des Médias</h1>
+            <p className="text-sm sm:text-base text-sofa-text-secondary mt-1 sm:mt-2">
               Gérez les logos d'équipes, photos de joueurs et statistiques FIFA
             </p>
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             <button
               onClick={handleSeedPlayers}
               disabled={updating}
-              className="flex items-center gap-2 px-4 py-2 bg-sofa-green text-white rounded-lg hover:bg-sofa-green/90 transition-colors disabled:opacity-50"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-sofa-green text-white rounded-lg hover:bg-sofa-green/90 active:bg-sofa-green/80 transition-colors disabled:opacity-50 font-medium text-sm sm:text-base touch-manipulation"
+              style={{ minHeight: '44px' }}
             >
               <RefreshCw className={`w-4 h-4 ${updating ? 'animate-spin' : ''}`} />
-              {updating ? 'Seed en cours...' : 'Seed Joueurs + Photos'}
+              <span className="hidden xs:inline">{updating ? 'Seed en cours...' : 'Seed Joueurs + Photos'}</span>
+              <span className="xs:hidden">{updating ? 'Seed...' : 'Seed'}</span>
             </button>
             
             <button
               onClick={handleUpdateSeasonStats}
               disabled={updating}
-              className="flex items-center gap-2 px-4 py-2 bg-sofa-text-accent text-white rounded-lg hover:bg-sofa-text-accent/90 transition-colors disabled:opacity-50"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-sofa-text-accent text-white rounded-lg hover:bg-sofa-text-accent/90 active:bg-sofa-text-accent/80 transition-colors disabled:opacity-50 font-medium text-sm sm:text-base touch-manipulation"
+              style={{ minHeight: '44px' }}
             >
               <RefreshCw className={`w-4 h-4 ${updating ? 'animate-spin' : ''}`} />
-              {updating ? 'Mise à jour...' : 'Mettre à jour les stats'}
+              <span className="hidden xs:inline">{updating ? 'Mise à jour...' : 'Mettre à jour les stats'}</span>
+              <span className="xs:hidden">{updating ? 'Mise à jour...' : 'Stats'}</span>
             </button>
           </div>
         </div>
 
         {/* Statistiques rapides */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="sofa-card p-6 text-center">
-            <div className="text-3xl font-bold text-sofa-text-accent mb-2">{teams.length}</div>
-            <div className="text-sm text-sofa-text-secondary">Équipes</div>
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
+          <div className="sofa-card p-4 sm:p-5 md:p-6 text-center">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-sofa-text-accent mb-1 sm:mb-2">{teams.length}</div>
+            <div className="text-xs sm:text-sm text-sofa-text-secondary">Équipes</div>
           </div>
           
-          <div className="sofa-card p-6 text-center">
-            <div className="text-3xl font-bold text-sofa-text-accent mb-2">{players.length}</div>
-            <div className="text-sm text-sofa-text-secondary">Joueurs</div>
+          <div className="sofa-card p-4 sm:p-5 md:p-6 text-center">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-sofa-text-accent mb-1 sm:mb-2">{players.length}</div>
+            <div className="text-xs sm:text-sm text-sofa-text-secondary">Joueurs</div>
           </div>
           
-          <div className="sofa-card p-6 text-center">
-            <div className="text-3xl font-bold text-sofa-text-accent mb-2">
+          <div className="sofa-card p-4 sm:p-5 md:p-6 text-center">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-sofa-text-accent mb-1 sm:mb-2">
               {teams.filter(t => t.logo).length}
             </div>
-            <div className="text-sm text-sofa-text-secondary">Logos ajoutés</div>
+            <div className="text-xs sm:text-sm text-sofa-text-secondary">Logos ajoutés</div>
           </div>
           
-          <div className="sofa-card p-6 text-center">
-            <div className="text-3xl font-bold text-sofa-text-accent mb-2">
+          <div className="sofa-card p-4 sm:p-5 md:p-6 text-center">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-sofa-text-accent mb-1 sm:mb-2">
               {players.filter(p => p.photo).length}
             </div>
-            <div className="text-sm text-sofa-text-secondary">Photos ajoutées</div>
+            <div className="text-xs sm:text-sm text-sofa-text-secondary">Photos ajoutées</div>
           </div>
         </div>
 

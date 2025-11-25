@@ -128,59 +128,60 @@ export default function NotificationTrackingPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+            className="flex items-center gap-2 text-sm sm:text-base text-gray-600 hover:text-gray-900 mb-3 sm:mb-4 transition touch-manipulation"
+            style={{ minHeight: '40px' }}
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             Retour
           </button>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-blue-600" />
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Suivi des notifications</h1>
-              <p className="text-gray-600">Statistiques de lecture et engagement</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Suivi des notifications</h1>
+              <p className="text-sm sm:text-base text-gray-600">Statistiques de lecture et engagement</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         {/* Stats globales */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 text-blue-600" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
+          <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 border border-gray-200 shadow-sm">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
               </div>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-xl sm:text-2xl font-bold text-gray-900">
                 {notifications.reduce((sum, n) => sum + n.recipientCount, 0)}
               </div>
             </div>
-            <p className="text-sm text-gray-600">Total destinataires</p>
+            <p className="text-xs sm:text-sm text-gray-600">Total destinataires</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <Eye className="w-5 h-5 text-green-600" />
+          <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 border border-gray-200 shadow-sm">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
               </div>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-xl sm:text-2xl font-bold text-gray-900">
                 {notifications.reduce((sum, n) => sum + n.readCount, 0)}
               </div>
             </div>
-            <p className="text-sm text-gray-600">Notifications lues</p>
+            <p className="text-xs sm:text-sm text-gray-600">Notifications lues</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-purple-600" />
+          <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 border border-gray-200 shadow-sm">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
               </div>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-xl sm:text-2xl font-bold text-gray-900">
                 {notifications.length > 0
                   ? Math.round(
                       (notifications.reduce((sum, n) => sum + n.readCount, 0) /
@@ -191,7 +192,7 @@ export default function NotificationTrackingPage() {
                 %
               </div>
             </div>
-            <p className="text-sm text-gray-600">Taux de lecture moyen</p>
+            <p className="text-xs sm:text-sm text-gray-600">Taux de lecture moyen</p>
           </div>
         </div>
 

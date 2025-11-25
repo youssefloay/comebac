@@ -6,7 +6,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useRouter } from 'next/navigation'
 import { collection, query, where, getDocs, doc, getDoc, updateDoc, addDoc, deleteDoc, serverTimestamp, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { Check, X, Eye, Users, Clock, CheckCircle, XCircle, Link as LinkIcon } from 'lucide-react'
+import { Check, X, Eye, Users, Clock, CheckCircle, XCircle, Link as LinkIcon, List, ArrowRight, Mail } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { capitalizeWords } from '@/lib/text-utils'
 
@@ -814,7 +814,10 @@ export default function TeamRegistrationsPage() {
         status: 'approved',
         processedAt: serverTimestamp(),
         processedBy: user?.email,
-        teamId: teamRef.id
+        teamId: teamRef.id,
+        isWaitingList: false, // Retirer de la waiting list lors de l'approbation
+        removedFromWaitingListAt: serverTimestamp(),
+        removedFromWaitingListBy: user?.email
       })
 
       setMessage({ type: 'success', text: `Équipe "${registration.teamName}" approuvée avec succès!` })
@@ -849,6 +852,32 @@ export default function TeamRegistrationsPage() {
     } catch (error) {
       console.error('Erreur lors du rejet:', error)
       setMessage({ type: 'error', text: 'Erreur lors du rejet de l\'équipe' })
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  const moveToWaitingList = async (registration: Registration) => {
+    if (!confirm(`Mettre l'équipe "${registration.teamName}" en waiting list ?\n\nL'équipe restera en attente mais sera marquée comme étant en liste d'attente.`)) {
+      return
+    }
+
+    setProcessing(true)
+    setMessage(null)
+
+    try {
+      await updateDoc(doc(db, 'teamRegistrations', registration.id), {
+        isWaitingList: true,
+        movedToWaitingListAt: serverTimestamp(),
+        movedToWaitingListBy: user?.email
+      })
+
+      setMessage({ type: 'success', text: `Équipe "${registration.teamName}" mise en waiting list` })
+      setSelectedRegistration(null)
+      loadRegistrations()
+    } catch (error) {
+      console.error('Erreur lors de la mise en waiting list:', error)
+      setMessage({ type: 'error', text: 'Erreur lors de la mise en waiting list' })
     } finally {
       setProcessing(false)
     }
@@ -945,45 +974,46 @@ export default function TeamRegistrationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-            <Users className="w-8 h-8 text-blue-600" />
-            Validation des Inscriptions d'Équipes
+        <div className="mb-4 sm:mb-6 md:mb-8">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 flex items-center gap-2 sm:gap-3">
+            <Users className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-blue-600" />
+            <span className="leading-tight">Validation des Inscriptions</span>
           </h1>
-          <p className="text-gray-600">Gérez les demandes d'inscription des équipes</p>
+          <p className="text-sm sm:text-base text-gray-600">Gérez les demandes d'inscription des équipes</p>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg border border-gray-200 mb-6">
+        <div className="bg-white rounded-lg border border-gray-200 mb-4 sm:mb-6 shadow-sm">
           <div className="border-b border-gray-200">
             <nav className="flex">
               <button
                 onClick={() => setActiveTab('registrations')}
-                className={`flex-1 px-6 py-4 text-center font-medium transition-colors border-b-2 ${
+                className={`flex-1 px-3 sm:px-4 md:px-6 py-3 sm:py-3.5 md:py-4 text-center font-medium transition-colors border-b-2 text-sm sm:text-base ${
                   activeTab === 'registrations'
                     ? 'border-blue-600 text-blue-600 bg-blue-50'
                     : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
-                <div className="flex items-center justify-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Inscriptions
+                <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span>Inscriptions</span>
                 </div>
               </button>
               <button
                 onClick={() => setActiveTab('waiting-list')}
-                className={`flex-1 px-6 py-4 text-center font-medium transition-colors border-b-2 ${
+                className={`flex-1 px-3 sm:px-4 md:px-6 py-3 sm:py-3.5 md:py-4 text-center font-medium transition-colors border-b-2 text-sm sm:text-base ${
                   activeTab === 'waiting-list'
                     ? 'border-amber-600 text-amber-600 bg-amber-50'
                     : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
-                <div className="flex items-center justify-center gap-2">
-                  <Clock className="w-5 h-5" />
-                  Waiting List
+                <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                  <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="hidden xs:inline">Waiting List</span>
+                  <span className="xs:hidden">Liste</span>
                 </div>
               </button>
             </nav>
@@ -1006,106 +1036,127 @@ export default function TeamRegistrationsPage() {
 
         {/* Waiting List Tab Content */}
         {activeTab === 'waiting-list' && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <WaitingListContent />
-          </div>
+          <WaitingListContent 
+            registrations={registrations.filter(r => r.isWaitingList === true)}
+            onApprove={approveRegistration}
+            onRemoveFromWaitingList={async (reg) => {
+              setProcessing(true)
+              try {
+                await updateDoc(doc(db, 'teamRegistrations', reg.id), {
+                  isWaitingList: false,
+                  removedFromWaitingListAt: serverTimestamp(),
+                  removedFromWaitingListBy: user?.email
+                })
+                setMessage({ type: 'success', text: `"${reg.teamName}" retirée de la waiting list` })
+                loadRegistrations()
+              } catch (error) {
+                console.error('Erreur:', error)
+                setMessage({ type: 'error', text: 'Erreur lors du retrait de la waiting list' })
+              } finally {
+                setProcessing(false)
+              }
+            }}
+            processing={processing}
+            setProcessing={setProcessing}
+            user={user}
+          />
         )}
 
         {/* Registrations Tab Content */}
         {activeTab === 'registrations' && (
           <>
             {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6">
+          <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">En attente</p>
-                <p className="text-3xl font-bold text-orange-600">{stats.pending}</p>
+                <p className="text-xs sm:text-sm text-gray-600">En attente</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-orange-600">{stats.pending}</p>
               </div>
-              <Clock className="w-12 h-12 text-orange-600 opacity-20" />
+              <Clock className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-orange-600 opacity-20 hidden sm:block" />
             </div>
           </div>
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
+          <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Approuvées</p>
-                <p className="text-3xl font-bold text-green-600">{stats.approved}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Approuvées</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600">{stats.approved}</p>
               </div>
-              <CheckCircle className="w-12 h-12 text-green-600 opacity-20" />
+              <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-green-600 opacity-20 hidden sm:block" />
             </div>
           </div>
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
+          <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Rejetées</p>
-                <p className="text-3xl font-bold text-red-600">{stats.rejected}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Rejetées</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-red-600">{stats.rejected}</p>
               </div>
-              <XCircle className="w-12 h-12 text-red-600 opacity-20" />
+              <XCircle className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-red-600 opacity-20 hidden sm:block" />
             </div>
           </div>
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
+          <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Waiting List</p>
-                <p className="text-3xl font-bold text-amber-600">{stats.waitingList}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Waiting List</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-amber-600">{stats.waitingList}</p>
               </div>
-              <Clock className="w-12 h-12 text-amber-600 opacity-20" />
+              <Clock className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-amber-600 opacity-20 hidden sm:block" />
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white p-4 rounded-lg border border-gray-200 mb-6">
-          <div className="flex gap-2">
+        <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 mb-4 sm:mb-6 shadow-sm">
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
             <button
               onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                filter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${
+                filter === 'all' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               Toutes ({registrations.length})
             </button>
             <button
               onClick={() => setFilter('pending')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                filter === 'pending' ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${
+                filter === 'pending' ? 'bg-orange-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               En attente ({stats.pending})
             </button>
             <button
               onClick={() => setFilter('approved')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                filter === 'approved' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${
+                filter === 'approved' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               Approuvées ({stats.approved})
             </button>
             <button
               onClick={() => setFilter('rejected')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                filter === 'rejected' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${
+                filter === 'rejected' ? 'bg-red-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               Rejetées ({stats.rejected})
             </button>
             <button
               onClick={() => setFilter('waiting-list')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                filter === 'waiting-list' ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${
+                filter === 'waiting-list' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              ⏳ Waiting List ({stats.waitingList})
+              ⏳ Liste ({stats.waitingList})
             </button>
           </div>
         </div>
 
         {/* Registrations List */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
           {filteredRegistrations.length === 0 ? (
-            <div className="col-span-2 bg-white p-12 rounded-lg border border-gray-200 text-center">
-              <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">Aucune inscription trouvée</p>
+            <div className="col-span-2 bg-white p-8 sm:p-12 rounded-lg border border-gray-200 text-center">
+              <Users className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-sm sm:text-base text-gray-500">Aucune inscription trouvée</p>
             </div>
           ) : (
             filteredRegistrations.map((registration, index) => (
@@ -1114,49 +1165,59 @@ export default function TeamRegistrationsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition"
+                className="bg-white p-4 sm:p-5 md:p-6 rounded-lg border border-gray-200 hover:shadow-lg transition shadow-sm"
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-xl font-bold text-gray-900">{registration.teamName}</h3>
+                <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 break-words">{registration.teamName}</h3>
                       {registration.registrationMode === 'collaborative' && (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold flex items-center gap-1">
+                        <span className="px-2 py-0.5 sm:py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold flex items-center gap-1 flex-shrink-0">
                           <LinkIcon className="w-3 h-3" />
-                          Collaboratif
+                          <span className="hidden xs:inline">Collaboratif</span>
+                          <span className="xs:hidden">Collab</span>
                         </span>
                       )}
                     </div>
                     {registration.schoolName && (
-                      <p className="text-sm text-blue-600 font-medium">
+                      <p className="text-xs sm:text-sm text-blue-600 font-medium truncate">
                         🏫 {registration.schoolName}
                       </p>
                     )}
                     {registration.teamGrade && (
-                      <p className="text-sm text-purple-600 font-medium">
-                        📚 Classe: {registration.teamGrade}
+                      <p className="text-xs sm:text-sm text-purple-600 font-medium">
+                        📚 {registration.teamGrade}
                       </p>
                     )}
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1">
                       {registration.players.length} joueur{registration.players.length > 1 ? 's' : ''}
                     </p>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    registration.status === 'pending' || registration.status === 'pending_players' || registration.status === 'pending_validation' ? 'bg-orange-100 text-orange-800' :
-                    registration.status === 'approved' ? 'bg-green-100 text-green-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {registration.status === 'pending' || registration.status === 'pending_players' || registration.status === 'pending_validation' ? 'En attente' :
-                     registration.status === 'approved' ? 'Approuvée' : 'Rejetée'}
-                  </span>
+                  <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                    <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+                      registration.status === 'pending' || registration.status === 'pending_players' || registration.status === 'pending_validation' ? 'bg-orange-100 text-orange-800' :
+                      registration.status === 'approved' ? 'bg-green-100 text-green-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {registration.status === 'pending' || registration.status === 'pending_players' || registration.status === 'pending_validation' ? 'En attente' :
+                       registration.status === 'approved' ? 'Approuvée' : 'Rejetée'}
+                    </span>
+                    {registration.isWaitingList && (
+                      <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 flex items-center gap-1 whitespace-nowrap">
+                        <List className="w-3 h-3" />
+                        <span className="hidden xs:inline">Waiting List</span>
+                        <span className="xs:hidden">Liste</span>
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Capitaine</p>
-                  <p className="text-sm text-gray-900">
+                <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-gray-50 rounded-lg">
+                  <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">Capitaine</p>
+                  <p className="text-xs sm:text-sm text-gray-900 font-medium">
                     {registration.captain.firstName} {registration.captain.lastName}
                   </p>
-                  <p className="text-xs text-gray-600">{registration.captain.email}</p>
+                  <p className="text-xs text-gray-600 break-all">{registration.captain.email}</p>
                   <p className="text-xs text-gray-600">{registration.captain.phone}</p>
                   
                   {/* Lien collaboratif */}
@@ -1218,41 +1279,71 @@ export default function TeamRegistrationsPage() {
                   )}
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setSelectedRegistration(registration)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    className="flex-1 min-w-[120px] sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition font-medium text-sm sm:text-base touch-manipulation"
+                    style={{ minHeight: '44px' }}
                   >
-                    <Eye className="w-4 h-4" />
-                    Détails
+                    <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span>Détails</span>
                   </button>
                   
                   <button
                     onClick={() => generateUpdateLink(registration)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                    className="flex-1 min-w-[100px] sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:bg-purple-800 transition font-medium text-sm sm:text-base touch-manipulation"
                     title="Générer un lien pour que le capitaine mette à jour les infos"
+                    style={{ minHeight: '44px' }}
                   >
-                    <LinkIcon className="w-4 h-4" />
+                    <LinkIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden xs:inline">Lien</span>
                   </button>
-                  {(registration.status === 'pending' || registration.status === 'pending_players' || registration.status === 'pending_validation') && (
+                  {(registration.status === 'pending' || registration.status === 'pending_players' || registration.status === 'pending_validation') && !registration.isWaitingList && (
                     <>
+                      <button
+                        onClick={() => moveToWaitingList(registration)}
+                        disabled={processing}
+                        className="flex-1 min-w-[120px] sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 active:bg-amber-800 disabled:bg-gray-400 transition font-medium text-sm sm:text-base touch-manipulation"
+                        title="Mettre en waiting list"
+                        style={{ minHeight: '44px' }}
+                      >
+                        <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span className="hidden xs:inline">Liste</span>
+                        <span className="xs:hidden">⏳</span>
+                      </button>
                       <button
                         onClick={() => approveRegistration(registration)}
                         disabled={processing}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition"
+                        className="flex-1 min-w-[120px] sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 disabled:bg-gray-400 transition font-bold shadow-md text-sm sm:text-base touch-manipulation"
                         title="Approuver l'équipe"
+                        style={{ minHeight: '44px' }}
                       >
-                        <Check className="w-4 h-4" />
+                        <Check className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span>Approuver</span>
                       </button>
                       <button
                         onClick={() => rejectRegistration(registration)}
                         disabled={processing}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 transition"
+                        className="flex-1 min-w-[100px] sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 active:bg-red-800 disabled:bg-gray-400 transition font-medium text-sm sm:text-base touch-manipulation"
                         title="Rejeter l'équipe"
+                        style={{ minHeight: '44px' }}
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span>Rejeter</span>
                       </button>
                     </>
+                  )}
+                  {registration.isWaitingList && (
+                    <button
+                      onClick={() => approveRegistration(registration)}
+                      disabled={processing}
+                      className="flex-1 min-w-[120px] sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 disabled:bg-gray-400 transition font-bold shadow-md text-sm sm:text-base touch-manipulation"
+                      title="Approuver l'équipe (en waiting list)"
+                      style={{ minHeight: '44px' }}
+                    >
+                      <Check className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span>Approuver</span>
+                    </button>
                   )}
                 </div>
               </motion.div>
@@ -1267,30 +1358,30 @@ export default function TeamRegistrationsPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50"
               onClick={() => setSelectedRegistration(null)}
             >
               <motion.div
-                initial={{ scale: 0.9, y: 20 }}
+                initial={{ scale: 0.95, y: 100 }}
                 animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.9, y: 20 }}
-                className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+                exit={{ scale: 0.95, y: 100 }}
+                className="bg-white rounded-t-2xl sm:rounded-lg max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="p-6 border-b border-gray-200 sticky top-0 bg-white">
+                <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
                   {editMode && editedRegistration ? (
                     <>
                       <input
                         type="text"
                         value={editedRegistration.teamName}
                         onChange={(e) => setEditedRegistration({...editedRegistration, teamName: e.target.value})}
-                        className="text-2xl font-bold text-gray-900 bg-white border-b-2 border-blue-600 mb-2 w-full px-2 py-1"
+                        className="text-xl sm:text-2xl font-bold text-gray-900 bg-white border-b-2 border-blue-600 mb-2 w-full px-2 py-2 text-base"
                       />
                       <input
                         type="text"
                         value={editedRegistration.schoolName || ''}
                         onChange={(e) => setEditedRegistration({...editedRegistration, schoolName: e.target.value})}
-                        className="text-sm text-gray-900 bg-white font-medium border-b border-blue-300 mb-1 w-full px-2 py-1"
+                        className="text-sm sm:text-base text-gray-900 bg-white font-medium border-b border-blue-300 mb-1 w-full px-2 py-2"
                         placeholder="École"
                       />
                       <div className="space-y-2">
@@ -1356,11 +1447,11 @@ export default function TeamRegistrationsPage() {
                   )}
                 </div>
 
-                <div className="p-6 space-y-6">
+                <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                   {/* Captain Info */}
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-3">Capitaine</h3>
-                    <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                    <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2 sm:mb-3">Capitaine</h3>
+                    <div className="bg-gray-50 p-3 sm:p-4 rounded-lg space-y-2">
                       {editMode && editedRegistration ? (
                         <>
                           <div className="flex gap-2">
@@ -1853,100 +1944,112 @@ export default function TeamRegistrationsPage() {
                   </div>
                 </div>
 
-                <div className="p-6 border-t border-gray-200 flex gap-3">
-                  {selectedRegistration.status === 'pending' && !editMode && (
-                    <>
-                      <button
-                        onClick={startEdit}
-                        disabled={processing}
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition font-medium"
-                      >
-                        <Eye className="w-5 h-5" />
-                        Modifier
-                      </button>
-                      <button
-                        onClick={() => approveRegistration(selectedRegistration)}
-                        disabled={processing}
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition font-medium"
-                      >
-                        <Check className="w-5 h-5" />
-                        Approuver
-                      </button>
-                      <button
-                        onClick={() => rejectRegistration(selectedRegistration)}
-                        disabled={processing}
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 transition font-medium"
-                      >
-                        <X className="w-5 h-5" />
-                        Rejeter
-                      </button>
-                    </>
-                  )}
-                  {editMode && (
-                    <>
-                      <button
-                        onClick={saveEdits}
-                        disabled={processing}
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition font-medium"
-                      >
-                        <Check className="w-5 h-5" />
-                        Sauvegarder
-                      </button>
-                      <button
-                        onClick={cancelEdit}
-                        disabled={processing}
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:bg-gray-400 transition font-medium"
-                      >
-                        <X className="w-5 h-5" />
-                        Annuler
-                      </button>
-                    </>
-                  )}
-                  {(selectedRegistration.status === 'approved' || selectedRegistration.status === 'pending' || selectedRegistration.status === 'pending_players' || selectedRegistration.status === 'pending_validation') && !editMode && (
-                    <>
-                      <button
-                        onClick={startEdit}
-                        disabled={processing}
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition font-medium"
-                      >
-                        <Eye className="w-5 h-5" />
-                        Modifier
-                      </button>
-                      {selectedRegistration.status === 'approved' && (
+                <div className="p-4 sm:p-6 border-t border-gray-200 bg-gray-50 sticky bottom-0">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                    {editMode && (
+                      <>
                         <button
-                          onClick={() => resendEmails(selectedRegistration)}
+                          onClick={saveEdits}
                           disabled={processing}
-                          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition font-medium"
+                          className="flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 sm:py-3.5 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 disabled:bg-gray-400 transition font-medium text-sm sm:text-base touch-manipulation"
+                          style={{ minHeight: '48px' }}
                         >
-                          📧 Renvoyer tous les emails
+                          <Check className="w-5 h-5" />
+                          Sauvegarder
                         </button>
-                      )}
+                        <button
+                          onClick={cancelEdit}
+                          disabled={processing}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 sm:py-3.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 active:bg-gray-800 disabled:bg-gray-400 transition font-medium text-sm sm:text-base touch-manipulation"
+                          style={{ minHeight: '48px' }}
+                        >
+                          <X className="w-5 h-5" />
+                          Annuler
+                        </button>
+                      </>
+                    )}
+                    {(selectedRegistration.status === 'approved' || selectedRegistration.status === 'pending' || selectedRegistration.status === 'pending_players' || selectedRegistration.status === 'pending_validation') && !editMode && (
+                      <>
+                        <button
+                          onClick={startEdit}
+                          disabled={processing}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 sm:py-3.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:bg-gray-400 transition font-medium text-sm sm:text-base touch-manipulation"
+                          style={{ minHeight: '48px' }}
+                        >
+                          <Eye className="w-5 h-5" />
+                          Modifier
+                        </button>
+                        {(selectedRegistration.status === 'pending' || selectedRegistration.status === 'pending_players' || selectedRegistration.status === 'pending_validation') && !selectedRegistration.isWaitingList && (
+                          <>
+                            <button
+                              onClick={() => moveToWaitingList(selectedRegistration)}
+                              disabled={processing}
+                              className="flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 sm:py-3.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 active:bg-amber-800 disabled:bg-gray-400 transition font-medium text-sm sm:text-base touch-manipulation"
+                              style={{ minHeight: '48px' }}
+                            >
+                              <List className="w-5 h-5" />
+                              Liste
+                            </button>
+                            <button
+                              onClick={() => approveRegistration(selectedRegistration)}
+                              disabled={processing}
+                              className="flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 sm:py-3.5 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 disabled:bg-gray-400 transition font-bold text-sm sm:text-base shadow-md touch-manipulation"
+                              style={{ minHeight: '48px' }}
+                            >
+                              <Check className="w-5 h-5" />
+                              Approuver
+                            </button>
+                            <button
+                              onClick={() => rejectRegistration(selectedRegistration)}
+                              disabled={processing}
+                              className="flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 sm:py-3.5 bg-red-600 text-white rounded-lg hover:bg-red-700 active:bg-red-800 disabled:bg-gray-400 transition font-medium text-sm sm:text-base touch-manipulation"
+                              style={{ minHeight: '48px' }}
+                            >
+                              <X className="w-5 h-5" />
+                              Rejeter
+                            </button>
+                          </>
+                        )}
+                        {selectedRegistration.status === 'approved' && (
+                          <button
+                            onClick={() => resendEmails(selectedRegistration)}
+                            disabled={processing}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 sm:py-3.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 active:bg-indigo-800 disabled:bg-gray-400 transition font-medium text-sm sm:text-base touch-manipulation"
+                            style={{ minHeight: '48px' }}
+                          >
+                            📧 Renvoyer emails
+                          </button>
+                        )}
+                        <button
+                          onClick={() => deleteRegistration(selectedRegistration)}
+                          disabled={processing}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 sm:py-3.5 bg-red-600 text-white rounded-lg hover:bg-red-700 active:bg-red-800 disabled:bg-gray-400 transition font-medium text-sm sm:text-base touch-manipulation"
+                          style={{ minHeight: '48px' }}
+                        >
+                          <X className="w-5 h-5" />
+                          Supprimer
+                        </button>
+                      </>
+                    )}
+                    {selectedRegistration.status === 'rejected' && (
                       <button
                         onClick={() => deleteRegistration(selectedRegistration)}
                         disabled={processing}
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 transition font-medium"
+                        className="flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 sm:py-3.5 bg-red-600 text-white rounded-lg hover:bg-red-700 active:bg-red-800 disabled:bg-gray-400 transition font-medium text-sm sm:text-base touch-manipulation"
+                        style={{ minHeight: '48px' }}
                       >
                         <X className="w-5 h-5" />
                         Supprimer
                       </button>
-                    </>
-                  )}
-                  {selectedRegistration.status === 'rejected' && (
+                    )}
                     <button
-                      onClick={() => deleteRegistration(selectedRegistration)}
-                      disabled={processing}
-                      className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 transition font-medium"
+                      onClick={() => setSelectedRegistration(null)}
+                      className="w-full sm:w-auto px-4 sm:px-6 py-3 sm:py-3.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 active:bg-gray-400 transition font-medium text-sm sm:text-base touch-manipulation"
+                      style={{ minHeight: '48px' }}
                     >
-                      <X className="w-5 h-5" />
-                      Supprimer
+                      Fermer
                     </button>
-                  )}
-                  <button
-                    onClick={() => setSelectedRegistration(null)}
-                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
-                  >
-                    Fermer
-                  </button>
+                  </div>
                 </div>
               </motion.div>
             </motion.div>
@@ -1960,7 +2063,21 @@ export default function TeamRegistrationsPage() {
 }
 
 // Waiting List Component
-function WaitingListContent() {
+function WaitingListContent({ 
+  registrations, 
+  onApprove, 
+  onRemoveFromWaitingList,
+  processing,
+  setProcessing,
+  user
+}: { 
+  registrations: Registration[]
+  onApprove: (reg: Registration) => void
+  onRemoveFromWaitingList: (reg: Registration) => void
+  processing: boolean
+  setProcessing: (value: boolean) => void
+  user: any
+}) {
   const [status, setStatus] = useState<{ isWaitingListEnabled: boolean; message: string }>({
     isWaitingListEnabled: false,
     message: ''
@@ -1969,6 +2086,8 @@ function WaitingListContent() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [customMessage, setCustomMessage] = useState('')
+  const [selectedTeam, setSelectedTeam] = useState<Registration | null>(null)
+  const [sendingEmail, setSendingEmail] = useState<string | null>(null)
 
   useEffect(() => {
     loadStatus()
@@ -2173,6 +2292,305 @@ function WaitingListContent() {
           )}
         </button>
       </div>
+
+      {/* Liste des équipes en waiting list */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 mt-6 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <List className="w-5 h-5 text-amber-600" />
+              Équipes en Waiting List ({registrations.length})
+            </h3>
+            <p className="text-sm text-gray-600 mt-1">
+              Gérez les équipes qui sont en liste d'attente. Utilisez les boutons ci-dessous pour approuver, retirer ou voir les détails.
+            </p>
+            {registrations.length > 0 && (
+              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                ✅ {registrations.length} équipe{registrations.length > 1 ? 's' : ''} trouvée{registrations.length > 1 ? 's' : ''} - Les boutons d'action sont à droite de chaque équipe
+              </div>
+            )}
+          </div>
+        </div>
+
+        {(() => {
+          console.log('🔍 Waiting List - Nombre d\'équipes:', registrations.length)
+          console.log('🔍 Waiting List - Équipes:', registrations.map(r => ({ name: r.teamName, isWaitingList: r.isWaitingList })))
+          
+          if (registrations.length === 0) {
+            return (
+              <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+                <Clock className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 font-medium mb-2">Aucune équipe en waiting list</p>
+                <p className="text-sm text-gray-400">
+                  Les équipes mises en waiting list depuis l'onglet "Registrations" apparaîtront ici.
+                </p>
+              </div>
+            )
+          }
+          
+          return (
+            <div className="space-y-4">
+              {registrations
+                .sort((a, b) => {
+                  // Trier par date de mise en waiting list (plus ancien en premier)
+                  const dateA = (a as any).movedToWaitingListAt || a.createdAt || ''
+                  const dateB = (b as any).movedToWaitingListAt || b.createdAt || ''
+                  return dateA.localeCompare(dateB)
+                })
+                .map((registration, index) => {
+                const formatDateTime = (dateValue: any): string => {
+                  if (!dateValue) return 'N/A'
+                  try {
+                    const date = dateValue.toDate ? dateValue.toDate() : new Date(dateValue)
+                    return new Intl.DateTimeFormat('fr-FR', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    }).format(date)
+                  } catch {
+                    return 'Date invalide'
+                  }
+                }
+
+                console.log(`🔍 Rendering team: ${registration.teamName}, has buttons: true`)
+                
+                return (
+                  <motion.div
+                    key={registration.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="border-2 border-amber-300 bg-amber-50 rounded-lg p-5 hover:shadow-lg transition-all"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-2 flex-wrap">
+                          <span className="px-3 py-1 bg-amber-600 text-white rounded-full text-sm font-bold whitespace-nowrap">
+                            #{index + 1}
+                          </span>
+                          <h4 className="text-lg font-bold text-gray-900">{registration.teamName}</h4>
+                          <span className="px-2 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold whitespace-nowrap">
+                            Waiting List
+                          </span>
+                        </div>
+                        {registration.schoolName && (
+                          <p className="text-sm text-gray-600 mb-1">🏫 {registration.schoolName}</p>
+                        )}
+                        <p className="text-sm text-gray-600 mb-2">
+                          👤 Capitaine: {registration.captain.firstName} {registration.captain.lastName} ({registration.captain.email})
+                        </p>
+                        <p className="text-sm text-gray-600 mb-2">
+                          👥 {registration.players.length} joueur{registration.players.length > 1 ? 's' : ''}
+                        </p>
+                        {(registration as any).movedToWaitingListAt && (
+                          <p className="text-xs text-amber-700">
+                            ⏳ Mise en waiting list le: {formatDateTime((registration as any).movedToWaitingListAt)}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-2.5 flex-shrink-0" style={{ minWidth: '180px' }}>
+                        <button
+                          onClick={() => {
+                            console.log('✅ Bouton Approuver cliqué pour:', registration.teamName)
+                            onApprove(registration)
+                          }}
+                          disabled={processing}
+                          className="w-full px-5 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition-all text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:scale-105"
+                          title="Approuver et sortir de la waiting list"
+                          style={{ minHeight: '44px' }}
+                        >
+                          <Check className="w-5 h-5" />
+                          Approuver
+                        </button>
+                        <button
+                          onClick={async () => {
+                            setSendingEmail(registration.captain.email)
+                            try {
+                              const response = await fetch('/api/admin/send-waiting-list-email', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  captainEmail: registration.captain.email,
+                                  captainName: `${registration.captain.firstName} ${registration.captain.lastName}`,
+                                  teamName: registration.teamName
+                                })
+                              })
+                              const data = await response.json()
+                              if (response.ok) {
+                                alert(`✅ Email envoyé à ${registration.captain.email}!\n\nID Resend: ${data.resendEmailId || 'N/A'}\n${data.resendEmailId ? `Vérifiez le statut: https://resend.com/emails/${data.resendEmailId}` : ''}`)
+                              } else {
+                                alert(`❌ Erreur: ${data.error || 'Erreur lors de l\'envoi'}\n\n${data.details || ''}`)
+                              }
+                            } catch (error: any) {
+                              alert(`❌ Erreur: ${error.message || 'Erreur de connexion'}`)
+                            } finally {
+                              setSendingEmail(null)
+                            }
+                          }}
+                          disabled={processing || sendingEmail === registration.captain.email}
+                          className="w-full px-5 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:bg-gray-400 transition-all text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:scale-105"
+                          title="Envoyer un email au capitaine pour le prévenir qu'il est en waiting list"
+                          style={{ minHeight: '44px' }}
+                        >
+                          <Mail className="w-5 h-5" />
+                          {sendingEmail === registration.captain.email ? 'Envoi...' : 'Email'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            console.log('🔄 Bouton Retirer cliqué pour:', registration.teamName)
+                            onRemoveFromWaitingList(registration)
+                          }}
+                          disabled={processing}
+                          className="w-full px-5 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-all text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:scale-105"
+                          title="Retirer de la waiting list (reste en attente)"
+                          style={{ minHeight: '44px' }}
+                        >
+                          <ArrowRight className="w-5 h-5" />
+                          Retirer
+                        </button>
+                        <button
+                          onClick={() => {
+                            console.log('👁️ Bouton Détails cliqué pour:', registration.teamName)
+                            setSelectedTeam(registration)
+                          }}
+                          className="w-full px-5 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:scale-105"
+                          style={{ minHeight: '44px' }}
+                        >
+                          <Eye className="w-5 h-5" />
+                          Détails
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          )
+        })()}
+      </div>
+
+      {/* Modal de détails pour une équipe en waiting list */}
+      {selectedTeam && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedTeam(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-gray-900">{selectedTeam.teamName}</h3>
+                <button
+                  onClick={() => setSelectedTeam(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-1">Capitaine</p>
+                <p className="text-gray-900">{selectedTeam.captain.firstName} {selectedTeam.captain.lastName}</p>
+                <p className="text-sm text-gray-600">{selectedTeam.captain.email}</p>
+                <p className="text-sm text-gray-600">{selectedTeam.captain.phone}</p>
+              </div>
+              {selectedTeam.coach && (
+                <div>
+                  <p className="text-sm font-semibold text-gray-700 mb-1">Entraîneur</p>
+                  <p className="text-gray-900">{selectedTeam.coach.firstName} {selectedTeam.coach.lastName}</p>
+                  <p className="text-sm text-gray-600">{selectedTeam.coach.email}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">Joueurs ({selectedTeam.players.length})</p>
+                <div className="space-y-2">
+                  {selectedTeam.players.map((player, idx) => (
+                    <div key={idx} className="p-3 bg-gray-50 rounded-lg">
+                      <p className="font-medium text-gray-900">
+                        {player.firstName} {player.lastName} {player.nickname && `"${player.nickname}"`}
+                      </p>
+                      <p className="text-sm text-gray-600">{player.email}</p>
+                      <p className="text-xs text-gray-500">
+                        #{player.jerseyNumber} - {player.position} - {player.foot}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="p-6 border-t border-gray-200 flex flex-wrap gap-3">
+              <button
+                onClick={() => {
+                  onApprove(selectedTeam)
+                  setSelectedTeam(null)
+                }}
+                disabled={processing}
+                className="flex-1 min-w-[140px] px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition font-medium flex items-center justify-center gap-2"
+              >
+                <Check className="w-5 h-5" />
+                Approuver
+              </button>
+              <button
+                onClick={async () => {
+                  setSendingEmail(selectedTeam.captain.email)
+                  try {
+                    const response = await fetch('/api/admin/send-waiting-list-email', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        captainEmail: selectedTeam.captain.email,
+                        captainName: `${selectedTeam.captain.firstName} ${selectedTeam.captain.lastName}`,
+                        teamName: selectedTeam.teamName
+                      })
+                    })
+                    const data = await response.json()
+                    if (response.ok) {
+                      alert(`✅ Email envoyé à ${selectedTeam.captain.email}!\n\nID Resend: ${data.resendEmailId || 'N/A'}\n${data.resendEmailId ? `Vérifiez le statut: https://resend.com/emails/${data.resendEmailId}` : ''}`)
+                    } else {
+                      alert(`❌ Erreur: ${data.error || 'Erreur lors de l\'envoi'}\n\n${data.details || ''}`)
+                    }
+                  } catch (error: any) {
+                    alert(`❌ Erreur: ${error.message || 'Erreur de connexion'}`)
+                  } finally {
+                    setSendingEmail(null)
+                  }
+                }}
+                disabled={processing || sendingEmail === selectedTeam.captain.email}
+                className="flex-1 min-w-[140px] px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:bg-gray-400 transition font-medium flex items-center justify-center gap-2"
+              >
+                <Mail className="w-5 h-5" />
+                {sendingEmail === selectedTeam.captain.email ? 'Envoi...' : 'Envoyer Email'}
+              </button>
+              <button
+                onClick={() => {
+                  onRemoveFromWaitingList(selectedTeam)
+                  setSelectedTeam(null)
+                }}
+                disabled={processing}
+                className="flex-1 min-w-[140px] px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition font-medium flex items-center justify-center gap-2"
+              >
+                <ArrowRight className="w-5 h-5" />
+                Retirer
+              </button>
+              <button
+                onClick={() => setSelectedTeam(null)}
+                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
+              >
+                Fermer
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   )
 }

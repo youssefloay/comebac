@@ -12,6 +12,42 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Si l'email change, on doit d'abord récupérer l'ancien email pour synchroniser
+    let oldEmail: string | null = null
+    if (updates.email !== undefined) {
+      try {
+        if (accountType === 'player') {
+          const playerDoc = await adminDb.collection('playerAccounts').doc(accountId).get()
+          if (playerDoc.exists) {
+            oldEmail = playerDoc.data()?.email
+          }
+        } else if (accountType === 'coach') {
+          const coachDoc = await adminDb.collection('coachAccounts').doc(accountId).get()
+          if (coachDoc.exists) {
+            oldEmail = coachDoc.data()?.email
+          }
+        }
+      } catch (error) {
+        console.error('Erreur récupération ancien email:', error)
+      }
+    }
+
+    // Si l'email change et qu'on a l'ancien email, synchroniser partout
+    let emailSyncResult: any = null
+    if (updates.email && oldEmail && oldEmail.toLowerCase().trim() !== updates.email.toLowerCase().trim()) {
+      console.log(`🔄 Email change détecté: ${oldEmail} → ${updates.email}, synchronisation...`)
+      try {
+        // Importer et appeler la fonction de synchronisation directement
+        const { syncEmailEverywhere } = await import('./sync-email-logic')
+        emailSyncResult = await syncEmailEverywhere(oldEmail, updates.email)
+        console.log(`✅ Email synchronisé:`, emailSyncResult.summary)
+        updatedCollections.push(`Email synchronisé dans ${emailSyncResult.updates.length} collection(s)`)
+      } catch (error: any) {
+        console.error('⚠️ Erreur lors de la synchronisation email:', error.message)
+        // On continue quand même avec la mise à jour normale
+      }
+    }
+
     const batch = adminDb.batch()
     const updatedCollections: string[] = []
 
@@ -346,10 +382,17 @@ export async function POST(request: NextRequest) {
     // Exécuter toutes les mises à jour
     await batch.commit()
 
+    let message = 'Compte mis à jour avec succès'
+    if (emailSyncResult) {
+      message += `\n📧 Email synchronisé dans ${emailSyncResult.updates.length} collection(s) (Firebase Auth, playerAccounts, players, teams, teamRegistrations, etc.)`
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'Compte mis à jour avec succès',
-      updatedCollections: [...new Set(updatedCollections)]
+      message,
+      updatedCollections: [...new Set(updatedCollections)],
+      emailSynced: !!emailSyncResult,
+      emailSyncSummary: emailSyncResult?.summary
     })
 
   } catch (error: any) {

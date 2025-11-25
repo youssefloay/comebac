@@ -245,7 +245,7 @@ export default function TeamAccountsPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
           <button
             onClick={() => router.back()}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
@@ -253,55 +253,55 @@ export default function TeamAccountsPage() {
             <ArrowLeft className="w-5 h-5" />
             Retour
           </button>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <Mail className="w-6 h-6 text-blue-600" />
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Comptes par équipe</h1>
-              <p className="text-gray-600">Statut de connexion et activation</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Comptes par équipe</h1>
+              <p className="text-sm sm:text-base text-gray-600">Statut de connexion et activation</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         {/* Stats globales */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <CheckCircle className="w-5 h-5 text-green-600" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
+          <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 border border-gray-200 shadow-sm">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
               </div>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-xl sm:text-2xl font-bold text-gray-900">
                 {teams.reduce((sum, t) => sum + t.connectedCount, 0)}
               </div>
             </div>
-            <p className="text-sm text-gray-600">Déjà connectés</p>
+            <p className="text-xs sm:text-sm text-gray-600">Déjà connectés</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Clock className="w-5 h-5 text-orange-600" />
+          <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 border border-gray-200 shadow-sm">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
               </div>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-xl sm:text-2xl font-bold text-gray-900">
                 {teams.reduce((sum, t) => sum + t.neverConnectedCount, 0)}
               </div>
             </div>
-            <p className="text-sm text-gray-600">Jamais connectés</p>
+            <p className="text-xs sm:text-sm text-gray-600">Jamais connectés</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                <XCircle className="w-5 h-5 text-red-600" />
+          <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 border border-gray-200 shadow-sm">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
               </div>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-xl sm:text-2xl font-bold text-gray-900">
                 {teams.reduce((sum, t) => sum + t.noAccountCount, 0)}
               </div>
             </div>
-            <p className="text-sm text-gray-600">Sans compte</p>
+            <p className="text-xs sm:text-sm text-gray-600">Sans compte</p>
           </div>
         </div>
 
@@ -319,28 +319,29 @@ export default function TeamAccountsPage() {
             return (
               <div key={team.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 {/* Header équipe */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
-                <div className="flex items-center justify-between flex-wrap gap-4">
-                  <h2 className="text-xl font-bold text-gray-900">{team.name}</h2>
-                  <div className="flex items-center gap-4 flex-wrap text-sm">
-                    <div className="flex items-center gap-4">
-                      <span className="flex items-center gap-1 text-green-600">
-                        <CheckCircle className="w-4 h-4" />
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900">{team.name}</h2>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
+                      <span className="flex items-center gap-1 text-green-600 whitespace-nowrap">
+                        <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
                         {connectedPlayers.length} connectés
                       </span>
-                      <span className="flex items-center gap-1 text-orange-600">
-                        <Clock className="w-4 h-4" />
+                      <span className="flex items-center gap-1 text-orange-600 whitespace-nowrap">
+                        <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                         {neverConnectedPlayers.length} jamais
                       </span>
-                      <span className="flex items-center gap-1 text-red-600">
-                        <XCircle className="w-4 h-4" />
+                      <span className="flex items-center gap-1 text-red-600 whitespace-nowrap">
+                        <XCircle className="w-3 h-3 sm:w-4 sm:h-4" />
                         {noAccountPlayers.length} sans compte
                       </span>
                     </div>
                     <button
                       onClick={() => resendTeamActivations(team.id, team.name, team.players, team.coaches)}
                       disabled={teamResending === team.id || neverConnectedPlayers.length === 0}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-orange-200 text-orange-700 hover:bg-orange-100 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                      className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full border border-orange-200 text-orange-700 hover:bg-orange-100 active:bg-orange-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-xs sm:text-sm touch-manipulation w-full sm:w-auto"
+                      style={{ minHeight: '40px' }}
                     >
                       {teamResending === team.id ? (
                         <>
@@ -359,7 +360,7 @@ export default function TeamAccountsPage() {
                 </div>
 
                 {/* Listes catégorisées */}
-                <div className="p-6 space-y-6">
+                <div className="p-4 sm:p-5 md:p-6 space-y-4 sm:space-y-6">
                   {team.coaches.length > 0 && (
                     <div className="rounded-xl border border-blue-100 bg-blue-50/60">
                       <div className="flex items-center justify-between px-4 py-3 border-b border-blue-100">

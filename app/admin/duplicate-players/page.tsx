@@ -108,7 +108,7 @@ export default function DuplicatePlayersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 p-4 md:p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 p-3 sm:p-4 md:p-6 lg:p-8 relative overflow-hidden">
       {/* Animated background pattern */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-400/10 rounded-full blur-3xl animate-pulse"></div>
@@ -130,19 +130,20 @@ export default function DuplicatePlayersPage() {
               >
                 <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               </Link>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-3">
-                <AlertTriangle className="w-8 h-8 md:w-10 md:h-10 text-orange-600" />
-                Joueurs dans Plusieurs Équipes
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-2 sm:gap-3">
+                <AlertTriangle className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10 text-orange-600" />
+                <span className="leading-tight">Joueurs dans Plusieurs Équipes</span>
               </h1>
             </div>
             <button
               onClick={loadDuplicates}
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl font-semibold"
+              className="px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 active:from-blue-800 active:to-indigo-800 transition-all shadow-lg hover:shadow-xl font-semibold text-sm sm:text-base touch-manipulation"
+              style={{ minHeight: '44px' }}
             >
               Actualiser
             </button>
           </div>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">
+          <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-400">
             {duplicates.length} joueur{duplicates.length > 1 ? 's' : ''} trouvé{duplicates.length > 1 ? 's' : ''} dans plusieurs équipes
           </p>
         </motion.div>
@@ -242,7 +243,8 @@ export default function DuplicatePlayersPage() {
                       <button
                         onClick={() => handleRemovePlayer(player)}
                         disabled={removing === `${player.sourceId}_${player.playerId || 'captain'}`}
-                        className="ml-4 px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl hover:from-red-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="ml-0 sm:ml-4 mt-2 sm:mt-0 px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl hover:from-red-700 hover:to-pink-700 active:from-red-800 active:to-pink-800 transition-all shadow-lg hover:shadow-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base touch-manipulation w-full sm:w-auto"
+                        style={{ minHeight: '44px' }}
                       >
                         {removing === `${player.sourceId}_${player.playerId || 'captain'}` ? (
                           <>

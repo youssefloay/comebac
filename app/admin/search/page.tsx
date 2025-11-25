@@ -211,27 +211,27 @@ export default function AdminSearchPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-4 sm:mb-6 md:mb-8">
           <Link
             href="/admin"
-            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4"
+            className="inline-flex items-center gap-2 text-sm sm:text-base text-blue-600 hover:text-blue-700 mb-2 sm:mb-4"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             Retour à l'admin
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
             Recherche globale
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             Recherchez rapidement un joueur ou un entraîneur
           </p>
         </div>
 
         {/* Search Bar */}
-        <div className="mb-8">
+        <div className="mb-4 sm:mb-6 md:mb-8">
           <SearchBar
             data={searchData}
             onSelect={handleSelect}
@@ -242,11 +242,11 @@ export default function AdminSearchPage() {
 
         {/* Résultat sélectionné */}
         {selectedResult && (
-          <div className="bg-white rounded-lg shadow-lg p-6 border-2 border-blue-500">
-            <div className="flex items-start gap-6">
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-5 md:p-6 border-2 border-blue-500">
+            <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
               {/* Avatar */}
-              <div className="relative flex-shrink-0">
-                <div className={`w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold ${
+              <div className="relative flex-shrink-0 mx-auto sm:mx-0">
+                <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold ${
                   selectedResult.type === 'coach'
                     ? 'bg-gradient-to-br from-orange-600 to-red-600'
                     : selectedResult.type === 'player'
@@ -271,11 +271,11 @@ export default function AdminSearchPage() {
               </div>
 
               {/* Info */}
-              <div className="flex-1">
-                <div className="flex items-center justify-between gap-3 mb-4">
-                  <div className="flex items-center gap-3">
+              <div className="flex-1 w-full">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3 sm:mb-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
                     {!isEditing ? (
-                      <h2 className="text-2xl font-bold text-gray-900">
+                      <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 break-words">
                         {selectedResult.firstName} {selectedResult.lastName}
                         {selectedResult.type === 'player' && selectedResult.nickname && (
                           <span className="text-lg text-blue-600 ml-2 font-normal">

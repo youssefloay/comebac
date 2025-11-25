@@ -358,15 +358,15 @@ export default function AccountsManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-            <Users className="w-8 h-8 text-blue-600" />
-            Gestion des Comptes
+        <div className="mb-4 sm:mb-6 md:mb-8">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 flex items-center gap-2 sm:gap-3">
+            <Users className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-blue-600" />
+            <span className="leading-tight">Gestion des Comptes</span>
           </h1>
-          <p className="text-gray-600">Gérez les rôles et les équipes des utilisateurs</p>
+          <p className="text-sm sm:text-base text-gray-600">Gérez les rôles et les équipes des utilisateurs</p>
         </div>
 
         {/* Message */}
@@ -384,77 +384,81 @@ export default function AccountsManagementPage() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6">
+          <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Total</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{stats.total}</p>
               </div>
-              <Users className="w-12 h-12 text-gray-400 opacity-20" />
+              <Users className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-gray-400 opacity-20 hidden sm:block" />
             </div>
           </div>
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
+          <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Utilisateurs</p>
-                <p className="text-3xl font-bold text-blue-600">{stats.users}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Utilisateurs</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600">{stats.users}</p>
               </div>
-              <User className="w-12 h-12 text-blue-600 opacity-20" />
+              <User className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-blue-600 opacity-20 hidden sm:block" />
             </div>
           </div>
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
+          <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Joueurs</p>
-                <p className="text-3xl font-bold text-green-600">{stats.players}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Joueurs</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600">{stats.players}</p>
               </div>
-              <Users className="w-12 h-12 text-green-600 opacity-20" />
+              <Users className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-green-600 opacity-20 hidden sm:block" />
             </div>
           </div>
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
+          <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Admins</p>
-                <p className="text-3xl font-bold text-purple-600">{stats.admins}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Admins</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-purple-600">{stats.admins}</p>
               </div>
-              <Shield className="w-12 h-12 text-purple-600 opacity-20" />
+              <Shield className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-purple-600 opacity-20 hidden sm:block" />
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white p-4 rounded-lg border border-gray-200 mb-6">
-          <div className="flex gap-2">
+        <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 mb-4 sm:mb-6 shadow-sm">
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
             <button
               onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                filter === 'all' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm sm:text-base flex-shrink-0 touch-manipulation ${
+                filter === 'all' ? 'bg-gray-900 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300'
               }`}
+              style={{ minHeight: '44px' }}
             >
               Tous ({stats.total})
             </button>
             <button
               onClick={() => setFilter('user')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                filter === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm sm:text-base flex-shrink-0 touch-manipulation ${
+                filter === 'user' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300'
               }`}
+              style={{ minHeight: '44px' }}
             >
               Utilisateurs ({stats.users})
             </button>
             <button
               onClick={() => setFilter('player')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                filter === 'player' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm sm:text-base flex-shrink-0 touch-manipulation ${
+                filter === 'player' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300'
               }`}
+              style={{ minHeight: '44px' }}
             >
               Joueurs ({stats.players})
             </button>
             <button
               onClick={() => setFilter('admin')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                filter === 'admin' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm sm:text-base flex-shrink-0 touch-manipulation ${
+                filter === 'admin' ? 'bg-purple-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300'
               }`}
+              style={{ minHeight: '44px' }}
             >
               Admins ({stats.admins})
             </button>
@@ -462,24 +466,24 @@ export default function AccountsManagementPage() {
         </div>
 
         {/* Accounts Table */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+          <div className="overflow-x-auto -mx-3 sm:mx-0">
+            <table className="w-full min-w-[640px]">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Utilisateur
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Rôle
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Équipe
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -493,7 +497,7 @@ export default function AccountsManagementPage() {
                     transition={{ delay: index * 0.05 }}
                     className="hover:bg-gray-50"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
                       {editingAccount === account.id ? (
                         <div className="flex gap-2">
                           <input
@@ -524,10 +528,10 @@ export default function AccountsManagementPage() {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{account.email}</div>
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
+                      <div className="text-xs sm:text-sm text-gray-900 break-all">{account.email}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
                       {editingAccount === account.id ? (
                         <select
                           value={editForm.role}
@@ -548,7 +552,7 @@ export default function AccountsManagementPage() {
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
                       {editingAccount === account.id && editForm.role === 'player' ? (
                         <select
                           value={editForm.teamId || ''}
@@ -566,50 +570,57 @@ export default function AccountsManagementPage() {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-sm font-medium">
                       {editingAccount === account.id ? (
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                           <button
                             onClick={() => saveAccount(account.id)}
                             disabled={saving}
-                            className="text-green-600 hover:text-green-900 disabled:opacity-50"
+                            className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 disabled:bg-gray-400 transition font-medium text-sm touch-manipulation flex items-center justify-center gap-1.5"
                             title="Sauvegarder"
+                            style={{ minHeight: '40px' }}
                           >
-                            <Save className="w-5 h-5" />
+                            <Save className="w-4 h-4" />
+                            <span className="hidden xs:inline">Sauvegarder</span>
                           </button>
                           <button
                             onClick={cancelEdit}
                             disabled={saving}
-                            className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                            className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:bg-red-800 disabled:bg-gray-400 transition font-medium text-sm touch-manipulation flex items-center justify-center gap-1.5"
                             title="Annuler"
+                            style={{ minHeight: '40px' }}
                           >
-                            <X className="w-5 h-5" />
+                            <X className="w-4 h-4" />
+                            <span className="hidden xs:inline">Annuler</span>
                           </button>
                         </div>
                       ) : (
-                        <div className="flex gap-2 relative">
+                        <div className="flex flex-wrap gap-1.5 sm:gap-2 relative">
                           <button
                             onClick={() => startEdit(account)}
-                            className="text-blue-600 hover:text-blue-900"
+                            className="px-2.5 sm:px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition touch-manipulation flex items-center justify-center"
                             title="Modifier"
+                            style={{ minHeight: '40px', minWidth: '40px' }}
                           >
-                            <Edit className="w-5 h-5" />
+                            <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
                           </button>
                           <button
                             onClick={() => sendPasswordReset(account)}
                             disabled={saving}
-                            className="text-orange-600 hover:text-orange-900 disabled:opacity-50"
+                            className="px-2.5 sm:px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 active:bg-orange-800 disabled:bg-gray-400 transition touch-manipulation flex items-center justify-center"
                             title="Réinitialiser mot de passe"
+                            style={{ minHeight: '40px', minWidth: '40px' }}
                           >
-                            <Mail className="w-5 h-5" />
+                            <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
                           </button>
                           <button
                             onClick={() => deleteAccount(account)}
                             disabled={saving}
-                            className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                            className="px-2.5 sm:px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:bg-red-800 disabled:bg-gray-400 transition touch-manipulation flex items-center justify-center"
                             title="Supprimer"
+                            style={{ minHeight: '40px', minWidth: '40px' }}
                           >
-                            <Trash2 className="w-5 h-5" />
+                            <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                           </button>
                         </div>
                       )}

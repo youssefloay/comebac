@@ -130,55 +130,56 @@ export default function UserAccountsPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition"
+            className="flex items-center gap-2 text-sm sm:text-base text-gray-600 hover:text-gray-900 mb-3 sm:mb-4 transition touch-manipulation"
+            style={{ minHeight: '40px' }}
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             Retour
           </button>
           
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Comptes utilisateurs</h1>
-              <p className="text-gray-600 mt-1">Gérer tous les comptes Firebase Auth</p>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Comptes utilisateurs</h1>
+              <p className="text-sm sm:text-base text-gray-600 mt-1">Gérer tous les comptes Firebase Auth</p>
             </div>
           </div>
 
           {/* Statistiques */}
           {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mt-6">
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 sm:gap-3 mt-4 sm:mt-6">
+              <div className="bg-gray-50 rounded-lg p-2.5 sm:p-3 border border-gray-200 shadow-sm">
+                <div className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</div>
                 <div className="text-xs text-gray-600">Total</div>
               </div>
-              <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                <div className="text-2xl font-bold text-blue-600">{stats.players}</div>
+              <div className="bg-blue-50 rounded-lg p-2.5 sm:p-3 border border-blue-200 shadow-sm">
+                <div className="text-xl sm:text-2xl font-bold text-blue-600">{stats.players}</div>
                 <div className="text-xs text-blue-700">Joueurs</div>
               </div>
-              <div className="bg-green-50 rounded-lg p-3 border border-green-200">
-                <div className="text-2xl font-bold text-green-600">{stats.coaches}</div>
+              <div className="bg-green-50 rounded-lg p-2.5 sm:p-3 border border-green-200 shadow-sm">
+                <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.coaches}</div>
                 <div className="text-xs text-green-700">Coaches</div>
               </div>
-              <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
-                <div className="text-2xl font-bold text-purple-600">{stats.admins}</div>
+              <div className="bg-purple-50 rounded-lg p-2.5 sm:p-3 border border-purple-200 shadow-sm">
+                <div className="text-xl sm:text-2xl font-bold text-purple-600">{stats.admins}</div>
                 <div className="text-xs text-purple-700">Admins</div>
               </div>
-              <div className="bg-red-50 rounded-lg p-3 border border-red-200">
-                <div className="text-2xl font-bold text-red-600">{stats.neverLoggedIn}</div>
+              <div className="bg-red-50 rounded-lg p-2.5 sm:p-3 border border-red-200 shadow-sm">
+                <div className="text-xl sm:text-2xl font-bold text-red-600">{stats.neverLoggedIn}</div>
                 <div className="text-xs text-red-700">Jamais connectés</div>
               </div>
-              <div className="bg-emerald-50 rounded-lg p-3 border border-emerald-200">
-                <div className="text-2xl font-bold text-emerald-600">{stats.verified}</div>
+              <div className="bg-emerald-50 rounded-lg p-2.5 sm:p-3 border border-emerald-200 shadow-sm">
+                <div className="text-xl sm:text-2xl font-bold text-emerald-600">{stats.verified}</div>
                 <div className="text-xs text-emerald-700">Vérifiés</div>
               </div>
-              <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
-                <div className="text-2xl font-bold text-amber-600">{stats.unknown}</div>
+              <div className="bg-amber-50 rounded-lg p-2.5 sm:p-3 border border-amber-200 shadow-sm">
+                <div className="text-xl sm:text-2xl font-bold text-amber-600">{stats.unknown}</div>
                 <div className="text-xs text-amber-700">Inconnus</div>
               </div>
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                <div className="text-2xl font-bold text-gray-600">{stats.disabled}</div>
+              <div className="bg-gray-50 rounded-lg p-2.5 sm:p-3 border border-gray-200 shadow-sm">
+                <div className="text-xl sm:text-2xl font-bold text-gray-600">{stats.disabled}</div>
                 <div className="text-xs text-gray-700">Désactivés</div>
               </div>
             </div>
@@ -187,8 +188,8 @@ export default function UserAccountsPage() {
       </div>
 
       {/* Filtres et recherche */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4 mb-4 sm:mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Recherche */}
             <div className="flex-1">
