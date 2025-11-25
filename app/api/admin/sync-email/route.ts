@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { syncEmailEverywhere } from './sync-email-logic'
+import { syncEmailEverywhere } from '../sync-email-logic'
 
 /**
  * API centralisée pour synchroniser un email dans TOUTES les collections

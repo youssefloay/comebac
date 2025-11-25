@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       console.log(`🔄 Email change détecté: ${oldEmail} → ${updates.email}, synchronisation...`)
       try {
         // Importer et appeler la fonction de synchronisation directement
-        const { syncEmailEverywhere } = await import('./sync-email-logic')
+        const { syncEmailEverywhere } = await import('../sync-email-logic')
         emailSyncResult = await syncEmailEverywhere(oldEmail, updates.email)
         console.log(`✅ Email synchronisé:`, emailSyncResult.summary)
         updatedCollections.push(`Email synchronisé dans ${emailSyncResult.updates.length} collection(s)`)
