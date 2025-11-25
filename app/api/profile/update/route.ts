@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     // Définir les champs autorisés selon le type
     const allowedFields: Record<string, string[]> = {
       player: ['phone', 'photo', 'foot', 'tshirtSize', 'birthDate', 'position', 'height'],
-      coach: ['phone', 'photo']
+      coach: ['phone', 'photo', 'tshirtSize']
     }
 
     const fields = allowedFields[userType]

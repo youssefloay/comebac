@@ -29,6 +29,7 @@ interface CoachData {
   teamId: string
   teamName?: string
   photo?: string
+  tshirtSize?: string
 }
 
 export default function CoachProfilePage() {
@@ -68,12 +69,14 @@ export default function CoachProfilePage() {
                 phone: data.phone || '',
                 teamId: data.teamId,
                 teamName: data.teamName,
-                photo: data.photo
+                photo: data.photo,
+                tshirtSize: data.tshirtSize
               }
               setCoachData(coach)
               setEditData({
                 phone: coach.phone || '',
-                photo: coach.photo || ''
+                photo: coach.photo || '',
+                tshirtSize: coach.tshirtSize || ''
               })
               setLoading(false)
               return
@@ -89,12 +92,14 @@ export default function CoachProfilePage() {
             phone: '',
             teamId: 'demo',
             teamName: 'Équipe Demo',
-            photo: ''
+            photo: '',
+            tshirtSize: ''
           }
           setCoachData(coach)
           setEditData({
             phone: '',
-            photo: ''
+            photo: '',
+            tshirtSize: ''
           })
           setLoading(false)
           return
@@ -142,7 +147,8 @@ export default function CoachProfilePage() {
               phone: coachDataRaw.phone || '',
               teamId: coachDataRaw.teamId,
               teamName: coachDataRaw.teamName,
-              photo: coachDataRaw.photo
+              photo: coachDataRaw.photo,
+              tshirtSize: coachDataRaw.tshirtSize
             }
 
             if (coach.teamId && !coach.teamName) {
@@ -156,7 +162,8 @@ export default function CoachProfilePage() {
             setCoachData(coach)
             setEditData({
               phone: coach.phone || '',
-              photo: coach.photo || ''
+              photo: coach.photo || '',
+              tshirtSize: coach.tshirtSize || ''
             })
           setLoading(false)
           return
@@ -183,7 +190,8 @@ export default function CoachProfilePage() {
             phone: playerDataRaw.phone || '',
             teamId: playerDataRaw.teamId,
             teamName: playerDataRaw.teamName,
-            photo: playerDataRaw.photo
+            photo: playerDataRaw.photo,
+            tshirtSize: playerDataRaw.tshirtSize
           }
 
           if (coach.teamId && !coach.teamName) {
@@ -197,7 +205,8 @@ export default function CoachProfilePage() {
           setCoachData(coach)
           setEditData({
             phone: coach.phone || '',
-            photo: coach.photo || ''
+            photo: coach.photo || '',
+            tshirtSize: coach.tshirtSize || ''
           })
           setLoading(false)
           return
@@ -218,7 +227,8 @@ export default function CoachProfilePage() {
           phone: coachDataRaw.phone || '',
           teamId: coachDataRaw.teamId,
           teamName: coachDataRaw.teamName,
-          photo: coachDataRaw.photo
+          photo: coachDataRaw.photo,
+          tshirtSize: coachDataRaw.tshirtSize
         }
 
         // Récupérer le nom de l'équipe si pas déjà présent
@@ -234,7 +244,8 @@ export default function CoachProfilePage() {
         // Pré-remplir editData avec toutes les valeurs actuelles
         setEditData({
           phone: coach.phone || '',
-          photo: coach.photo || ''
+          photo: coach.photo || '',
+          tshirtSize: coach.tshirtSize || ''
         })
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error)
@@ -255,6 +266,7 @@ export default function CoachProfilePage() {
       
       // Vérifier quels champs ont changé
       if (editData.phone !== coachData.phone) updates.phone = editData.phone
+      if (editData.tshirtSize !== coachData.tshirtSize) updates.tshirtSize = editData.tshirtSize
 
       if (Object.keys(updates).length === 0) {
         setEditing(false)
@@ -277,7 +289,7 @@ export default function CoachProfilePage() {
         setCoachData({
           ...coachData,
           ...updates
-        })
+        } as CoachData)
         setEditing(false)
         alert('Profil mis à jour avec succès!')
       } else {
@@ -449,7 +461,8 @@ export default function CoachProfilePage() {
                 // Réinitialiser editData avec les valeurs actuelles
                 setEditData({
                   phone: coachData.phone || '',
-                  photo: coachData.photo || ''
+                  photo: coachData.photo || '',
+                  tshirtSize: coachData.tshirtSize || ''
                 })
                 setEditing(true)
               }}
@@ -467,7 +480,8 @@ export default function CoachProfilePage() {
                   setEditing(false)
                   setEditData({
                     phone: coachData.phone,
-                    photo: coachData.photo
+                    photo: coachData.photo,
+                    tshirtSize: coachData.tshirtSize
                   })
                 }}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-all font-semibold"
@@ -614,6 +628,47 @@ export default function CoachProfilePage() {
                   />
                 ) : (
                   <p className="font-semibold text-gray-900 dark:text-white">{coachData.phone || 'Non renseigné'}</p>
+                )}
+              </div>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.02, x: 5 }}
+              className="flex items-center gap-3 p-4 bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-700"
+            >
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                <User className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Taille T-shirt</p>
+                {editing ? (
+                  <select
+                    value={editData.tshirtSize || ''}
+                    onChange={(e) => setEditData({ ...editData, tshirtSize: e.target.value })}
+                    className="w-full px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white bg-white dark:bg-gray-700"
+                  >
+                    <option value="">Sélectionner</option>
+                    <option value="4XXS">4XXS</option>
+                    <option value="3XXS">3XXS</option>
+                    <option value="2XXS">2XXS</option>
+                    <option value="XXS">XXS</option>
+                    <option value="XS">XS</option>
+                    <option value="S">S</option>
+                    <option value="M">M</option>
+                    <option value="L">L</option>
+                    <option value="XL">XL</option>
+                    <option value="XXL">XXL</option>
+                    <option value="3XL">3XL</option>
+                    <option value="4XL">4XL</option>
+                    <option value="5XL">5XL</option>
+                    <option value="6XL">6XL</option>
+                    <option value="3XXL">3XXL</option>
+                    <option value="4XXL">4XXL</option>
+                    <option value="5XXL">5XXL</option>
+                    <option value="6XXL">6XXL</option>
+                  </select>
+                ) : (
+                  <p className="font-semibold text-gray-900 dark:text-white">{coachData.tshirtSize || 'Non renseigné'}</p>
                 )}
               </div>
             </motion.div>
