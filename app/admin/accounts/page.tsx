@@ -359,8 +359,21 @@ export default function AccountsManagementPage() {
     admins: accounts.filter(a => a.role === 'admin').length
   }
 
+  // Debug: vérifier que t est bien défini
+  if (!t || !t.accounts) {
+    console.error('❌ Traductions non disponibles:', { t, hasAccounts: !!t?.accounts })
+    return (
+      <div className="p-8">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <p className="font-bold">Erreur de traduction</p>
+          <p>Les traductions ne sont pas disponibles. Vérifiez que le provider i18n est bien configuré.</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 lg:p-8">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-4 sm:mb-6 md:mb-8">

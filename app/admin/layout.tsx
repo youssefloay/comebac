@@ -59,9 +59,9 @@ function LanguageButton() {
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       {/* Language Button - Fixed top right */}
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed top-4 right-4 z-[9999]">
         <LanguageButton />
       </div>
       

@@ -13,19 +13,25 @@ const AdminI18nContext = createContext<AdminI18nContextType | undefined>(undefin
 
 export function AdminI18nProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>('fr')
+  const [mounted, setMounted] = useState(false)
 
   // Load language from localStorage on mount
   useEffect(() => {
-    const savedLanguage = localStorage.getItem('admin-language') as Language | null
-    if (savedLanguage && (savedLanguage === 'fr' || savedLanguage === 'en')) {
-      setLanguageState(savedLanguage)
+    setMounted(true)
+    if (typeof window !== 'undefined') {
+      const savedLanguage = localStorage.getItem('admin-language') as Language | null
+      if (savedLanguage && (savedLanguage === 'fr' || savedLanguage === 'en')) {
+        setLanguageState(savedLanguage)
+      }
     }
   }, [])
 
   // Save language to localStorage when it changes
   const setLanguage = (lang: Language) => {
     setLanguageState(lang)
-    localStorage.setItem('admin-language', lang)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('admin-language', lang)
+    }
   }
 
   const value: AdminI18nContextType = {
