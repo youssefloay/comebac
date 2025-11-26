@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { ArrowLeft, Eye, EyeOff, Users, TrendingUp, Clock } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useAdminI18n } from '@/lib/i18n/admin-i18n-context'
 
 interface Notification {
   id: string
@@ -29,6 +30,7 @@ interface NotificationDetail extends Notification {
 }
 
 export default function NotificationTrackingPage() {
+  const { t } = useAdminI18n()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -135,15 +137,15 @@ export default function NotificationTrackingPage() {
             style={{ minHeight: '40px' }}
           >
             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-            Retour
+            {t.common.back}
           </button>
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
               <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Suivi des notifications</h1>
-              <p className="text-sm sm:text-base text-gray-600">Statistiques de lecture et engagement</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t.notificationTracking.title}</h1>
+              <p className="text-sm sm:text-base text-gray-600">{t.notificationTracking.subtitle}</p>
             </div>
           </div>
         </div>
@@ -161,7 +163,7 @@ export default function NotificationTrackingPage() {
                 {notifications.reduce((sum, n) => sum + n.recipientCount, 0)}
               </div>
             </div>
-            <p className="text-xs sm:text-sm text-gray-600">Total destinataires</p>
+            <p className="text-xs sm:text-sm text-gray-600">{t.notificationTracking.totalRecipients}</p>
           </div>
 
           <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 border border-gray-200 shadow-sm">
@@ -173,7 +175,7 @@ export default function NotificationTrackingPage() {
                 {notifications.reduce((sum, n) => sum + n.readCount, 0)}
               </div>
             </div>
-            <p className="text-xs sm:text-sm text-gray-600">Notifications lues</p>
+            <p className="text-xs sm:text-sm text-gray-600">{t.notificationTracking.notificationsRead}</p>
           </div>
 
           <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 border border-gray-200 shadow-sm">
@@ -192,7 +194,7 @@ export default function NotificationTrackingPage() {
                 %
               </div>
             </div>
-            <p className="text-xs sm:text-sm text-gray-600">Taux de lecture moyen</p>
+            <p className="text-xs sm:text-sm text-gray-600">{t.notificationTracking.averageReadRate}</p>
           </div>
         </div>
 

@@ -6,6 +6,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useRouter } from 'next/navigation'
 import { Archive, Calendar, Trophy, Users, Target } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useAdminI18n } from '@/lib/i18n/admin-i18n-context'
 
 interface SeasonArchive {
   id: string
@@ -21,6 +22,7 @@ interface SeasonArchive {
 }
 
 export default function ArchivesPage() {
+  const { t } = useAdminI18n()
   const { user, loading: authLoading, isAdmin } = useAuth()
   const router = useRouter()
   const [archives, setArchives] = useState<SeasonArchive[]>([])
@@ -74,15 +76,15 @@ export default function ArchivesPage() {
         <div className="mb-4 sm:mb-6 md:mb-8">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 flex items-center gap-2 sm:gap-3">
             <Archive className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-blue-600" />
-            <span className="leading-tight">Archives des Saisons</span>
+            <span className="leading-tight">{t.archives.title}</span>
           </h1>
-          <p className="text-sm sm:text-base text-gray-600">Consultez les statistiques des saisons passées</p>
+          <p className="text-sm sm:text-base text-gray-600">{t.archives.subtitle}</p>
         </div>
 
         {archives.length === 0 ? (
           <div className="bg-white p-8 sm:p-12 rounded-lg border border-gray-200 text-center shadow-sm">
             <Archive className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-sm sm:text-base text-gray-500">Aucune saison archivée pour le moment</p>
+            <p className="text-sm sm:text-base text-gray-500">{t.archives.noArchives}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">

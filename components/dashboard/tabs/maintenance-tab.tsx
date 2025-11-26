@@ -20,6 +20,8 @@ export default function MaintenanceTab() {
   const [teams, setTeams] = useState<Team[]>([])
   const [showNotificationModal, setShowNotificationModal] = useState(false)
   const [backupLoading, setBackupLoading] = useState(false)
+  const [showTeamSelectModal, setShowTeamSelectModal] = useState(false)
+  const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([])
 
   useEffect(() => {
     loadTeams()
@@ -549,6 +551,183 @@ export default function MaintenanceTab() {
             )}
           </button>
         </div>
+
+        {/* Exporter équipes en Excel - BOUTON VISIBLE */}
+        <div className="bg-white rounded-xl p-6 border-2 border-green-500 hover:border-green-600 transition-colors shadow-xl" style={{ minHeight: '200px' }}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">📊</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 text-lg">Exporter équipes Excel</h3>
+              <p className="text-xs text-gray-600">Surnom, numéro, taille</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Exporte une ou plusieurs équipes dans un fichier Excel. Chaque équipe aura sa propre feuille avec le surnom, numéro et taille de t-shirt de chaque joueur.
+          </p>
+          <button
+            onClick={() => {
+              console.log('🔘 Bouton cliqué, teams:', teams.length)
+              if (teams.length === 0) {
+                alert('Aucune équipe disponible. Veuillez recharger la page.')
+                return
+              }
+              console.log('🔘 Ouverture modal')
+              setShowTeamSelectModal(true)
+            }}
+            disabled={loading}
+            className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition font-semibold text-base shadow-lg"
+            style={{ minHeight: '48px' }}
+          >
+            {teams.length === 0 ? 'Chargement...' : "📊 Choisir les équipes"}
+          </button>
+        </div>
+
+        {/* Modal de sélection d'équipes */}
+        {showTeamSelectModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Choisir les équipes</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {selectedTeamIds.length > 0 
+                      ? `${selectedTeamIds.length} équipe(s) sélectionnée(s)`
+                      : 'Sélectionnez une ou plusieurs équipes'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowTeamSelectModal(false)
+                    setSelectedTeamIds([])
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="mb-4 flex gap-2">
+                <button
+                  onClick={() => {
+                    if (selectedTeamIds.length === teams.length) {
+                      setSelectedTeamIds([])
+                    } else {
+                      setSelectedTeamIds(teams.map(t => t.id))
+                    }
+                  }}
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
+                >
+                  {selectedTeamIds.length === teams.length ? 'Tout désélectionner' : 'Tout sélectionner'}
+                </button>
+              </div>
+              
+              <div className="space-y-2 mb-4 max-h-96 overflow-y-auto">
+                {teams.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Loader className="w-8 h-8 animate-spin mx-auto mb-2" />
+                    <p>Chargement des équipes...</p>
+                  </div>
+                ) : (
+                  teams.map((team) => {
+                    const isSelected = selectedTeamIds.includes(team.id)
+                    return (
+                      <label
+                        key={team.id}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition cursor-pointer ${
+                          isSelected
+                            ? 'border-green-600 bg-green-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedTeamIds([...selectedTeamIds, team.id])
+                            } else {
+                              setSelectedTeamIds(selectedTeamIds.filter(id => id !== team.id))
+                            }
+                          }}
+                          className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                        />
+                        <div className="flex-1">
+                          <div className="font-semibold text-gray-900">{team.name}</div>
+                          {team.schoolName && (
+                            <div className="text-sm text-gray-600">{team.schoolName}</div>
+                          )}
+                        </div>
+                      </label>
+                    )
+                  })
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowTeamSelectModal(false)
+                    setSelectedTeamIds([])
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={async () => {
+                    if (selectedTeamIds.length === 0) {
+                      alert('Veuillez sélectionner au moins une équipe')
+                      return
+                    }
+
+                    setShowTeamSelectModal(false)
+                    setLoading(true)
+                    setMessage(null)
+                    
+                    try {
+                      // Envoyer les IDs séparés par des virgules
+                      const teamIdsParam = selectedTeamIds.join(',')
+                      const response = await fetch(`/api/admin/export/teams-excel?teamIds=${teamIdsParam}`)
+                      if (response.ok) {
+                        const blob = await response.blob()
+                        const url = window.URL.createObjectURL(blob)
+                        const a = document.createElement('a')
+                        a.href = url
+                        a.download = `equipes_${new Date().toISOString().split('T')[0]}.xlsx`
+                        document.body.appendChild(a)
+                        a.click()
+                        window.URL.revokeObjectURL(url)
+                        document.body.removeChild(a)
+                        setMessage({ type: 'success', text: `Export Excel réussi ! ${selectedTeamIds.length} équipe(s) exportée(s).` })
+                      } else {
+                        const data = await response.json()
+                        setMessage({ type: 'error', text: data.error || 'Erreur lors de l\'export' })
+                      }
+                    } catch (error) {
+                      setMessage({ type: 'error', text: 'Erreur de connexion' })
+                    } finally {
+                      setLoading(false)
+                      setSelectedTeamIds([])
+                    }
+                  }}
+                  disabled={selectedTeamIds.length === 0 || loading}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition font-medium"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader className="w-4 h-4 animate-spin" />
+                      Export...
+                    </span>
+                  ) : (
+                    `Exporter ${selectedTeamIds.length > 0 ? `(${selectedTeamIds.length})` : ''}`
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Synchroniser noms d'équipes */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-indigo-300 transition-colors">

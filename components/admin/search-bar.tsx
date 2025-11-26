@@ -184,7 +184,7 @@ export function SearchBar({
         <div className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-300 rounded-lg shadow-2xl max-h-[600px] overflow-y-auto">
           {suggestions.map((result, index) => (
             <button
-              key={result.id}
+              key={`${result.type}-${result.id}-${result.uid || ''}`}
               onClick={() => handleSelect(result)}
               className={`w-full px-5 py-5 flex items-start gap-4 hover:bg-blue-50 transition border-b-2 border-gray-200 last:border-b-0 ${
                 index === selectedIndex ? 'bg-blue-100 border-l-4 border-l-blue-600' : ''

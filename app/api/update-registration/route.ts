@@ -90,22 +90,28 @@ export async function POST(request: Request) {
           }
 
           // Mettre à jour les joueurs dans l'équipe
-          const updatedPlayers = registration.players.map((p: any) => ({
-            name: `${p.firstName} ${p.lastName}`,
-            firstName: p.firstName,
-            lastName: p.lastName,
-            nickname: p.nickname || '',
-            number: parseInt(p.jerseyNumber) || 0,
-            position: p.position,
-            email: p.email,
-            phone: p.phone,
-            birthDate: p.birthDate || '',
-            age: calculateAge(p.birthDate),
-            height: parseFloat(p.height) || 0,
-            tshirtSize: p.tshirtSize || 'M',
-            strongFoot: p.foot === 'Droitier' ? 'Droit' : p.foot === 'Gaucher' ? 'Gauche' : 'Ambidextre',
-            isCaptain: p.isCaptain || false
-          }))
+          const updatedPlayers = registration.players.map((p: any) => {
+            const jerseyNum = parseInt(p.jerseyNumber) || 0
+            const footValue = p.foot || ''
+            return {
+              name: `${p.firstName} ${p.lastName}`,
+              firstName: p.firstName,
+              lastName: p.lastName,
+              nickname: p.nickname || '',
+              number: jerseyNum,
+              jerseyNumber: jerseyNum,
+              position: p.position,
+              email: p.email,
+              phone: p.phone,
+              birthDate: p.birthDate || '',
+              age: calculateAge(p.birthDate),
+              height: parseFloat(p.height) || 0,
+              tshirtSize: p.tshirtSize || 'M',
+              foot: footValue,
+              strongFoot: footValue === 'Droitier' ? 'Droit' : footValue === 'Gaucher' ? 'Gauche' : 'Ambidextre',
+              isCaptain: p.isCaptain || false
+            }
+          })
 
           teamUpdateData.players = updatedPlayers
 
@@ -123,11 +129,15 @@ export async function POST(request: Request) {
             const player = registration.players[i]
             const existingPlayer = existingPlayers.find(p => p.data().email === player.email)
 
+            const jerseyNum = parseInt(player.jerseyNumber) || 0
+            const footValue = player.foot || ''
             const playerData: any = {
               name: `${player.firstName} ${player.lastName}`,
-              number: parseInt(player.jerseyNumber) || 0,
+              number: jerseyNum,
+              jerseyNumber: jerseyNum,
               position: player.position,
               teamId: teamDoc.id,
+              teamName: registration.teamName,
               nationality: 'Égypte',
               isCaptain: i === 0, // Le premier joueur est le capitaine
               email: player.email,
@@ -138,7 +148,8 @@ export async function POST(request: Request) {
               birthDate: player.birthDate || '',
               height: parseFloat(player.height) || 0,
               tshirtSize: player.tshirtSize || 'M',
-              strongFoot: player.foot === 'Droitier' ? 'Droit' : player.foot === 'Gaucher' ? 'Gauche' : 'Ambidextre',
+              foot: footValue,
+              strongFoot: footValue === 'Droitier' ? 'Droit' : footValue === 'Gaucher' ? 'Gauche' : 'Ambidextre',
               grade: player.grade || registration.teamGrade,
               school: registration.schoolName,
               updatedAt: Timestamp.now()
@@ -207,6 +218,8 @@ export async function POST(request: Request) {
               }
             }
 
+            const jerseyNum = parseInt(player.jerseyNumber) || 0
+            const footValue = player.foot || ''
             const accountData: any = {
               firstName: player.firstName,
               lastName: player.lastName,
@@ -214,13 +227,15 @@ export async function POST(request: Request) {
               email: player.email,
               phone: player.phone,
               position: player.position,
-              jerseyNumber: parseInt(player.jerseyNumber) || 0,
+              jerseyNumber: jerseyNum,
+              number: jerseyNum,
               teamId: teamDoc.id,
               teamName: registration.teamName,
               birthDate: player.birthDate || '',
               height: parseFloat(player.height) || 0,
               tshirtSize: player.tshirtSize || 'M',
-              foot: player.foot,
+              foot: footValue,
+              strongFoot: footValue === 'Droitier' ? 'Droit' : footValue === 'Gaucher' ? 'Gauche' : 'Ambidextre',
               grade: player.grade || registration.teamGrade,
               updatedAt: Timestamp.now()
             }
@@ -229,8 +244,12 @@ export async function POST(request: Request) {
               // Mettre à jour le compte existant
               await adminDb.collection('playerAccounts').doc(existingAccount.id).update(accountData)
             } else {
-              // Ne pas créer de nouveau compte ici - sera créé lors de la connexion ou par l'admin
-              // On met juste à jour teams et players
+              // Créer un nouveau compte dans playerAccounts pour assurer la synchronisation
+              await adminDb.collection('playerAccounts').add({
+                ...accountData,
+                createdAt: Timestamp.now()
+              })
+              console.log(`✅ playerAccounts créé pour ${player.email}`)
             }
           }
 

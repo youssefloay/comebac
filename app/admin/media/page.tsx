@@ -7,10 +7,12 @@ import { getTeams, getPlayersWithProfiles, updatePlayerSeasonStats } from "@/lib
 import { MediaManager } from "@/components/admin/media-manager"
 import type { Team, Player } from "@/lib/types"
 import { RefreshCw } from "lucide-react"
+import { useAdminI18n } from '@/lib/i18n/admin-i18n-context'
 
 export default function AdminMediaPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const { t } = useAdminI18n()
   const [teams, setTeams] = useState<Team[]>([])
   const [players, setPlayers] = useState<Player[]>([])
   const [loading, setLoading] = useState(true)
@@ -100,9 +102,9 @@ export default function AdminMediaPage() {
         {/* Header avec actions */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
           <div className="flex-1">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-sofa-text-primary">Gestion des Médias</h1>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-sofa-text-primary">{t.media.title}</h1>
             <p className="text-sm sm:text-base text-sofa-text-secondary mt-1 sm:mt-2">
-              Gérez les logos d'équipes, photos de joueurs et statistiques FIFA
+              {t.media.subtitle}
             </p>
           </div>
           
@@ -114,8 +116,8 @@ export default function AdminMediaPage() {
               style={{ minHeight: '44px' }}
             >
               <RefreshCw className={`w-4 h-4 ${updating ? 'animate-spin' : ''}`} />
-              <span className="hidden xs:inline">{updating ? 'Seed en cours...' : 'Seed Joueurs + Photos'}</span>
-              <span className="xs:hidden">{updating ? 'Seed...' : 'Seed'}</span>
+              <span className="hidden xs:inline">{updating ? t.common.loading : t.media.seedPlayers}</span>
+              <span className="xs:hidden">{updating ? t.common.loading : 'Seed'}</span>
             </button>
             
             <button
@@ -125,8 +127,8 @@ export default function AdminMediaPage() {
               style={{ minHeight: '44px' }}
             >
               <RefreshCw className={`w-4 h-4 ${updating ? 'animate-spin' : ''}`} />
-              <span className="hidden xs:inline">{updating ? 'Mise à jour...' : 'Mettre à jour les stats'}</span>
-              <span className="xs:hidden">{updating ? 'Mise à jour...' : 'Stats'}</span>
+              <span className="hidden xs:inline">{updating ? t.common.loading : t.media.updateStats}</span>
+              <span className="xs:hidden">{updating ? t.common.loading : 'Stats'}</span>
             </button>
           </div>
         </div>
@@ -135,26 +137,26 @@ export default function AdminMediaPage() {
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
           <div className="sofa-card p-4 sm:p-5 md:p-6 text-center">
             <div className="text-xl sm:text-2xl md:text-3xl font-bold text-sofa-text-accent mb-1 sm:mb-2">{teams.length}</div>
-            <div className="text-xs sm:text-sm text-sofa-text-secondary">Équipes</div>
+            <div className="text-xs sm:text-sm text-sofa-text-secondary">{t.media.teams}</div>
           </div>
           
           <div className="sofa-card p-4 sm:p-5 md:p-6 text-center">
             <div className="text-xl sm:text-2xl md:text-3xl font-bold text-sofa-text-accent mb-1 sm:mb-2">{players.length}</div>
-            <div className="text-xs sm:text-sm text-sofa-text-secondary">Joueurs</div>
+            <div className="text-xs sm:text-sm text-sofa-text-secondary">{t.media.players}</div>
           </div>
           
           <div className="sofa-card p-4 sm:p-5 md:p-6 text-center">
             <div className="text-xl sm:text-2xl md:text-3xl font-bold text-sofa-text-accent mb-1 sm:mb-2">
               {teams.filter(t => t.logo).length}
             </div>
-            <div className="text-xs sm:text-sm text-sofa-text-secondary">Logos ajoutés</div>
+            <div className="text-xs sm:text-sm text-sofa-text-secondary">{t.media.logosAdded}</div>
           </div>
           
           <div className="sofa-card p-4 sm:p-5 md:p-6 text-center">
             <div className="text-xl sm:text-2xl md:text-3xl font-bold text-sofa-text-accent mb-1 sm:mb-2">
               {players.filter(p => p.photo).length}
             </div>
-            <div className="text-xs sm:text-sm text-sofa-text-secondary">Photos ajoutées</div>
+            <div className="text-xs sm:text-sm text-sofa-text-secondary">{t.media.photosAdded}</div>
           </div>
         </div>
 

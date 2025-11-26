@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Search, Filter, Loader } from 'lucide-react'
+import { useAdminI18n } from '@/lib/i18n/admin-i18n-context'
 
 interface UserAccount {
   uid: string
@@ -32,6 +33,7 @@ interface Stats {
 }
 
 export default function UserAccountsPage() {
+  const { t } = useAdminI18n()
   const router = useRouter()
   const [accounts, setAccounts] = useState<UserAccount[]>([])
   const [filteredAccounts, setFilteredAccounts] = useState<UserAccount[]>([])
@@ -137,13 +139,13 @@ export default function UserAccountsPage() {
             style={{ minHeight: '40px' }}
           >
             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-            Retour
+            {t.common.back}
           </button>
           
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Comptes utilisateurs</h1>
-              <p className="text-sm sm:text-base text-gray-600 mt-1">Gérer tous les comptes Firebase Auth</p>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{t.userAccounts.title}</h1>
+              <p className="text-sm sm:text-base text-gray-600 mt-1">{t.userAccounts.subtitle}</p>
             </div>
           </div>
 
@@ -152,35 +154,35 @@ export default function UserAccountsPage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 sm:gap-3 mt-4 sm:mt-6">
               <div className="bg-gray-50 rounded-lg p-2.5 sm:p-3 border border-gray-200 shadow-sm">
                 <div className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</div>
-                <div className="text-xs text-gray-600">Total</div>
+                <div className="text-xs text-gray-600">{t.common.total}</div>
               </div>
               <div className="bg-blue-50 rounded-lg p-2.5 sm:p-3 border border-blue-200 shadow-sm">
                 <div className="text-xl sm:text-2xl font-bold text-blue-600">{stats.players}</div>
-                <div className="text-xs text-blue-700">Joueurs</div>
+                <div className="text-xs text-blue-700">{t.accounts.players}</div>
               </div>
               <div className="bg-green-50 rounded-lg p-2.5 sm:p-3 border border-green-200 shadow-sm">
                 <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.coaches}</div>
-                <div className="text-xs text-green-700">Coaches</div>
+                <div className="text-xs text-green-700">{t.teamAccounts.coaches}</div>
               </div>
               <div className="bg-purple-50 rounded-lg p-2.5 sm:p-3 border border-purple-200 shadow-sm">
                 <div className="text-xl sm:text-2xl font-bold text-purple-600">{stats.admins}</div>
-                <div className="text-xs text-purple-700">Admins</div>
+                <div className="text-xs text-purple-700">{t.accounts.admins}</div>
               </div>
               <div className="bg-red-50 rounded-lg p-2.5 sm:p-3 border border-red-200 shadow-sm">
                 <div className="text-xl sm:text-2xl font-bold text-red-600">{stats.neverLoggedIn}</div>
-                <div className="text-xs text-red-700">Jamais connectés</div>
+                <div className="text-xs text-red-700">{t.userAccounts.neverLoggedIn}</div>
               </div>
               <div className="bg-emerald-50 rounded-lg p-2.5 sm:p-3 border border-emerald-200 shadow-sm">
                 <div className="text-xl sm:text-2xl font-bold text-emerald-600">{stats.verified}</div>
-                <div className="text-xs text-emerald-700">Vérifiés</div>
+                <div className="text-xs text-emerald-700">{t.userAccounts.verified}</div>
               </div>
               <div className="bg-amber-50 rounded-lg p-2.5 sm:p-3 border border-amber-200 shadow-sm">
                 <div className="text-xl sm:text-2xl font-bold text-amber-600">{stats.unknown}</div>
-                <div className="text-xs text-amber-700">Inconnus</div>
+                <div className="text-xs text-amber-700">{t.userAccounts.unknown}</div>
               </div>
               <div className="bg-gray-50 rounded-lg p-2.5 sm:p-3 border border-gray-200 shadow-sm">
                 <div className="text-xl sm:text-2xl font-bold text-gray-600">{stats.disabled}</div>
-                <div className="text-xs text-gray-700">Désactivés</div>
+                <div className="text-xs text-gray-700">{t.userAccounts.disabled}</div>
               </div>
             </div>
           )}

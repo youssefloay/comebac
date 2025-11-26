@@ -64,9 +64,12 @@ export async function POST(request: NextRequest) {
         .limit(1)
         .get()
 
+      let playerAccountDoc
+      let playerAccountsByEmailSnap
+
       if (playerAccountsSnap.empty) {
         // Essayer par email
-        const playerAccountsByEmailSnap = await adminDb
+        playerAccountsByEmailSnap = await adminDb
           .collection('playerAccounts')
           .where('email', '==', userRecord.email)
           .limit(1)
@@ -79,13 +82,20 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        await playerAccountsByEmailSnap.docs[0].ref.update(filteredUpdates)
+        playerAccountDoc = playerAccountsByEmailSnap.docs[0]
+        await playerAccountDoc.ref.update(filteredUpdates)
       } else {
-        await playerAccountsSnap.docs[0].ref.update(filteredUpdates)
+        playerAccountDoc = playerAccountsSnap.docs[0]
+        await playerAccountDoc.ref.update(filteredUpdates)
       }
 
-      // Mettre à jour aussi dans la collection players si nécessaire
-      if (updates.position || updates.height || updates.foot) {
+      // Récupérer le playerAccount pour obtenir teamId et teamName
+      const playerAccountData = playerAccountDoc.data()
+      const teamId = playerAccountData?.teamId
+      const teamName = playerAccountData?.teamName
+
+      // Mettre à jour aussi dans la collection players
+      if (updates.position || updates.height || updates.foot || updates.tshirtSize || updates.birthDate) {
         const playersSnap = await adminDb
           .collection('players')
           .where('email', '==', userRecord.email)
@@ -95,13 +105,107 @@ export async function POST(request: NextRequest) {
           const playerUpdates: any = {}
           if (updates.position) playerUpdates.position = updates.position
           if (updates.height) playerUpdates.height = updates.height
+          if (updates.tshirtSize) playerUpdates.tshirtSize = updates.tshirtSize
+          if (updates.birthDate) playerUpdates.birthDate = updates.birthDate
           if (updates.foot) {
             playerUpdates.strongFoot = updates.foot === 'Droitier' ? 'Droit' : 
                                       updates.foot === 'Gaucher' ? 'Gauche' : 'Ambidextre'
           }
+          playerUpdates.updatedAt = new Date()
           if (Object.keys(playerUpdates).length > 0) {
             await playerDoc.ref.update(playerUpdates)
           }
+        }
+      }
+
+      // Mettre à jour dans teams.players si l'équipe existe
+      if (teamId && (updates.position || updates.height || updates.foot || updates.tshirtSize || updates.birthDate)) {
+        try {
+          const teamDoc = await adminDb.collection('teams').doc(teamId).get()
+          if (teamDoc.exists) {
+            const teamData = teamDoc.data()
+            const players = teamData?.players || []
+            const playerIndex = players.findIndex((p: any) => p.email === userRecord.email)
+            
+            if (playerIndex >= 0) {
+              if (updates.position) players[playerIndex].position = updates.position
+              if (updates.height) players[playerIndex].height = updates.height
+              if (updates.tshirtSize) players[playerIndex].tshirtSize = updates.tshirtSize
+              if (updates.birthDate) {
+                players[playerIndex].birthDate = updates.birthDate
+                // Recalculer l'âge si nécessaire
+                if (updates.birthDate) {
+                  const today = new Date()
+                  const birth = new Date(updates.birthDate)
+                  let age = today.getFullYear() - birth.getFullYear()
+                  const monthDiff = today.getMonth() - birth.getMonth()
+                  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                    age--
+                  }
+                  players[playerIndex].age = age
+                }
+              }
+              if (updates.foot) {
+                players[playerIndex].strongFoot = updates.foot === 'Droitier' ? 'Droit' : 
+                                                  updates.foot === 'Gaucher' ? 'Gauche' : 'Ambidextre'
+                players[playerIndex].foot = updates.foot
+              }
+              
+              await adminDb.collection('teams').doc(teamId).update({
+                players: players,
+                updatedAt: new Date()
+              })
+            }
+          }
+        } catch (teamError) {
+          console.error('Erreur mise à jour teams.players:', teamError)
+          // On continue même si la mise à jour de l'équipe échoue
+        }
+      }
+
+      // Mettre à jour dans teamRegistrations si l'inscription existe
+      if (teamId && (updates.tshirtSize || updates.birthDate || updates.height || updates.position || updates.foot)) {
+        try {
+          const registrationsSnap = await adminDb.collection('teamRegistrations')
+            .where('teamId', '==', teamId)
+            .limit(1)
+            .get()
+          
+          if (!registrationsSnap.empty) {
+            const registrationDoc = registrationsSnap.docs[0]
+            const registrationData = registrationDoc.data()
+            const players = registrationData?.players || []
+            const playerIndex = players.findIndex((p: any) => p.email === userRecord.email)
+            
+            if (playerIndex >= 0) {
+              if (updates.tshirtSize) players[playerIndex].tshirtSize = updates.tshirtSize
+              if (updates.birthDate) {
+                players[playerIndex].birthDate = updates.birthDate
+                // Recalculer l'âge si nécessaire
+                if (updates.birthDate) {
+                  const today = new Date()
+                  const birth = new Date(updates.birthDate)
+                  let age = today.getFullYear() - birth.getFullYear()
+                  const monthDiff = today.getMonth() - birth.getMonth()
+                  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                    age--
+                  }
+                  players[playerIndex].age = age
+                }
+              }
+              if (updates.height) players[playerIndex].height = updates.height
+              if (updates.position) players[playerIndex].position = updates.position
+              if (updates.foot) players[playerIndex].foot = updates.foot
+              
+              await registrationDoc.ref.update({
+                players: players,
+                lastUpdatedAt: new Date()
+              })
+            }
+          }
+        } catch (registrationError) {
+          console.error('Erreur mise à jour teamRegistrations:', registrationError)
+          // On continue même si la mise à jour de l'inscription échoue
         }
       }
     } else if (userType === 'coach') {

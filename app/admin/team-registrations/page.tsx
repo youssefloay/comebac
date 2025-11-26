@@ -9,6 +9,7 @@ import { db } from '@/lib/firebase'
 import { Check, X, Eye, Users, Clock, CheckCircle, XCircle, Link as LinkIcon, List, ArrowRight, Mail } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { capitalizeWords } from '@/lib/text-utils'
+import { useAdminI18n } from '@/lib/i18n/admin-i18n-context'
 
 interface Player {
   firstName: string
@@ -59,6 +60,7 @@ interface Registration {
 export default function TeamRegistrationsPage() {
   const { user, loading: authLoading, isAdmin } = useAuth()
   const router = useRouter()
+  const { t } = useAdminI18n()
   const [registrations, setRegistrations] = useState<Registration[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedRegistration, setSelectedRegistration] = useState<Registration | null>(null)
@@ -734,6 +736,45 @@ export default function TeamRegistrationsPage() {
       })
       await Promise.all(playerPromises)
 
+      // 2.5. Synchroniser tous les joueurs dans teams.players, players, et playerAccounts
+      try {
+        const syncResponse = await fetch('/api/admin/sync-team-players', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            teamId: teamRef.id,
+            teamName: registration.teamName,
+            players: registration.players.map((p, index) => ({
+              firstName: p.firstName,
+              lastName: p.lastName,
+              nickname: p.nickname,
+              email: p.email,
+              phone: p.phone,
+              birthDate: p.birthDate,
+              age: p.age,
+              height: p.height,
+              tshirtSize: p.tshirtSize,
+              position: p.position,
+              foot: p.foot,
+              jerseyNumber: p.jerseyNumber,
+              grade: p.grade || registration.teamGrade,
+              isCaptain: index === 0
+            })),
+            schoolName: registration.schoolName,
+            teamGrade: registration.teamGrade,
+            createPlayerAccounts: false // On laisse create-player-accounts le faire pour les emails
+          })
+        })
+        if (syncResponse.ok) {
+          console.log('✅ Joueurs synchronisés dans toutes les collections')
+        } else {
+          console.warn('⚠️ Erreur lors de la synchronisation des joueurs')
+        }
+      } catch (syncError) {
+        console.error('Erreur synchronisation joueurs:', syncError)
+        // On continue même si la synchronisation échoue
+      }
+
       // 3. Créer les comptes joueurs et envoyer les emails
       try {
         const accountsResponse = await fetch('/api/admin/create-player-accounts', {
@@ -1070,7 +1111,7 @@ export default function TeamRegistrationsPage() {
           <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">En attente</p>
+                <p className="text-xs sm:text-sm text-gray-600">{t.teamRegistrations.pending}</p>
                 <p className="text-xl sm:text-2xl md:text-3xl font-bold text-orange-600">{stats.pending}</p>
               </div>
               <Clock className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-orange-600 opacity-20 hidden sm:block" />
@@ -1079,7 +1120,7 @@ export default function TeamRegistrationsPage() {
           <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Approuvées</p>
+                <p className="text-xs sm:text-sm text-gray-600">{t.teamRegistrations.approved}</p>
                 <p className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600">{stats.approved}</p>
               </div>
               <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-green-600 opacity-20 hidden sm:block" />
@@ -1088,7 +1129,7 @@ export default function TeamRegistrationsPage() {
           <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Rejetées</p>
+                <p className="text-xs sm:text-sm text-gray-600">{t.teamRegistrations.rejected}</p>
                 <p className="text-xl sm:text-2xl md:text-3xl font-bold text-red-600">{stats.rejected}</p>
               </div>
               <XCircle className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-red-600 opacity-20 hidden sm:block" />
@@ -1097,7 +1138,7 @@ export default function TeamRegistrationsPage() {
           <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Waiting List</p>
+                <p className="text-xs sm:text-sm text-gray-600">{t.teamRegistrations.waitingList.teamsInWaitingList}</p>
                 <p className="text-xl sm:text-2xl md:text-3xl font-bold text-amber-600">{stats.waitingList}</p>
               </div>
               <Clock className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-amber-600 opacity-20 hidden sm:block" />
@@ -1114,7 +1155,7 @@ export default function TeamRegistrationsPage() {
                 filter === 'all' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Toutes ({registrations.length})
+              {t.teamRegistrations.all} ({registrations.length})
             </button>
             <button
               onClick={() => setFilter('pending')}
@@ -1122,7 +1163,7 @@ export default function TeamRegistrationsPage() {
                 filter === 'pending' ? 'bg-orange-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              En attente ({stats.pending})
+              {t.teamRegistrations.pending} ({stats.pending})
             </button>
             <button
               onClick={() => setFilter('approved')}
@@ -1130,7 +1171,7 @@ export default function TeamRegistrationsPage() {
                 filter === 'approved' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Approuvées ({stats.approved})
+              {t.teamRegistrations.approved} ({stats.approved})
             </button>
             <button
               onClick={() => setFilter('rejected')}
@@ -1138,7 +1179,7 @@ export default function TeamRegistrationsPage() {
                 filter === 'rejected' ? 'bg-red-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Rejetées ({stats.rejected})
+              {t.teamRegistrations.rejected} ({stats.rejected})
             </button>
             <button
               onClick={() => setFilter('waiting-list')}
@@ -1146,7 +1187,7 @@ export default function TeamRegistrationsPage() {
                 filter === 'waiting-list' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              ⏳ Liste ({stats.waitingList})
+              ⏳ {t.teamRegistrations.waitingList.teamsInWaitingList} ({stats.waitingList})
             </button>
           </div>
         </div>
@@ -1156,7 +1197,7 @@ export default function TeamRegistrationsPage() {
           {filteredRegistrations.length === 0 ? (
             <div className="col-span-2 bg-white p-8 sm:p-12 rounded-lg border border-gray-200 text-center">
               <Users className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-sm sm:text-base text-gray-500">Aucune inscription trouvée</p>
+              <p className="text-sm sm:text-base text-gray-500">{t.teamRegistrations.noRegistrations}</p>
             </div>
           ) : (
             filteredRegistrations.map((registration, index) => (

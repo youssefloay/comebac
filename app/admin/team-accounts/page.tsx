@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { ArrowLeft, Mail, CheckCircle, XCircle, Clock, Send } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useAdminI18n } from '@/lib/i18n/admin-i18n-context'
 
 interface Player {
   id: string
@@ -41,6 +42,7 @@ interface Team {
 
 export default function TeamAccountsPage() {
   const router = useRouter()
+  const { t } = useAdminI18n()
   const [loading, setLoading] = useState(true)
   const [teams, setTeams] = useState<Team[]>([])
   const [sendingEmail, setSendingEmail] = useState<string | null>(null)
@@ -258,8 +260,8 @@ export default function TeamAccountsPage() {
               <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Comptes par équipe</h1>
-              <p className="text-sm sm:text-base text-gray-600">Statut de connexion et activation</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t.teamAccounts.title}</h1>
+              <p className="text-sm sm:text-base text-gray-600">{t.teamAccounts.subtitle}</p>
             </div>
           </div>
         </div>
@@ -277,7 +279,7 @@ export default function TeamAccountsPage() {
                 {teams.reduce((sum, t) => sum + t.connectedCount, 0)}
               </div>
             </div>
-            <p className="text-xs sm:text-sm text-gray-600">Déjà connectés</p>
+            <p className="text-xs sm:text-sm text-gray-600">{t.teamAccounts.connected}</p>
           </div>
 
           <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 border border-gray-200 shadow-sm">
@@ -289,7 +291,7 @@ export default function TeamAccountsPage() {
                 {teams.reduce((sum, t) => sum + t.neverConnectedCount, 0)}
               </div>
             </div>
-            <p className="text-xs sm:text-sm text-gray-600">Jamais connectés</p>
+            <p className="text-xs sm:text-sm text-gray-600">{t.teamAccounts.neverConnected}</p>
           </div>
 
           <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 border border-gray-200 shadow-sm">
@@ -301,7 +303,7 @@ export default function TeamAccountsPage() {
                 {teams.reduce((sum, t) => sum + t.noAccountCount, 0)}
               </div>
             </div>
-            <p className="text-xs sm:text-sm text-gray-600">Sans compte</p>
+            <p className="text-xs sm:text-sm text-gray-600">{t.teamAccounts.noAccount}</p>
           </div>
         </div>
 
@@ -326,15 +328,15 @@ export default function TeamAccountsPage() {
                     <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
                       <span className="flex items-center gap-1 text-green-600 whitespace-nowrap">
                         <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                        {connectedPlayers.length} connectés
+                        {connectedPlayers.length} {t.teamAccounts.connected}
                       </span>
                       <span className="flex items-center gap-1 text-orange-600 whitespace-nowrap">
                         <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                        {neverConnectedPlayers.length} jamais
+                        {neverConnectedPlayers.length} {t.teamAccounts.neverConnected}
                       </span>
                       <span className="flex items-center gap-1 text-red-600 whitespace-nowrap">
                         <XCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                        {noAccountPlayers.length} sans compte
+                        {noAccountPlayers.length} {t.teamAccounts.noAccount}
                       </span>
                     </div>
                     <button
@@ -346,12 +348,12 @@ export default function TeamAccountsPage() {
                       {teamResending === team.id ? (
                         <>
                           <div className="w-3 h-3 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
-                          Relance...
+                          {t.common.loading}
                         </>
                       ) : (
                         <>
                           <Send className="w-3 h-3" />
-                          Relancer l'équipe
+                          {t.teamAccounts.resendTeam}
                         </>
                       )}
                     </button>
@@ -365,16 +367,16 @@ export default function TeamAccountsPage() {
                     <div className="rounded-xl border border-blue-100 bg-blue-50/60">
                       <div className="flex items-center justify-between px-4 py-3 border-b border-blue-100">
                         <div className="flex items-center gap-2 text-blue-700 font-semibold">
-                          👤 Coachs ({team.coaches.length})
+                          👤 {t.teamAccounts.coaches} ({team.coaches.length})
                         </div>
                       </div>
                       <div className="divide-y divide-blue-100">
                         {team.coaches.map((coach) => {
                           const status = coach.hasAccount
                             ? (coach.lastSignIn
-                              ? `Dernière connexion: ${formatDate(coach.lastSignIn)}`
-                              : 'Compte créé mais jamais connecté')
-                            : 'Aucun compte créé'
+                              ? `${t.teamAccounts.lastLogin}: ${formatDate(coach.lastSignIn)}`
+                              : t.teamAccounts.accountCreated + ' ' + t.teamAccounts.neverConnected)
+                            : t.teamAccounts.noAccount
 
                           return (
                             <div key={coach.id} className="px-4 py-3">
@@ -387,12 +389,12 @@ export default function TeamAccountsPage() {
                                   </p>
                                   {coach.createdAt && coach.hasAccount && (
                                     <p className="text-xs text-gray-500">
-                                      Compte créé: {formatDate(coach.createdAt)}
+                                      {t.teamAccounts.accountCreated}: {formatDate(coach.createdAt)}
                                     </p>
                                   )}
                                   {coach.lastResendDate && (
                                     <p className="text-xs text-orange-600 font-medium">
-                                      📧 Dernière relance: {formatDate(coach.lastResendDate)}
+                                      📧 {t.teamAccounts.lastResend}: {formatDate(coach.lastResendDate)}
                                     </p>
                                   )}
                                 </div>
@@ -411,7 +413,7 @@ export default function TeamAccountsPage() {
                                       ) : (
                                         <>
                                           <Send className="w-3 h-3" />
-                                          Relancer
+                                          {t.teamAccounts.resendEmail}
                                         </>
                                       )}
                                     </button>
@@ -424,12 +426,12 @@ export default function TeamAccountsPage() {
                                       {creatingCoachAccount === coach.id ? (
                                         <>
                                           <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                          Création...
+                                          {t.common.loading}
                                         </>
                                       ) : (
                                         <>
                                           <Send className="w-3 h-3" />
-                                          Créer compte
+                                          {t.teamAccounts.createAccount}
                                         </>
                                       )}
                                     </button>
@@ -449,13 +451,13 @@ export default function TeamAccountsPage() {
                       <div className="flex items-center justify-between px-4 py-3 border-b border-green-100">
                         <div className="flex items-center gap-2 text-green-700 font-semibold">
                           <CheckCircle className="w-4 h-4" />
-                          Déjà connectés
+                          {t.teamAccounts.connected}
                         </div>
                         <span className="text-sm text-green-700">{connectedPlayers.length}</span>
                       </div>
                       <div className="divide-y divide-green-100">
                         {connectedPlayers.length === 0 ? (
-                          <p className="px-4 py-6 text-sm text-green-900/70">Aucun joueur connecté</p>
+                          <p className="px-4 py-6 text-sm text-green-900/70">{t.common.loading}</p>
                         ) : (
                           connectedPlayers.map((player) => (
                             <div key={player.id} className="px-4 py-3">
@@ -463,15 +465,15 @@ export default function TeamAccountsPage() {
                                 {player.name}
                                 {player.emailVerified && (
                                   <span className="text-[10px] bg-white text-green-600 px-2 py-0.5 rounded-full border border-green-200">
-                                    Email vérifié
+                                    {t.search.emailVerified}
                                   </span>
                                 )}
                               </p>
                               <p className="text-sm text-gray-600 truncate">{player.email}</p>
-                              <p className="text-xs text-gray-500 mt-1">Dernière connexion: {formatDate(player.lastSignIn)}</p>
+                              <p className="text-xs text-gray-500 mt-1">{t.teamAccounts.lastLogin}: {formatDate(player.lastSignIn)}</p>
                               {player.lastResendDate && (
                                 <p className="text-xs text-orange-600 font-medium mt-1">
-                                  📧 Dernière relance: {formatDate(player.lastResendDate)}
+                                  📧 {t.teamAccounts.lastResend}: {formatDate(player.lastResendDate)}
                                 </p>
                               )}
                             </div>
@@ -485,13 +487,13 @@ export default function TeamAccountsPage() {
                       <div className="flex items-center justify-between px-4 py-3 border-b border-orange-100">
                         <div className="flex items-center gap-2 text-orange-700 font-semibold">
                           <Clock className="w-4 h-4" />
-                          Jamais connectés
+                          {t.teamAccounts.neverConnected}
                         </div>
                         <span className="text-sm text-orange-700">{neverConnectedPlayers.length}</span>
                       </div>
                       <div className="divide-y divide-orange-100">
                         {neverConnectedPlayers.length === 0 ? (
-                          <p className="px-4 py-6 text-sm text-orange-900/70">Tous les comptes ont été utilisés</p>
+                          <p className="px-4 py-6 text-sm text-orange-900/70">{t.common.loading}</p>
                         ) : (
                           neverConnectedPlayers.map((player) => (
                             <div key={player.id} className="px-4 py-3">
@@ -499,10 +501,10 @@ export default function TeamAccountsPage() {
                                 <div className="flex-1 min-w-0">
                                   <p className="font-semibold text-gray-900">{player.name}</p>
                                   <p className="text-sm text-gray-600 truncate">{player.email}</p>
-                                  <p className="text-xs text-gray-500 mt-1">Compte créé: {formatDate(player.createdAt)}</p>
+                                  <p className="text-xs text-gray-500 mt-1">{t.teamAccounts.accountCreated}: {formatDate(player.createdAt)}</p>
                                   {player.lastResendDate && (
                                     <p className="text-xs text-orange-600 font-medium mt-1">
-                                      📧 Dernière relance: {formatDate(player.lastResendDate)}
+                                      📧 {t.teamAccounts.lastResend}: {formatDate(player.lastResendDate)}
                                     </p>
                                   )}
                                 </div>
@@ -514,12 +516,12 @@ export default function TeamAccountsPage() {
                                   {sendingEmail === player.email ? (
                                     <>
                                       <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                      Envoi...
+                                      {t.common.loading}
                                     </>
                                   ) : (
                                     <>
                                       <Send className="w-3 h-3" />
-                                      Relancer
+                                      {t.teamAccounts.resendEmail}
                                     </>
                                   )}
                                 </button>
@@ -535,13 +537,13 @@ export default function TeamAccountsPage() {
                       <div className="flex items-center justify-between px-4 py-3 border-b border-red-100">
                         <div className="flex items-center gap-2 text-red-700 font-semibold">
                           <XCircle className="w-4 h-4" />
-                          Sans compte
+                          {t.teamAccounts.noAccount}
                         </div>
                         <span className="text-sm text-red-700">{noAccountPlayers.length}</span>
                       </div>
                       <div className="divide-y divide-red-100">
                         {noAccountPlayers.length === 0 ? (
-                          <p className="px-4 py-6 text-sm text-red-900/70">Tous les joueurs ont un compte</p>
+                          <p className="px-4 py-6 text-sm text-red-900/70">{t.common.loading}</p>
                         ) : (
                           noAccountPlayers.map((player) => (
                             <div key={player.id} className="px-4 py-3">
@@ -549,7 +551,7 @@ export default function TeamAccountsPage() {
                                 <div>
                                   <p className="font-semibold text-gray-900">{player.name}</p>
                                   <p className="text-sm text-gray-600 truncate">{player.email}</p>
-                                  <p className="text-xs text-red-600 mt-1">Aucun compte créé</p>
+                                  <p className="text-xs text-red-600 mt-1">{t.teamAccounts.noAccount}</p>
                                 </div>
                                 <button
                                   onClick={() => createPlayerAccount(player.id, player.name)}
@@ -559,12 +561,12 @@ export default function TeamAccountsPage() {
                                   {creatingPlayerAccount === player.id ? (
                                     <>
                                       <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                      Création...
+                                      {t.common.loading}
                                     </>
                                   ) : (
                                     <>
                                       <Send className="w-3 h-3" />
-                                      Créer compte
+                                      {t.teamAccounts.createAccount}
                                     </>
                                   )}
                                 </button>

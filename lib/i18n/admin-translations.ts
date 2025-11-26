@@ -245,6 +245,7 @@ export interface AdminTranslations {
       noTeams: string
       movedToWaitingList: string
     }
+    noRegistrations: string
   }
 }
 
@@ -471,6 +472,7 @@ export const translations: Record<Language, AdminTranslations> = {
         noTeams: 'Aucune équipe en waiting list',
         movedToWaitingList: 'Mise en waiting list le',
       },
+      noRegistrations: 'Aucune inscription trouvée',
     },
   },
   en: {
@@ -695,6 +697,7 @@ export const translations: Record<Language, AdminTranslations> = {
         noTeams: 'No teams in waiting list',
         movedToWaitingList: 'Moved to waiting list on',
       },
+      noRegistrations: 'No registrations found',
     },
   },
 }

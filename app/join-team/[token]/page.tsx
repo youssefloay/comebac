@@ -302,6 +302,45 @@ export default function JoinTeamPage() {
         players: arrayUnion(playerData)
       })
 
+      // Si l'équipe est déjà approuvée, synchroniser le joueur dans toutes les collections
+      if (registration.status === 'approved' && registration.teamId) {
+        try {
+          const syncResponse = await fetch('/api/admin/sync-team-players', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              teamId: registration.teamId,
+              teamName: registration.teamName,
+              players: [{
+                firstName: firstName.trim(),
+                lastName: lastName.trim(),
+                nickname: nickname.trim(),
+                email: email.trim().toLowerCase(),
+                phone: phone.trim(),
+                birthDate: birthDate,
+                height: height,
+                tshirtSize: tshirtSize,
+                position: position,
+                foot: foot,
+                jerseyNumber: jerseyNumber.trim(),
+                grade: registration.teamGrade
+              }],
+              schoolName: registration.schoolName,
+              teamGrade: registration.teamGrade,
+              createPlayerAccounts: true
+            })
+          })
+          if (syncResponse.ok) {
+            console.log('✅ Joueur synchronisé dans toutes les collections')
+          } else {
+            console.warn('⚠️ Erreur lors de la synchronisation du joueur')
+          }
+        } catch (syncError) {
+          console.error('Erreur synchronisation joueur:', syncError)
+          // On continue même si la synchronisation échoue
+        }
+      }
+
       // Vérifier si on a atteint 10 joueurs et notifier l'admin (une seule fois)
       const updatedPlayersCount = registration.players.length + 1
       const registrationData = registration as any

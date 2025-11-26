@@ -8,9 +8,11 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ArrowLeft, Users, UserCog } from 'lucide-react'
 import Link from 'next/link'
 import { SearchBar, SearchResult } from '@/components/admin/search-bar'
+import { useAdminI18n } from '@/lib/i18n/admin-i18n-context'
 
 export default function AdminSearchPage() {
   const router = useRouter()
+  const { t } = useAdminI18n()
   const [searchData, setSearchData] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null)
@@ -220,13 +222,13 @@ export default function AdminSearchPage() {
             className="inline-flex items-center gap-2 text-sm sm:text-base text-blue-600 hover:text-blue-700 mb-2 sm:mb-4"
           >
             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-            Retour à l'admin
+            {t.common.back}
           </Link>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
-            Recherche globale
+            {t.search.title}
           </h1>
           <p className="text-sm sm:text-base text-gray-600">
-            Recherchez rapidement un joueur ou un entraîneur
+            {t.search.subtitle}
           </p>
         </div>
 
@@ -235,7 +237,7 @@ export default function AdminSearchPage() {
           <SearchBar
             data={searchData}
             onSelect={handleSelect}
-            placeholder="Tapez un nom, email, équipe ou position..."
+            placeholder={t.search.placeholder}
             maxSuggestions={10}
           />
         </div>

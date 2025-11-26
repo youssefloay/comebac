@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react"
 import { Bell, Sparkles, TrendingUp, Users, CheckCircle, XCircle, Trophy, X, Clock } from "lucide-react"
 import Link from "next/link"
+import { useAdminI18n } from '@/lib/i18n/admin-i18n-context'
 
 export default function AdminStatsPage() {
+  const { t } = useAdminI18n()
   const [notificationStats, setNotificationStats] = useState<any>(null)
   const [fantasyStats, setFantasyStats] = useState<any>(null)
   const [pageStats, setPageStats] = useState<any>(null)
@@ -96,16 +98,16 @@ export default function AdminStatsPage() {
         {/* Header */}
         <div className="mb-4 sm:mb-6 md:mb-8">
           <Link href="/admin" className="text-sm sm:text-base text-blue-600 hover:text-blue-700 mb-2 sm:mb-4 inline-block">
-            ← Retour Admin
+            ← {t.common.back}
           </Link>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">📊 Statistiques</h1>
-          <p className="text-sm sm:text-base text-gray-600">Vue d'ensemble de la plateforme</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">📊 {t.stats.title}</h1>
+          <p className="text-sm sm:text-base text-gray-600">{t.stats.subtitle}</p>
         </div>
 
         {/* General Stats - Overview */}
         {generalStats && (
           <div className="mb-8">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">📈 Vue d'ensemble</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">📈 {t.stats.overview}</h2>
             
             {/* Main Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
@@ -117,10 +119,10 @@ export default function AdminStatsPage() {
                   </div>
                   <span className="text-2xl sm:text-3xl font-bold text-blue-600">{generalStats.stats.teams.total}</span>
                 </div>
-                <h3 className="font-bold text-gray-900 mb-2 text-sm sm:text-base">Équipes</h3>
+                <h3 className="font-bold text-gray-900 mb-2 text-sm sm:text-base">{t.stats.teams}</h3>
                 <div className="space-y-1 text-xs sm:text-sm">
-                  <p className="text-gray-600">✅ Avec coach: {generalStats.stats.teams.withCoach}</p>
-                  <p className="text-gray-600">⚠️ Sans coach: {generalStats.stats.teams.withoutCoach}</p>
+                  <p className="text-gray-600">✅ {t.stats.withCoach}: {generalStats.stats.teams.withCoach}</p>
+                  <p className="text-gray-600">⚠️ {t.stats.withoutCoach}: {generalStats.stats.teams.withoutCoach}</p>
                 </div>
               </div>
 
@@ -132,10 +134,10 @@ export default function AdminStatsPage() {
                   </div>
                   <span className="text-2xl sm:text-3xl font-bold text-green-600">{generalStats.stats.players.total}</span>
                 </div>
-                <h3 className="font-bold text-gray-900 mb-2 text-sm sm:text-base">Joueurs</h3>
+                <h3 className="font-bold text-gray-900 mb-2 text-sm sm:text-base">{t.stats.players}</h3>
                 <div className="space-y-1 text-xs sm:text-sm">
-                  <p className="text-gray-600">👑 Capitaines: {generalStats.stats.players.captains}</p>
-                  <p className="text-gray-600">🏆 Coaches intérimaires: {generalStats.stats.players.actingCoaches}</p>
+                  <p className="text-gray-600">👑 {t.stats.captains}: {generalStats.stats.players.captains}</p>
+                  <p className="text-gray-600">🏆 {t.stats.actingCoaches}: {generalStats.stats.players.actingCoaches}</p>
                 </div>
               </div>
 

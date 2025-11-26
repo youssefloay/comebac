@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Users, AlertTriangle, Trash2, Edit, Loader, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useAdminI18n } from '@/lib/i18n/admin-i18n-context'
 
 interface PlayerInfo {
   firstName: string
@@ -25,6 +26,7 @@ interface DuplicateGroup {
 
 export default function DuplicatePlayersPage() {
   const router = useRouter()
+  const { t } = useAdminI18n()
   const [loading, setLoading] = useState(true)
   const [duplicates, setDuplicates] = useState<DuplicateGroup[]>([])
   const [removing, setRemoving] = useState<string | null>(null)
@@ -132,7 +134,7 @@ export default function DuplicatePlayersPage() {
               </Link>
               <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-2 sm:gap-3">
                 <AlertTriangle className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10 text-orange-600" />
-                <span className="leading-tight">Joueurs dans Plusieurs Équipes</span>
+                <span className="leading-tight">{t.duplicatePlayers.title}</span>
               </h1>
             </div>
             <button
@@ -140,11 +142,11 @@ export default function DuplicatePlayersPage() {
               className="px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 active:from-blue-800 active:to-indigo-800 transition-all shadow-lg hover:shadow-xl font-semibold text-sm sm:text-base touch-manipulation"
               style={{ minHeight: '44px' }}
             >
-              Actualiser
+              {t.common.refresh}
             </button>
           </div>
           <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-400">
-            {duplicates.length} joueur{duplicates.length > 1 ? 's' : ''} trouvé{duplicates.length > 1 ? 's' : ''} dans plusieurs équipes
+            {duplicates.length} {t.duplicatePlayers.found}
           </p>
         </motion.div>
 

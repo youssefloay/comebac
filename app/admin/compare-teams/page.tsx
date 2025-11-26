@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Users, Loader, Search, AlertCircle, ArrowLeft, UserCheck } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useAdminI18n } from '@/lib/i18n/admin-i18n-context'
 
 interface PlayerInfo {
   firstName: string
@@ -37,6 +38,7 @@ interface Team {
 }
 
 export default function CompareTeamsPage() {
+  const { t } = useAdminI18n()
   const router = useRouter()
   const [teams, setTeams] = useState<Team[]>([])
   const [team1Id, setTeam1Id] = useState<string>('')
@@ -179,7 +181,7 @@ export default function CompareTeamsPage() {
               </Link>
               <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-2 sm:gap-3">
                 <UserCheck className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10 text-blue-600" />
-                <span className="leading-tight">Comparer Deux Équipes</span>
+                <span className="leading-tight">{t.compareTeams.title}</span>
               </h1>
             </div>
           </div>
@@ -207,11 +209,11 @@ export default function CompareTeamsPage() {
                 className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
               />
               <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                🔍 Comparer toutes les équipes entre elles
+                🔍 {t.compareTeams.compareAll}
               </span>
             </label>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
-              Compare toutes les équipes deux par deux pour trouver tous les joueurs en commun
+              {t.compareTeams.compareAllDesc}
             </p>
           </div>
 
@@ -219,11 +221,11 @@ export default function CompareTeamsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
               <div>
                 <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Équipe 1
+                  {t.compareTeams.team1}
                 </label>
                 {loadingTeams ? (
                   <div className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-100 dark:bg-gray-700 animate-pulse text-sm">
-                    Chargement...
+                    {t.common.loading}
                   </div>
                 ) : (
                   <select
@@ -232,7 +234,7 @@ export default function CompareTeamsPage() {
                     className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base touch-manipulation"
                     style={{ minHeight: '44px' }}
                   >
-                    <option value="">Sélectionner une équipe</option>
+                    <option value="">{t.compareTeams.selectTeam}</option>
                     {teams.map(team => (
                       <option key={team.id} value={team.id}>{team.name}</option>
                     ))}
@@ -241,11 +243,11 @@ export default function CompareTeamsPage() {
               </div>
               <div>
                 <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Équipe 2
+                  {t.compareTeams.team2}
                 </label>
                 {loadingTeams ? (
                   <div className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-100 dark:bg-gray-700 animate-pulse text-sm">
-                    Chargement...
+                    {t.common.loading}
                   </div>
                 ) : (
                   <select
@@ -254,7 +256,7 @@ export default function CompareTeamsPage() {
                     className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base touch-manipulation"
                     style={{ minHeight: '44px' }}
                   >
-                    <option value="">Sélectionner une équipe</option>
+                    <option value="">{t.compareTeams.selectTeam}</option>
                     {teams.map(team => (
                       <option key={team.id} value={team.id}>{team.name}</option>
                     ))}
@@ -267,7 +269,7 @@ export default function CompareTeamsPage() {
           {/* Critères de recherche */}
           <div className="mb-4 p-4 bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-700/50 dark:to-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-              Critères de recherche
+              {t.compareTeams.searchCriteria}
             </label>
             <div className="flex flex-wrap gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -278,7 +280,7 @@ export default function CompareTeamsPage() {
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                  📧 Par email
+                  📧 {t.compareTeams.byEmail}
                 </span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
@@ -289,16 +291,16 @@ export default function CompareTeamsPage() {
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                  👤 Par nom + prénom
+                  👤 {t.compareTeams.byName}
                 </span>
               </label>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               {searchByEmail && searchByName 
-                ? 'Recherche par email OU nom+prénom' 
+                ? `${t.compareTeams.byEmail} OR ${t.compareTeams.byName}` 
                 : searchByEmail 
-                ? 'Recherche uniquement par email' 
-                : 'Recherche uniquement par nom+prénom'}
+                ? t.compareTeams.byEmail 
+                : t.compareTeams.byName}
             </p>
           </div>
 
@@ -311,12 +313,12 @@ export default function CompareTeamsPage() {
             {loading ? (
               <>
                 <Loader className="w-5 h-5 animate-spin" />
-                {compareAll ? 'Comparaison de toutes les équipes...' : 'Comparaison...'}
+                {compareAll ? t.compareTeams.comparingAll : t.compareTeams.comparing}
               </>
             ) : (
               <>
                 <Search className="w-5 h-5" />
-                {compareAll ? 'Comparer toutes les équipes' : 'Comparer'}
+                {compareAll ? t.compareTeams.compareAll : t.compareTeams.compare}
               </>
             )}
           </button>
