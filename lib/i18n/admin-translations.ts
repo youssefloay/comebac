@@ -32,6 +32,7 @@ export interface AdminTranslations {
     subtitle: string
     users: string
     players: string
+    coaches: string
     admins: string
     all: string
     role: string
@@ -279,6 +280,7 @@ export const translations: Record<Language, AdminTranslations> = {
       subtitle: 'Gérez les rôles et les équipes des utilisateurs',
       users: 'Utilisateurs',
       players: 'Joueurs',
+      coaches: 'Coachs',
       admins: 'Admins',
       all: 'Tous',
       role: 'Rôle',
@@ -504,6 +506,7 @@ export const translations: Record<Language, AdminTranslations> = {
       subtitle: 'Manage user roles and teams',
       users: 'Users',
       players: 'Players',
+      coaches: 'Coaches',
       admins: 'Admins',
       all: 'All',
       role: 'Role',

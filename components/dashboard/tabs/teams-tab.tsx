@@ -1037,13 +1037,13 @@ export default function TeamsTab() {
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-100">
                       <div className="flex items-start gap-4">
                         <div className="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-2xl">
-                          {selectedTeam.coach.firstName.charAt(0)}{selectedTeam.coach.lastName.charAt(0)}
+                          {(selectedTeam.coach?.firstName?.charAt(0) || '')}{(selectedTeam.coach?.lastName?.charAt(0) || '') || '?'}
                         </div>
                         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <p className="text-sm text-gray-600">Nom complet</p>
                             <p className="font-semibold text-gray-900 text-lg">
-                              {selectedTeam.coach.firstName} {selectedTeam.coach.lastName}
+                              {selectedTeam.coach?.firstName || ''} {selectedTeam.coach?.lastName || ''}
                             </p>
                           </div>
                           {selectedTeam.coach.birthDate && (
@@ -1156,11 +1156,11 @@ export default function TeamsTab() {
                           )}
                           <div className="flex items-center gap-3 mb-2">
                             <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold">
-                              {player.name.charAt(0).toUpperCase()}
+                              {(player.name?.charAt(0) || player.email?.charAt(0) || '?').toUpperCase()}
                             </div>
                             <div className="flex-1">
-                              <p className="font-medium text-gray-900">{player.name}</p>
-                              <p className="text-sm text-gray-600">{player.email}</p>
+                              <p className="font-medium text-gray-900">{player.name || player.email || 'Joueur sans nom'}</p>
+                              <p className="text-sm text-gray-600">{player.email || 'Pas d\'email'}</p>
                             </div>
                           </div>
                           {!hasCoach && !player.isActingCoach && player.playerAccountId && (

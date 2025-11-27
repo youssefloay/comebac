@@ -16,13 +16,14 @@ interface Account {
   email: string
   firstName?: string
   lastName?: string
-  role: 'user' | 'player' | 'admin'
+  role: 'user' | 'player' | 'admin' | 'coach'
   teamId?: string
   teamName?: string
   position?: string
   jerseyNumber?: number
   createdAt: any
-  collection: 'playerAccounts' | 'users' | 'userProfiles'
+  collection: 'playerAccounts' | 'users' | 'userProfiles' | 'coachAccounts'
+  collections?: string[] // Pour les comptes fusionnés (plusieurs collections)
   hasLoggedIn?: boolean
   profileCompleted?: boolean
 }
@@ -83,6 +84,26 @@ export default function AccountsManagementPage() {
         name: doc.data().name
       })) as Team[]
       setTeams(teamsData)
+
+      // Charger les comptes coaches
+      const coachAccountsSnap = await getDocs(collection(db, 'coachAccounts'))
+      const coachAccounts = coachAccountsSnap.docs.map(doc => {
+        const data = doc.data()
+        const team = teamsData.find(t => t.id === data.teamId)
+        return {
+          id: doc.id,
+          uid: data.uid || doc.id,
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          role: 'coach' as const,
+          teamId: data.teamId,
+          teamName: team?.name || data.teamName,
+          createdAt: data.createdAt,
+          collection: 'coachAccounts' as const,
+          hasLoggedIn: !!data.lastLogin
+        }
+      })
 
       // Charger les comptes joueurs
       const playerAccountsSnap = await getDocs(collection(db, 'playerAccounts'))
@@ -171,8 +192,70 @@ export default function AccountsManagementPage() {
           }
         })
 
-      const allAccounts = [...playerAccounts, ...userAccounts, ...orphanProfiles]
-      setAccounts(allAccounts)
+      // Regrouper les comptes par email pour éviter les doublons dans l'affichage
+      const accountsByEmail = new Map<string, Account[]>()
+      
+      const allAccountsRaw = [...coachAccounts, ...playerAccounts, ...userAccounts, ...orphanProfiles]
+      
+      // Grouper par email
+      allAccountsRaw.forEach(account => {
+        const email = account.email?.toLowerCase()?.trim()
+        if (email) {
+          if (!accountsByEmail.has(email)) {
+            accountsByEmail.set(email, [])
+          }
+          accountsByEmail.get(email)!.push(account)
+        }
+      })
+      
+      // Pour chaque email, garder le meilleur compte (priorité: playerAccounts > users > userProfiles)
+      const deduplicatedAccounts: Account[] = []
+      
+      accountsByEmail.forEach((accounts, email) => {
+        if (accounts.length === 1) {
+          // Un seul compte, s'assurer que teamName est correct
+          const account = accounts[0]
+          if (account.teamId) {
+            const team = teamsData.find(t => t.id === account.teamId)
+            if (team) {
+              account.teamName = team.name
+            }
+          }
+          deduplicatedAccounts.push(account)
+        } else {
+          // Plusieurs comptes, fusionner intelligemment
+          // Priorité: coachAccounts > playerAccounts > users > userProfiles
+          const coachAccount = accounts.find(a => a.collection === 'coachAccounts')
+          const playerAccount = accounts.find(a => a.collection === 'playerAccounts')
+          const userAccount = accounts.find(a => a.collection === 'users')
+          const profileAccount = accounts.find(a => a.collection === 'userProfiles')
+          
+          // Créer un compte fusionné avec toutes les informations
+          // Priorité: coach > player > user
+          const mergedTeamId = coachAccount?.teamId || playerAccount?.teamId || userAccount?.teamId || profileAccount?.teamId
+          const mergedTeam = mergedTeamId ? teamsData.find(t => t.id === mergedTeamId) : null
+          
+          const mergedAccount: Account = {
+            ...(coachAccount || playerAccount || userAccount || profileAccount || accounts[0]),
+            // Ajouter un champ pour indiquer les collections liées
+            collections: accounts.map(a => a.collection),
+            // Prendre les meilleures données de chaque source (priorité: coach > player > user)
+            firstName: coachAccount?.firstName || playerAccount?.firstName || userAccount?.firstName || profileAccount?.firstName || accounts[0].firstName,
+            lastName: coachAccount?.lastName || playerAccount?.lastName || userAccount?.lastName || profileAccount?.lastName || accounts[0].lastName,
+            role: coachAccount?.role || playerAccount?.role || userAccount?.role || profileAccount?.role || accounts[0].role,
+            teamId: mergedTeamId,
+            teamName: mergedTeam?.name || coachAccount?.teamName || playerAccount?.teamName || userAccount?.teamName || profileAccount?.teamName,
+            position: playerAccount?.position,
+            jerseyNumber: playerAccount?.jerseyNumber,
+            hasLoggedIn: userAccount?.hasLoggedIn || playerAccount?.hasLoggedIn || coachAccount?.hasLoggedIn || false,
+            profileCompleted: profileAccount?.profileCompleted || userAccount?.profileCompleted || false
+          } as any
+          
+          deduplicatedAccounts.push(mergedAccount)
+        }
+      })
+      
+      setAccounts(deduplicatedAccounts)
     } catch (error) {
       console.error('Erreur lors du chargement des comptes:', error)
       setMessage({ type: 'error', text: 'Erreur lors du chargement des comptes' })
@@ -356,6 +439,7 @@ export default function AccountsManagementPage() {
     total: accounts.length,
     users: accounts.filter(a => a.role === 'user').length,
     players: accounts.filter(a => a.role === 'player').length,
+    coaches: accounts.filter(a => a.role === 'coach').length,
     admins: accounts.filter(a => a.role === 'admin').length
   }
 
@@ -399,7 +483,7 @@ export default function AccountsManagementPage() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6">
           <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
@@ -425,6 +509,15 @@ export default function AccountsManagementPage() {
                 <p className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600">{stats.players}</p>
               </div>
               <Users className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-green-600 opacity-20 hidden sm:block" />
+            </div>
+          </div>
+          <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm text-gray-600">{t.accounts.coaches || 'Coaches'}</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-orange-600">{stats.coaches}</p>
+              </div>
+              <User className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-orange-600 opacity-20 hidden sm:block" />
             </div>
           </div>
           <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg border border-gray-200 shadow-sm">
@@ -467,6 +560,15 @@ export default function AccountsManagementPage() {
               style={{ minHeight: '44px' }}
             >
               {t.accounts.players} ({stats.players})
+            </button>
+            <button
+              onClick={() => setFilter('coach')}
+              className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm sm:text-base flex-shrink-0 touch-manipulation ${
+                filter === 'coach' ? 'bg-orange-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300'
+              }`}
+              style={{ minHeight: '44px' }}
+            >
+              {t.accounts.coaches || 'Coaches'} ({stats.coaches})
             </button>
             <button
               onClick={() => setFilter('admin')}
@@ -545,6 +647,12 @@ export default function AccountsManagementPage() {
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4">
                       <div className="text-xs sm:text-sm text-gray-900 break-all">{account.email}</div>
+                      {account.collections && account.collections.length > 1 && (
+                        <div className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                          <span>⚠️</span>
+                          <span>Fusionné: {account.collections.join(', ')}</span>
+                        </div>
+                      )}
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4">
                       {editingAccount === account.id ? (
@@ -555,15 +663,20 @@ export default function AccountsManagementPage() {
                         >
                           <option value="user">{t.accounts.user}</option>
                           <option value="player">{t.accounts.player}</option>
+                          <option value="coach">{t.accounts.coaches || 'Coach'}</option>
                           <option value="admin">{t.accounts.admin}</option>
                         </select>
                       ) : (
                         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           account.role === 'admin' ? 'bg-purple-100 text-purple-800' :
                           account.role === 'player' ? 'bg-green-100 text-green-800' :
+                          account.role === 'coach' ? 'bg-orange-100 text-orange-800' :
                           'bg-blue-100 text-blue-800'
                         }`}>
-                          {account.role === 'admin' ? t.accounts.admin : account.role === 'player' ? t.accounts.player : t.accounts.user}
+                          {account.role === 'admin' ? t.accounts.admin : 
+                           account.role === 'player' ? t.accounts.player : 
+                           account.role === 'coach' ? (t.accounts.coaches || 'Coach') : 
+                           t.accounts.user}
                         </span>
                       )}
                     </td>

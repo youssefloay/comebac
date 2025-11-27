@@ -15,6 +15,16 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
+  webpack: (config, { isServer }) => {
+    // Exclure @aws-sdk/client-s3 du bundling (package optionnel)
+    if (isServer) {
+      config.externals = config.externals || []
+      config.externals.push({
+        '@aws-sdk/client-s3': 'commonjs @aws-sdk/client-s3'
+      })
+    }
+    return config
+  },
   images: {
     // Optimisation des images activée pour de meilleures performances
     formats: ['image/avif', 'image/webp'],

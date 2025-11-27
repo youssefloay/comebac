@@ -281,7 +281,17 @@ async function uploadToS3(backupJson: string): Promise<any> {
   }
 
   try {
-    const { S3Client, PutObjectCommand } = await import('@aws-sdk/client-s3')
+    // Import dynamique optionnel - si le package n'est pas installé, on retourne une erreur claire
+    let S3Client: any, PutObjectCommand: any
+    try {
+      // @ts-ignore - Package optionnel, peut ne pas être installé
+      const s3Module = await import('@aws-sdk/client-s3')
+      S3Client = s3Module.S3Client
+      PutObjectCommand = s3Module.PutObjectCommand
+    } catch (importError: any) {
+      throw new Error('Package @aws-sdk/client-s3 non installé. Installez-le avec: npm install @aws-sdk/client-s3')
+    }
+
     const s3Client = new S3Client({
       region: process.env.AWS_REGION || 'us-east-1',
       credentials: {
@@ -312,7 +322,7 @@ async function uploadToS3(backupJson: string): Promise<any> {
       url: `s3://${process.env.AWS_S3_BUCKET_NAME}/${fileName}`
     }
   } catch (error: any) {
-    throw new Error(`Upload S3 échoué: ${error.message}. Installez @aws-sdk/client-s3.`)
+    throw new Error(`Upload S3 échoué: ${error.message}`)
   }
 }
 
