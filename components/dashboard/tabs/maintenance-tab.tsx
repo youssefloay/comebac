@@ -22,6 +22,20 @@ export default function MaintenanceTab() {
   const [backupLoading, setBackupLoading] = useState(false)
   const [showTeamSelectModal, setShowTeamSelectModal] = useState(false)
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([])
+  const [selectedColumns, setSelectedColumns] = useState<Record<string, boolean>>({
+    nickname: true,
+    number: true,
+    tshirtSize: true,
+    fullName: false,
+    email: false,
+    phone: false,
+    position: false,
+    height: false,
+    birthDate: false,
+    teamName: false,
+    grade: false,
+    foot: false
+  })
 
   useEffect(() => {
     loadTeams()
@@ -587,20 +601,35 @@ export default function MaintenanceTab() {
         {/* Modal de sélection d'équipes */}
         {showTeamSelectModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900">Choisir les équipes</h3>
+                  <h3 className="text-xl font-bold text-gray-900">Export Excel - Configuration</h3>
                   <p className="text-sm text-gray-600 mt-1">
                     {selectedTeamIds.length > 0 
                       ? `${selectedTeamIds.length} équipe(s) sélectionnée(s)`
-                      : 'Sélectionnez une ou plusieurs équipes'}
+                      : 'Sélectionnez les équipes et colonnes à exporter'}
                   </p>
                 </div>
                 <button
                   onClick={() => {
                     setShowTeamSelectModal(false)
                     setSelectedTeamIds([])
+                    // Réinitialiser les colonnes aux valeurs par défaut
+                    setSelectedColumns({
+                      nickname: true,
+                      number: true,
+                      tshirtSize: true,
+                      fullName: false,
+                      email: false,
+                      phone: false,
+                      position: false,
+                      height: false,
+                      birthDate: false,
+                      teamName: false,
+                      grade: false,
+                      foot: false
+                    })
                   }}
                   className="text-gray-400 hover:text-gray-600"
                 >
@@ -608,21 +637,87 @@ export default function MaintenanceTab() {
                 </button>
               </div>
               
-              <div className="mb-4 flex gap-2">
-                <button
-                  onClick={() => {
-                    if (selectedTeamIds.length === teams.length) {
-                      setSelectedTeamIds([])
-                    } else {
-                      setSelectedTeamIds(teams.map(t => t.id))
-                    }
-                  }}
-                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
-                >
-                  {selectedTeamIds.length === teams.length ? 'Tout désélectionner' : 'Tout sélectionner'}
-                </button>
+              {/* Sélection des colonnes */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h4 className="font-semibold text-gray-900 mb-3">Colonnes à exporter</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {Object.entries({
+                    nickname: 'Surnom',
+                    fullName: 'Nom complet',
+                    number: 'Numéro',
+                    tshirtSize: 'Taille T-shirt',
+                    email: 'Email',
+                    phone: 'Téléphone',
+                    position: 'Position',
+                    height: 'Taille (cm)',
+                    birthDate: 'Date de naissance',
+                    teamName: 'Équipe',
+                    grade: 'Classe',
+                    foot: 'Pied fort'
+                  }).map(([key, label]) => (
+                    <label key={key} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedColumns[key] || false}
+                        onChange={(e) => {
+                          setSelectedColumns({
+                            ...selectedColumns,
+                            [key]: e.target.checked
+                          })
+                        }}
+                        className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                      />
+                      <span className="text-sm text-gray-700">{label}</span>
+                    </label>
+                  ))}
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => {
+                      const allSelected = Object.keys(selectedColumns).reduce((acc, key) => {
+                        acc[key] = true
+                        return acc
+                      }, {} as Record<string, boolean>)
+                      setSelectedColumns(allSelected)
+                    }}
+                    className="text-xs px-2 py-1 text-blue-600 hover:text-blue-700"
+                  >
+                    Tout sélectionner
+                  </button>
+                  <button
+                    onClick={() => {
+                      const allUnselected = Object.keys(selectedColumns).reduce((acc, key) => {
+                        acc[key] = false
+                        return acc
+                      }, {} as Record<string, boolean>)
+                      setSelectedColumns(allUnselected)
+                    }}
+                    className="text-xs px-2 py-1 text-blue-600 hover:text-blue-700"
+                  >
+                    Tout désélectionner
+                  </button>
+                </div>
               </div>
-              
+
+              {/* Sélection des équipes */}
+              <div className="mb-4">
+                <h4 className="font-semibold text-gray-900 mb-3">Équipes à exporter</h4>
+                <div className="mb-3 flex gap-2">
+                  <button
+                    onClick={() => {
+                      if (selectedTeamIds.length === teams.length) {
+                        setSelectedTeamIds([])
+                      } else {
+                        setSelectedTeamIds(teams.map(t => t.id))
+                      }
+                    }}
+                    className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
+                  >
+                    {selectedTeamIds.length === teams.length ? 'Tout désélectionner' : 'Tout sélectionner'}
+                  </button>
+                </div>
+              </div>
+
               <div className="space-y-2 mb-4 max-h-96 overflow-y-auto">
                 {teams.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
@@ -670,6 +765,21 @@ export default function MaintenanceTab() {
                   onClick={() => {
                     setShowTeamSelectModal(false)
                     setSelectedTeamIds([])
+                    // Réinitialiser les colonnes aux valeurs par défaut
+                    setSelectedColumns({
+                      nickname: true,
+                      number: true,
+                      tshirtSize: true,
+                      fullName: false,
+                      email: false,
+                      phone: false,
+                      position: false,
+                      height: false,
+                      birthDate: false,
+                      teamName: false,
+                      grade: false,
+                      foot: false
+                    })
                   }}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
                 >
@@ -687,9 +797,20 @@ export default function MaintenanceTab() {
                     setMessage(null)
                     
                     try {
-                      // Envoyer les IDs séparés par des virgules
+                      // Vérifier qu'au moins une colonne est sélectionnée
+                      const selectedCols = Object.entries(selectedColumns)
+                        .filter(([_, selected]) => selected)
+                        .map(([key, _]) => key)
+                      
+                      if (selectedCols.length === 0) {
+                        alert('Veuillez sélectionner au moins une colonne à exporter')
+                        return
+                      }
+
+                      // Envoyer les IDs séparés par des virgules et les colonnes
                       const teamIdsParam = selectedTeamIds.join(',')
-                      const response = await fetch(`/api/admin/export/teams-excel?teamIds=${teamIdsParam}`)
+                      const columnsParam = selectedCols.join(',')
+                      const response = await fetch(`/api/admin/export/teams-excel?teamIds=${teamIdsParam}&columns=${columnsParam}`)
                       if (response.ok) {
                         const blob = await response.blob()
                         const url = window.URL.createObjectURL(blob)

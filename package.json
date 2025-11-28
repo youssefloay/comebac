@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "lint": "eslint .",
     "start": "next start",
     "setup-test-data": "npx tsx scripts/setup-test-data.ts",
