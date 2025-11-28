@@ -2,8 +2,6 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { collection, query, orderBy, getDocs } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
 import { SofaMatchCard } from '@/components/sofa/match-card'
 import { SofaStatCard } from '@/components/sofa/stat-card'
 import { SofaTeamCard } from '@/components/sofa/team-card'
@@ -74,178 +72,34 @@ export default function PublicHome() {
   useEffect(() => {
     const loadData = async () => {
       try {
+        // Utiliser l'API route optimisée avec cache
+        const response = await fetch('/api/public/home-data')
+        if (!response.ok) {
+          throw new Error('Failed to fetch data')
+        }
         
-        // Charger toutes les données en parallèle pour améliorer les performances
-        const [teamsSnap, playersSnap, playerAccountsSnap, coachAccountsSnap, matchesSnap, statsSnap, resultsSnap] = await Promise.all([
-          getDocs(collection(db, 'teams')),
-          getDocs(collection(db, 'players')),
-          getDocs(collection(db, 'playerAccounts')),
-          getDocs(collection(db, 'coachAccounts')),
-          getDocs(collection(db, 'matches')),
-          getDocs(query(collection(db, 'teamStatistics'), orderBy('points', 'desc'))),
-          getDocs(collection(db, 'matchResults'))
-        ])
-        
-        
-        const teamsData = teamsSnap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Team[]
-        
-        const allPlayers = playersSnap.docs.map(doc => doc.data())
-        const allPlayerAccounts = playerAccountsSnap.docs.map(doc => doc.data())
-        const allCoachAccounts = coachAccountsSnap.docs.map(doc => doc.data())
-        
-        // Créer un Set des emails des entraîneurs pour exclusion rapide
-        const coachEmails = new Set(allCoachAccounts.map((coach: any) => coach.email))
-        
-        // Add player counts to teams - exclure les entraîneurs
-        let teamsWithPlayerCounts = teamsData.map(team => {
-          // Compter uniquement les playerAccounts qui ne sont pas des entraîneurs
-          const teamPlayerAccounts = allPlayerAccounts.filter((account: any) => 
-            account.teamId === team.id && 
-            !coachEmails.has(account.email) && 
-            !account.isActingCoach
-          )
-          
-          return {
-            ...team,
-            playerCount: teamPlayerAccounts.length
-          }
-        })
+        const data = await response.json()
         
         // Filtrer pour ne garder que les équipes participantes (pages publiques uniquement)
         const participatingTeamIds = await getParticipatingTeamIds()
+        let teamsWithPlayerCounts = data.teams || []
         if (participatingTeamIds) {
           teamsWithPlayerCounts = filterParticipatingTeams(teamsWithPlayerCounts, participatingTeamIds)
         }
         
         setTeams(teamsWithPlayerCounts)
-
-        // Create teams map for match display
-        const teamsMap = new Map()
-        teamsData.forEach(team => {
-          teamsMap.set(team.id, team)
-        })
-        const allMatches = matchesSnap.docs.map(doc => {
-          const data = doc.data()
-          return {
-            id: doc.id,
-            homeTeamId: data.homeTeamId,
-            awayTeamId: data.awayTeamId,
-            date: data.date?.toDate() || new Date(),
-            round: data.round || 1,
-            status: data.status || 'scheduled',
-            homeTeam: teamsMap.get(data.homeTeamId),
-            awayTeam: teamsMap.get(data.awayTeamId),
-            isTest: data.isTest || false
-          }
-        }) as Match[]
-
-        // Filtrer les matchs de test et les finales non publiées (ne pas les afficher publiquement)
-        const publicMatches = allMatches.filter(match => {
-          if (match.isTest) return false
-          // Si c'est une finale, vérifier qu'elle est publiée
-          if ((match as any).isFinal && !(match as any).isPublished) return false
-          return true
-        })
-
-        // Process match results (déjà chargés en parallèle)
-        const resultsMap = new Map()
-        let totalGoals = 0
-        resultsSnap.docs.forEach(doc => {
-          const result = doc.data()
-          resultsMap.set(result.matchId, result)
-          totalGoals += (result.homeTeamScore || 0) + (result.awayTeamScore || 0)
-        })
-
-        // Combine matches with results
-        const matchesWithResults = allMatches.map(match => ({
+        
+        // Convertir les dates ISO en objets Date pour les matchs
+        const convertMatches = (matches: any[]) => matches.map(match => ({
           ...match,
-          result: resultsMap.get(match.id),
-          homeTeamScore: resultsMap.get(match.id)?.homeTeamScore,
-          awayTeamScore: resultsMap.get(match.id)?.awayTeamScore
+          date: new Date(match.date)
         }))
-
-        // Filter matches
-        const today = new Date()
-        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-        const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000)
-
-        // Matchs d'aujourd'hui - trier par heure croissante (le plus proche en premier)
-        const todayMatchesFiltered = matchesWithResults
-          .filter(match => match.date >= todayStart && match.date < todayEnd)
-          .sort((a, b) => a.date.getTime() - b.date.getTime())
         
-        // Matchs à venir - trier par date/heure croissante (le plus proche en premier)
-        const upcomingMatchesFiltered = matchesWithResults
-          .filter(match => match.date > todayEnd && match.status === 'scheduled')
-          .sort((a, b) => a.date.getTime() - b.date.getTime())
-          .slice(0, 6)
-
-        // Matchs récents - trier par date décroissante (les plus récents en premier)
-        const recentMatchesFiltered = matchesWithResults
-          .filter(match => match.status === 'completed')
-          .sort((a, b) => b.date.getTime() - a.date.getTime())
-          .slice(0, 6)
-
-        setTodayMatches(todayMatchesFiltered)
-        setUpcomingMatches(upcomingMatchesFiltered)
-        setRecentMatches(recentMatchesFiltered)
-
-        // Process standings from teamStatistics (déjà chargés en parallèle)
-        // Remove duplicates by keeping only the best entry per team
-        const teamStatsMap = new Map()
-        
-        statsSnap.docs.forEach(doc => {
-          const data = doc.data()
-          const existing = teamStatsMap.get(data.teamId)
-          
-          if (!existing) {
-            teamStatsMap.set(data.teamId, { id: doc.id, ...data })
-          } else {
-            // Keep the one with higher points, or more recent updatedAt
-            const shouldReplace = 
-              (data.points || 0) > (existing.points || 0) ||
-              ((data.points || 0) === (existing.points || 0) && 
-               (data.updatedAt?.toDate?.() || new Date(data.updatedAt || 0)) > 
-               (existing.updatedAt?.toDate?.() || new Date(existing.updatedAt || 0)))
-            
-            if (shouldReplace) {
-              teamStatsMap.set(data.teamId, { id: doc.id, ...data })
-            }
-          }
-        })
-        
-        const uniqueStats = Array.from(teamStatsMap.values())
-        
-        const standingsData = uniqueStats
-          .map(data => {
-            const team = teamsMap.get(data.teamId)
-            const goalDifference = (data.goalsFor || 0) - (data.goalsAgainst || 0)
-            return {
-              ...data,
-              teamName: team?.name || 'Équipe inconnue',
-              goalDifference: goalDifference,
-              teamLogo: team?.logo
-            }
-          })
-          .sort((a, b) => {
-            if (b.points !== a.points) return b.points - a.points
-            const aDiff = a.goalDifference
-            const bDiff = b.goalDifference
-            return bDiff - aDiff
-          }) as Standing[]
-          
-        setStandings(standingsData.slice(0, 6)) // Top 6 teams
-
-        // Set stats
-        setStats({
-          teams: teamsData.length,
-          matches: allMatches.length,
-          goals: totalGoals,
-          completed: matchesWithResults.filter(m => m.status === 'completed').length
-        })
+        setTodayMatches(convertMatches(data.todayMatches || []))
+        setUpcomingMatches(convertMatches(data.upcomingMatches || []))
+        setRecentMatches(convertMatches(data.recentMatches || []))
+        setStandings(data.standings || [])
+        setStats(data.stats || { teams: 0, matches: 0, goals: 0, completed: 0 })
         
       } catch (error) {
         console.error('❌ Erreur lors du chargement des données:', error)

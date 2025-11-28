@@ -4,8 +4,6 @@ import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { db } from "@/lib/firebase"
-import { collection, getDocs, query, where, doc, getDoc, orderBy } from "firebase/firestore"
 import type { Team, Player, Match, MatchResult, TeamStatistics } from "@/lib/types"
 import { SofaMatchCard } from "@/components/sofa/match-card"
 import { t } from "@/lib/i18n"
@@ -41,120 +39,38 @@ export default function TeamDetailPage() {
       try {
         console.log('🔄 Chargement des détails de l\'équipe...')
         
-        // Fetch team
-        const teamDoc = await getDoc(doc(db, "teams", teamId))
-        if (teamDoc.exists()) {
-          let teamData = { id: teamDoc.id, ...teamDoc.data() } as Team
-          
-          // Si le coach n'est pas rempli dans teams, chercher dans coachAccounts
-          if (!teamData.coach || !teamData.coach.firstName || !teamData.coach.lastName) {
-            const coachQuery = query(collection(db, 'coachAccounts'), where('teamId', '==', teamId))
-            const coachSnap = await getDocs(coachQuery)
-            
-            if (!coachSnap.empty) {
-              const coachData = coachSnap.docs[0].data()
-              teamData = {
-                ...teamData,
-                coach: {
-                  firstName: coachData.firstName || '',
-                  lastName: coachData.lastName || '',
-                  birthDate: coachData.birthDate || '',
-                  email: coachData.email || '',
-                  phone: coachData.phone || ''
-                }
-              }
-            }
+        // Utiliser l'API route optimisée avec cache
+        const response = await fetch(`/api/public/team/${teamId}`)
+        if (!response.ok) {
+          if (response.status === 404) {
+            console.error('Équipe non trouvée')
+          } else {
+            throw new Error('Failed to fetch team data')
           }
-          
-          setTeam(teamData)
-          setLogoError(false)
+          setLoading(false)
+          return
         }
-
-        // Fetch all teams for match display
-        const teamsSnap = await getDocs(collection(db, 'teams'))
-        const teamsMap = new Map()
-        teamsSnap.docs.forEach(doc => {
-          teamsMap.set(doc.id, { id: doc.id, ...doc.data() })
-        })
-
-        // Fetch players, playerAccounts, and coachAccounts (exclude coaches)
-        const [playersSnap, playerAccountsSnap, coachAccountsSnap] = await Promise.all([
-          getDocs(query(collection(db, "players"), where("teamId", "==", teamId))),
-          getDocs(query(collection(db, "playerAccounts"), where("teamId", "==", teamId))),
-          getDocs(query(collection(db, "coachAccounts"), where("teamId", "==", teamId)))
-        ])
         
-        const allPlayersData = playersSnap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Player[]
+        const data = await response.json()
         
-        const allPlayerAccounts = playerAccountsSnap.docs.map((doc) => doc.data())
-        const allCoachAccounts = coachAccountsSnap.docs.map((doc) => doc.data())
+        if (!data.team) {
+          console.error('Équipe non trouvée')
+          setLoading(false)
+          return
+        }
         
-        // Créer un Set des emails des entraîneurs pour exclusion rapide
-        const coachEmails = new Set(allCoachAccounts.map((coach: any) => coach.email))
-        const actingCoachEmails = new Set(
-          allPlayerAccounts
-            .filter((account: any) => account.isActingCoach === true)
-            .map((account: any) => account.email)
-        )
+        setTeam(data.team as Team)
+        setLogoError(false)
+        setPlayers(data.players || [])
         
-        // Filter out coaches - exclude coachAccounts and acting coaches
-        const playersData = allPlayersData.filter((player) => {
-          const playerEmail = player.email || (player as any).email
-          // Exclude coaches - check multiple conditions
-          const isCoach = 
-            (player as any).isCoach === true || 
-            player.position?.toLowerCase().includes('entraîneur') ||
-            player.position?.toLowerCase().includes('entraineur') ||
-            player.position?.toLowerCase().includes('coach') ||
-            (playerEmail && coachEmails.has(playerEmail)) ||
-            (playerEmail && actingCoachEmails.has(playerEmail))
-          return !isCoach
-        })
-        
-        playersData.sort((a, b) => (a.number || 0) - (b.number || 0))
-        setPlayers(playersData)
-
-        // Fetch team matches (home and away)
-        const allMatchesSnap = await getDocs(collection(db, 'matches'))
-        const teamMatches = allMatchesSnap.docs
-          .map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            date: doc.data().date?.toDate() || new Date(),
-            homeTeam: teamsMap.get(doc.data().homeTeamId),
-            awayTeam: teamsMap.get(doc.data().awayTeamId)
-          }))
-          .filter((match: any) => 
-            match.homeTeamId === teamId || match.awayTeamId === teamId
-          ) as (Match & { homeTeam?: Team; awayTeam?: Team })[]
-
-        // Fetch match results
-        const resultsSnap = await getDocs(collection(db, 'matchResults'))
-        const resultsMap = new Map()
-        resultsSnap.docs.forEach(doc => {
-          const result = doc.data()
-          resultsMap.set(result.matchId, result)
-        })
-
-        // Combine matches with results
-        const matchesWithResults = teamMatches.map(match => ({
+        // Convertir les dates ISO en objets Date pour les matchs
+        const matchesWithDates = (data.matches || []).map((match: any) => ({
           ...match,
-          result: resultsMap.get(match.id)
+          date: new Date(match.date)
         }))
-
-        // Sort matches by date (most recent first)
-        matchesWithResults.sort((a, b) => b.date.getTime() - a.date.getTime())
-        setMatches(matchesWithResults)
-
-        // Fetch team statistics
-        const statsQuery = query(collection(db, 'teamStatistics'), where('teamId', '==', teamId))
-        const statsSnap = await getDocs(statsQuery)
-        if (statsSnap.docs.length > 0) {
-          setTeamStats({ id: statsSnap.docs[0].id, ...statsSnap.docs[0].data() } as TeamStatistics)
-        }
+        setMatches(matchesWithDates)
+        
+        setTeamStats(data.teamStats || null)
 
         console.log('✅ Détails de l\'équipe chargés')
       } catch (error) {

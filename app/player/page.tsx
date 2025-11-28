@@ -5,8 +5,6 @@ import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { PlayerDashboard } from '@/components/dashboard/player-dashboard'
-import { collection, query, where, getDocs } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
 
 export default function PlayerPage() {
   const { user, isAdmin, loading: authLoading } = useAuth()
@@ -29,14 +27,14 @@ export default function PlayerPage() {
       }
 
       try {
-        // Vérifier si l'utilisateur a des données dans playerAccounts
-        const playerAccountsQuery = query(
-          collection(db, 'playerAccounts'),
-          where('email', '==', user.email)
-        )
-        const playerAccountsSnap = await getDocs(playerAccountsQuery)
-        
-        setIsPlayer(!playerAccountsSnap.empty)
+        // Utiliser l'API route optimisée avec cache
+        const response = await fetch(`/api/player/status?email=${encodeURIComponent(user.email)}`)
+        if (response.ok) {
+          const data = await response.json()
+          setIsPlayer(data.isPlayer || false)
+        } else {
+          setIsPlayer(false)
+        }
       } catch (error) {
         console.error('Erreur lors de la vérification du statut joueur:', error)
         setIsPlayer(false)
