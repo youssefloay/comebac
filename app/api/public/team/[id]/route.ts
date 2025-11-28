@@ -20,16 +20,27 @@ async function getCachedData(key: string, fetcher: () => Promise<any>) {
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
     if (!adminDb) {
+      console.error('❌ adminDb is not initialized')
       return NextResponse.json({ error: 'Database not initialized' }, { status: 500 })
     }
 
-    const teamId = params.id
+    // Gérer params qui peut être une Promise dans Next.js 16
+    const resolvedParams = params instanceof Promise ? await params : params
+    const teamId = resolvedParams.id
+
+    if (!teamId) {
+      return NextResponse.json({ error: 'Team ID is required' }, { status: 400 })
+    }
 
     const data = await getCachedData(`team-${teamId}`, async () => {
+      if (!adminDb) {
+        throw new Error('Database not initialized')
+      }
+      
       // Charger uniquement les données nécessaires pour cette équipe
       const [teamDoc, playersSnap, playerAccountsSnap, coachAccountsSnap, homeMatchesSnap, awayMatchesSnap, resultsSnap, statsSnap] = await Promise.all([
         adminDb.collection('teams').doc(teamId).get(),
@@ -193,8 +204,16 @@ export async function GET(
     })
   } catch (error: any) {
     console.error('❌ Erreur API public/team:', error)
+    console.error('Détails:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    })
     return NextResponse.json(
-      { error: 'Failed to fetch team data' },
+      { 
+        error: 'Failed to fetch team data',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      },
       { status: 500 }
     )
   }

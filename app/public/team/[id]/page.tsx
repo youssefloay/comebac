@@ -37,15 +37,30 @@ export default function TeamDetailPage() {
   useEffect(() => {
     const fetchTeamDetails = async () => {
       try {
-        console.log('🔄 Chargement des détails de l\'équipe...')
+        console.log('🔄 Chargement des détails de l\'équipe...', teamId)
+        
+        if (!teamId) {
+          console.error('❌ Team ID manquant')
+          setLoading(false)
+          return
+        }
         
         // Utiliser l'API route optimisée avec cache
         const response = await fetch(`/api/public/team/${teamId}`)
+        
         if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          console.error('❌ Erreur API:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData.error,
+            details: errorData.details
+          })
+          
           if (response.status === 404) {
             console.error('Équipe non trouvée')
           } else {
-            throw new Error('Failed to fetch team data')
+            throw new Error(`Failed to fetch team data: ${response.status} ${errorData.error || response.statusText}`)
           }
           setLoading(false)
           return
@@ -53,8 +68,8 @@ export default function TeamDetailPage() {
         
         const data = await response.json()
         
-        if (!data.team) {
-          console.error('Équipe non trouvée')
+        if (!data || !data.team) {
+          console.error('❌ Données invalides reçues:', data)
           setLoading(false)
           return
         }
