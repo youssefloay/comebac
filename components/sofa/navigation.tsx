@@ -33,17 +33,14 @@ export function SofaNavigation() {
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-700/50 shadow-md overflow-hidden"
+              className="relative"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 blur-sm group-hover:blur-md transition-all"></div>
-              <div className="relative w-full h-full flex items-center justify-center p-1 sm:p-1.5">
-                <img 
-                  src="/comebac.png" 
-                  alt="ComeBac League" 
-                  className="w-[90%] h-[90%] object-contain object-center"
-                  style={{ imageRendering: 'auto' }}
-                />
-              </div>
+              <img 
+                src="/comebac.png" 
+                alt="ComeBac League" 
+                className="w-9 h-9 sm:w-10 sm:h-10 object-contain"
+                style={{ imageRendering: 'auto' }}
+              />
             </motion.div>
             <div className="hidden sm:block">
               <h1 className="text-base sm:text-lg font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">
