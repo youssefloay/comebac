@@ -36,7 +36,7 @@ export function PremierLeagueNavigation() {
         <Link href={user ? "/public" : "/"} className="pl-logo">
           <div className="pl-logo-icon">
             <img
-              src="/comebac-logo.svg"
+              src="/comebac.png"
               alt="ComeBac League"
               className="w-8 h-8 object-contain rounded"
             />
