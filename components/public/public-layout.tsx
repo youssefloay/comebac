@@ -51,10 +51,13 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                 whileTap={{ scale: 0.95 }}
                 className="relative w-8 h-8 rounded-full bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-700/50 shadow-md flex items-center justify-center overflow-hidden"
               >
-                <SimpleLogo 
-                  className="w-[75%] h-[75%] object-contain"
-                  alt="ComeBac League"
-                />
+                <div className="w-[75%] h-[75%] flex items-center justify-center">
+                  <img 
+                    src="/comebac.png?v=2" 
+                    alt="ComeBac League" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
               </motion.div>
               <div>
                 <h1 className="text-sm font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">

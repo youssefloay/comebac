@@ -41,7 +41,7 @@ export function Logo({
 
   return (
     <Image
-      src="/comebac.png"
+      src="/comebac.png?v=2"
       alt={alt}
       width={width}
       height={height}
@@ -85,7 +85,7 @@ export function SimpleLogo({
   // Essayer d'abord le PNG (nouveau logo optimisé)
   return (
     <img
-      src="/comebac.png"
+      src="/comebac.png?v=2"
       alt={alt}
       className={className}
       onError={() => setImageError(true)}
