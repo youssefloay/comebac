@@ -1,7 +1,7 @@
 export function getPlayerWelcomeEmailHtml(playerName: string, teamName: string, resetLink: string, playerEmail: string) {
   const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.comebac.com').replace(/\/$/, '')
   const assetBaseUrl = (process.env.NEXT_PUBLIC_EMAIL_ASSET_URL || 'https://www.comebac.com').replace(/\/$/, '')
-  const logoUrl = `${assetBaseUrl}/comebac.png`
+  const logoUrl = `${assetBaseUrl}/comebac.png?v=2`
 
   return `
     <!DOCTYPE html>
@@ -225,7 +225,7 @@ export function getPlayerWelcomeEmailHtml(playerName: string, teamName: string, 
 export function getCoachWelcomeEmailHtml(email: string, firstName: string, lastName: string, teamName: string, resetLink: string) {
   const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.comebac.com').replace(/\/$/, '')
   const assetBaseUrl = (process.env.NEXT_PUBLIC_EMAIL_ASSET_URL || 'https://www.comebac.com').replace(/\/$/, '')
-  const logoUrl = `${assetBaseUrl}/comebac.png`
+  const logoUrl = `${assetBaseUrl}/comebac.png?v=2`
 
   return `
     <!DOCTYPE html>
