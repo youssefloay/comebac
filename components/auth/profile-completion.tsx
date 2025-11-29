@@ -113,7 +113,8 @@ export function ProfileCompletion({ user, onComplete }: ProfileCompletionProps) 
               <img 
                 src="/comebac.png" 
                 alt="ComeBac League" 
-                className="w-16 h-16 object-contain rounded-lg"
+                className="w-16 h-16 object-contain object-center rounded-lg bg-white dark:bg-gray-900"
+                style={{ imageRendering: 'auto' }}
               />
             </motion.div>
             <CardTitle className="text-2xl font-bold text-gray-900">

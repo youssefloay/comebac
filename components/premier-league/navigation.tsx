@@ -38,7 +38,8 @@ export function PremierLeagueNavigation() {
             <img
               src="/comebac.png"
               alt="ComeBac League"
-              className="w-8 h-8 object-contain rounded"
+              className="w-8 h-8 object-contain object-center rounded bg-white dark:bg-gray-900"
+              style={{ imageRendering: 'auto' }}
             />
           </div>
           <div>

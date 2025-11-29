@@ -39,7 +39,8 @@ export function SofaNavigation() {
               <img 
                 src="/comebac.png" 
                 alt="ComeBac League" 
-                className="relative w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-lg sm:rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-md"
+                className="relative w-9 h-9 sm:w-10 sm:h-10 object-contain object-center rounded-lg sm:rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-md bg-white dark:bg-gray-900"
+                style={{ imageRendering: 'auto' }}
               />
             </motion.div>
             <div className="hidden sm:block">
