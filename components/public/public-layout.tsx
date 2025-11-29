@@ -49,15 +49,12 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative w-8 h-8 rounded-full flex items-center justify-center bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-700/50 shadow-md overflow-hidden"
+                className="relative"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 blur-sm group-hover:blur-md transition-all"></div>
-                <div className="relative w-full h-full flex items-center justify-center p-2">
-                  <SimpleLogo 
-                    className="max-w-[85%] max-h-[85%] w-auto h-auto object-contain object-center"
-                    alt="ComeBac League"
-                  />
-                </div>
+                <SimpleLogo 
+                  className="w-8 h-8 object-contain"
+                  alt="ComeBac League"
+                />
               </motion.div>
               <div>
                 <h1 className="text-sm font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">

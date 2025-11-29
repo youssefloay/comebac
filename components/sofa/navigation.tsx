@@ -36,11 +36,11 @@ export function SofaNavigation() {
               className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-700/50 shadow-md overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 blur-sm group-hover:blur-md transition-all"></div>
-              <div className="relative w-full h-full flex items-center justify-center p-2.5 sm:p-2">
+              <div className="relative w-full h-full flex items-center justify-center p-1 sm:p-1.5">
                 <img 
                   src="/comebac.png" 
                   alt="ComeBac League" 
-                  className="max-w-[85%] max-h-[85%] w-auto h-auto object-contain object-center"
+                  className="w-[90%] h-[90%] object-contain object-center"
                   style={{ imageRendering: 'auto' }}
                 />
               </div>
