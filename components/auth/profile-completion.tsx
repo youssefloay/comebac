@@ -111,7 +111,7 @@ export function ProfileCompletion({ user, onComplete }: ProfileCompletionProps) 
               className="mx-auto mb-4 w-16 h-16 flex items-center justify-center"
             >
               <img 
-                src="/comebac.png" 
+                src="/comebac-logo.svg" 
                 alt="ComeBac League" 
                 className="w-16 h-16 object-contain rounded-lg"
               />

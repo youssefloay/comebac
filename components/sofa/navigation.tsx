@@ -37,7 +37,7 @@ export function SofaNavigation() {
             >
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl blur-sm group-hover:blur-md transition-all"></div>
               <img 
-                src="/comebac.png" 
+                src="/comebac-logo.svg" 
                 alt="ComeBac League" 
                 className="relative w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-lg sm:rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-md"
               />

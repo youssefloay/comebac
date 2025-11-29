@@ -41,7 +41,7 @@ export function Logo({
 
   return (
     <Image
-      src="/comebac.png"
+      src="/comebac-logo.svg"
       alt={alt}
       width={width}
       height={height}
@@ -82,10 +82,10 @@ export function SimpleLogo({
     )
   }
 
-  // Essayer d'abord le PNG
+  // Essayer d'abord le SVG (nouveau logo)
   return (
     <img
-      src="/comebac.png"
+      src="/comebac-logo.svg"
       alt={alt}
       className={className}
       onError={() => setImageError(true)}
