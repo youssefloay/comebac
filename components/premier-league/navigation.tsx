@@ -34,11 +34,11 @@ export function PremierLeagueNavigation() {
       <div className="pl-nav-content">
         {/* Logo */}
         <Link href={user ? "/public" : "/"} className="pl-logo">
-          <div className="pl-logo-icon">
+          <div className="pl-logo-icon w-8 h-8 rounded-full flex items-center justify-center bg-white dark:bg-gray-900 overflow-hidden">
             <img
               src="/comebac.png"
               alt="ComeBac League"
-              className="w-8 h-8 object-contain object-center rounded bg-white dark:bg-gray-900"
+              className="w-full h-full object-contain object-center p-1"
               style={{ imageRendering: 'auto' }}
             />
           </div>

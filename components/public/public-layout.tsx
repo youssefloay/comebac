@@ -49,11 +49,11 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative"
+                className="relative w-8 h-8 rounded-full flex items-center justify-center bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-700/50 shadow-md overflow-hidden"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg blur-sm group-hover:blur-md transition-all"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 blur-sm group-hover:blur-md transition-all"></div>
                 <SimpleLogo 
-                  className="relative w-8 h-8 object-contain rounded-lg border border-gray-200/50 dark:border-gray-700/50 shadow-md"
+                  className="relative w-full h-full object-contain object-center p-1"
                   alt="ComeBac League"
                 />
               </motion.div>

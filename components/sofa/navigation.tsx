@@ -33,13 +33,13 @@ export function SofaNavigation() {
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="relative"
+              className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-700/50 shadow-md overflow-hidden"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl blur-sm group-hover:blur-md transition-all"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 blur-sm group-hover:blur-md transition-all"></div>
               <img 
                 src="/comebac.png" 
                 alt="ComeBac League" 
-                className="relative w-9 h-9 sm:w-10 sm:h-10 object-contain object-center rounded-lg sm:rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-md bg-white dark:bg-gray-900"
+                className="relative w-full h-full object-contain object-center p-1.5"
                 style={{ imageRendering: 'auto' }}
               />
             </motion.div>
