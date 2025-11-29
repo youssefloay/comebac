@@ -21,7 +21,8 @@
     "update-acting-coach-status": "npx tsx scripts/update-acting-coach-status.ts",
     "register-se7en-team": "npx tsx scripts/register-se7en-team.ts",
     "update-se7en-team": "npx tsx scripts/update-se7en-team.ts",
-    "backup:auto": "npx tsx scripts/backup-automatic.ts"
+    "backup:auto": "npx tsx scripts/backup-automatic.ts",
+    "generate-pwa-icons": "bash scripts/generate-pwa-icons.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

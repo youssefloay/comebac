@@ -43,23 +43,23 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/comebac.png', sizes: '32x32', type: 'image/png' },
-      { url: '/comebac.png', sizes: '16x16', type: 'image/png' },
+      { url: '/icons/icon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/icon-16x16.png', sizes: '16x16', type: 'image/png' },
     ],
     apple: [
-      { url: '/comebac.png', sizes: '180x180', type: 'image/png' },
-      { url: '/comebac.png', sizes: '152x152', type: 'image/png' },
-      { url: '/comebac.png', sizes: '144x144', type: 'image/png' },
-      { url: '/comebac.png', sizes: '120x120', type: 'image/png' },
-      { url: '/comebac.png', sizes: '114x114', type: 'image/png' },
-      { url: '/comebac.png', sizes: '76x76', type: 'image/png' },
-      { url: '/comebac.png', sizes: '72x72', type: 'image/png' },
-      { url: '/comebac.png', sizes: '60x60', type: 'image/png' },
-      { url: '/comebac.png', sizes: '57x57', type: 'image/png' },
+      { url: '/icons/icon-180x180.png', sizes: '180x180', type: 'image/png' },
+      { url: '/icons/icon-152x152.png', sizes: '152x152', type: 'image/png' },
+      { url: '/icons/icon-144x144.png', sizes: '144x144', type: 'image/png' },
+      { url: '/icons/icon-120x120.png', sizes: '120x120', type: 'image/png' },
+      { url: '/icons/icon-114x114.png', sizes: '114x114', type: 'image/png' },
+      { url: '/icons/icon-76x76.png', sizes: '76x76', type: 'image/png' },
+      { url: '/icons/icon-72x72.png', sizes: '72x72', type: 'image/png' },
+      { url: '/icons/icon-60x60.png', sizes: '60x60', type: 'image/png' },
+      { url: '/icons/icon-57x57.png', sizes: '57x57', type: 'image/png' },
     ],
     other: [
-      { rel: 'apple-touch-icon-precomposed', url: '/comebac.png' },
-      { rel: 'shortcut icon', url: '/comebac.png' },
+      { rel: 'apple-touch-icon-precomposed', url: '/icons/icon-180x180.png' },
+      { rel: 'shortcut icon', url: '/icons/icon-32x32.png' },
     ],
   },
   manifest: '/manifest.json',
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
     title: 'ComeBac League',
     startupImage: [
       {
-        url: '/comebac.png',
+        url: '/icons/icon-512x512.png',
         media: '(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)',
       },
     ],
@@ -122,16 +122,25 @@ export default function RootLayout({
     <html lang="fr">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-        <link rel="icon" type="image/png" href="/comebac.png" />
-        <link rel="shortcut icon" type="image/png" href="/comebac.png" />
-        <link rel="apple-touch-icon" href="/comebac.png" />
-        <link rel="apple-touch-icon-precomposed" href="/comebac.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
+        <link rel="shortcut icon" type="image/png" href="/icons/icon-32x32.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+        <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.png" />
+        <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-120x120.png" />
+        <link rel="apple-touch-icon" sizes="114x114" href="/icons/icon-114x114.png" />
+        <link rel="apple-touch-icon" sizes="76x76" href="/icons/icon-76x76.png" />
+        <link rel="apple-touch-icon" sizes="72x72" href="/icons/icon-72x72.png" />
+        <link rel="apple-touch-icon" sizes="60x60" href="/icons/icon-60x60.png" />
+        <link rel="apple-touch-icon" sizes="57x57" href="/icons/icon-57x57.png" />
+        <link rel="apple-touch-icon-precomposed" href="/icons/icon-180x180.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="ComeBac League" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content="ComeBac League" />
-        <meta name="msapplication-TileImage" content="/comebac.png" />
+        <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
         <meta name="msapplication-TileColor" content="#10b981" />
         <meta name="theme-color" content="#10b981" />
         <meta name="google-adsense-account" content="ca-pub-6906465408852552" />
