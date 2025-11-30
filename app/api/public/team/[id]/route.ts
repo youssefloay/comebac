@@ -128,11 +128,16 @@ export async function GET(
       }))
       
       const allCoachAccounts = coachAccountsSnap.docs.map(doc => doc.data())
-      const coachEmails = new Set(allCoachAccounts.map((coach: any) => coach.email))
+      const coachEmails = new Set(
+        allCoachAccounts
+          .map((coach: any) => coach.email?.toLowerCase().trim())
+          .filter((email: string) => email)
+      )
       const actingCoachEmails = new Set(
         allPlayerAccounts
           .filter((account: any) => account.isActingCoach === true)
-          .map((account: any) => account.email)
+          .map((account: any) => account.email?.toLowerCase().trim())
+          .filter((email: string) => email)
       )
 
       // Créer un Map pour fusionner les données (email comme clé)
