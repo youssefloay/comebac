@@ -115,13 +115,18 @@ export async function GET(
         }
       })
 
-      // Filtrer les joueurs (exclure les entraîneurs)
+      // PRIORITÉ: Utiliser playerAccounts comme source de vérité (joueurs actifs)
+      // Combiner avec players pour les données complémentaires
       const allPlayersData = playersSnap.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }))
 
-      const allPlayerAccounts = playerAccountsSnap.docs.map(doc => doc.data())
+      const allPlayerAccounts = playerAccountsSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      
       const allCoachAccounts = coachAccountsSnap.docs.map(doc => doc.data())
       const coachEmails = new Set(allCoachAccounts.map((coach: any) => coach.email))
       const actingCoachEmails = new Set(
@@ -130,19 +135,106 @@ export async function GET(
           .map((account: any) => account.email)
       )
 
-      const playersData = allPlayersData
-        .filter((player: any) => {
-          const playerEmail = player.email
-          const isCoach = 
-            player.isCoach === true || 
-            player.position?.toLowerCase().includes('entraîneur') ||
-            player.position?.toLowerCase().includes('entraineur') ||
-            player.position?.toLowerCase().includes('coach') ||
-            (playerEmail && coachEmails.has(playerEmail)) ||
-            (playerEmail && actingCoachEmails.has(playerEmail))
-          return !isCoach
-        })
-        .sort((a: any, b: any) => (a.number || 0) - (b.number || 0))
+      // Créer un Map pour fusionner les données (email comme clé)
+      const playersMap = new Map<string, any>()
+      
+      // PRIORITÉ 1: Ajouter tous les joueurs de playerAccounts (source de vérité)
+      allPlayerAccounts.forEach((account: any) => {
+        const email = account.email?.toLowerCase().trim()
+        const playerEmail = email || ''
+        
+        // Exclure les coaches
+        const isCoach = 
+          account.isActingCoach === true ||
+          (playerEmail && coachEmails.has(playerEmail)) ||
+          (playerEmail && actingCoachEmails.has(playerEmail))
+        
+        if (!isCoach && account.status !== 'inactive') {
+          // Construire le nom complet
+          const name = account.nickname 
+            ? `${account.firstName || ''} ${account.lastName || ''}`.trim() || account.nickname
+            : `${account.firstName || ''} ${account.lastName || ''}`.trim()
+          
+          const playerData = {
+            id: account.id,
+            name: name,
+            firstName: account.firstName,
+            lastName: account.lastName,
+            nickname: account.nickname,
+            email: account.email,
+            position: account.position,
+            number: account.jerseyNumber || account.number,
+            jerseyNumber: account.jerseyNumber || account.number,
+            teamId: account.teamId,
+            photo: account.photo,
+            isCaptain: account.isCaptain || false,
+            ...account
+          }
+          
+          if (email) {
+            playersMap.set(email, playerData)
+          } else {
+            // Si pas d'email, utiliser id comme clé
+            playersMap.set(account.id, playerData)
+          }
+        }
+      })
+      
+      // PRIORITÉ 2: Compléter avec les joueurs de players qui ne sont pas déjà dans playerAccounts
+      allPlayersData.forEach((player: any) => {
+        const playerEmail = player.email?.toLowerCase().trim()
+        const isCoach = 
+          player.isCoach === true || 
+          player.position?.toLowerCase().includes('entraîneur') ||
+          player.position?.toLowerCase().includes('entraineur') ||
+          player.position?.toLowerCase().includes('coach') ||
+          (playerEmail && coachEmails.has(playerEmail)) ||
+          (playerEmail && actingCoachEmails.has(playerEmail))
+        
+        if (!isCoach) {
+          // Construire le nom complet
+          const name = player.name || `${player.firstName || ''} ${player.lastName || ''}`.trim()
+          
+          if (playerEmail && !playersMap.has(playerEmail)) {
+            // Joueur dans players mais pas dans playerAccounts - l'ajouter
+            playersMap.set(playerEmail, {
+              id: player.id,
+              name: name,
+              firstName: player.firstName,
+              lastName: player.lastName,
+              nickname: player.nickname,
+              email: player.email,
+              position: player.position,
+              number: player.number,
+              jerseyNumber: player.number,
+              teamId: player.teamId,
+              photo: player.photo,
+              ...player
+            })
+          } else if (!playerEmail) {
+            // Pas d'email, utiliser id comme clé
+            if (!playersMap.has(player.id)) {
+              playersMap.set(player.id, {
+                id: player.id,
+                name: name,
+                firstName: player.firstName,
+                lastName: player.lastName,
+                nickname: player.nickname,
+                position: player.position,
+                number: player.number,
+                jerseyNumber: player.number,
+                teamId: player.teamId,
+                photo: player.photo,
+                ...player
+              })
+            }
+          }
+        }
+      })
+
+      // Convertir le Map en array et trier
+      const playersData = Array.from(playersMap.values())
+        .sort((a: any, b: any) => (a.number || a.jerseyNumber || 0) - (b.number || b.jerseyNumber || 0))
 
       // Traiter les matchs
       const teamMatches = matchesSnap.map((doc: any) => {
