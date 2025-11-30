@@ -3,14 +3,68 @@ import { db } from '@/lib/firebase'
 import { collection, getDocs } from 'firebase/firestore'
 import * as XLSX from 'xlsx'
 
+// Function to translate positions to English
+const translatePosition = (position: string): string => {
+  if (!position || position === 'N/A') return 'N/A'
+  
+  const positionLower = position.toLowerCase()
+  
+  // French to English position mapping
+  const positionMap: Record<string, string> = {
+    'gardien': 'Goalkeeper',
+    'goalkeeper': 'Goalkeeper',
+    'défenseur': 'Defender',
+    'defender': 'Defender',
+    'défenseur central': 'Center Back',
+    'center back': 'Center Back',
+    'latéral': 'Full Back',
+    'full back': 'Full Back',
+    'arrière latéral': 'Full Back',
+    'milieu': 'Midfielder',
+    'midfielder': 'Midfielder',
+    'milieu défensif': 'Defensive Midfielder',
+    'defensive midfielder': 'Defensive Midfielder',
+    'milieu central': 'Central Midfielder',
+    'central midfielder': 'Central Midfielder',
+    'milieu offensif': 'Attacking Midfielder',
+    'attacking midfielder': 'Attacking Midfielder',
+    'ailier': 'Winger',
+    'winger': 'Winger',
+    'attaquant': 'Forward',
+    'forward': 'Forward',
+    'striker': 'Striker',
+    'avant centre': 'Striker',
+    'entraîneur': 'Coach',
+    'coach': 'Coach',
+    'entraineur': 'Coach'
+  }
+  
+  // Check for exact match first
+  if (positionMap[positionLower]) {
+    return positionMap[positionLower]
+  }
+  
+  // Check for partial matches
+  for (const [french, english] of Object.entries(positionMap)) {
+    if (positionLower.includes(french)) {
+      return english
+    }
+  }
+  
+  // If no match found, capitalize first letter of each word
+  return position.split(' ').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  ).join(' ')
+}
+
 // Mapping des colonnes avec leurs labels et fonctions d'extraction
 const columnDefinitions: Record<string, { label: string, extract: (player: any) => any }> = {
   nickname: {
-    label: 'Surnom',
+    label: 'Nickname',
     extract: (p: any) => p.nickname || 'N/A'
   },
   fullName: {
-    label: 'Nom complet',
+    label: 'Full Name',
     extract: (p: any) => {
       const firstName = p.firstName || ''
       const lastName = p.lastName || ''
@@ -18,11 +72,11 @@ const columnDefinitions: Record<string, { label: string, extract: (player: any) 
     }
   },
   number: {
-    label: 'Numéro',
+    label: 'Number',
     extract: (p: any) => p.jerseyNumber || p.number || 'N/A'
   },
   tshirtSize: {
-    label: 'Taille T-shirt',
+    label: 'T-shirt Size',
     extract: (p: any) => p.tshirtSize || 'N/A'
   },
   email: {
@@ -30,23 +84,23 @@ const columnDefinitions: Record<string, { label: string, extract: (player: any) 
     extract: (p: any) => p.email || 'N/A'
   },
   phone: {
-    label: 'Téléphone',
+    label: 'Phone',
     extract: (p: any) => p.phone || p.phoneNumber || 'N/A'
   },
   position: {
     label: 'Position',
-    extract: (p: any) => p.position || 'N/A'
+    extract: (p: any) => translatePosition(p.position || 'N/A')
   },
   height: {
-    label: 'Taille (cm)',
+    label: 'Height (cm)',
     extract: (p: any) => p.height || p.heightCm || 'N/A'
   },
   birthDate: {
-    label: 'Date de naissance',
+    label: 'Birth Date',
     extract: (p: any) => {
       if (p.birthDate) {
         if (p.birthDate.toDate) {
-          return p.birthDate.toDate().toLocaleDateString('fr-FR')
+          return p.birthDate.toDate().toLocaleDateString('en-US')
         }
         if (typeof p.birthDate === 'string') {
           return p.birthDate
@@ -56,16 +110,24 @@ const columnDefinitions: Record<string, { label: string, extract: (player: any) 
     }
   },
   teamName: {
-    label: 'Équipe',
+    label: 'Team',
     extract: (p: any) => p.teamName || 'N/A'
   },
   grade: {
-    label: 'Classe',
+    label: 'Grade',
     extract: (p: any) => p.grade || p.class || 'N/A'
   },
   foot: {
-    label: 'Pied fort',
-    extract: (p: any) => p.foot || p.preferredFoot || 'N/A'
+    label: 'Preferred Foot',
+    extract: (p: any) => {
+      const foot = p.foot || p.preferredFoot || 'N/A'
+      if (foot === 'N/A') return 'N/A'
+      const footLower = foot.toLowerCase()
+      if (footLower.includes('droit') || footLower.includes('right')) return 'Right'
+      if (footLower.includes('gauche') || footLower.includes('left')) return 'Left'
+      if (footLower.includes('ambidextre') || footLower.includes('both')) return 'Both'
+      return foot
+    }
   }
 }
 
@@ -95,7 +157,7 @@ export async function GET(request: NextRequest) {
     
     if (selectedColumns.length === 0) {
       return NextResponse.json(
-        { error: 'Aucune colonne valide sélectionnée' },
+        { error: 'No valid columns selected' },
         { status: 400 }
       )
     }
@@ -120,7 +182,7 @@ export async function GET(request: NextRequest) {
       teams = teams.filter(team => selectedTeamIds.includes(team.id))
       if (teams.length === 0) {
         return NextResponse.json(
-          { error: 'Aucune équipe trouvée avec les IDs fournis' },
+          { error: 'No teams found with the provided IDs' },
           { status: 404 }
         )
       }
@@ -300,7 +362,7 @@ export async function GET(request: NextRequest) {
 
       // Si aucune donnée, ajouter une ligne vide
       if (teamPlayers.length === 0) {
-        sheetData.push(selectedColumns.map(() => 'Aucun joueur'))
+        sheetData.push(selectedColumns.map(() => 'No players'))
       }
 
       // Créer la feuille
@@ -338,7 +400,7 @@ export async function GET(request: NextRequest) {
       
       // S'assurer qu'il y a un nom
       if (!sheetName || sheetName.length === 0) {
-        sheetName = `Equipe_${team.id.substring(0, 20)}`
+        sheetName = `Team_${team.id.substring(0, 20)}`
       }
 
       console.log(`📊 Feuille créée: ${sheetName} avec ${teamPlayers.length} joueurs`)
@@ -352,8 +414,8 @@ export async function GET(request: NextRequest) {
     // Vérifier qu'il y a au moins une feuille
     if (workbook.SheetNames.length === 0) {
       // Créer une feuille vide si aucune équipe
-      const emptySheet = XLSX.utils.aoa_to_sheet([['Aucune équipe trouvée']])
-      XLSX.utils.book_append_sheet(workbook, emptySheet, 'Aucune équipe')
+      const emptySheet = XLSX.utils.aoa_to_sheet([['No teams found']])
+      XLSX.utils.book_append_sheet(workbook, emptySheet, 'No teams')
     }
 
     // Générer le buffer Excel
@@ -365,13 +427,13 @@ export async function GET(request: NextRequest) {
     return new NextResponse(excelBuffer, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="equipes_${new Date().toISOString().split('T')[0]}.xlsx"`
+        'Content-Disposition': `attachment; filename="teams_${new Date().toISOString().split('T')[0]}.xlsx"`
       }
     })
   } catch (error: any) {
     console.error('Erreur export équipes Excel:', error)
     return NextResponse.json(
-      { error: 'Erreur lors de l\'export', details: error.message },
+      { error: 'Error during export', details: error.message },
       { status: 500 }
     )
   }
