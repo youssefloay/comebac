@@ -33,12 +33,12 @@ export function SofaNavigation() {
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-700/50 shadow-md flex items-center justify-center overflow-hidden"
+              className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-700/50 shadow-md flex items-center justify-center overflow-hidden"
             >
               <img 
                 src="/comebac.png?v=2" 
                 alt="ComeBac League" 
-                className="w-[75%] h-[75%] object-contain"
+                className="w-[85%] h-[85%] object-contain"
                 style={{ imageRendering: 'auto' }}
               />
             </motion.div>
