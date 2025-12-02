@@ -23,8 +23,8 @@ export default function TeamsPage() {
   useEffect(() => {
     const fetchTeamsWithPlayers = async () => {
       try {
-        // Fetch teams
-        const teamsSnap = await getDocs(collection(db, "teams"))
+        // Fetch teams (only active ones)
+        const teamsSnap = await getDocs(query(collection(db, "teams"), where("isActive", "==", true)))
         const teamsData = teamsSnap.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),

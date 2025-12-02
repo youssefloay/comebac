@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { db } from "@/lib/firebase"
-import { collection, getDocs } from "firebase/firestore"
+import { collection, getDocs, query, where } from "firebase/firestore"
 import type { TeamStatistics } from "@/lib/types"
 import { Trophy, TrendingUp, TrendingDown, Minus } from "lucide-react"
 import { motion } from "framer-motion"
@@ -21,18 +21,27 @@ export default function CoachRankingPage() {
       try {
         const [statsSnap, teamsSnap] = await Promise.all([
           getDocs(collection(db, "teamStatistics")),
-          getDocs(collection(db, "teams"))
+          getDocs(query(collection(db, "teams"), where("isActive", "==", true)))
         ])
         
         const teamsMap = new Map()
+        const activeTeamIds = new Set<string>()
         teamsSnap.docs.forEach((doc) => {
-          teamsMap.set(doc.id, { id: doc.id, ...doc.data() })
+          const teamData = { id: doc.id, ...doc.data() }
+          teamsMap.set(doc.id, teamData)
+          activeTeamIds.add(doc.id)
         })
 
         const teamStatsMap = new Map()
         
         statsSnap.docs.forEach((doc) => {
           const data = doc.data() as TeamStatistics
+          
+          // Filtrer les équipes inactives
+          if (!activeTeamIds.has(data.teamId)) {
+            return
+          }
+          
           const existing = teamStatsMap.get(data.teamId)
           
           if (!existing || (data.points || 0) > (existing.points || 0)) {

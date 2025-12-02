@@ -6,6 +6,7 @@ export interface Team {
   school?: string // Nom de l'école/établissement
   schoolName?: string // Alias pour school (pour compatibilité)
   teamGrade?: string // Classe/Niveau (ex: "1ère", "Terminale")
+  isActive?: boolean // Si l'équipe est active (par défaut true) - les équipes inactives sont archivées mais pas supprimées
   coach?: {
     firstName: string
     lastName: string

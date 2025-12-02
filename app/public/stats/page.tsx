@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { db } from "@/lib/firebase"
-import { collection, getDocs } from "firebase/firestore"
+import { collection, getDocs, query, where } from "firebase/firestore"
 
 interface TopScorer {
   playerName: string
@@ -26,7 +26,7 @@ export default function StatsPage() {
       try {
         // Fetch all results to calculate top scorers and assisters
         const resultsSnap = await getDocs(collection(db, "matchResults"))
-        const teamsSnap = await getDocs(collection(db, "teams"))
+        const teamsSnap = await getDocs(query(collection(db, "teams"), where("isActive", "==", true)))
 
         const teamsMap = new Map()
         teamsSnap.docs.forEach((doc) => {

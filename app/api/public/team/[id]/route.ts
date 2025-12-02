@@ -3,7 +3,7 @@ import { adminDb } from '@/lib/firebase-admin'
 
 // Cache simple en mémoire
 const cache = new Map<string, { data: any; timestamp: number }>()
-const CACHE_DURATION = 60 * 1000 // 1 minute
+const CACHE_DURATION = 30 * 1000 // 30 secondes (réduit pour tests)
 
 async function getCachedData(key: string, fetcher: () => Promise<any>) {
   const cached = cache.get(key)
@@ -36,7 +36,7 @@ export async function GET(
       return NextResponse.json({ error: 'Team ID is required' }, { status: 400 })
     }
 
-    const data = await getCachedData(`team-${teamId}`, async () => {
+    const data = await getCachedData(`team-${teamId}-v3`, async () => {
       if (!adminDb) {
         throw new Error('Database not initialized')
       }
@@ -80,6 +80,11 @@ export async function GET(
       }
 
       const teamData = { id: teamDoc.id, ...teamDoc.data() }
+      
+      // Vérifier si l'équipe est active (ne pas afficher les équipes archivées côté public)
+      if (teamData.isActive === false) {
+        return NextResponse.json({ error: 'Team not found' }, { status: 404 })
+      }
 
       // Si le coach n'est pas rempli, chercher dans coachAccounts
       if (!teamData.coach || !teamData.coach.firstName) {

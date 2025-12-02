@@ -42,9 +42,8 @@ export default function MatchesPage() {
         )
         const matchesSnap = await getDocs(matchesQuery)
         
-        // Fetch teams
-        const teamsRef = collection(db, "teams")
-        const teamsSnap = await getDocs(teamsRef)
+        // Fetch teams (only active ones)
+        const teamsSnap = await getDocs(query(collection(db, "teams"), where("isActive", "==", true)))
         
         // Fetch results
         const resultsRef = collection(db, "matchResults")

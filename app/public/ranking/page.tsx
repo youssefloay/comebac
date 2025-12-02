@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { db } from "@/lib/firebase"
-import { collection, getDocs } from "firebase/firestore"
+import { collection, getDocs, query, where } from "firebase/firestore"
 import type { TeamStatistics, Team } from "@/lib/types"
 import { t } from "@/lib/i18n"
 import { TeamLink } from "@/components/ui/team-link"
@@ -26,19 +26,29 @@ export default function RankingPage() {
       try {
         const [statsSnap, teamsSnap] = await Promise.all([
           getDocs(collection(db, "teamStatistics")),
-          getDocs(collection(db, "teams"))
+          getDocs(query(collection(db, "teams"), where("isActive", "==", true)))
         ])
         
         const teamsMap = new Map()
+        const activeTeamIds = new Set<string>()
         teamsSnap.docs.forEach((doc) => {
-          teamsMap.set(doc.id, { id: doc.id, ...doc.data() })
+          const teamData = { id: doc.id, ...doc.data() }
+          teamsMap.set(doc.id, teamData)
+          activeTeamIds.add(doc.id)
         })
 
         // Remove duplicates by keeping only the latest/best entry per team
+        // ET filtrer pour ne garder que les équipes actives
         const teamStatsMap = new Map()
         
         statsSnap.docs.forEach((doc) => {
           const data = doc.data() as TeamStatistics
+          
+          // Filtrer les équipes inactives
+          if (!activeTeamIds.has(data.teamId)) {
+            return
+          }
+          
           const existing = teamStatsMap.get(data.teamId)
           
           if (!existing) {

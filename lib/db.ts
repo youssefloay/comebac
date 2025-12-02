@@ -75,10 +75,20 @@ export async function createTeam(
   }
 }
 
-export async function getTeams(): Promise<Team[]> {
+export async function getTeams(includeInactive: boolean = false): Promise<Team[]> {
   try {
     console.log("[v0] Fetching teams from Firestore...");
-    const querySnapshot = await getDocs(collection(db, "teams"));
+    let querySnapshot;
+    
+    if (includeInactive) {
+      // Récupérer toutes les équipes (y compris inactives)
+      querySnapshot = await getDocs(collection(db, "teams"));
+    } else {
+      // Filtrer pour ne récupérer que les équipes actives (isActive !== false)
+      const q = query(collection(db, "teams"), where("isActive", "==", true));
+      querySnapshot = await getDocs(q);
+    }
+    
     console.log("[v0] Teams fetched:", querySnapshot.docs.length);
     return querySnapshot.docs.map((doc) => ({
       id: doc.id,

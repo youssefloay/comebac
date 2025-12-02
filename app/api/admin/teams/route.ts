@@ -2,9 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/firebase'
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, Timestamp, query, where } from 'firebase/firestore'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const teamsSnapshot = await getDocs(collection(db, 'teams'))
+    // Vérifier si on veut toutes les équipes (y compris inactives) ou seulement les actives
+    const { searchParams } = new URL(request.url)
+    const includeInactive = searchParams.get('includeInactive') === 'true'
+    
+    let teamsQuery = query(collection(db, 'teams'))
+    
+    // Par défaut, ne récupérer que les équipes actives (isActive === true)
+    if (!includeInactive) {
+      teamsQuery = query(collection(db, 'teams'), where('isActive', '==', true))
+    }
+    
+    const teamsSnapshot = await getDocs(teamsQuery)
     const teamsData = teamsSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -57,6 +68,7 @@ export async function POST(request: NextRequest) {
     
     const docRef = await addDoc(collection(db, 'teams'), {
       ...teamData,
+      isActive: teamData.isActive !== undefined ? teamData.isActive : true, // Par défaut active
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
     })
@@ -72,12 +84,24 @@ export async function PUT(request: NextRequest) {
   try {
     const { id, ...teamData } = await request.json()
     
-    await updateDoc(doc(db, 'teams', id), {
+    console.log(`[API] Updating team ${id} with data:`, teamData)
+    
+    // S'assurer que isActive est bien un boolean
+    const updateData: any = {
       ...teamData,
       updatedAt: Timestamp.now()
-    })
+    }
     
-    return NextResponse.json({ id, ...teamData })
+    // Si isActive est fourni, s'assurer qu'il est un boolean
+    if ('isActive' in teamData) {
+      updateData.isActive = teamData.isActive === true || teamData.isActive === 'true'
+    }
+    
+    await updateDoc(doc(db, 'teams', id), updateData)
+    
+    console.log(`[API] Team ${id} updated successfully with isActive: ${updateData.isActive}`)
+    
+    return NextResponse.json({ id, ...updateData })
   } catch (error) {
     console.error('Error updating team:', error)
     return NextResponse.json({ error: 'Failed to update team' }, { status: 500 })

@@ -65,14 +65,26 @@ export async function getCurrentRanking(): Promise<
   >
 > {
   try {
-    const allStats = await getAllTeamStatistics()
+    const [allStats, teams] = await Promise.all([
+      getAllTeamStatistics(),
+      getTeams() // Récupérer uniquement les équipes actives
+    ])
+    
+    // Créer un Set des IDs des équipes actives
+    const activeTeamIds = new Set(teams.map(t => t.id))
     
     console.log(`[v0] Raw statistics count: ${allStats.length}`)
+    console.log(`[v0] Active teams count: ${activeTeamIds.size}`)
     
     // Remove duplicates by keeping only the best entry per team
     const teamStatsMap = new Map<string, TeamStatistics>()
     
     allStats.forEach(stat => {
+      // Filtrer les équipes inactives
+      if (!activeTeamIds.has(stat.teamId)) {
+        return
+      }
+      
       const existing = teamStatsMap.get(stat.teamId)
       
       if (!existing) {
@@ -94,7 +106,7 @@ export async function getCurrentRanking(): Promise<
     })
     
     const uniqueStats = Array.from(teamStatsMap.values())
-    console.log(`[v0] Unique statistics count: ${uniqueStats.length}`)
+    console.log(`[v0] Unique statistics count (active teams only): ${uniqueStats.length}`)
     
     if (allStats.length !== uniqueStats.length) {
       console.warn(`[v0] ⚠️ Found ${allStats.length - uniqueStats.length} duplicate team statistics entries!`)

@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { Plus, Trash2, Edit2, AlertCircle, X, Users, TrendingUp, Calendar, UserCheck, Crown, CheckCircle, XCircle } from "lucide-react"
+import { Plus, Trash2, Edit2, AlertCircle, X, Users, TrendingUp, Calendar, UserCheck, Crown, CheckCircle, XCircle, Archive, ArchiveRestore, Filter } from "lucide-react"
 // Removed old imports - using API endpoints instead
 import type { Team } from "@/lib/types"
 import { ImageCropper } from "@/components/admin/ImageCropper"
@@ -78,15 +78,19 @@ export default function TeamsTab() {
   const [promotingPlayerId, setPromotingPlayerId] = useState<string | null>(null)
   const [teamsCoachInfo, setTeamsCoachInfo] = useState<Map<string, TeamCoachInfo>>(new Map())
   const [teamsPlayerCount, setTeamsPlayerCount] = useState<Map<string, number>>(new Map())
+  const [showArchived, setShowArchived] = useState(false)
 
   useEffect(() => {
     loadTeams()
-  }, [])
+  }, [showArchived])
 
   const loadTeams = async () => {
     try {
       setError(null)
-      const response = await fetch('/api/admin/teams')
+      const url = showArchived 
+        ? '/api/admin/teams?includeInactive=true'
+        : '/api/admin/teams'
+      const response = await fetch(url)
       if (!response.ok) throw new Error('Failed to fetch teams')
       const teamsData = await response.json()
       const teamsWithDates = teamsData.map((team: any) => ({
@@ -344,6 +348,43 @@ export default function TeamsTab() {
     setError(null)
   }
 
+  const handleToggleActive = async (team: Team) => {
+    const isCurrentlyActive = team.isActive !== false
+    const action = isCurrentlyActive ? 'archiver' : 'désarchiver'
+    
+    if (!confirm(`Voulez-vous ${action} l'équipe "${team.name}"?\n\n${isCurrentlyActive ? 'L\'équipe sera masquée des statistiques et classements mais ne sera pas supprimée.' : 'L\'équipe sera à nouveau visible dans les statistiques et classements.'}`)) {
+      return
+    }
+
+    try {
+      setError(null)
+      setLoading(true)
+      
+      const response = await fetch('/api/admin/teams', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: team.id,
+          isActive: !isCurrentlyActive
+        })
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update team')
+      }
+      
+      setSuccess(`Équipe "${team.name}" ${isCurrentlyActive ? 'archivée' : 'désarchivée'} avec succès`)
+      await loadTeams()
+      setTimeout(() => setSuccess(null), 5000)
+    } catch (err: any) {
+      setError(`Erreur lors de l'${action}: ${err.message}`)
+      console.error("Error toggling team active status:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -540,16 +581,32 @@ export default function TeamsTab() {
     <div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Gestion des Équipes</h2>
-        <button
-          onClick={() => {
-            handleCancel()
-            setShowForm(true)
-          }}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition w-full sm:w-auto justify-center"
-        >
-          <Plus className="w-5 h-5" />
-          <span className="text-sm sm:text-base">Nouvelle équipe</span>
-        </button>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button
+            onClick={() => setShowArchived(!showArchived)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition w-full sm:w-auto justify-center ${
+              showArchived
+                ? 'bg-orange-600 text-white hover:bg-orange-700'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+            title={showArchived ? 'Masquer les équipes archivées' : 'Afficher les équipes archivées'}
+          >
+            <Filter className="w-4 h-4" />
+            <span className="text-sm sm:text-base">
+              {showArchived ? 'Masquer archivées' : 'Afficher archivées'}
+            </span>
+          </button>
+          <button
+            onClick={() => {
+              handleCancel()
+              setShowForm(true)
+            }}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition w-full sm:w-auto justify-center"
+          >
+            <Plus className="w-5 h-5" />
+            <span className="text-sm sm:text-base">Nouvelle équipe</span>
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -854,12 +911,25 @@ export default function TeamsTab() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {teams.map((team) => (
-          <div key={team.id} className="bg-white rounded-lg shadow hover:shadow-lg transition p-6">
+          <div 
+            key={team.id} 
+            className={`bg-white rounded-lg shadow hover:shadow-lg transition p-6 ${
+              team.isActive === false ? 'opacity-60 border-2 border-orange-300' : ''
+            }`}
+          >
             <div className="flex items-start justify-between mb-4">
               <div 
                 className="flex-1 cursor-pointer" 
                 onClick={() => handleTeamClick(team)}
               >
+                <div className="flex items-center gap-2 mb-2">
+                  {team.isActive === false && (
+                    <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full flex items-center gap-1">
+                      <Archive className="w-3 h-3" />
+                      Archivée
+                    </span>
+                  )}
+                </div>
                 <div
                   className="w-12 h-12 rounded-lg mb-3 flex items-center justify-center text-white font-bold text-lg overflow-hidden"
                   style={{ backgroundColor: team.logo ? 'transparent' : team.color }}
@@ -882,6 +952,24 @@ export default function TeamsTab() {
                 <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition">{team.name}</h3>
               </div>
               <div className="flex gap-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleToggleActive(team)
+                  }}
+                  className={`p-2 rounded-lg transition ${
+                    team.isActive === false
+                      ? 'text-green-600 hover:bg-green-50'
+                      : 'text-orange-600 hover:bg-orange-50'
+                  }`}
+                  title={team.isActive === false ? 'Désarchiver' : 'Archiver'}
+                >
+                  {team.isActive === false ? (
+                    <ArchiveRestore className="w-4 h-4" />
+                  ) : (
+                    <Archive className="w-4 h-4" />
+                  )}
+                </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
