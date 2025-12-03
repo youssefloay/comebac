@@ -33,7 +33,27 @@ export default function PreseasonMatchesPage() {
       const matchesData = await matchesRes.json()
       const teamsData = await teamsRes.json()
 
-      setMatches(matchesData.matches || [])
+      // Convertir les dates string en Date objects
+      const matchesWithDates = (matchesData.matches || []).map((match: any) => ({
+        ...match,
+        date: match.date instanceof Date 
+          ? match.date 
+          : typeof match.date === 'string' 
+            ? new Date(match.date) 
+            : new Date(match.date),
+        createdAt: match.createdAt instanceof Date 
+          ? match.createdAt 
+          : match.createdAt 
+            ? new Date(match.createdAt) 
+            : new Date(),
+        updatedAt: match.updatedAt instanceof Date 
+          ? match.updatedAt 
+          : match.updatedAt 
+            ? new Date(match.updatedAt) 
+            : new Date(),
+      }))
+
+      setMatches(matchesWithDates)
       setTeams(Array.isArray(teamsData) ? teamsData : teamsData.teams || [])
     } catch (error) {
       console.error('Error loading data:', error)
@@ -100,18 +120,52 @@ export default function PreseasonMatchesPage() {
 
   const handleEdit = (match: PreseasonMatch) => {
     setEditingMatch(match)
+    
+    // Gérer la date qui peut être un Date object ou une string
+    let dateString = ''
+    if (match.date instanceof Date) {
+      dateString = match.date.toISOString().split('T')[0]
+    } else if (typeof match.date === 'string') {
+      // Si c'est une string, essayer de la convertir
+      const dateObj = new Date(match.date)
+      if (!isNaN(dateObj.getTime())) {
+        dateString = dateObj.toISOString().split('T')[0]
+      } else {
+        // Si la conversion échoue, utiliser la string directement si elle est au format YYYY-MM-DD
+        dateString = match.date.split('T')[0]
+      }
+    } else {
+      // Fallback: essayer de créer une date
+      const dateObj = new Date(match.date as any)
+      if (!isNaN(dateObj.getTime())) {
+        dateString = dateObj.toISOString().split('T')[0]
+      }
+    }
+    
     setFormData({
       teamAId: match.teamAId,
       teamBId: match.teamBId,
-      date: match.date.toISOString().split('T')[0],
+      date: dateString,
       time: match.time,
       location: match.location,
     })
     setShowForm(true)
+    
+    // Scroll vers le formulaire après un court délai pour laisser le DOM se mettre à jour
+    setTimeout(() => {
+      const formElement = document.querySelector('[data-preseason-form]')
+      if (formElement) {
+        formElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }, 100)
   }
 
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('fr-FR', {
+  const formatDate = (date: Date | string) => {
+    const dateObj = date instanceof Date ? date : new Date(date)
+    if (isNaN(dateObj.getTime())) {
+      return 'Date invalide'
+    }
+    return dateObj.toLocaleDateString('fr-FR', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -174,7 +228,7 @@ export default function PreseasonMatchesPage() {
 
       {/* Form */}
       {showForm && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6" data-preseason-form>
           <h3 className="text-lg font-semibold mb-4">
             {editingMatch ? 'Modifier le match' : 'Nouveau match'}
           </h3>
