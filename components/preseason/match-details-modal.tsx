@@ -132,7 +132,7 @@ export function MatchDetailsModal({ match, isOpen, onClose }: MatchDetailsModalP
                     className="block hover:opacity-80 transition-opacity"
                   >
                     {match.teamALogo ? (
-                      <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-3 bg-white dark:bg-gray-100 rounded-full p-3 shadow-xl border-2 border-gray-200 dark:border-gray-300">
+                      <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-3 bg-white dark:bg-gray-100 rounded-2xl p-3 shadow-xl border-2 border-gray-200 dark:border-gray-300">
                         <img
                           src={match.teamALogo}
                           alt={match.teamAName}
@@ -147,7 +147,7 @@ export function MatchDetailsModal({ match, isOpen, onClose }: MatchDetailsModalP
                         />
                       </div>
                     ) : (
-                      <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-3 bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 rounded-full flex items-center justify-center border-2 border-orange-200 dark:border-orange-800 shadow-xl">
+                      <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-3 bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 rounded-2xl flex items-center justify-center border-2 border-orange-200 dark:border-orange-800 shadow-xl">
                         <span className="text-orange-700 dark:text-orange-300 font-bold text-lg sm:text-xl">
                           {match.teamAName.substring(0, 2).toUpperCase()}
                         </span>
@@ -184,7 +184,7 @@ export function MatchDetailsModal({ match, isOpen, onClose }: MatchDetailsModalP
                     className="block hover:opacity-80 transition-opacity"
                   >
                     {match.teamBLogo ? (
-                      <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-3 bg-white dark:bg-gray-100 rounded-full p-3 shadow-xl border-2 border-gray-200 dark:border-gray-300">
+                      <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-3 bg-white dark:bg-gray-100 rounded-2xl p-3 shadow-xl border-2 border-gray-200 dark:border-gray-300">
                         <img
                           src={match.teamBLogo}
                           alt={match.teamBName}
@@ -199,7 +199,7 @@ export function MatchDetailsModal({ match, isOpen, onClose }: MatchDetailsModalP
                         />
                       </div>
                     ) : (
-                      <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-3 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-full flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 shadow-xl">
+                      <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-3 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 shadow-xl">
                         <span className="text-blue-700 dark:text-blue-300 font-bold text-lg sm:text-xl">
                           {match.teamBName.substring(0, 2).toUpperCase()}
                         </span>

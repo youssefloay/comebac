@@ -198,7 +198,7 @@ export default function PreseasonPage() {
                       <div className="flex items-center gap-3 sm:gap-4 mb-3">
                         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                           {match.teamALogo ? (
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-gray-50 rounded-full p-2.5 sm:p-3 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 flex-shrink-0 ring-2 ring-gray-100 dark:ring-gray-700">
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-gray-50 rounded-2xl p-2.5 sm:p-3 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 flex-shrink-0 ring-2 ring-gray-100 dark:ring-gray-700">
                               <img
                                 src={match.teamALogo}
                                 alt={match.teamAName}
@@ -213,7 +213,7 @@ export default function PreseasonPage() {
                               />
                             </div>
                           ) : (
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-orange-200 to-red-200 dark:from-orange-800/40 dark:to-red-800/40 rounded-full flex items-center justify-center border-[3px] border-orange-300 dark:border-orange-700 flex-shrink-0 shadow-xl ring-2 ring-orange-100 dark:ring-orange-900/30">
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-orange-200 to-red-200 dark:from-orange-800/40 dark:to-red-800/40 rounded-2xl flex items-center justify-center border-[3px] border-orange-300 dark:border-orange-700 flex-shrink-0 shadow-xl ring-2 ring-orange-100 dark:ring-orange-900/30">
                               <span className="text-orange-800 dark:text-orange-200 font-bold text-lg sm:text-xl">
                                 {match.teamAName.substring(0, 2).toUpperCase()}
                               </span>
@@ -226,7 +226,7 @@ export default function PreseasonPage() {
                         <span className="text-gray-500 dark:text-gray-400 font-semibold text-sm sm:text-base flex-shrink-0">vs</span>
                         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                           {match.teamBLogo ? (
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-gray-50 rounded-full p-2.5 sm:p-3 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 flex-shrink-0 ring-2 ring-gray-100 dark:ring-gray-700">
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-gray-50 rounded-2xl p-2.5 sm:p-3 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 flex-shrink-0 ring-2 ring-gray-100 dark:ring-gray-700">
                               <img
                                 src={match.teamBLogo}
                                 alt={match.teamBName}
@@ -241,7 +241,7 @@ export default function PreseasonPage() {
                               />
                             </div>
                           ) : (
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-blue-200 to-indigo-200 dark:from-blue-800/40 dark:to-indigo-800/40 rounded-full flex items-center justify-center border-[3px] border-blue-300 dark:border-blue-700 flex-shrink-0 shadow-xl ring-2 ring-blue-100 dark:ring-blue-900/30">
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-blue-200 to-indigo-200 dark:from-blue-800/40 dark:to-indigo-800/40 rounded-2xl flex items-center justify-center border-[3px] border-blue-300 dark:border-blue-700 flex-shrink-0 shadow-xl ring-2 ring-blue-100 dark:ring-blue-900/30">
                               <span className="text-blue-800 dark:text-blue-200 font-bold text-lg sm:text-xl">
                                 {match.teamBName.substring(0, 2).toUpperCase()}
                               </span>
@@ -317,7 +317,7 @@ export default function PreseasonPage() {
                       <div className="text-right">
                         <div className="flex items-center justify-end gap-2 mb-2">
                           {match.teamALogo ? (
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white dark:bg-gray-50 rounded-full p-2.5 sm:p-3 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 ring-2 ring-gray-100 dark:ring-gray-700">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white dark:bg-gray-50 rounded-2xl p-2.5 sm:p-3 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 ring-2 ring-gray-100 dark:ring-gray-700">
                               <img
                                 src={match.teamALogo}
                                 alt={match.teamAName}
@@ -332,7 +332,7 @@ export default function PreseasonPage() {
                               />
                             </div>
                           ) : (
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-200 to-red-200 dark:from-orange-800/40 dark:to-red-800/40 rounded-full flex items-center justify-center border-[3px] border-orange-300 dark:border-orange-700 shadow-xl ring-2 ring-orange-100 dark:ring-orange-900/30">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-200 to-red-200 dark:from-orange-800/40 dark:to-red-800/40 rounded-2xl flex items-center justify-center border-[3px] border-orange-300 dark:border-orange-700 shadow-xl ring-2 ring-orange-100 dark:ring-orange-900/30">
                               <span className="text-orange-800 dark:text-orange-200 font-bold text-base sm:text-lg">
                                 {match.teamAName.substring(0, 2).toUpperCase()}
                               </span>
@@ -356,7 +356,7 @@ export default function PreseasonPage() {
                       <div className="text-left">
                         <div className="flex items-center gap-2 mb-2">
                           {match.teamBLogo ? (
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white dark:bg-gray-50 rounded-full p-2.5 sm:p-3 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 ring-2 ring-gray-100 dark:ring-gray-700">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white dark:bg-gray-50 rounded-2xl p-2.5 sm:p-3 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 ring-2 ring-gray-100 dark:ring-gray-700">
                               <img
                                 src={match.teamBLogo}
                                 alt={match.teamBName}
@@ -371,7 +371,7 @@ export default function PreseasonPage() {
                               />
                             </div>
                           ) : (
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-200 to-indigo-200 dark:from-blue-800/40 dark:to-indigo-800/40 rounded-full flex items-center justify-center border-[3px] border-blue-300 dark:border-blue-700 shadow-xl ring-2 ring-blue-100 dark:ring-blue-900/30">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-200 to-indigo-200 dark:from-blue-800/40 dark:to-indigo-800/40 rounded-2xl flex items-center justify-center border-[3px] border-blue-300 dark:border-blue-700 shadow-xl ring-2 ring-blue-100 dark:ring-blue-900/30">
                               <span className="text-blue-800 dark:text-blue-200 font-bold text-base sm:text-lg">
                                 {match.teamBName.substring(0, 2).toUpperCase()}
                               </span>
