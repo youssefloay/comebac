@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 import { useTheme } from "@/lib/theme-context";
-import { Home, Trophy, Calendar, BarChart3, Users, Sun, Moon, UserPlus } from "lucide-react";
+import { Home, Trophy, Calendar, BarChart3, Users, Sun, Moon, UserPlus, Flame } from "lucide-react";
 import { NotificationDropdown } from "@/components/notifications/notification-dropdown";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { FantasyButton } from "@/components/fantasy/fantasy-button";
@@ -16,6 +16,7 @@ const navigationItems = [
   { href: "/public/ranking", label: "Classement", icon: Trophy },
   { href: "/public/statistics", label: "Statistiques", icon: BarChart3 },
   { href: "/public/teams", label: "Équipes", icon: Users },
+  { href: "/preseason", label: "Preseason", icon: Flame },
 ];
 
 export function SofaNavigation() {

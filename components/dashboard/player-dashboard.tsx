@@ -11,6 +11,7 @@ import { NotificationBell } from '@/components/notifications/notification-bell'
 import { t } from '@/lib/i18n'
 import { motion } from 'framer-motion'
 import { useTheme } from '@/lib/theme-context'
+import { PreseasonSection } from '@/components/preseason/preseason-section'
 
 interface PlayerData {
   id: string
@@ -425,6 +426,11 @@ export function PlayerDashboard() {
             </Link>
           </motion.div>
         </div>
+
+        {/* Preseason Section */}
+        {playerData?.teamId && (
+          <PreseasonSection teamId={playerData.teamId} teamName={playerData.teamName} />
+        )}
       </div>
     </div>
   )

@@ -157,3 +157,36 @@ export interface Tournament {
   createdAt: Date
   updatedAt: Date
 }
+
+export interface PreseasonMatch {
+  id: string
+  teamAId: string
+  teamBId: string
+  teamAName: string
+  teamBName: string
+  date: Date
+  time: string // Format HH:mm
+  location: string
+  status: "upcoming" | "in_progress" | "finished"
+  scoreA?: number
+  scoreB?: number
+  penaltiesA?: number
+  penaltiesB?: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface PreseasonStats {
+  id: string
+  teamId: string
+  teamName: string
+  played: number
+  wins: number
+  losses: number
+  penaltyWins: number
+  penaltyLosses: number
+  goalsFor: number
+  goalsAgainst: number
+  points: number
+  updatedAt: Date
+}

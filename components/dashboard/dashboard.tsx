@@ -18,8 +18,9 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 const StatisticsTab = lazy(() => import("./tabs/statistics-tab"))
 const MaintenanceTab = lazy(() => import("./tabs/maintenance-tab"))
 const AccountsTab = lazy(() => import("./tabs/accounts-tab"))
+const ShopTab = lazy(() => import("./tabs/shop-tab"))
 
-type TabType = "teams" | "players" | "matches" | "results" | "statistics" | "lineups" | "registrations" | "archives" | "activity" | "accounts" | "maintenance" | "test-matches" | "mini-league" | "waiting-list"
+type TabType = "teams" | "players" | "matches" | "results" | "statistics" | "lineups" | "registrations" | "archives" | "activity" | "accounts" | "maintenance" | "test-matches" | "mini-league" | "waiting-list" | "shop" | "preseason"
 
 export default function Dashboard({ user }: { user: any }) {
   const [activeTab, setActiveTab] = useState<TabType>("teams")
@@ -266,6 +267,8 @@ export default function Dashboard({ user }: { user: any }) {
     { id: "results", label: "Résultats", icon: "📊" },
     { id: "statistics", label: "Statistiques", icon: "📈" },
     { id: "mini-league", label: "Mini-League", icon: "🏆" },
+    { id: "preseason", label: "Preseason", icon: "🔥" },
+    { id: "shop", label: "Boutique", icon: "🛍️" },
     { id: "activity", label: "Activité", icon: "🔔" },
     { id: "accounts", label: "Comptes", icon: "👤" },
     { id: "registrations", label: "Inscriptions", icon: "📝" },
@@ -549,6 +552,23 @@ export default function Dashboard({ user }: { user: any }) {
           {activeTab === "mini-league" && (
             <Suspense fallback={<div className="flex items-center justify-center py-12"><LoadingSpinner size="lg" /></div>}>
               <MiniLeagueTab />
+            </Suspense>
+          )}
+          {activeTab === "preseason" && (
+            <div className="text-center py-8 md:py-12">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-4">Preseason</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">Gérez les matchs et résultats de la présaison</p>
+              <button
+                onClick={() => window.location.href = '/admin/preseason/matches'}
+                className="px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg hover:from-orange-700 hover:to-red-700 transition font-medium shadow-lg"
+              >
+                🔥 Accéder à Preseason
+              </button>
+            </div>
+          )}
+          {activeTab === "shop" && (
+            <Suspense fallback={<div className="flex items-center justify-center py-12"><LoadingSpinner size="lg" /></div>}>
+              <ShopTab />
             </Suspense>
           )}
           {activeTab === "waiting-list" && <WaitingListTab />}

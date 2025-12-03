@@ -22,7 +22,8 @@ import {
   User,
   Gamepad2,
   Bell,
-  Sparkles
+  Sparkles,
+  Flame
 } from "lucide-react"
 
 // Main tabs (always visible) - will use i18n in component
@@ -37,6 +38,7 @@ const mainTabs = [
 const secondaryTabs = [
   { href: "/public/statistics", labelKey: "nav.stats", icon: BarChart3 },
   { href: "/public/fantasy", labelKey: "nav.fantasy", icon: Sparkles },
+  { href: "/preseason", labelKey: "Preseason", icon: Flame },
 ]
 
 export function BottomNavigation() {
