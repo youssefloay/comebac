@@ -172,6 +172,33 @@ export interface PreseasonMatch {
   scoreB?: number
   penaltiesA?: number
   penaltiesB?: number
+  // Goal scorers
+  teamAGoalScorers?: Array<{
+    playerId?: string
+    playerName: string
+    assists?: string
+    isPenalty?: boolean
+    isPenaltyMissed?: boolean
+    isOwnGoal?: boolean
+  }>
+  teamBGoalScorers?: Array<{
+    playerId?: string
+    playerName: string
+    assists?: string
+    isPenalty?: boolean
+    isPenaltyMissed?: boolean
+    isOwnGoal?: boolean
+  }>
+  // Cards
+  teamAYellowCards?: Array<{ playerId?: string; playerName: string }>
+  teamBYellowCards?: Array<{ playerId?: string; playerName: string }>
+  teamARedCards?: Array<{ playerId?: string; playerName: string }>
+  teamBRedCards?: Array<{ playerId?: string; playerName: string }>
+  // Penalty shootout (if draw)
+  penaltyShootout?: {
+    teamAPlayers: Array<{ playerId?: string; playerName: string; nickname?: string; scored: boolean }>
+    teamBPlayers: Array<{ playerId?: string; playerName: string; nickname?: string; scored: boolean }>
+  }
   createdAt: Date
   updatedAt: Date
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from 'framer-motion'
-import { Clock, MapPin, Calendar } from 'lucide-react'
+import { Clock, MapPin, Calendar, Flame } from 'lucide-react'
 import { useState } from 'react'
 import { MatchDetailsPopup } from './match-details-popup'
 import { TeamLink } from '@/components/ui/team-link'
@@ -20,6 +20,9 @@ interface SofaMatchCardProps {
     status: 'live' | 'completed' | 'upcoming'
     venue?: string
     round?: number
+    isPreseason?: boolean
+    penaltiesA?: number
+    penaltiesB?: number
   }
   index: number
 }
@@ -70,9 +73,15 @@ export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
       >
       {/* Header with status and time - Mobile Optimized */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-4">
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           {getStatusBadge()}
-          {match.round && (
+          {match.isPreseason && (
+            <span className="sofa-badge bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs flex items-center gap-1">
+              <Flame className="w-3 h-3" />
+              Preseason
+            </span>
+          )}
+          {match.round && match.round > 0 && (
             <span className="text-sofa-text-muted text-xs sm:text-sm">
               Journée {match.round}
             </span>
@@ -115,8 +124,15 @@ export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
             {/* Score */}
             <div className="text-center py-2">
               {match.status === 'completed' || match.status === 'live' ? (
-                <div className={`text-2xl font-bold ${match.status === 'live' ? 'text-red-600' : 'text-gray-900'}`}>
-                  {match.scoreA} - {match.scoreB}
+                <div>
+                  <div className={`text-2xl font-bold ${match.status === 'live' ? 'text-red-600' : 'text-gray-900'}`}>
+                    {match.scoreA} - {match.scoreB}
+                  </div>
+                  {match.penaltiesA !== undefined && match.penaltiesB !== undefined && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      TAB: {match.penaltiesA} - {match.penaltiesB}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-gray-400 text-xl font-bold">VS</div>
@@ -165,8 +181,15 @@ export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
           {/* Score - Centered */}
           <div className="text-center px-1">
             {match.status === 'completed' || match.status === 'live' ? (
-              <div className={`text-2xl md:text-3xl font-bold ${match.status === 'live' ? 'text-red-600' : 'text-gray-900'}`}>
-                {match.scoreA} - {match.scoreB}
+              <div>
+                <div className={`text-2xl md:text-3xl font-bold ${match.status === 'live' ? 'text-red-600' : 'text-gray-900'}`}>
+                  {match.scoreA} - {match.scoreB}
+                </div>
+                {match.penaltiesA !== undefined && match.penaltiesB !== undefined && (
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    TAB: {match.penaltiesA} - {match.penaltiesB}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-gray-400 text-xl md:text-2xl font-bold">VS</div>

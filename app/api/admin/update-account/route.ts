@@ -12,24 +12,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Si l'email change, on doit d'abord récupérer l'ancien email pour synchroniser
+    // Récupérer les données actuelles du compte pour les utiliser dans les mises à jour
+    let currentAccountData: any = null
     let oldEmail: string | null = null
-    if (updates.email !== undefined) {
-      try {
-        if (accountType === 'player') {
-          const playerDoc = await adminDb.collection('playerAccounts').doc(accountId).get()
-          if (playerDoc.exists) {
-            oldEmail = playerDoc.data()?.email
-          }
-        } else if (accountType === 'coach') {
-          const coachDoc = await adminDb.collection('coachAccounts').doc(accountId).get()
-          if (coachDoc.exists) {
-            oldEmail = coachDoc.data()?.email
-          }
+    
+    try {
+      if (accountType === 'player') {
+        const playerDoc = await adminDb.collection('playerAccounts').doc(accountId).get()
+        if (playerDoc.exists) {
+          currentAccountData = playerDoc.data()
+          oldEmail = currentAccountData?.email
         }
-      } catch (error) {
-        console.error('Erreur récupération ancien email:', error)
+      } else if (accountType === 'coach') {
+        const coachDoc = await adminDb.collection('coachAccounts').doc(accountId).get()
+        if (coachDoc.exists) {
+          currentAccountData = coachDoc.data()
+          oldEmail = currentAccountData?.email
+        }
       }
+    } catch (error) {
+      console.error('Erreur récupération données compte:', error)
     }
 
     // Si l'email change et qu'on a l'ancien email, synchroniser partout
@@ -67,6 +69,7 @@ export async function POST(request: NextRequest) {
     if (updates.tshirtSize !== undefined) updateData.tshirtSize = updates.tshirtSize
     if (updates.foot !== undefined) updateData.foot = updates.foot
     if (updates.teamName !== undefined) updateData.teamName = updates.teamName
+    if (updates.teamId !== undefined) updateData.teamId = updates.teamId || null
     if (updates.position !== undefined) updateData.position = updates.position
     if (updates.jerseyNumber !== undefined) updateData.jerseyNumber = updates.jerseyNumber
     if (updates.role !== undefined) updateData.role = updates.role
@@ -132,8 +135,79 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 4. Mettre à jour dans l'équipe si teamId existe
-    if (teamId) {
+    // 4. Gérer le transfert d'équipe si teamId change
+    let oldTeamId: string | null = currentAccountData?.teamId || null
+    let newTeamId: string | null = updates.teamId !== undefined ? (updates.teamId || null) : teamId || null
+    
+    // Si le teamId change, retirer de l'ancienne équipe et ajouter à la nouvelle
+    if (oldTeamId && newTeamId && oldTeamId !== newTeamId) {
+      console.log(`🔄 Transfert d'équipe détecté: ${oldTeamId} → ${newTeamId}`)
+      
+      // Retirer de l'ancienne équipe
+      const oldTeamRef = adminDb.collection('teams').doc(oldTeamId)
+      const oldTeamDoc = await oldTeamRef.get()
+      if (oldTeamDoc.exists) {
+        const oldTeamData = oldTeamDoc.data()
+        
+        if (accountType === 'player' && oldTeamData?.players) {
+          const updatedPlayers = oldTeamData.players.filter((p: any) => 
+            p.id !== accountId && p.email !== updates.email
+          )
+          batch.update(oldTeamRef, { players: updatedPlayers })
+          updatedCollections.push(`teams (retiré de ${oldTeamData.name})`)
+        } else if (accountType === 'coach' && oldTeamData?.coachId === accountId) {
+          batch.update(oldTeamRef, { 
+            coachId: null,
+            coach: null
+          })
+          updatedCollections.push(`teams (coach retiré de ${oldTeamData.name})`)
+        }
+      }
+      
+      // Ajouter à la nouvelle équipe
+      const newTeamRef = adminDb.collection('teams').doc(newTeamId)
+      const newTeamDoc = await newTeamRef.get()
+      if (newTeamDoc.exists) {
+        const newTeamData = newTeamDoc.data()
+        
+        if (accountType === 'player') {
+          const players = newTeamData?.players || []
+          // Vérifier si le joueur n'est pas déjà dans l'équipe
+          const playerExists = players.some((p: any) => p.id === accountId || p.email === updates.email)
+          if (!playerExists) {
+            const newPlayer = {
+              id: accountId,
+              firstName: updates.firstName || currentAccountData?.firstName || '',
+              lastName: updates.lastName || currentAccountData?.lastName || '',
+              email: updates.email || currentAccountData?.email || '',
+              position: updates.position || currentAccountData?.position || '',
+              jerseyNumber: updates.jerseyNumber || currentAccountData?.jerseyNumber || null,
+              nickname: updates.nickname || currentAccountData?.nickname || ''
+            }
+            batch.update(newTeamRef, { 
+              players: [...players, newPlayer]
+            })
+            updatedCollections.push(`teams (ajouté à ${newTeamData.name})`)
+          }
+        } else if (accountType === 'coach') {
+          const coachUpdate: any = {
+            coachId: accountId,
+            coach: {
+              firstName: updates.firstName || currentAccountData?.firstName || '',
+              lastName: updates.lastName || currentAccountData?.lastName || '',
+              birthDate: updates.birthDate || currentAccountData?.birthDate || '',
+              email: updates.email || currentAccountData?.email || '',
+              phone: updates.phone || currentAccountData?.phone || ''
+            }
+          }
+          batch.update(newTeamRef, coachUpdate)
+          updatedCollections.push(`teams (coach ajouté à ${newTeamData.name})`)
+        }
+      }
+    }
+    
+    // 4. Mettre à jour dans l'équipe si teamId existe (pour les autres mises à jour)
+    if (newTeamId) {
       const teamRef = adminDb.collection('teams').doc(teamId)
       const teamDoc = await teamRef.get()
       

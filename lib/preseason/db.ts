@@ -131,6 +131,27 @@ export async function updatePreseasonMatch(id: string, updates: Partial<Preseaso
   if (updates.penaltiesB !== undefined) {
     updateData.penaltiesB = updates.penaltiesB
   }
+  if (updates.teamAGoalScorers !== undefined) {
+    updateData.teamAGoalScorers = updates.teamAGoalScorers
+  }
+  if (updates.teamBGoalScorers !== undefined) {
+    updateData.teamBGoalScorers = updates.teamBGoalScorers
+  }
+  if (updates.teamAYellowCards !== undefined) {
+    updateData.teamAYellowCards = updates.teamAYellowCards
+  }
+  if (updates.teamBYellowCards !== undefined) {
+    updateData.teamBYellowCards = updates.teamBYellowCards
+  }
+  if (updates.teamARedCards !== undefined) {
+    updateData.teamARedCards = updates.teamARedCards
+  }
+  if (updates.teamBRedCards !== undefined) {
+    updateData.teamBRedCards = updates.teamBRedCards
+  }
+  if (updates.penaltyShootout !== undefined) {
+    updateData.penaltyShootout = updates.penaltyShootout
+  }
 
   await adminDb!.collection('preseasonMatches').doc(id).update(updateData)
 }
@@ -268,7 +289,33 @@ export async function processPreseasonResult(
   scoreA: number,
   scoreB: number,
   penaltiesA?: number,
-  penaltiesB?: number
+  penaltiesB?: number,
+  resultData?: {
+    teamAGoalScorers?: Array<{
+      playerId?: string
+      playerName: string
+      assists?: string
+      isPenalty?: boolean
+      isPenaltyMissed?: boolean
+      isOwnGoal?: boolean
+    }>
+    teamBGoalScorers?: Array<{
+      playerId?: string
+      playerName: string
+      assists?: string
+      isPenalty?: boolean
+      isPenaltyMissed?: boolean
+      isOwnGoal?: boolean
+    }>
+    teamAYellowCards?: Array<{ playerId?: string; playerName: string }>
+    teamBYellowCards?: Array<{ playerId?: string; playerName: string }>
+    teamARedCards?: Array<{ playerId?: string; playerName: string }>
+    teamBRedCards?: Array<{ playerId?: string; playerName: string }>
+    penaltyShootout?: {
+      teamAPlayers: Array<{ playerId?: string; playerName: string; nickname?: string; scored: boolean }>
+      teamBPlayers: Array<{ playerId?: string; playerName: string; nickname?: string; scored: boolean }>
+    }
+  }
 ): Promise<void> {
   const match = await getPreseasonMatchById(matchId)
   if (!match) {
@@ -372,13 +419,26 @@ export async function processPreseasonResult(
   await updatePreseasonStats(match.teamAId, newStatsA)
   await updatePreseasonStats(match.teamBId, newStatsB)
 
-  // Update match status
-  await updatePreseasonMatch(matchId, {
+  // Update match status with all result data
+  const matchUpdate: any = {
     status: 'finished',
     scoreA,
     scoreB,
     penaltiesA,
     penaltiesB,
-  })
+  }
+
+  // Add detailed result data if provided
+  if (resultData) {
+    if (resultData.teamAGoalScorers) matchUpdate.teamAGoalScorers = resultData.teamAGoalScorers
+    if (resultData.teamBGoalScorers) matchUpdate.teamBGoalScorers = resultData.teamBGoalScorers
+    if (resultData.teamAYellowCards) matchUpdate.teamAYellowCards = resultData.teamAYellowCards
+    if (resultData.teamBYellowCards) matchUpdate.teamBYellowCards = resultData.teamBYellowCards
+    if (resultData.teamARedCards) matchUpdate.teamARedCards = resultData.teamARedCards
+    if (resultData.teamBRedCards) matchUpdate.teamBRedCards = resultData.teamBRedCards
+    if (resultData.penaltyShootout) matchUpdate.penaltyShootout = resultData.penaltyShootout
+  }
+
+  await updatePreseasonMatch(matchId, matchUpdate)
 }
 

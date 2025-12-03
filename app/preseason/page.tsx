@@ -5,12 +5,14 @@ import { Calendar, Trophy, Clock, MapPin, TrendingUp, ArrowLeft, Flame } from 'l
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import type { PreseasonMatch, PreseasonStats } from '@/lib/types'
+import { MatchDetailsModal } from '@/components/preseason/match-details-modal'
 
 export default function PreseasonPage() {
-  const [matches, setMatches] = useState<PreseasonMatch[]>([])
+  const [matches, setMatches] = useState<(PreseasonMatch & { teamALogo?: string; teamBLogo?: string })[]>([])
   const [ranking, setRanking] = useState<PreseasonStats[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'upcoming' | 'finished' | 'ranking'>('upcoming')
+  const [selectedMatch, setSelectedMatch] = useState<(PreseasonMatch & { teamALogo?: string; teamBLogo?: string }) | null>(null)
 
   useEffect(() => {
     loadData()
@@ -91,7 +93,7 @@ export default function PreseasonPage() {
               animate={{ opacity: 1, y: 0 }}
               className="flex items-center justify-center gap-3 mb-3"
             >
-              <Flame className="w-8 h-8 sm:w-10 sm:h-10" />
+              <Flame className="w-8 h-8 sm:w-10 sm:h-10 text-orange-500" />
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">
                 Preseason
               </h1>
@@ -174,7 +176,8 @@ export default function PreseasonPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-2xl transition-all"
+                  className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-2xl transition-all cursor-pointer"
+                  onClick={() => setSelectedMatch(match)}
                 >
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex-1">
@@ -192,9 +195,63 @@ export default function PreseasonPage() {
                           <span>{match.location}</span>
                         </div>
                       </div>
-                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                        {match.teamAName} <span className="text-gray-400">vs</span> {match.teamBName}
-                      </h3>
+                      <div className="flex items-center gap-3 sm:gap-4 mb-3">
+                        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                          {match.teamALogo ? (
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-gray-50 rounded-full p-2.5 sm:p-3 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 flex-shrink-0 ring-2 ring-gray-100 dark:ring-gray-700">
+                              <img
+                                src={match.teamALogo}
+                                alt={match.teamAName}
+                                className="w-full h-full object-contain"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none'
+                                  if (e.currentTarget.parentElement) {
+                                    const initials = match.teamAName.substring(0, 2).toUpperCase()
+                                    e.currentTarget.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-gray-600 dark:text-gray-700 font-bold text-lg sm:text-xl">${initials}</div>`
+                                  }
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-orange-200 to-red-200 dark:from-orange-800/40 dark:to-red-800/40 rounded-full flex items-center justify-center border-[3px] border-orange-300 dark:border-orange-700 flex-shrink-0 shadow-xl ring-2 ring-orange-100 dark:ring-orange-900/30">
+                              <span className="text-orange-800 dark:text-orange-200 font-bold text-lg sm:text-xl">
+                                {match.teamAName.substring(0, 2).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                          <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 dark:text-white truncate">
+                            {match.teamAName}
+                          </h3>
+                        </div>
+                        <span className="text-gray-500 dark:text-gray-400 font-semibold text-sm sm:text-base flex-shrink-0">vs</span>
+                        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                          {match.teamBLogo ? (
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-gray-50 rounded-full p-2.5 sm:p-3 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 flex-shrink-0 ring-2 ring-gray-100 dark:ring-gray-700">
+                              <img
+                                src={match.teamBLogo}
+                                alt={match.teamBName}
+                                className="w-full h-full object-contain"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none'
+                                  if (e.currentTarget.parentElement) {
+                                    const initials = match.teamBName.substring(0, 2).toUpperCase()
+                                    e.currentTarget.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-gray-600 dark:text-gray-700 font-bold text-lg sm:text-xl">${initials}</div>`
+                                  }
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-blue-200 to-indigo-200 dark:from-blue-800/40 dark:to-indigo-800/40 rounded-full flex items-center justify-center border-[3px] border-blue-300 dark:border-blue-700 flex-shrink-0 shadow-xl ring-2 ring-blue-100 dark:ring-blue-900/30">
+                              <span className="text-blue-800 dark:text-blue-200 font-bold text-lg sm:text-xl">
+                                {match.teamBName.substring(0, 2).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                          <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 dark:text-white truncate">
+                            {match.teamBName}
+                          </h3>
+                        </div>
+                      </div>
                       <span
                         className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
                           match.status === 'in_progress'
@@ -247,7 +304,8 @@ export default function PreseasonPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-2xl transition-all"
+                    className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-2xl transition-all cursor-pointer"
+                    onClick={() => setSelectedMatch(match)}
                   >
                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
                       <Calendar className="w-4 h-4" />
@@ -255,12 +313,38 @@ export default function PreseasonPage() {
                       <MapPin className="w-4 h-4 ml-2" />
                       <span>{match.location}</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-4 items-center">
-                      <div className={`text-right ${teamAWon ? 'font-bold text-lg' : 'text-gray-700 dark:text-gray-300'}`}>
-                        {match.teamAName}
+                    <div className="grid grid-cols-3 gap-3 sm:gap-4 items-center">
+                      <div className="text-right">
+                        <div className="flex items-center justify-end gap-2 mb-2">
+                          {match.teamALogo ? (
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white dark:bg-gray-50 rounded-full p-2.5 sm:p-3 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 ring-2 ring-gray-100 dark:ring-gray-700">
+                              <img
+                                src={match.teamALogo}
+                                alt={match.teamAName}
+                                className="w-full h-full object-contain"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none'
+                                  if (e.currentTarget.parentElement) {
+                                    const initials = match.teamAName.substring(0, 2).toUpperCase()
+                                    e.currentTarget.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-gray-600 dark:text-gray-700 font-bold text-base sm:text-lg">${initials}</div>`
+                                  }
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-200 to-red-200 dark:from-orange-800/40 dark:to-red-800/40 rounded-full flex items-center justify-center border-[3px] border-orange-300 dark:border-orange-700 shadow-xl ring-2 ring-orange-100 dark:ring-orange-900/30">
+                              <span className="text-orange-800 dark:text-orange-200 font-bold text-base sm:text-lg">
+                                {match.teamAName.substring(0, 2).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <div className={`${teamAWon ? 'font-bold text-base sm:text-lg' : 'text-gray-700 dark:text-gray-300'}`}>
+                          {match.teamAName}
+                        </div>
                       </div>
                       <div className="text-center">
-                        <div className="text-4xl font-bold text-gray-900 dark:text-white">
+                        <div className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
                           {match.scoreA} - {match.scoreB}
                         </div>
                         {match.penaltiesA !== undefined && match.penaltiesB !== undefined && (
@@ -269,8 +353,34 @@ export default function PreseasonPage() {
                           </div>
                         )}
                       </div>
-                      <div className={`text-left ${teamBWon ? 'font-bold text-lg' : 'text-gray-700 dark:text-gray-300'}`}>
-                        {match.teamBName}
+                      <div className="text-left">
+                        <div className="flex items-center gap-2 mb-2">
+                          {match.teamBLogo ? (
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white dark:bg-gray-50 rounded-full p-2.5 sm:p-3 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 ring-2 ring-gray-100 dark:ring-gray-700">
+                              <img
+                                src={match.teamBLogo}
+                                alt={match.teamBName}
+                                className="w-full h-full object-contain"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none'
+                                  if (e.currentTarget.parentElement) {
+                                    const initials = match.teamBName.substring(0, 2).toUpperCase()
+                                    e.currentTarget.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-gray-600 dark:text-gray-700 font-bold text-base sm:text-lg">${initials}</div>`
+                                  }
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-200 to-indigo-200 dark:from-blue-800/40 dark:to-indigo-800/40 rounded-full flex items-center justify-center border-[3px] border-blue-300 dark:border-blue-700 shadow-xl ring-2 ring-blue-100 dark:ring-blue-900/30">
+                              <span className="text-blue-800 dark:text-blue-200 font-bold text-base sm:text-lg">
+                                {match.teamBName.substring(0, 2).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <div className={`${teamBWon ? 'font-bold text-base sm:text-lg' : 'text-gray-700 dark:text-gray-300'}`}>
+                          {match.teamBName}
+                        </div>
                       </div>
                     </div>
                   </motion.div>
@@ -416,6 +526,15 @@ export default function PreseasonPage() {
 
       {/* Spacer pour la navigation mobile */}
       <div className="h-20"></div>
+
+      {/* Match Details Modal */}
+      {selectedMatch && (
+        <MatchDetailsModal
+          match={selectedMatch}
+          isOpen={!!selectedMatch}
+          onClose={() => setSelectedMatch(null)}
+        />
+      )}
     </div>
   )
 }

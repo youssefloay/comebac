@@ -11,7 +11,33 @@ import { adminDb } from '@/lib/firebase-admin'
 export async function GET() {
   try {
     const matches = await getPreseasonMatches()
-    return NextResponse.json({ matches })
+    
+    // Enrichir avec les logos des équipes
+    const enrichedMatches = await Promise.all(
+      matches.map(async (match) => {
+        try {
+          const [teamADoc, teamBDoc] = await Promise.all([
+            adminDb!.collection('teams').doc(match.teamAId).get(),
+            adminDb!.collection('teams').doc(match.teamBId).get(),
+          ])
+          
+          return {
+            ...match,
+            teamALogo: teamADoc.exists ? teamADoc.data()!.logo : null,
+            teamBLogo: teamBDoc.exists ? teamBDoc.data()!.logo : null,
+          }
+        } catch (error) {
+          console.error(`Error fetching team logos for match ${match.id}:`, error)
+          return {
+            ...match,
+            teamALogo: null,
+            teamBLogo: null,
+          }
+        }
+      })
+    )
+    
+    return NextResponse.json({ matches: enrichedMatches })
   } catch (error) {
     console.error('Error fetching preseason matches:', error)
     return NextResponse.json(
@@ -52,8 +78,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const teamAName = teamADoc.data()!.name
-    const teamBName = teamBDoc.data()!.name
+    const teamAData = teamADoc.data()!
+    const teamBData = teamBDoc.data()!
+    const teamAName = teamAData.name
+    const teamBName = teamBData.name
 
     const matchId = await createPreseasonMatch({
       teamAId,

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ArrowLeft, Users, UserCog } from 'lucide-react'
@@ -10,16 +10,37 @@ import Link from 'next/link'
 import { SearchBar, SearchResult } from '@/components/admin/search-bar'
 import { useAdminI18n } from '@/lib/i18n/admin-i18n-context'
 
+interface Team {
+  id: string
+  name: string
+}
+
 export default function AdminSearchPage() {
   const router = useRouter()
   const { t } = useAdminI18n()
   const [searchData, setSearchData] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null)
+  const [teams, setTeams] = useState<Team[]>([])
 
   useEffect(() => {
     loadData()
+    loadTeams()
   }, [])
+  
+  const loadTeams = async () => {
+    try {
+      // Charger toutes les équipes (y compris archivées) pour le transfert
+      const teamsSnap = await getDocs(collection(db, 'teams'))
+      const teamsData = teamsSnap.docs.map(doc => ({
+        id: doc.id,
+        name: doc.data().name || ''
+      })).sort((a, b) => a.name.localeCompare(b.name))
+      setTeams(teamsData)
+    } catch (error) {
+      console.error('Error loading teams:', error)
+    }
+  }
 
   const loadData = async () => {
     try {
@@ -358,15 +379,32 @@ export default function AdminSearchPage() {
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-gray-700 w-32">Équipe:</span>
                       {!isEditing ? (
-                        <span className="text-gray-900">{selectedResult.teamName}</span>
+                        <span className="text-gray-900">{selectedResult.teamName || 'Aucune équipe'}</span>
                       ) : (
-                        <input
-                          type="text"
-                          value={editedData.teamName || ''}
-                          onChange={(e) => setEditedData({ ...editedData, teamName: e.target.value })}
+                        <select
+                          value={
+                            editedData.teamId || 
+                            (editedData.teamName ? teams.find(t => t.name === editedData.teamName)?.id : null) || 
+                            selectedResult.teamId || 
+                            ''
+                          }
+                          onChange={(e) => {
+                            const selectedTeam = teams.find(t => t.id === e.target.value)
+                            setEditedData({ 
+                              ...editedData, 
+                              teamId: e.target.value || undefined,
+                              teamName: selectedTeam?.name || ''
+                            })
+                          }}
                           className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
-                          placeholder="Nom de l'équipe"
-                        />
+                        >
+                          <option value="">Aucune équipe</option>
+                          {teams.map(team => (
+                            <option key={team.id} value={team.id}>
+                              {team.name}
+                            </option>
+                          ))}
+                        </select>
                       )}
                     </div>
                   )}

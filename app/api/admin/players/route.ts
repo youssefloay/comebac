@@ -7,18 +7,81 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const teamId = searchParams.get('teamId')
     
+    // Fetch from playerAccounts (primary source) and players (fallback)
+    let playerAccountsSnapshot
     let playersSnapshot
+    
     if (teamId) {
+      const playerAccountsQuery = query(collection(db, 'playerAccounts'), where('teamId', '==', teamId))
       const playersQuery = query(collection(db, 'players'), where('teamId', '==', teamId))
+      playerAccountsSnapshot = await getDocs(playerAccountsQuery)
       playersSnapshot = await getDocs(playersQuery)
     } else {
+      playerAccountsSnapshot = await getDocs(collection(db, 'playerAccounts'))
       playersSnapshot = await getDocs(collection(db, 'players'))
     }
     
-    const players = playersSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }))
+    // Create a map to avoid duplicates (prioritize playerAccounts)
+    const playersMap = new Map()
+    
+    // First, add all playerAccounts
+    playerAccountsSnapshot.docs.forEach(doc => {
+      const data = doc.data()
+      const email = data.email?.toLowerCase().trim()
+      const name = data.nickname 
+        ? `${data.firstName || ''} ${data.lastName || ''}`.trim() || data.nickname
+        : `${data.firstName || ''} ${data.lastName || ''}`.trim()
+      
+      const playerData = {
+        id: doc.id,
+        name: name,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        nickname: data.nickname,
+        email: data.email,
+        position: data.position,
+        number: data.jerseyNumber || data.number || 0,
+        jerseyNumber: data.jerseyNumber || data.number || 0,
+        teamId: data.teamId,
+        ...data
+      }
+      
+      if (email) {
+        playersMap.set(email, playerData)
+      } else {
+        playersMap.set(doc.id, playerData)
+      }
+    })
+    
+    // Then, add players that are not in playerAccounts
+    playersSnapshot.docs.forEach(doc => {
+      const data = doc.data()
+      const email = data.email?.toLowerCase().trim()
+      
+      if (!email || !playersMap.has(email)) {
+        const playerData = {
+          id: doc.id,
+          name: data.name || `${data.firstName || ''} ${data.lastName || ''}`.trim(),
+          firstName: data.firstName,
+          lastName: data.lastName,
+          nickname: data.nickname,
+          email: data.email,
+          position: data.position,
+          number: data.number || data.jerseyNumber || 0,
+          jerseyNumber: data.number || data.jerseyNumber || 0,
+          teamId: data.teamId,
+          ...data
+        }
+        
+        if (email) {
+          playersMap.set(email, playerData)
+        } else {
+          playersMap.set(doc.id, playerData)
+        }
+      }
+    })
+    
+    const players = Array.from(playersMap.values())
     
     return NextResponse.json(players)
   } catch (error) {

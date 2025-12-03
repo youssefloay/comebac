@@ -64,12 +64,14 @@ export function SofaNavigation() {
                   href={item.href}
                   className={`px-4 py-2 rounded-lg transition-all ${
                     isActive 
-                      ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300" 
+                      ? item.icon === Flame
+                        ? "bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900 dark:to-red-900 text-orange-700 dark:text-orange-300"
+                        : "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <Icon className="w-4 h-4" />
+                    <Icon className={`w-4 h-4 ${item.icon === Flame ? 'text-orange-500' : ''}`} />
                     <span className="text-sm font-medium">{item.label}</span>
                   </div>
                 </Link>

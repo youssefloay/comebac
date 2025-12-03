@@ -16,11 +16,14 @@ import {
   Users, 
   CheckCircle,
   Filter,
-  ChevronDown
+  ChevronDown,
+  Flame
 } from "lucide-react"
+import type { PreseasonMatch } from '@/lib/types'
 
 export default function MatchesPage() {
   const [matches, setMatches] = useState<(Match & { homeTeam?: Team; awayTeam?: Team; result?: MatchResult })[]>([])
+  const [preseasonMatches, setPreseasonMatches] = useState<(PreseasonMatch & { teamALogo?: string; teamBLogo?: string })[]>([])
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState<'all' | 'scheduled' | 'completed' | 'in_progress'>('all')
   const [selectedRound, setSelectedRound] = useState<number | 'all'>('all')
@@ -32,7 +35,7 @@ export default function MatchesPage() {
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        // Fetch matches - limit to recent matches for performance
+        // Fetch regular matches - limit to recent matches for performance
         const matchesRef = collection(db, "matches")
         const matchesQuery = query(
           matchesRef, 
@@ -41,6 +44,11 @@ export default function MatchesPage() {
           limit(200) // Limit to 200 most recent matches
         )
         const matchesSnap = await getDocs(matchesQuery)
+        
+        // Fetch preseason matches
+        const preseasonRes = await fetch('/api/preseason/matches')
+        const preseasonData = await preseasonRes.json()
+        setPreseasonMatches(preseasonData.matches || [])
         
         // Fetch teams (only active ones)
         const teamsSnap = await getDocs(query(collection(db, "teams"), where("isActive", "==", true)))
@@ -155,9 +163,47 @@ export default function MatchesPage() {
     fetchMatches()
   }, [])
 
+
+
+
+
+
+  // Convert preseason matches to match format
+  const convertedPreseasonMatches = useMemo(() => {
+    return preseasonMatches.map(match => {
+      const matchDate = new Date(match.date)
+      const [hours, minutes] = match.time.split(':')
+      matchDate.setHours(parseInt(hours), parseInt(minutes), 0, 0)
+      
+      return {
+        id: `preseason-${match.id}`,
+        homeTeamId: match.teamAId,
+        awayTeamId: match.teamBId,
+        homeTeam: { id: match.teamAId, name: match.teamAName, logo: match.teamALogo },
+        awayTeam: { id: match.teamBId, name: match.teamBName, logo: match.teamBLogo },
+        date: matchDate,
+        status: match.status === 'finished' ? 'completed' as const :
+                match.status === 'in_progress' ? 'in_progress' as const :
+                'scheduled' as const,
+        round: 0, // Preseason matches don't have rounds
+        isPreseason: true,
+        location: match.location,
+        scoreA: match.scoreA,
+        scoreB: match.scoreB,
+        penaltiesA: match.penaltiesA,
+        penaltiesB: match.penaltiesB,
+      } as Match & { homeTeam?: Team; awayTeam?: Team; isPreseason?: boolean; location?: string; scoreA?: number; scoreB?: number; penaltiesA?: number; penaltiesB?: number }
+    })
+  }, [preseasonMatches])
+
+  // Combine regular and preseason matches
+  const allMatches = useMemo(() => {
+    return [...matches, ...convertedPreseasonMatches]
+  }, [matches, convertedPreseasonMatches])
+
   // Filter matches based on status and round - optimisé avec useMemo
   const filteredMatches = useMemo(() => {
-    let filtered = matches
+    let filtered = allMatches
 
     if (filterStatus !== 'all') {
       filtered = filtered.filter(match => match.status === filterStatus)
@@ -175,12 +221,7 @@ export default function MatchesPage() {
     })
 
     return filtered
-  }, [matches, filterStatus, selectedRound])
-
-
-
-
-
+  }, [allMatches, filterStatus, selectedRound])
 
   // Organize matches by priority - optimisé avec useMemo
   const { liveMatches, todayMatches, upcomingMatches, recentMatches } = useMemo(() => {
@@ -238,7 +279,7 @@ export default function MatchesPage() {
                 </div>
                 <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">{t('matches.total')}</span>
               </div>
-              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 dark:text-blue-400">{matches.length}</div>
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 dark:text-blue-400">{allMatches.length}</div>
             </div>
           </motion.div>
           
@@ -257,7 +298,7 @@ export default function MatchesPage() {
                 </div>
                 <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">{t('matches.completed')}</span>
               </div>
-              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600 dark:text-green-400">{matches.filter(m => m.status === 'completed').length}</div>
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600 dark:text-green-400">{allMatches.filter(m => m.status === 'completed').length}</div>
             </div>
           </motion.div>
           
@@ -276,7 +317,7 @@ export default function MatchesPage() {
                 </div>
                 <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">{t('matches.upcoming')}</span>
               </div>
-              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-orange-600 dark:text-orange-400">{matches.filter(m => m.status === 'scheduled').length}</div>
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-orange-600 dark:text-orange-400">{allMatches.filter(m => m.status === 'scheduled').length}</div>
             </div>
           </motion.div>
           
@@ -441,6 +482,7 @@ export default function MatchesPage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
                 {liveMatches.map((match, index) => {
+                  const isPreseason = (match as any).isPreseason
                   const convertedMatch = {
                     id: match.id,
                     teamA: match.homeTeam?.name || t('home.unknownTeam'),
@@ -448,11 +490,14 @@ export default function MatchesPage() {
                     teamAId: match.homeTeamId,
                     teamBId: match.awayTeamId,
                     date: match.date,
-                    scoreA: match.result?.homeTeamScore,
-                    scoreB: match.result?.awayTeamScore,
+                    scoreA: isPreseason ? (match as any).scoreA : match.result?.homeTeamScore,
+                    scoreB: isPreseason ? (match as any).scoreB : match.result?.awayTeamScore,
                     status: 'live' as const,
-                    venue: `${t('team.stadiumOf')} ${match.homeTeam?.name || t('home.unknownTeam')}`,
-                    round: match.round
+                    venue: isPreseason ? (match as any).location : `${t('team.stadiumOf')} ${match.homeTeam?.name || t('home.unknownTeam')}`,
+                    round: match.round,
+                    isPreseason,
+                    penaltiesA: isPreseason ? (match as any).penaltiesA : undefined,
+                    penaltiesB: isPreseason ? (match as any).penaltiesB : undefined,
                   }
                   
                   return (
@@ -485,6 +530,7 @@ export default function MatchesPage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
                 {todayMatches.map((match, index) => {
+                  const isPreseason = (match as any).isPreseason
                   const convertedMatch = {
                     id: match.id,
                     teamA: match.homeTeam?.name || t('home.unknownTeam'),
@@ -492,11 +538,14 @@ export default function MatchesPage() {
                     teamAId: match.homeTeamId,
                     teamBId: match.awayTeamId,
                     date: match.date,
-                    scoreA: match.result?.homeTeamScore,
-                    scoreB: match.result?.awayTeamScore,
+                    scoreA: isPreseason ? (match as any).scoreA : match.result?.homeTeamScore,
+                    scoreB: isPreseason ? (match as any).scoreB : match.result?.awayTeamScore,
                     status: match.status === 'completed' ? 'completed' as const : 'upcoming' as const,
-                    venue: `${t('team.stadiumOf')} ${match.homeTeam?.name || t('home.unknownTeam')}`,
-                    round: match.round
+                    venue: isPreseason ? (match as any).location : `${t('team.stadiumOf')} ${match.homeTeam?.name || t('home.unknownTeam')}`,
+                    round: match.round,
+                    isPreseason,
+                    penaltiesA: isPreseason ? (match as any).penaltiesA : undefined,
+                    penaltiesB: isPreseason ? (match as any).penaltiesB : undefined,
                   }
                   
                   return (
@@ -541,6 +590,7 @@ export default function MatchesPage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
                 {upcomingMatches.map((match, index) => {
+                  const isPreseason = (match as any).isPreseason
                   const convertedMatch = {
                     id: match.id,
                     teamA: match.homeTeam?.name || t('home.unknownTeam'),
@@ -548,11 +598,14 @@ export default function MatchesPage() {
                     teamAId: match.homeTeamId,
                     teamBId: match.awayTeamId,
                     date: match.date,
-                    scoreA: match.result?.homeTeamScore,
-                    scoreB: match.result?.awayTeamScore,
+                    scoreA: isPreseason ? (match as any).scoreA : match.result?.homeTeamScore,
+                    scoreB: isPreseason ? (match as any).scoreB : match.result?.awayTeamScore,
                     status: 'upcoming' as const,
-                    venue: `${t('team.stadiumOf')} ${match.homeTeam?.name || t('home.unknownTeam')}`,
-                    round: match.round
+                    venue: isPreseason ? (match as any).location : `${t('team.stadiumOf')} ${match.homeTeam?.name || t('home.unknownTeam')}`,
+                    round: match.round,
+                    isPreseason,
+                    penaltiesA: isPreseason ? (match as any).penaltiesA : undefined,
+                    penaltiesB: isPreseason ? (match as any).penaltiesB : undefined,
                   }
                   
                   return (
@@ -597,6 +650,7 @@ export default function MatchesPage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
                 {recentMatches.map((match, index) => {
+                  const isPreseason = (match as any).isPreseason
                   const convertedMatch = {
                     id: match.id,
                     teamA: match.homeTeam?.name || t('home.unknownTeam'),
@@ -604,11 +658,14 @@ export default function MatchesPage() {
                     teamAId: match.homeTeamId,
                     teamBId: match.awayTeamId,
                     date: match.date,
-                    scoreA: match.result?.homeTeamScore,
-                    scoreB: match.result?.awayTeamScore,
+                    scoreA: isPreseason ? (match as any).scoreA : match.result?.homeTeamScore,
+                    scoreB: isPreseason ? (match as any).scoreB : match.result?.awayTeamScore,
                     status: 'completed' as const,
-                    venue: `${t('team.stadiumOf')} ${match.homeTeam?.name || t('home.unknownTeam')}`,
-                    round: match.round
+                    venue: isPreseason ? (match as any).location : `${t('team.stadiumOf')} ${match.homeTeam?.name || t('home.unknownTeam')}`,
+                    round: match.round,
+                    isPreseason,
+                    penaltiesA: isPreseason ? (match as any).penaltiesA : undefined,
+                    penaltiesB: isPreseason ? (match as any).penaltiesB : undefined,
                   }
                   
                   return (
@@ -649,6 +706,7 @@ export default function MatchesPage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
                 {filteredMatches.map((match, index) => {
+                  const isPreseason = (match as any).isPreseason
                   const convertedMatch = {
                     id: match.id,
                     teamA: match.homeTeam?.name || t('home.unknownTeam'),
@@ -656,13 +714,16 @@ export default function MatchesPage() {
                     teamAId: match.homeTeamId,
                     teamBId: match.awayTeamId,
                     date: match.date,
-                    scoreA: match.result?.homeTeamScore,
-                    scoreB: match.result?.awayTeamScore,
+                    scoreA: isPreseason ? (match as any).scoreA : match.result?.homeTeamScore,
+                    scoreB: isPreseason ? (match as any).scoreB : match.result?.awayTeamScore,
                     status: match.status === 'completed' ? 'completed' as const : 
                             match.status === 'in_progress' ? 'live' as const :
                             'upcoming' as const,
-                    venue: `${t('team.stadiumOf')} ${match.homeTeam?.name || t('home.unknownTeam')}`,
-                    round: match.round
+                    venue: isPreseason ? (match as any).location : `${t('team.stadiumOf')} ${match.homeTeam?.name || t('home.unknownTeam')}`,
+                    round: match.round,
+                    isPreseason,
+                    penaltiesA: isPreseason ? (match as any).penaltiesA : undefined,
+                    penaltiesB: isPreseason ? (match as any).penaltiesB : undefined,
                   }
                   
                   return (

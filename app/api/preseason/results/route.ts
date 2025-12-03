@@ -5,7 +5,20 @@ import { processPreseasonResult, getPreseasonMatches } from '@/lib/preseason/db'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { matchId, scoreA, scoreB, penaltiesA, penaltiesB } = body
+    const { 
+      matchId, 
+      scoreA, 
+      scoreB, 
+      penaltiesA, 
+      penaltiesB,
+      teamAGoalScorers,
+      teamBGoalScorers,
+      teamAYellowCards,
+      teamBYellowCards,
+      teamARedCards,
+      teamBRedCards,
+      penaltyShootout
+    } = body
 
     if (!matchId || scoreA === undefined || scoreB === undefined) {
       return NextResponse.json(
@@ -14,7 +27,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    await processPreseasonResult(matchId, scoreA, scoreB, penaltiesA, penaltiesB)
+    const resultData = {
+      teamAGoalScorers,
+      teamBGoalScorers,
+      teamAYellowCards,
+      teamBYellowCards,
+      teamARedCards,
+      teamBRedCards,
+      penaltyShootout,
+    }
+
+    await processPreseasonResult(matchId, scoreA, scoreB, penaltiesA, penaltiesB, resultData)
 
     return NextResponse.json({ success: true })
   } catch (error: any) {

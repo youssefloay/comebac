@@ -30,7 +30,7 @@ import {
 const mainTabs = [
   { href: "/public", labelKey: "nav.home", icon: Home },
   { href: "/public/matches", labelKey: "nav.matches", icon: Calendar },
-  { href: "/public/ranking", labelKey: "nav.ranking", icon: Trophy },
+  { href: "/preseason", labelKey: "Preseason", icon: Flame },
   { href: "/public/teams", labelKey: "nav.teams", icon: Users },
 ]
 
@@ -38,7 +38,7 @@ const mainTabs = [
 const secondaryTabs = [
   { href: "/public/statistics", labelKey: "nav.stats", icon: BarChart3 },
   { href: "/public/fantasy", labelKey: "nav.fantasy", icon: Sparkles },
-  { href: "/preseason", labelKey: "Preseason", icon: Flame },
+  { href: "/public/ranking", labelKey: "nav.ranking", icon: Trophy },
 ]
 
 export function BottomNavigation() {
@@ -187,7 +187,11 @@ export function BottomNavigation() {
                   {isActive && (
                     <motion.div
                       layoutId="activeBottomTab"
-                      className="absolute inset-0 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10 rounded-2xl"
+                      className={`absolute inset-0 rounded-2xl ${
+                        tab.icon === Flame
+                          ? 'bg-gradient-to-br from-orange-50 to-red-50/50 dark:from-orange-900/20 dark:to-red-800/10'
+                          : 'bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10'
+                      }`}
                       initial={false}
                       transition={{
                         type: "spring",
@@ -197,17 +201,29 @@ export function BottomNavigation() {
                     />
                   )}
                   <div className={`relative z-10 p-1.5 rounded-xl transition-all duration-300 ${
-                    isActive ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30' : 'group-hover:bg-gray-100 dark:group-hover:bg-gray-800'
+                    isActive 
+                      ? tab.icon === Flame 
+                        ? 'bg-gradient-to-br from-orange-500 to-red-500 shadow-lg shadow-orange-500/30' 
+                        : 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30'
+                      : 'group-hover:bg-gray-100 dark:group-hover:bg-gray-800'
                   }`}>
                     <Icon 
                       className={`w-5 h-5 transition-all duration-300 ${
-                        isActive ? 'text-white scale-110' : 'group-hover:scale-110'
+                        isActive 
+                          ? 'text-white scale-110' 
+                          : tab.icon === Flame 
+                            ? 'text-orange-500 group-hover:text-orange-600 group-hover:scale-110' 
+                            : 'group-hover:scale-110'
                       }`} 
                       aria-hidden="true"
                     />
                   </div>
                   <span className={`text-[10px] font-semibold mt-1.5 transition-all duration-300 ${
-                    isActive ? 'text-blue-600 dark:text-blue-400' : ''
+                    isActive 
+                      ? tab.icon === Flame 
+                        ? 'text-orange-600 dark:text-orange-400' 
+                        : 'text-blue-600 dark:text-blue-400'
+                      : ''
                   }`}>
                     {useTranslation ? t(tab.labelKey) : t(tab.labelKey)}
                   </span>
