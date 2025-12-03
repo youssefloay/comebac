@@ -132,11 +132,11 @@ export function MatchDetailsModal({ match, isOpen, onClose }: MatchDetailsModalP
                     className="block hover:opacity-80 transition-opacity"
                   >
                     {match.teamALogo ? (
-                      <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-3 bg-white dark:bg-gray-100 rounded-2xl p-3 shadow-xl border-2 border-gray-200 dark:border-gray-300">
+                      <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-3 bg-white dark:bg-gray-100 rounded-2xl p-0.5 shadow-xl border-2 border-gray-200 dark:border-gray-300 overflow-hidden">
                         <img
                           src={match.teamALogo}
                           alt={match.teamAName}
-                          className="w-full h-full object-contain"
+                          className="w-full h-full object-cover"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             if (e.currentTarget.parentElement) {
@@ -184,11 +184,11 @@ export function MatchDetailsModal({ match, isOpen, onClose }: MatchDetailsModalP
                     className="block hover:opacity-80 transition-opacity"
                   >
                     {match.teamBLogo ? (
-                      <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-3 bg-white dark:bg-gray-100 rounded-2xl p-3 shadow-xl border-2 border-gray-200 dark:border-gray-300">
+                      <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-3 bg-white dark:bg-gray-100 rounded-2xl p-0.5 shadow-xl border-2 border-gray-200 dark:border-gray-300 overflow-hidden">
                         <img
                           src={match.teamBLogo}
                           alt={match.teamBName}
-                          className="w-full h-full object-contain"
+                          className="w-full h-full object-cover"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             if (e.currentTarget.parentElement) {

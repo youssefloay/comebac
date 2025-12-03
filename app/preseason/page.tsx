@@ -198,11 +198,11 @@ export default function PreseasonPage() {
                       <div className="flex items-center gap-3 sm:gap-4 mb-3">
                         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                           {match.teamALogo ? (
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-gray-50 rounded-2xl p-2.5 sm:p-3 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 flex-shrink-0 ring-2 ring-gray-100 dark:ring-gray-700">
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-gray-50 rounded-2xl p-0.5 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 flex-shrink-0 ring-2 ring-gray-100 dark:ring-gray-700 overflow-hidden">
                               <img
                                 src={match.teamALogo}
                                 alt={match.teamAName}
-                                className="w-full h-full object-contain"
+                                className="w-full h-full object-cover"
                                 onError={(e) => {
                                   e.currentTarget.style.display = 'none'
                                   if (e.currentTarget.parentElement) {
@@ -226,11 +226,11 @@ export default function PreseasonPage() {
                         <span className="text-gray-500 dark:text-gray-400 font-semibold text-sm sm:text-base flex-shrink-0">vs</span>
                         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                           {match.teamBLogo ? (
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-gray-50 rounded-2xl p-2.5 sm:p-3 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 flex-shrink-0 ring-2 ring-gray-100 dark:ring-gray-700">
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-gray-50 rounded-2xl p-0.5 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 flex-shrink-0 ring-2 ring-gray-100 dark:ring-gray-700 overflow-hidden">
                               <img
                                 src={match.teamBLogo}
                                 alt={match.teamBName}
-                                className="w-full h-full object-contain"
+                                className="w-full h-full object-cover"
                                 onError={(e) => {
                                   e.currentTarget.style.display = 'none'
                                   if (e.currentTarget.parentElement) {
@@ -317,11 +317,11 @@ export default function PreseasonPage() {
                       <div className="text-right">
                         <div className="flex items-center justify-end gap-2 mb-2">
                           {match.teamALogo ? (
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white dark:bg-gray-50 rounded-2xl p-2.5 sm:p-3 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 ring-2 ring-gray-100 dark:ring-gray-700">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white dark:bg-gray-50 rounded-2xl p-0.5 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 ring-2 ring-gray-100 dark:ring-gray-700 overflow-hidden">
                               <img
                                 src={match.teamALogo}
                                 alt={match.teamAName}
-                                className="w-full h-full object-contain"
+                                className="w-full h-full object-cover"
                                 onError={(e) => {
                                   e.currentTarget.style.display = 'none'
                                   if (e.currentTarget.parentElement) {
@@ -356,11 +356,11 @@ export default function PreseasonPage() {
                       <div className="text-left">
                         <div className="flex items-center gap-2 mb-2">
                           {match.teamBLogo ? (
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white dark:bg-gray-50 rounded-2xl p-2.5 sm:p-3 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 ring-2 ring-gray-100 dark:ring-gray-700">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white dark:bg-gray-50 rounded-2xl p-0.5 shadow-xl border-[3px] border-gray-300 dark:border-gray-400 ring-2 ring-gray-100 dark:ring-gray-700 overflow-hidden">
                               <img
                                 src={match.teamBLogo}
                                 alt={match.teamBName}
-                                className="w-full h-full object-contain"
+                                className="w-full h-full object-cover"
                                 onError={(e) => {
                                   e.currentTarget.style.display = 'none'
                                   if (e.currentTarget.parentElement) {
