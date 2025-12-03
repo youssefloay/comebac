@@ -25,21 +25,39 @@ export async function createPreseasonMatch(matchData: Omit<PreseasonMatch, 'id' 
 }
 
 export async function getPreseasonMatches(): Promise<PreseasonMatch[]> {
-  const snapshot = await adminDb!.collection('preseasonMatches')
-    .orderBy('date', 'asc')
-    .orderBy('time', 'asc')
-    .get()
+  try {
+    // Try with date ordering only (composite index may not exist)
+    const snapshot = await adminDb!.collection('preseasonMatches')
+      .orderBy('date', 'asc')
+      .get()
 
-  return snapshot.docs.map(doc => {
-    const data = doc.data()
-    return {
-      id: doc.id,
-      ...data,
-      date: data.date?.toDate ? data.date.toDate() : new Date(data.date),
-      createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
-      updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt),
-    } as PreseasonMatch
-  })
+    const matches = snapshot.docs.map(doc => {
+      const data = doc.data()
+      return {
+        id: doc.id,
+        ...data,
+        date: data.date?.toDate ? data.date.toDate() : new Date(data.date),
+        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
+        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt),
+      } as PreseasonMatch
+    })
+
+    // Sort by date and time manually
+    matches.sort((a, b) => {
+      const dateA = a.date.getTime()
+      const dateB = b.date.getTime()
+      if (dateA !== dateB) {
+        return dateA - dateB
+      }
+      // If same date, sort by time
+      return a.time.localeCompare(b.time)
+    })
+
+    return matches
+  } catch (error) {
+    console.error('Error fetching preseason matches:', error)
+    throw error
+  }
 }
 
 export async function getPreseasonMatchById(id: string): Promise<PreseasonMatch | null> {
