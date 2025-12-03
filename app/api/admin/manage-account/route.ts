@@ -39,14 +39,23 @@ export async function POST(request: Request) {
     }
 
     if (action === 'resetPassword') {
-      // Générer un lien de réinitialisation de mot de passe
+      // Générer un lien de réinitialisation de mot de passe JUSTE AVANT l'envoi
+      // pour éviter que le lien expire avant d'être reçu
+      const linkGenerationTime = Date.now()
+      console.log(`🔗 Génération du lien de réinitialisation pour ${email} à ${new Date(linkGenerationTime).toISOString()}`)
+      
       const resetLink = await auth.generatePasswordResetLink(email, getPasswordResetActionCodeSettings(email))
+      
+      const linkGeneratedTime = Date.now()
+      console.log(`✅ Lien généré en ${linkGeneratedTime - linkGenerationTime}ms`)
+      console.log(`🔗 Lien: ${resetLink.substring(0, 100)}...`)
 
       // Envoyer l'email (seulement si l'email est contact@comebac.com en mode test)
       const canSendEmail = email === 'contact@comebac.com' || process.env.NODE_ENV === 'production'
       
       if (canSendEmail) {
         try {
+          const emailSendStartTime = Date.now()
           await sendEmail({
           to: email,
           subject: 'Réinitialisation de votre mot de passe - ComeBac League',
@@ -101,7 +110,11 @@ export async function POST(request: Request) {
           `
         })
 
-          console.log('✅ Email de réinitialisation envoyé à', email)
+          const emailSendTime = Date.now() - emailSendStartTime
+          const totalTime = Date.now() - linkGenerationTime
+          console.log(`✅ Email de réinitialisation envoyé à ${email}`)
+          console.log(`⏱️  Temps total (génération + envoi): ${totalTime}ms`)
+          console.log(`📧 Temps d'envoi email: ${emailSendTime}ms`)
         } catch (emailError) {
           console.error('❌ Erreur d\'envoi d\'email:', emailError)
           // On continue même si l'email échoue, le lien est quand même généré

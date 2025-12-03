@@ -19,6 +19,23 @@ export default function ResetPasswordPage() {
     if (typeof window === 'undefined') return
     const searchParams = new URLSearchParams(window.location.search)
     const code = searchParams.get('oobCode')
+    const mode = searchParams.get('mode')
+    
+    // Vérifier si on arrive depuis Firebase avec une erreur
+    if (!code && mode !== 'resetPassword') {
+      // Vérifier si on a un paramètre d'erreur dans l'URL
+      const errorParam = searchParams.get('error')
+      if (errorParam || window.location.href.includes('expired') || window.location.href.includes('already')) {
+        setError('Votre demande de réinitialisation du mot de passe a expiré ou ce lien a déjà été utilisé.')
+        setStatus('error')
+        return
+      }
+      
+      setError('Lien invalide. Veuillez demander un nouveau mail de réinitialisation.')
+      setStatus('error')
+      return
+    }
+
     if (!code) {
       setError('Lien invalide. Veuillez demander un nouveau mail de réinitialisation.')
       setStatus('error')
@@ -31,8 +48,16 @@ export default function ResetPasswordPage() {
         setEmail(retrievedEmail)
         setStatus('ready')
       })
-      .catch(() => {
-        setError('Ce lien a expiré ou a déjà été utilisé. Merci de recommencer la procédure depuis l\'application.')
+      .catch((err: any) => {
+        console.error('Erreur vérification code:', err)
+        // Détecter le type d'erreur
+        if (err.code === 'auth/expired-action-code') {
+          setError('Votre demande de réinitialisation du mot de passe a expiré. Les liens sont valables pendant 1 heure.')
+        } else if (err.code === 'auth/invalid-action-code') {
+          setError('Ce lien a déjà été utilisé ou est invalide. Chaque lien ne peut être utilisé qu\'une seule fois.')
+        } else {
+          setError('Ce lien a expiré ou a déjà été utilisé. Merci de recommencer la procédure depuis l\'application.')
+        }
         setStatus('error')
       })
   }, [])
@@ -108,14 +133,27 @@ export default function ResetPasswordPage() {
 
             {status === 'error' && (
               <div className="text-center py-12">
-                <div className="w-16 h-16 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-4">
-                  !
+                <div className="w-16 h-16 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center mx-auto mb-4">
+                  <LockKeyhole className="w-8 h-8" />
                 </div>
-                <h2 className="text-xl font-semibold mb-2">Lien invalide</h2>
-                <p className="text-gray-600 mb-6">{error}</p>
-                <Link href="/login" className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold shadow-lg hover:bg-indigo-700">
-                  Retourner à la connexion
-                </Link>
+                <h2 className="text-2xl font-semibold mb-3 text-gray-900">Lien expiré ou invalide</h2>
+                <p className="text-gray-600 mb-2">
+                  Votre demande de réinitialisation du mot de passe a expiré ou ce lien a déjà été utilisé.
+                </p>
+                <p className="text-sm text-gray-500 mb-8">
+                  Les liens de réinitialisation sont valables pendant 1 heure et ne peuvent être utilisés qu'une seule fois.
+                </p>
+                <div className="space-y-3">
+                  <Link 
+                    href="/login" 
+                    className="inline-block w-full px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold shadow-lg hover:bg-indigo-700 transition-colors"
+                  >
+                    Retourner à la connexion
+                  </Link>
+                  <p className="text-sm text-gray-500">
+                    Vous pouvez demander un nouveau lien depuis la page de connexion en cliquant sur "Mot de passe oublié".
+                  </p>
+                </div>
               </div>
             )}
 
