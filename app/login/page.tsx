@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { AlertCircle, Mail, Lock, UserPlus, Eye, EyeOff } from "lucide-react";
-import { SimpleLogo } from "@/components/ui/logo";
 import { motion } from "framer-motion";
 import { DomainError } from "@/components/auth/domain-error";
 import { ProfileCompletion } from "@/components/auth/profile-completion";
@@ -203,11 +202,18 @@ export default function LoginPage() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className="relative mx-auto mb-4 sm:mb-6 w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/30 shadow-lg"
+              className="relative mx-auto mb-4 sm:mb-6 w-16 h-16 sm:w-20 sm:h-20 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center overflow-hidden border-2 border-white/50 shadow-xl"
             >
-              <SimpleLogo
-                className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
+              <img
+                src="/comebac.png?v=2"
                 alt="ComeBac League"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none'
+                  if (e.currentTarget.parentElement) {
+                    e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-white font-bold text-lg sm:text-xl">CB</div>'
+                  }
+                }}
               />
             </motion.div>
             

@@ -35,17 +35,30 @@ export function getPlayerWelcomeEmailHtml(playerName: string, teamName: string, 
           width: 80px;
           height: 80px;
           margin: 0 auto 16px;
-          background: white;
+          background: rgba(255, 255, 255, 0.3);
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 8px;
+          border: 2px solid rgba(255, 255, 255, 0.5);
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
         }
         .logo img {
           width: 100%;
-          height: auto;
+          height: 100%;
+          object-fit: cover;
           display: block;
+        }
+        .logo-fallback {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          font-size: 24px;
         }
         .header h1 {
           color: white;
@@ -154,7 +167,8 @@ export function getPlayerWelcomeEmailHtml(playerName: string, teamName: string, 
       <div class="container">
         <div class="header">
           <div class="logo">
-            <img src="${logoUrl}" alt="ComeBac League" />
+            <img src="${logoUrl}" alt="ComeBac League" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <div class="logo-fallback" style="display: none;">CB</div>
           </div>
           <h1>Bienvenue dans ComeBac League</h1>
         </div>
@@ -259,17 +273,30 @@ export function getCoachWelcomeEmailHtml(email: string, firstName: string, lastN
           width: 80px;
           height: 80px;
           margin: 0 auto 16px;
-          background: white;
+          background: rgba(255, 255, 255, 0.3);
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 8px;
+          border: 2px solid rgba(255, 255, 255, 0.5);
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
         }
         .logo img {
           width: 100%;
-          height: auto;
+          height: 100%;
+          object-fit: cover;
           display: block;
+        }
+        .logo-fallback {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          font-size: 24px;
         }
         .header h1 {
           color: white;
@@ -378,7 +405,8 @@ export function getCoachWelcomeEmailHtml(email: string, firstName: string, lastN
       <div class="container">
         <div class="header">
           <div class="logo">
-            <img src="${logoUrl}" alt="ComeBac League" />
+            <img src="${logoUrl}" alt="ComeBac League" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <div class="logo-fallback" style="display: none;">CB</div>
           </div>
           <h1>Bienvenue Coach</h1>
         </div>
@@ -484,17 +512,30 @@ export function getPasswordResetEmailHtml(email: string, resetLink: string) {
           width: 80px;
           height: 80px;
           margin: 0 auto 16px;
-          background: white;
+          background: rgba(255, 255, 255, 0.3);
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 8px;
+          border: 2px solid rgba(255, 255, 255, 0.5);
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
         }
         .logo img {
           width: 100%;
-          height: auto;
+          height: 100%;
+          object-fit: cover;
           display: block;
+        }
+        .logo-fallback {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          font-size: 24px;
         }
         .header h1 {
           color: white;
@@ -599,7 +640,8 @@ export function getPasswordResetEmailHtml(email: string, resetLink: string) {
       <div class="container">
         <div class="header">
           <div class="logo">
-            <img src="${logoUrl}" alt="ComeBac League" />
+            <img src="${logoUrl}" alt="ComeBac League" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <div class="logo-fallback" style="display: none;">CB</div>
           </div>
           <h1>🔐 Réinitialisation de mot de passe</h1>
         </div>
