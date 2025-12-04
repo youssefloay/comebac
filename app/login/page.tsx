@@ -114,14 +114,34 @@ export default function LoginPage() {
     try {
       setIsLoading(true);
       setError("");
-      await resetPassword(email);
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erreur lors de l'envoi de l'email de réinitialisation");
+      }
+
+      // Afficher l'ID Resend si disponible pour le débogage
+      if (data.emailId) {
+        console.log('📧 Email ID Resend:', data.emailId);
+        console.log('📧 Vérifiez le statut:', data.checkStatusUrl);
+      }
+
       setResetEmailSent(true);
       setShowForgotPassword(false);
     } catch (error: any) {
-      if (error.code === 'auth/user-not-found') {
+      console.error('❌ Erreur reset password:', error);
+      if (error.message?.includes('user-not-found')) {
         setError("Aucun compte trouvé avec cet email");
       } else {
-        setError("Erreur lors de l'envoi de l'email de réinitialisation");
+        setError(error.message || "Erreur lors de l'envoi de l'email de réinitialisation");
       }
     } finally {
       setIsLoading(false);

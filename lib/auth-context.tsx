@@ -538,6 +538,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       console.log('✅ Email de réinitialisation envoyé via notre service personnalisé à:', email)
+      if (data.emailId) {
+        console.log('📧 Email ID Resend:', data.emailId)
+        console.log('📧 Vérifiez le statut sur:', data.checkStatusUrl)
+      }
     } catch (error: any) {
       console.error('❌ Erreur lors de l\'envoi de l\'email de réinitialisation:', error)
       throw error
