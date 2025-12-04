@@ -647,6 +647,26 @@ export async function updateTeamLogo(
 }
 
 /**
+ * Updates team jersey
+ */
+export async function updateTeamJersey(
+  teamId: string,
+  jerseyUrl: string
+): Promise<void> {
+  try {
+    const teamRef = doc(db, "teams", teamId);
+    await updateDoc(teamRef, {
+      jersey: jerseyUrl,
+      updatedAt: Timestamp.now(),
+    });
+    console.log(`Team jersey updated for team ${teamId}`);
+  } catch (error) {
+    console.error("Error updating team jersey:", error);
+    throw error;
+  }
+}
+
+/**
  * Updates player photo and stats
  */
 export async function updatePlayerProfile(

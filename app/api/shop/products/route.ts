@@ -3,14 +3,24 @@ import { adminDb } from '@/lib/firebase-admin'
 import { DEFAULT_PRODUCTS } from '@/lib/shop-utils'
 
 // GET - Récupérer tous les produits actifs
-export async function GET() {
+// Query params: ?teamId=xxx pour récupérer aussi les produits spécifiques à une équipe
+export async function GET(request: Request) {
   try {
     if (!adminDb) {
       return NextResponse.json({ error: 'Database not initialized' }, { status: 500 })
     }
-    const productsSnapshot = await adminDb.collection('shopProducts').where('active', '==', true).get()
     
-    if (productsSnapshot.empty) {
+    const { searchParams } = new URL(request.url)
+    const teamId = searchParams.get('teamId')
+    
+    // Récupérer les produits génériques (sans teamId)
+    const genericProductsSnapshot = await adminDb.collection('shopProducts')
+      .where('active', '==', true)
+      .get()
+    
+    let products: any[] = []
+    
+    if (genericProductsSnapshot.empty) {
       // Initialiser les produits par défaut
       const batch = adminDb.batch()
       DEFAULT_PRODUCTS.forEach((product) => {
@@ -21,11 +31,34 @@ export async function GET() {
       
       // Récupérer à nouveau
       const newSnapshot = await adminDb.collection('shopProducts').where('active', '==', true).get()
-      const products = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-      return NextResponse.json(products)
+      products = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    } else {
+      products = genericProductsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
     }
-
-    const products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    
+    // Si un teamId est fourni, récupérer aussi les produits spécifiques à cette équipe
+    if (teamId) {
+      const teamProductsSnapshot = await adminDb.collection('shopProducts')
+        .where('active', '==', true)
+        .where('teamId', '==', teamId)
+        .get()
+      
+      const teamProducts = teamProductsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      
+      // Remplacer les produits génériques par les produits spécifiques à l'équipe si ils existent
+      // Par exemple, remplacer le maillot générique par le maillot spécifique de l'équipe
+      teamProducts.forEach(teamProduct => {
+        const index = products.findIndex(p => p.type === teamProduct.type && !p.teamId)
+        if (index !== -1) {
+          // Remplacer le produit générique par le produit spécifique
+          products[index] = teamProduct
+        } else {
+          // Ajouter le produit spécifique
+          products.push(teamProduct)
+        }
+      })
+    }
+    
     return NextResponse.json(products)
   } catch (error) {
     console.error('Error fetching products:', error)

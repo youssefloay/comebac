@@ -31,19 +31,21 @@ export default function TeamShopPage() {
 
   const fetchData = async () => {
     try {
-      const [teamRes, productsRes, settingsRes] = await Promise.all([
+      const [teamRes, settingsRes] = await Promise.all([
         fetch(`/api/teams/${teamId}`),
-        fetch('/api/shop/products'),
         fetch('/api/shop/settings')
       ])
 
       const teamData = await teamRes.json()
-      const productsData = await productsRes.json()
       const settingsData = await settingsRes.json()
 
       setTeam(teamData)
-      setProducts(productsData)
       setSettings(settingsData)
+
+      // Récupérer les produits avec le teamId pour avoir les maillots spécifiques à l'équipe
+      const productsRes = await fetch(`/api/shop/products?teamId=${teamId}`)
+      const productsData = await productsRes.json()
+      setProducts(productsData)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -173,13 +175,26 @@ export default function TeamShopPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
             >
-              {/* Mockup Real */}
+              {/* Mockup Real ou Image du maillot */}
               <div className="w-full h-64 mb-4">
-                <ProductMockupReal
-                  productType={product.type}
-                  teamName={team.name}
-                  teamLogo={team.logo}
-                />
+                {product.type === 'jersey' && product.images && product.images.length > 0 && product.teamId ? (
+                  // Afficher l'image réelle du maillot si c'est un produit spécifique à l'équipe
+                  <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                    <Image
+                      src={product.images[0]}
+                      alt={product.name}
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                ) : (
+                  // Sinon, utiliser le mockup générique
+                  <ProductMockupReal
+                    productType={product.type}
+                    teamName={team.name}
+                    teamLogo={team.logo}
+                  />
+                )}
               </div>
 
               <h3 className="text-xl font-bold mb-2">{product.name}</h3>

@@ -21,6 +21,8 @@ export interface ShopProduct {
   images: string[]
   active: boolean
   mockupTemplate?: string // pour le mockup 3D
+  teamId?: string // Optionnel: pour les produits spécifiques à une équipe
+  teamName?: string // Optionnel: nom de l'équipe pour les produits spécifiques
 }
 
 export interface ProductCustomization {

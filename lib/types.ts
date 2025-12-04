@@ -3,6 +3,7 @@ export interface Team {
   name: string
   logo: string
   color: string
+  jersey?: string // URL du maillot de l'équipe
   school?: string // Nom de l'école/établissement
   schoolName?: string // Alias pour school (pour compatibilité)
   teamGrade?: string // Classe/Niveau (ex: "1ère", "Terminale")

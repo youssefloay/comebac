@@ -68,3 +68,20 @@ export async function uploadCoachPhoto(coachId: string, file: File | Blob): Prom
     throw new Error(`Erreur upload photo: ${error.message || error.code || 'Erreur inconnue'}`)
   }
 }
+
+export async function uploadTeamJersey(teamId: string, file: Blob): Promise<string> {
+  try {
+    const fileName = `team-jerseys/${teamId}-${Date.now()}.jpg`
+    const storageRef = ref(storage, fileName)
+    
+    await uploadBytes(storageRef, file, {
+      contentType: 'image/jpeg',
+    })
+    
+    const downloadURL = await getDownloadURL(storageRef)
+    return downloadURL
+  } catch (error) {
+    console.error('Error uploading team jersey:', error)
+    throw error
+  }
+}
