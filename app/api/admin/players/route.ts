@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       
       if (!email || !playersMap.has(email)) {
         const playerData = {
-          id: doc.id,
+      id: doc.id,
           name: data.name || `${data.firstName || ''} ${data.lastName || ''}`.trim(),
           firstName: data.firstName,
           lastName: data.lastName,

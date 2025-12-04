@@ -10,7 +10,7 @@
 ### Statut : ❌ **NON CORRIGÉ**
 
 **Routes affectées :**
-- `app/api/admin/create-coach-account/route.ts:21`
+- `app/api/admin/create-coach-account/route.ts:21`  
 - `app/api/admin/update-player-email/route.ts:6`
 - `app/api/admin/delete-account/route.ts:6`
 - `app/api/admin/reset-database/route.ts:1`
@@ -168,7 +168,7 @@ Le code gère maintenant le cas où un compte coach existe mais sans `uid` ou av
 ### Statut : ⚠️ **PARTIELLEMENT CORRIGÉ**
 
 **Fichier affecté :**
-- `app/api/profile/upload-photo-client/route.ts:35-112`
+- `app/api/profile/upload-photo-client/route.ts:35-112`  
 
 **Problème :**
 Les images sont stockées comme chaînes `data:image/jpeg;base64,...` dans les documents Firestore. Même avec une limite brute de 900 KB, l'inflation base64 pousse de nombreux uploads au-delà de la limite de 1 MB de Firestore, causant des échecs intermittents.

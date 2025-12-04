@@ -138,8 +138,9 @@ export default function MatchDetailsPage() {
 
   const canViewLineups = () => {
     if (!match) return false
-    const minutesUntilMatch = (match.date.getTime() - new Date().getTime()) / (1000 * 60)
-    return minutesUntilMatch <= 30 || match.status !== 'upcoming'
+    // Les joueurs peuvent voir les compositions dès qu'elles sont validées par le coach
+    // Vérifier si au moins une des deux compositions est validée
+    return (homeLineup?.validated === true) || (awayLineup?.validated === true) || match.status !== 'upcoming'
   }
 
   const getPlayerById = (players: Player[], id: string) => {
@@ -248,10 +249,10 @@ export default function MatchDetailsPage() {
             <div className="bg-white p-8 rounded-lg shadow-md border border-gray-200 text-center">
               <Lock className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-bold text-gray-900 mb-2">
-                Compositions non encore publiées
+                Compositions non encore validées
               </h3>
               <p className="text-gray-600">
-                Les compositions seront visibles 30 minutes avant le coup d'envoi
+                Les compositions seront visibles dès qu'elles sont validées par les coaches
               </p>
             </div>
           ) : (

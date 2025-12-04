@@ -1,14 +1,12 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
-import { SofaMatchCard } from '@/components/sofa/match-card'
-import { SofaStatCard } from '@/components/sofa/stat-card'
-import { SofaTeamCard } from '@/components/sofa/team-card'
+import Image from 'next/image'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import Link from 'next/link'
 import { t } from '@/lib/i18n'
-import { AdBanner } from '@/components/ads/AdBanner'
 import { getParticipatingTeamIds, filterParticipatingTeams } from '@/lib/tournament-utils'
 import { TeamLink } from '@/components/ui/team-link'
 import { 
@@ -19,6 +17,20 @@ import {
   Target,
   UserPlus
 } from 'lucide-react'
+
+// Lazy load des composants pour réduire le bundle initial
+const SofaMatchCard = dynamic(() => import('@/components/sofa/match-card').then(mod => ({ default: mod.SofaMatchCard })), {
+  loading: () => <div className="h-32 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-xl" />
+})
+
+const SofaTeamCard = dynamic(() => import('@/components/sofa/team-card').then(mod => ({ default: mod.SofaTeamCard })), {
+  loading: () => <div className="h-48 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-xl" />,
+  ssr: true
+})
+
+const AdBanner = dynamic(() => import('@/components/ads/AdBanner').then(mod => ({ default: mod.AdBanner })), {
+  ssr: false
+})
 
 interface Match {
   id: string
@@ -170,7 +182,7 @@ export default function PublicHome() {
             <motion.h1 
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              transition={{ duration: 0.2 }}
               className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent"
             >
               {t('home.title')}
@@ -178,7 +190,7 @@ export default function PublicHome() {
             <motion.p 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+              transition={{ duration: 0.2, delay: 0.1 }}
               className="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto"
             >
               {t('home.subtitle')}
@@ -187,7 +199,7 @@ export default function PublicHome() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
+              transition={{ duration: 0.2, delay: 0.2 }}
               className="flex flex-col sm:flex-row items-center justify-center gap-4"
             >
               <Link href="/register-team">
@@ -214,7 +226,7 @@ export default function PublicHome() {
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+            transition={{ duration: 0.2 }}
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
@@ -262,7 +274,7 @@ export default function PublicHome() {
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.2, delay: 0.1 }}
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
@@ -299,10 +311,13 @@ export default function PublicHome() {
                   </div>
                   <div className="mb-4 flex justify-center">
                     {topThreeTeams[1].teamLogo ? (
-                      <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 shadow-lg flex items-center justify-center">
-                        <img 
-                          src={topThreeTeams[1].teamLogo} 
+                      <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 shadow-lg flex items-center justify-center relative">
+                        <Image
+                          src={topThreeTeams[1].teamLogo}
                           alt={topThreeTeams[1].teamName}
+                          width={80}
+                          height={80}
+                          priority
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
@@ -346,10 +361,13 @@ export default function PublicHome() {
                   </div>
                   <div className="mb-4 flex justify-center">
                     {topThreeTeams[0].teamLogo ? (
-                      <div className="w-24 h-24 rounded-full overflow-hidden bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-400 dark:border-yellow-600 shadow-xl flex items-center justify-center">
-                        <img 
-                          src={topThreeTeams[0].teamLogo} 
+                      <div className="w-24 h-24 rounded-full overflow-hidden bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-400 dark:border-yellow-600 shadow-xl flex items-center justify-center relative">
+                        <Image
+                          src={topThreeTeams[0].teamLogo}
                           alt={topThreeTeams[0].teamName}
+                          width={96}
+                          height={96}
+                          priority
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
@@ -393,10 +411,13 @@ export default function PublicHome() {
                   </div>
                   <div className="mb-4 flex justify-center">
                     {topThreeTeams[2].teamLogo ? (
-                      <div className="w-20 h-20 rounded-full overflow-hidden bg-orange-100 dark:bg-orange-900/30 border-2 border-orange-400 dark:border-orange-600 shadow-lg flex items-center justify-center">
-                        <img 
-                          src={topThreeTeams[2].teamLogo} 
+                      <div className="w-20 h-20 rounded-full overflow-hidden bg-orange-100 dark:bg-orange-900/30 border-2 border-orange-400 dark:border-orange-600 shadow-lg flex items-center justify-center relative">
+                        <Image
+                          src={topThreeTeams[2].teamLogo}
                           alt={topThreeTeams[2].teamName}
+                          width={80}
+                          height={80}
+                          priority
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
@@ -432,7 +453,7 @@ export default function PublicHome() {
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
+          transition={{ duration: 0.2, delay: 0.15 }}
         >
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -446,7 +467,7 @@ export default function PublicHome() {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 + 0.1 * 0 }}
+              transition={{ duration: 0.15 }}
               whileHover={{ scale: 1.02, y: -4 }}
               className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-50 via-blue-100/50 to-white dark:from-blue-950/20 dark:via-blue-900/10 dark:to-gray-900 border border-blue-200/50 dark:border-blue-800/30 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300"
             >
@@ -457,14 +478,9 @@ export default function PublicHome() {
                     <Users className="w-6 h-6 text-white" />
                   </div>
                   <div className="text-right">
-                    <motion.div
-                      initial={{ scale: 0.8 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.3 + 0.1 * 0 + 0.2 }}
-                      className="text-3xl font-bold text-blue-600 dark:text-blue-400"
-                    >
+                    <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                       {stats.teams}
-                    </motion.div>
+                    </div>
                   </div>
                 </div>
                 <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('home.teamsCount')}</div>
@@ -475,7 +491,7 @@ export default function PublicHome() {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 + 0.1 * 1 }}
+              transition={{ duration: 0.15, delay: 0.05 }}
               whileHover={{ scale: 1.02, y: -4 }}
               className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-white dark:from-emerald-950/20 dark:via-emerald-900/10 dark:to-gray-900 border border-emerald-200/50 dark:border-emerald-800/30 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300"
             >
@@ -486,14 +502,9 @@ export default function PublicHome() {
                     <Calendar className="w-6 h-6 text-white" />
                   </div>
                   <div className="text-right">
-                    <motion.div
-                      initial={{ scale: 0.8 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.3 + 0.1 * 1 + 0.2 }}
-                      className="text-3xl font-bold text-emerald-600 dark:text-emerald-400"
-                    >
+                    <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
                       {stats.matches}
-                    </motion.div>
+                    </div>
                   </div>
                 </div>
                 <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('nav.matches')}</div>
@@ -504,7 +515,7 @@ export default function PublicHome() {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 + 0.1 * 2 }}
+              transition={{ duration: 0.15, delay: 0.1 }}
               whileHover={{ scale: 1.02, y: -4 }}
               className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-50 via-purple-100/50 to-white dark:from-purple-950/20 dark:via-purple-900/10 dark:to-gray-900 border border-purple-200/50 dark:border-purple-800/30 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300"
             >
@@ -515,14 +526,9 @@ export default function PublicHome() {
                     <Target className="w-6 h-6 text-white" />
                   </div>
                   <div className="text-right">
-                    <motion.div
-                      initial={{ scale: 0.8 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.3 + 0.1 * 2 + 0.2 }}
-                      className="text-3xl font-bold text-purple-600 dark:text-purple-400"
-                    >
+                    <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
                       {stats.goals}
-                    </motion.div>
+                    </div>
                   </div>
                 </div>
                 <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('stats.goals')}</div>
@@ -533,7 +539,7 @@ export default function PublicHome() {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 + 0.1 * 3 }}
+              transition={{ duration: 0.15, delay: 0.15 }}
               whileHover={{ scale: 1.02, y: -4 }}
               className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 via-amber-100/50 to-white dark:from-amber-950/20 dark:via-amber-900/10 dark:to-gray-900 border border-amber-200/50 dark:border-amber-800/30 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300"
             >
@@ -544,14 +550,9 @@ export default function PublicHome() {
                     <Trophy className="w-6 h-6 text-white" strokeWidth={2.5} />
                   </div>
                   <div className="text-right">
-                    <motion.div
-                      initial={{ scale: 0.8 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.3 + 0.1 * 3 + 0.2 }}
-                      className="text-3xl font-bold text-amber-600 dark:text-amber-400"
-                    >
+                    <div className="text-3xl font-bold text-amber-600 dark:text-amber-400">
                       {stats.completed}
-                    </motion.div>
+                    </div>
                   </div>
                 </div>
                 <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('match.completed')}</div>
@@ -565,7 +566,7 @@ export default function PublicHome() {
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
+            transition={{ duration: 0.2, delay: 0.2 }}
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
@@ -623,7 +624,7 @@ export default function PublicHome() {
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
+            transition={{ duration: 0.2, delay: 0.25 }}
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
@@ -667,7 +668,7 @@ export default function PublicHome() {
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
+            transition={{ duration: 0.2, delay: 0.3 }}
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
@@ -689,26 +690,27 @@ export default function PublicHome() {
             
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {teams.slice(0, 4).map((team, index) => (
-                <motion.div
-                  key={team.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  whileHover={{ scale: 1.02, y: -4 }}
-                >
-                  <SofaTeamCard 
-                    team={{
-                      id: team.id,
-                      name: team.name,
-                      color: team.color,
-                      playerCount: team.playerCount || 0,
-                      logo: team.logo,
-                      school: team.school,
-                      schoolName: team.schoolName
-                    }} 
-                    index={index} 
-                  />
-                </motion.div>
+                <Suspense key={team.id} fallback={<div className="h-48 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-xl" />}>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.15, delay: index * 0.05 }}
+                    whileHover={{ scale: 1.02, y: -4 }}
+                  >
+                    <SofaTeamCard 
+                      team={{
+                        id: team.id,
+                        name: team.name,
+                        color: team.color,
+                        playerCount: team.playerCount || 0,
+                        logo: team.logo,
+                        school: team.school,
+                        schoolName: team.schoolName
+                      }} 
+                      index={index} 
+                    />
+                  </motion.div>
+                </Suspense>
               ))}
             </div>
           </motion.section>
@@ -716,7 +718,9 @@ export default function PublicHome() {
 
         {/* Publicité discrète en bas de page */}
         <div className="pt-8">
-          <AdBanner slot="1234567890" format="auto" style="horizontal" className="opacity-75" />
+          <Suspense fallback={null}>
+            <AdBanner slot="1234567890" format="auto" style="horizontal" className="opacity-75" />
+          </Suspense>
         </div>
 
       </div>

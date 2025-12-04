@@ -1,11 +1,13 @@
 "use client"
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Clock, MapPin, Calendar, Target, CreditCard, Users } from 'lucide-react'
+import { X, Clock, MapPin, Calendar, Target, CreditCard, Users, Lock, AlertCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { getMatchResult } from '@/lib/db'
 import type { MatchResult } from '@/lib/types'
 import { TeamLink } from '@/components/ui/team-link'
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 interface MatchDetailsPopupProps {
   isOpen: boolean
@@ -25,9 +27,32 @@ interface MatchDetailsPopupProps {
   }
 }
 
+interface Lineup {
+  matchId: string
+  teamId: string
+  starters: string[]
+  substitutes: string[]
+  formation: string
+  validated: boolean
+  validatedAt?: Date
+}
+
+interface Player {
+  id: string
+  firstName: string
+  lastName: string
+  position: string
+  jerseyNumber: number
+}
+
 export function MatchDetailsPopup({ isOpen, onClose, match }: MatchDetailsPopupProps) {
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null)
   const [loading, setLoading] = useState(false)
+  const [homeLineup, setHomeLineup] = useState<Lineup | null>(null)
+  const [awayLineup, setAwayLineup] = useState<Lineup | null>(null)
+  const [homePlayers, setHomePlayers] = useState<Player[]>([])
+  const [awayPlayers, setAwayPlayers] = useState<Player[]>([])
+  const [lineupsLoading, setLineupsLoading] = useState(false)
 
   useEffect(() => {
     if (isOpen && match.status !== 'upcoming') {
@@ -38,6 +63,83 @@ export function MatchDetailsPopup({ isOpen, onClose, match }: MatchDetailsPopupP
         .finally(() => setLoading(false))
     }
   }, [isOpen, match.id, match.status])
+
+  useEffect(() => {
+    if (isOpen && match.status === 'upcoming' && match.teamAId && match.teamBId) {
+      loadLineups()
+    }
+  }, [isOpen, match.id, match.status, match.teamAId, match.teamBId])
+
+  const loadLineups = async () => {
+    if (!match.teamAId || !match.teamBId) return
+    
+    setLineupsLoading(true)
+    try {
+      // Charger les compositions
+      const lineupsQuery = query(
+        collection(db, 'lineups'),
+        where('matchId', '==', match.id)
+      )
+      const lineupsSnap = await getDocs(lineupsQuery)
+      
+      lineupsSnap.docs.forEach(doc => {
+        const lineupData = doc.data() as Lineup
+        if (lineupData.teamId === match.teamAId) {
+          setHomeLineup(lineupData)
+        } else if (lineupData.teamId === match.teamBId) {
+          setAwayLineup(lineupData)
+        }
+      })
+
+      // Charger les joueurs des deux équipes
+      const [homePlayersSnap, awayPlayersSnap] = await Promise.all([
+        getDocs(query(collection(db, 'playerAccounts'), where('teamId', '==', match.teamAId))),
+        getDocs(query(collection(db, 'playerAccounts'), where('teamId', '==', match.teamBId)))
+      ])
+
+      const homePlayersData = homePlayersSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Player[]
+      setHomePlayers(homePlayersData)
+
+      const awayPlayersData = awayPlayersSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Player[]
+      setAwayPlayers(awayPlayersData)
+    } catch (error) {
+      console.error('Erreur lors du chargement des compositions:', error)
+    } finally {
+      setLineupsLoading(false)
+    }
+  }
+
+  const canViewLineups = () => {
+    if (!match) return false
+    const minutesUntilMatch = (match.date.getTime() - new Date().getTime()) / (1000 * 60)
+    // Visible 30 minutes avant le match ou pendant/en après match
+    return minutesUntilMatch <= 30 || match.status !== 'upcoming'
+  }
+
+  const getPositionPlayers = (lineup: Lineup | null, players: Player[]) => {
+    if (!lineup) return { defenders: [], midfielders: [], forwards: [], goalkeeper: [] }
+    
+    const starters = lineup.starters.map(id => players.find(p => p.id === id)).filter(Boolean) as Player[]
+    const goalkeeper = starters.filter(p => p.position.toLowerCase().includes('gardien') || p.position.toLowerCase().includes('goal'))
+    const fieldPlayers = starters.filter(p => !p.position.toLowerCase().includes('gardien') && !p.position.toLowerCase().includes('goal'))
+    
+    return {
+      goalkeeper: goalkeeper.slice(0, 1),
+      defenders: fieldPlayers.filter(p => p.position.toLowerCase().includes('défenseur')).slice(0, 3),
+      midfielders: fieldPlayers.filter(p => p.position.toLowerCase().includes('milieu')).slice(0, 3),
+      forwards: fieldPlayers.filter(p => p.position.toLowerCase().includes('attaquant')).slice(0, 2)
+    }
+  }
+
+  const showLineups = canViewLineups()
+  const homePositions = getPositionPlayers(homeLineup, homePlayers)
+  const awayPositions = getPositionPlayers(awayLineup, awayPlayers)
 
   const formatTime = (date: Date) => {
     return new Intl.DateTimeFormat('fr-FR', {
@@ -353,10 +455,56 @@ export function MatchDetailsPopup({ isOpen, onClose, match }: MatchDetailsPopupP
                     )}
                   </div>
                 ) : match.status === 'upcoming' ? (
-                  <div className="text-center py-8">
-                    <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Match à venir</h3>
-                    <p className="text-gray-500">Les détails du match seront disponibles après le coup d'envoi.</p>
+                  <div className="space-y-6">
+                    {/* Compositions Section */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <Users className="w-5 h-5 text-blue-600" />
+                        <h4 className="font-semibold text-lg">Compositions Officielles</h4>
+                      </div>
+
+                      {lineupsLoading ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                          <p className="text-gray-500 mt-2">Chargement des compositions...</p>
+                        </div>
+                      ) : !showLineups ? (
+                        <div className="bg-white p-8 rounded-lg shadow-md border border-gray-200 text-center">
+                          <Lock className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                          <h3 className="text-lg font-bold text-gray-900 mb-2">
+                            Compositions non encore publiées
+                          </h3>
+                          <p className="text-gray-600">
+                            Les compositions seront visibles 30 minutes avant le coup d'envoi
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Composition Domicile */}
+                          <PublicTeamLineupCard
+                            teamName={match.teamA}
+                            lineup={homeLineup}
+                            players={homePlayers}
+                            positions={homePositions}
+                            color="#10b981"
+                          />
+
+                          {/* Composition Extérieur */}
+                          <PublicTeamLineupCard
+                            teamName={match.teamB}
+                            lineup={awayLineup}
+                            players={awayPlayers}
+                            positions={awayPositions}
+                            color="#3b82f6"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Message pour les autres détails */}
+                    <div className="text-center py-4 border-t border-gray-200">
+                      <p className="text-gray-500 text-sm">Les détails du match seront disponibles après le coup d'envoi.</p>
+                    </div>
                   </div>
                 ) : (
                   <div className="text-center py-8">
@@ -369,5 +517,142 @@ export function MatchDetailsPopup({ isOpen, onClose, match }: MatchDetailsPopupP
         </>
       )}
     </AnimatePresence>
+  )
+}
+
+function PublicTeamLineupCard({ 
+  teamName, 
+  lineup, 
+  players, 
+  positions, 
+  color 
+}: { 
+  teamName: string
+  lineup: Lineup | null
+  players: Player[]
+  positions: { defenders: Player[], midfielders: Player[], forwards: Player[], goalkeeper: Player[] }
+  color: string
+}) {
+  const getPlayerById = (id: string) => players.find(p => p.id === id)
+
+  if (!lineup || !lineup.validated) {
+    return (
+      <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+        <h5 className="text-sm font-bold text-gray-900 mb-3">{teamName}</h5>
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+          <AlertCircle className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
+          <p className="text-yellow-800 font-medium text-sm">
+            Composition non validée
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+      <h5 className="text-sm font-bold text-gray-900 mb-3">{teamName}</h5>
+      
+      {/* Mini-terrain simplifié */}
+      <div 
+        className="relative w-full aspect-[3/4] rounded-xl overflow-hidden shadow-md mb-3"
+        style={{
+          background: `
+            linear-gradient(180deg, 
+              #0a2e0a 0%,
+              #1a4d1a 20%,
+              #2d6b2d 40%,
+              #3d8b3d 50%,
+              #2d6b2d 60%,
+              #1a4d1a 80%,
+              #0a2e0a 100%
+            )
+          `,
+          boxShadow: 'inset 0 0 80px rgba(0,0,0,0.4)'
+        }}
+      >
+        {/* Ligne médiane */}
+        <div 
+          className="absolute top-1/2 left-0 right-0 h-0.5 transform -translate-y-1/2"
+          style={{
+            background: 'rgba(255,255,255,0.95)',
+            boxShadow: '0 0 8px rgba(255,255,255,0.5)'
+          }}
+        ></div>
+
+        {/* Attaquants */}
+        <div className="absolute top-[10%] left-0 right-0 flex justify-center gap-4">
+          {positions.forwards.map((player, i) => (
+            <PublicPlayerCard key={i} player={player} color={color} />
+          ))}
+        </div>
+
+        {/* Milieux */}
+        <div className="absolute top-[35%] left-0 right-0 flex justify-center gap-4">
+          {positions.midfielders.map((player, i) => (
+            <PublicPlayerCard key={i} player={player} color={color} />
+          ))}
+        </div>
+
+        {/* Défenseurs */}
+        <div className="absolute top-[60%] left-0 right-0 flex justify-center gap-4">
+          {positions.defenders.map((player, i) => (
+            <PublicPlayerCard key={i} player={player} color={color} />
+          ))}
+        </div>
+
+        {/* Gardien */}
+        <div className="absolute bottom-[5%] left-1/2 transform -translate-x-1/2">
+          {positions.goalkeeper[0] && (
+            <PublicPlayerCard player={positions.goalkeeper[0]} color={color} />
+          )}
+        </div>
+      </div>
+
+      {/* Remplaçants */}
+      {lineup.substitutes.length > 0 && (
+        <div>
+          <h6 className="text-xs font-bold text-gray-700 mb-2">
+            Remplaçants ({lineup.substitutes.length})
+          </h6>
+          <div className="grid grid-cols-4 gap-1.5">
+            {lineup.substitutes.map(id => {
+              const player = getPlayerById(id)
+              return player ? (
+                <div key={id} className="p-1.5 bg-white rounded border border-gray-200">
+                  <div className="flex flex-col items-center gap-1">
+                    <div 
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                      style={{ backgroundColor: color }}
+                    >
+                      {player.jerseyNumber}
+                    </div>
+                    <p className="text-xs font-semibold text-gray-900 truncate w-full text-center">
+                      {player.lastName}
+                    </p>
+                  </div>
+                </div>
+              ) : null
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PublicPlayerCard({ player, color }: { player: Player; color: string }) {
+  return (
+    <div className="flex flex-col items-center">
+      <div 
+        className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs border-2 border-white shadow-md"
+        style={{ backgroundColor: color }}
+      >
+        {player.jerseyNumber}
+      </div>
+      <p className="text-[10px] font-semibold text-white mt-1 text-center max-w-[50px] truncate drop-shadow-lg">
+        {player.lastName}
+      </p>
+    </div>
   )
 }

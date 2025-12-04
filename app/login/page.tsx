@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
+import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { Input } from "@/components/ui/input";
@@ -8,8 +10,15 @@ import { Label } from "@/components/ui/label";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { AlertCircle, Mail, Lock, UserPlus, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
-import { DomainError } from "@/components/auth/domain-error";
-import { ProfileCompletion } from "@/components/auth/profile-completion";
+
+// Lazy load des composants non critiques
+const DomainError = dynamic(() => import("@/components/auth/domain-error").then(mod => ({ default: mod.DomainError })), {
+  loading: () => <div className="min-h-screen flex items-center justify-center"><LoadingSpinner size="lg" /></div>
+})
+
+const ProfileCompletion = dynamic(() => import("@/components/auth/profile-completion").then(mod => ({ default: mod.ProfileCompletion })), {
+  loading: () => <div className="min-h-screen flex items-center justify-center"><LoadingSpinner size="lg" /></div>
+})
 
 export default function LoginPage() {
   const {
@@ -181,18 +190,18 @@ export default function LoginPage() {
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md relative z-10"
-      >
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-          className="bg-gradient-to-br from-white via-white to-gray-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-2xl sm:rounded-3xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl shadow-2xl overflow-hidden"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="w-full max-w-md relative z-10"
         >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2 }}
+            className="bg-gradient-to-br from-white via-white to-gray-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-2xl sm:rounded-3xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl shadow-2xl overflow-hidden"
+          >
           {/* Header with gradient */}
           <div className="relative bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-6 sm:p-8 pb-8 sm:pb-10">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
@@ -201,12 +210,15 @@ export default function LoginPage() {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+              transition={{ duration: 0.2, type: "spring", stiffness: 200 }}
               className="relative mx-auto mb-4 sm:mb-6 w-16 h-16 sm:w-20 sm:h-20 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center overflow-hidden border-2 border-white/50 shadow-xl"
             >
-              <img
+              <Image
                 src="/comebac.png?v=2"
                 alt="ComeBac League"
+                width={80}
+                height={80}
+                priority
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none'
@@ -220,7 +232,7 @@ export default function LoginPage() {
             <motion.h1
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ duration: 0.2, delay: 0.05 }}
               className="text-2xl sm:text-3xl font-bold text-white text-center mb-2"
             >
               ComeBac League
@@ -229,7 +241,7 @@ export default function LoginPage() {
             <motion.p
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+              transition={{ duration: 0.2, delay: 0.1 }}
               className="text-blue-100 text-center text-sm sm:text-base"
             >
               {isSignUp

@@ -1,0 +1,145 @@
+// Script simple pour initialiser la boutique
+// Exécuter avec: node scripts/init-shop-simple.js
+
+const admin = require('firebase-admin');
+
+// Initialize Firebase Admin
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    }),
+  });
+}
+
+const db = admin.firestore();
+
+async function initShop() {
+  console.log('🛍️ Initialisation de la boutique...');
+
+  try {
+    // 1. Créer les paramètres de la boutique
+    console.log('📝 Création des paramètres...');
+    await db.collection('shopSettings').doc('main').set({
+      currentPeriod: {
+        id: null,
+        isOpen: false,
+        startDate: null,
+        endDate: null,
+        status: 'upcoming'
+      },
+      deliveryOptions: {
+        pickup: true,
+        shipping: true,
+        shippingCost: 100
+      },
+      products: {
+        jersey: { price: 950, active: true },
+        tshirt: { price: 750, active: true },
+        sweatshirt: { price: 1100, active: true }
+      },
+      notificationEmails: []
+    });
+    console.log('✅ Paramètres créés');
+
+    // 2. Créer les produits
+    console.log('📝 Création des produits...');
+    const products = [
+      {
+        type: 'jersey',
+        name: 'Maillot Officiel',
+        nameAr: 'قميص رسمي',
+        description: 'Maillot officiel de votre équipe avec personnalisation nom et numéro',
+        descriptionAr: 'قميص رسمي لفريقك مع التخصيص الاسم والرقم',
+        price: 950,
+        customizable: true,
+        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+        images: [],
+        active: true,
+        mockupTemplate: 'jersey'
+      },
+      {
+        type: 'tshirt',
+        name: 'T-Shirt ComeBac',
+        nameAr: 'تي شيرت كومباك',
+        description: 'T-shirt avec logo ComeBac et logo de votre équipe',
+        descriptionAr: 'تي شيرت مع شعار كومباك وشعار فريقك',
+        price: 750,
+        customizable: false,
+        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+        images: [],
+        active: true,
+        mockupTemplate: 'tshirt'
+      },
+      {
+        type: 'sweatshirt',
+        name: 'Sweatshirt ComeBac',
+        nameAr: 'سويت شيرت كومباك',
+        description: 'Sweatshirt avec logo ComeBac et logo de votre équipe',
+        descriptionAr: 'سويت شيرت مع شعار كومباك وشعار فريقك',
+        price: 1100,
+        customizable: false,
+        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+        images: [],
+        active: true,
+        mockupTemplate: 'sweatshirt'
+      }
+    ];
+
+    for (const product of products) {
+      const docRef = db.collection('shopProducts').doc();
+      await docRef.set({ ...product, id: docRef.id });
+    }
+    console.log('✅ Produits créés');
+
+    // 3. Créer une période de test
+    console.log('📝 Création d\'une période de test...');
+    const now = new Date();
+    const endDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000); // +14 jours
+
+    const periodRef = db.collection('shopPeriods').doc();
+    const periodData = {
+      id: periodRef.id,
+      name: 'Janvier 2025 - Test',
+      startDate: admin.firestore.Timestamp.fromDate(now),
+      endDate: admin.firestore.Timestamp.fromDate(endDate),
+      status: 'open',
+      totalOrders: 0,
+      totalRevenue: 0,
+      summary: {
+        jerseys: 0,
+        tshirts: 0,
+        sweatshirts: 0
+      },
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+    
+    await periodRef.set(periodData);
+
+    // Mettre à jour les settings avec cette période
+    await db.collection('shopSettings').doc('main').update({
+      'currentPeriod.id': periodRef.id,
+      'currentPeriod.isOpen': true,
+      'currentPeriod.status': 'open',
+      'currentPeriod.startDate': admin.firestore.Timestamp.fromDate(now),
+      'currentPeriod.endDate': admin.firestore.Timestamp.fromDate(endDate)
+    });
+    console.log('✅ Période de test créée et ouverte');
+
+    console.log('\n🎉 Boutique initialisée avec succès !');
+    console.log('\n📋 Résumé :');
+    console.log('- Paramètres créés');
+    console.log('- 3 produits créés (Maillot, T-Shirt, Sweatshirt)');
+    console.log('- Période de test créée et ouverte (14 jours)');
+    console.log('\n🚀 Vous pouvez maintenant tester la boutique sur /public/shop');
+    
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Erreur lors de l\'initialisation:', error);
+    process.exit(1);
+  }
+}
+
+initShop();

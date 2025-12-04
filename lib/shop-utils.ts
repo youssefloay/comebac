@@ -64,9 +64,9 @@ export function validateCustomization(
 
   if (customization.name.length > 15) {
     return { valid: false, error: 'Le nom ne peut pas dépasser 15 caractères' }
-  }
+        }
 
-  if (customization.number < 0 || customization.number > 99) {
+        if (customization.number < 0 || customization.number > 99) {
     return { valid: false, error: 'Le numéro doit être entre 0 et 99' }
   }
 

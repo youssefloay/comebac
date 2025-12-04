@@ -56,7 +56,7 @@ export default function ResetPasswordPage() {
         } else if (err.code === 'auth/invalid-action-code') {
           setError('Ce lien a déjà été utilisé ou est invalide. Chaque lien ne peut être utilisé qu\'une seule fois.')
         } else {
-          setError('Ce lien a expiré ou a déjà été utilisé. Merci de recommencer la procédure depuis l\'application.')
+        setError('Ce lien a expiré ou a déjà été utilisé. Merci de recommencer la procédure depuis l\'application.')
         }
         setStatus('error')
       })
@@ -148,8 +148,8 @@ export default function ResetPasswordPage() {
                     href="/login" 
                     className="inline-block w-full px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold shadow-lg hover:bg-indigo-700 transition-colors"
                   >
-                    Retourner à la connexion
-                  </Link>
+                  Retourner à la connexion
+                </Link>
                   <p className="text-sm text-gray-500">
                     Vous pouvez demander un nouveau lien depuis la page de connexion en cliquant sur "Mot de passe oublié".
                   </p>

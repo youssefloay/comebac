@@ -125,8 +125,8 @@ export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
             <div className="text-center py-2">
               {match.status === 'completed' || match.status === 'live' ? (
                 <div>
-                  <div className={`text-2xl font-bold ${match.status === 'live' ? 'text-red-600' : 'text-gray-900'}`}>
-                    {match.scoreA} - {match.scoreB}
+                <div className={`text-2xl font-bold ${match.status === 'live' ? 'text-red-600' : 'text-gray-900'}`}>
+                  {match.scoreA} - {match.scoreB}
                   </div>
                   {match.penaltiesA !== undefined && match.penaltiesB !== undefined && (
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -182,8 +182,8 @@ export function SofaMatchCard({ match, index }: SofaMatchCardProps) {
           <div className="text-center px-1">
             {match.status === 'completed' || match.status === 'live' ? (
               <div>
-                <div className={`text-2xl md:text-3xl font-bold ${match.status === 'live' ? 'text-red-600' : 'text-gray-900'}`}>
-                  {match.scoreA} - {match.scoreB}
+              <div className={`text-2xl md:text-3xl font-bold ${match.status === 'live' ? 'text-red-600' : 'text-gray-900'}`}>
+                {match.scoreA} - {match.scoreB}
                 </div>
                 {match.penaltiesA !== undefined && match.penaltiesB !== undefined && (
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">

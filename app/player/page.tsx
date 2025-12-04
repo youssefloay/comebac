@@ -1,10 +1,19 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
+import dynamic from 'next/dynamic'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { PlayerDashboard } from '@/components/dashboard/player-dashboard'
+
+// Lazy load du dashboard pour réduire le bundle initial
+const PlayerDashboard = dynamic(() => import('@/components/dashboard/player-dashboard').then(mod => ({ default: mod.PlayerDashboard })), {
+  loading: () => (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <LoadingSpinner size="lg" />
+    </div>
+  )
+})
 
 export default function PlayerPage() {
   const { user, isAdmin, loading: authLoading } = useAuth()

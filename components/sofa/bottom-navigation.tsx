@@ -68,28 +68,38 @@ export function BottomNavigation() {
 
   // Check if user is a player
   useEffect(() => {
-    if (!user?.email) return
+    if (!user?.email) {
+      setIsPlayer(false)
+      return
+    }
     
     const checkPlayer = async () => {
       try {
-        const { collection, query, where, getDocs } = await import('firebase/firestore')
-        const { db } = await import('@/lib/firebase')
-        
-        const playerAccountsQuery = query(
-          collection(db, 'playerAccounts'),
-          where('email', '==', user.email)
-        )
-        const playerAccountsSnap = await getDocs(playerAccountsQuery)
-        const hasPlayerAccount = !playerAccountsSnap.empty
-        const allowPlayerAccess = hasPlayerAccount && (!userProfile || (userProfile as any).role === 'player' || (userProfile as any).role === 'admin')
-        setIsPlayer(allowPlayerAccess)
+        // Utiliser l'API route optimisée avec cache (même logique que /player/page.tsx)
+        const response = await fetch(`/api/player/status?email=${encodeURIComponent(user.email)}`)
+        if (response.ok) {
+          const data = await response.json()
+          setIsPlayer(data.isPlayer || false)
+        } else {
+          // Fallback: vérifier directement dans Firestore
+          const { collection, query, where, getDocs } = await import('firebase/firestore')
+          const { db } = await import('@/lib/firebase')
+          
+          const playerAccountsQuery = query(
+            collection(db, 'playerAccounts'),
+            where('email', '==', user.email.toLowerCase().trim())
+          )
+          const playerAccountsSnap = await getDocs(playerAccountsQuery)
+          setIsPlayer(!playerAccountsSnap.empty)
+        }
       } catch (error) {
         console.error('Error checking player status:', error)
+        setIsPlayer(false)
       }
     }
     
     checkPlayer()
-  }, [user, userProfile])
+  }, [user])
 
   // Check if user is a coach
   useEffect(() => {
@@ -336,6 +346,42 @@ export function BottomNavigation() {
                   <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-3 py-2">
                     {useTranslation ? t('nav.navigation') : 'Navigation'}
                   </div>
+                  {/* Player option - only for player accounts */}
+                  {isPlayer && (
+                    <motion.div
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Link
+                        href="/player"
+                        onClick={() => setShowMoreMenu(false)}
+                        className={`group flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 ${
+                          pathname?.startsWith('/player')
+                            ? 'bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 text-purple-700 dark:text-purple-400 border border-purple-200/50 dark:border-purple-800/50 shadow-sm' 
+                            : 'hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100/50 dark:hover:from-gray-800/50 dark:hover:to-gray-700/50 text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        <div className={`p-2 rounded-xl transition-all duration-300 ${
+                          pathname?.startsWith('/player')
+                            ? 'bg-gradient-to-br from-purple-500 to-blue-600 shadow-lg' 
+                            : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'
+                        }`}>
+                          <Gamepad2 className={`w-5 h-5 transition-all duration-300 ${
+                            pathname?.startsWith('/player') ? 'text-white' : 'text-gray-600 dark:text-gray-400'
+                          }`} />
+                        </div>
+                        <span className="font-semibold flex-1">
+                          {useTranslation ? t('role.player') : 'Joueur'}
+                        </span>
+                        {pathname?.startsWith('/player') && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="w-2 h-2 bg-purple-600 dark:bg-purple-400 rounded-full"
+                          />
+                        )}
+                      </Link>
+                    </motion.div>
+                  )}
                   {secondaryTabs.map((tab) => {
                     const isActive = pathname === tab.href
                     const Icon = tab.icon

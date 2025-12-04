@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { useAuth } from '@/lib/auth-context'
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
@@ -11,7 +12,12 @@ import { NotificationBell } from '@/components/notifications/notification-bell'
 import { t } from '@/lib/i18n'
 import { motion } from 'framer-motion'
 import { useTheme } from '@/lib/theme-context'
-import { PreseasonSection } from '@/components/preseason/preseason-section'
+import dynamic from 'next/dynamic'
+
+// Lazy load de PreseasonSection pour réduire le bundle initial
+const PreseasonSection = dynamic(() => import('@/components/preseason/preseason-section').then(mod => ({ default: mod.PreseasonSection })), {
+  loading: () => <div className="h-32 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-xl mb-8" />
+})
 
 interface PlayerData {
   id: string
@@ -195,57 +201,57 @@ export function PlayerDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-8"
-        >
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="mb-8"
+          >
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <motion.h1
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 }}
-                className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2"
-              >
-                {t('player.welcome')}, {playerData.firstName}! 👋
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-gray-600 dark:text-gray-400 text-lg"
-              >
-                {playerData.position} • #{playerData.jerseyNumber}
-              </motion.p>
+            <motion.h1
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.2 }}
+              className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2"
+            >
+              {t('player.welcome')}, {playerData.firstName}! 👋
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.2, delay: 0.05 }}
+              className="text-gray-600 dark:text-gray-400 text-lg"
+            >
+              {playerData.position} • #{playerData.jerseyNumber}
+            </motion.p>
             </div>
             <div className="flex items-center gap-3">
               {/* Theme Toggle */}
-              <motion.button
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={toggleTheme}
-                className="p-2.5 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-700 border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:shadow-xl transition-all"
-                aria-label={theme === 'light' ? 'Passer en mode sombre' : 'Passer en mode clair'}
-              >
-                {theme === 'light' ? (
-                  <Moon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                ) : (
-                  <Sun className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                )}
-              </motion.button>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.35 }}
-              >
-                <NotificationBell />
-              </motion.div>
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.15 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={toggleTheme}
+              className="p-2.5 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-700 border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:shadow-xl transition-all"
+              aria-label={theme === 'light' ? 'Passer en mode sombre' : 'Passer en mode clair'}
+            >
+              {theme === 'light' ? (
+                <Moon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+              ) : (
+                <Sun className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+              )}
+            </motion.button>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.15, delay: 0.05 }}
+            >
+              <NotificationBell />
+            </motion.div>
             </div>
           </div>
         </motion.div>
@@ -255,7 +261,7 @@ export function PlayerDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ duration: 0.2 }}
             className="relative bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-2xl mb-8 overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
@@ -263,10 +269,17 @@ export function PlayerDashboard() {
             <div className="relative flex items-center gap-4 md:gap-6 flex-wrap">
               <motion.div
                 whileHover={{ scale: 1.05, rotate: 5 }}
-                className="w-16 h-16 md:w-20 md:h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center overflow-hidden border-2 border-white/30 shadow-lg"
+                className="w-16 h-16 md:w-20 md:h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center overflow-hidden border-2 border-white/30 shadow-lg relative"
               >
                 {teamData.logo ? (
-                  <img src={teamData.logo} alt={teamData.name} className="w-full h-full object-cover" />
+                  <Image
+                    src={teamData.logo}
+                    alt={teamData.name}
+                    width={80}
+                    height={80}
+                    priority
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <Shield className="w-8 h-8 md:w-10 md:h-10 text-white" />
                 )}
@@ -329,12 +342,12 @@ export function PlayerDashboard() {
             </Link>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            whileHover={{ scale: 1.02, y: -5 }}
-          >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, delay: 0.15 }}
+              whileHover={{ scale: 1.02, y: -5 }}
+            >
             <Link
               href="/player/badges"
               className="block bg-gradient-to-br from-white via-white to-purple-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-6 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl hover:shadow-2xl transition-all group"
@@ -364,7 +377,7 @@ export function PlayerDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
+            transition={{ duration: 0.2, delay: 0.25 }}
             whileHover={{ scale: 1.05, y: -5 }}
             className="bg-gradient-to-br from-white via-white to-blue-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-6 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl"
           >
@@ -382,7 +395,7 @@ export function PlayerDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
+            transition={{ duration: 0.2, delay: 0.3 }}
             whileHover={{ scale: 1.05, y: -5 }}
             className="bg-gradient-to-br from-white via-white to-green-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-6 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl"
           >
@@ -400,7 +413,7 @@ export function PlayerDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
+            transition={{ duration: 0.2, delay: 0.35 }}
             whileHover={{ scale: 1.05, y: -5 }}
             className="bg-gradient-to-br from-white via-white to-purple-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-6 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl"
           >
@@ -418,7 +431,7 @@ export function PlayerDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9 }}
+            transition={{ duration: 0.2, delay: 0.4 }}
             whileHover={{ scale: 1.05, y: -5 }}
             className="bg-gradient-to-br from-white via-white to-yellow-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-6 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl"
           >
