@@ -54,6 +54,7 @@ export default function CoachLineupsPage() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [teamId, setTeamId] = useState<string | null>(null)
   const [teamColor, setTeamColor] = useState('#3B82F6')
+  const [formation, setFormation] = useState<string>('3-2-1') // Format: défenseurs-milieux-attaquants
 
   useEffect(() => {
     loadData()
@@ -194,10 +195,12 @@ export default function CoachLineupsPage() {
       setExistingLineup(lineupData)
       setSelectedStarters(lineupData.starters || [])
       setSelectedSubstitutes(lineupData.substitutes || [])
+      setFormation(lineupData.formation || '3-2-1')
     } else {
       setExistingLineup(null)
       setSelectedStarters([])
       setSelectedSubstitutes([])
+      setFormation('3-2-1')
     }
   }
 
@@ -244,7 +247,7 @@ export default function CoachLineupsPage() {
         teamId: teamId,
         starters: selectedStarters,
         substitutes: selectedSubstitutes,
-        formation: '7 titulaires',
+        formation: formation,
         validated: true,
         validatedAt: serverTimestamp(),
         createdAt: serverTimestamp(),
@@ -292,11 +295,45 @@ export default function CoachLineupsPage() {
     const goalkeeper = starters.filter(p => p.position.toLowerCase().includes('gardien') || p.position.toLowerCase().includes('goal'))
     const fieldPlayers = starters.filter(p => !p.position.toLowerCase().includes('gardien') && !p.position.toLowerCase().includes('goal'))
     
+    // Parser la formation (format: "3-2-1" = défenseurs-milieux-attaquants)
+    const [defCount, midCount, fwdCount] = formation.split('-').map(Number)
+    
+    // Si la formation n'est pas valide, utiliser les valeurs par défaut
+    const defendersCount = isNaN(defCount) ? 3 : defCount
+    const midfieldersCount = isNaN(midCount) ? 2 : midCount
+    const forwardsCount = isNaN(fwdCount) ? 1 : fwdCount
+    
+    // Trier les joueurs par position
+    const defenders = fieldPlayers.filter(p => p.position.toLowerCase().includes('défenseur'))
+    const midfielders = fieldPlayers.filter(p => p.position.toLowerCase().includes('milieu'))
+    const forwards = fieldPlayers.filter(p => p.position.toLowerCase().includes('attaquant'))
+    
+    // Si on n'a pas assez de joueurs dans une position, compléter avec les autres
+    const allFieldPlayers = [...defenders, ...midfielders, ...forwards]
+    const remainingPlayers = fieldPlayers.filter(p => !allFieldPlayers.includes(p))
+    
+    // Répartir les joueurs selon la formation
+    let defs = defenders.slice(0, defendersCount)
+    let mids = midfielders.slice(0, midfieldersCount)
+    let fwds = forwards.slice(0, forwardsCount)
+    
+    // Compléter avec les joueurs restants si nécessaire
+    let remaining = [...remainingPlayers]
+    if (defs.length < defendersCount && remaining.length > 0) {
+      defs = [...defs, ...remaining.splice(0, defendersCount - defs.length)]
+    }
+    if (mids.length < midfieldersCount && remaining.length > 0) {
+      mids = [...mids, ...remaining.splice(0, midfieldersCount - mids.length)]
+    }
+    if (fwds.length < forwardsCount && remaining.length > 0) {
+      fwds = [...fwds, ...remaining.splice(0, forwardsCount - fwds.length)]
+    }
+    
     return {
       goalkeeper: goalkeeper.slice(0, 1),
-      defenders: fieldPlayers.filter(p => p.position.toLowerCase().includes('défenseur')).slice(0, 3),
-      midfielders: fieldPlayers.filter(p => p.position.toLowerCase().includes('milieu')).slice(0, 3),
-      forwards: fieldPlayers.filter(p => p.position.toLowerCase().includes('attaquant')).slice(0, 2)
+      defenders: defs.slice(0, defendersCount),
+      midfielders: mids.slice(0, midfieldersCount),
+      forwards: fwds.slice(0, forwardsCount)
     }
   }
 
@@ -428,7 +465,7 @@ export default function CoachLineupsPage() {
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
                     <h3 className="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                      Formation (7 titulaires)
+                      Formation {formation} (7 titulaires)
                     </h3>
                     {selectedMatch?.isPreseason && (
                       <span className="px-2.5 sm:px-3 py-1 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 text-orange-700 dark:text-orange-400 rounded-full text-xs sm:text-sm font-semibold border border-orange-200 dark:border-orange-800 flex items-center gap-1 w-fit">
@@ -437,6 +474,30 @@ export default function CoachLineupsPage() {
                       </span>
                     )}
                   </div>
+
+                  {/* Sélecteur de formation */}
+                  {!locked && (
+                    <div className="mb-4">
+                      <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        Choisir la formation
+                      </label>
+                      <select
+                        value={formation}
+                        onChange={(e) => setFormation(e.target.value)}
+                        className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm font-semibold"
+                      >
+                        <option value="3-2-1">3-2-1 (3 défenseurs, 2 milieux, 1 attaquant)</option>
+                        <option value="2-3-1">2-3-1 (2 défenseurs, 3 milieux, 1 attaquant)</option>
+                        <option value="3-1-2">3-1-2 (3 défenseurs, 1 milieu, 2 attaquants)</option>
+                        <option value="2-2-2">2-2-2 (2 défenseurs, 2 milieux, 2 attaquants)</option>
+                        <option value="4-1-1">4-1-1 (4 défenseurs, 1 milieu, 1 attaquant)</option>
+                        <option value="2-4-0">2-4-0 (2 défenseurs, 4 milieux, 0 attaquant)</option>
+                      </select>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Formation actuelle: <span className="font-bold text-orange-600 dark:text-orange-400">{formation}</span>
+                      </p>
+                    </div>
+                  )}
                   
                   {/* Mini-terrain */}
                   <div 
@@ -465,44 +526,80 @@ export default function CoachLineupsPage() {
                       }}
                     ></div>
 
-                    {/* Attaquants */}
-                    <div className="absolute top-[10%] left-0 right-0 flex justify-center gap-4 sm:gap-6 md:gap-8">
-                      {[0, 1].map(i => (
-                        <div key={i}>
-                          {positions.forwards[i] ? (
-                            <PlayerCard player={positions.forwards[i]} color={teamColor} />
-                          ) : (
-                            <EmptySlot label="ATT" />
-                          )}
+                    {/* Attaquants - Position dynamique selon la formation */}
+                    {(() => {
+                      const [defCount, midCount, fwdCount] = formation.split('-').map(Number)
+                      const forwardsCount = isNaN(fwdCount) ? 1 : fwdCount
+                      return forwardsCount > 0 && (
+                        <div 
+                          className="absolute left-0 right-0 flex justify-center"
+                          style={{ 
+                            top: forwardsCount === 1 ? '12%' : '10%',
+                            gap: forwardsCount === 1 ? '0' : 'clamp(1rem, 2vw, 2rem)'
+                          }}
+                        >
+                          {Array.from({ length: forwardsCount }).map((_, i) => (
+                            <div key={i}>
+                              {positions.forwards[i] ? (
+                                <PlayerCard player={positions.forwards[i]} color={teamColor} />
+                              ) : (
+                                <EmptySlot label="ATT" />
+                              )}
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      )
+                    })()}
 
-                    {/* Milieux */}
-                    <div className="absolute top-[35%] left-0 right-0 flex justify-center gap-3 sm:gap-4 md:gap-6 lg:gap-8">
-                      {[0, 1, 2].map(i => (
-                        <div key={i}>
-                          {positions.midfielders[i] ? (
-                            <PlayerCard player={positions.midfielders[i]} color={teamColor} />
-                          ) : (
-                            <EmptySlot label="MIL" />
-                          )}
+                    {/* Milieux - Position dynamique selon la formation */}
+                    {(() => {
+                      const [defCount, midCount, fwdCount] = formation.split('-').map(Number)
+                      const midfieldersCount = isNaN(midCount) ? 2 : midCount
+                      return midfieldersCount > 0 && (
+                        <div 
+                          className="absolute left-0 right-0 flex justify-center"
+                          style={{ 
+                            top: midfieldersCount <= 2 ? '38%' : midfieldersCount === 3 ? '35%' : midfieldersCount === 4 ? '32%' : '35%',
+                            gap: 'clamp(0.5rem, 1.5vw, 1.5rem)'
+                          }}
+                        >
+                          {Array.from({ length: midfieldersCount }).map((_, i) => (
+                            <div key={i}>
+                              {positions.midfielders[i] ? (
+                                <PlayerCard player={positions.midfielders[i]} color={teamColor} />
+                              ) : (
+                                <EmptySlot label="MIL" />
+                              )}
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      )
+                    })()}
 
-                    {/* Défenseurs */}
-                    <div className="absolute top-[60%] left-0 right-0 flex justify-center gap-3 sm:gap-4 md:gap-6 lg:gap-8">
-                      {[0, 1, 2].map(i => (
-                        <div key={i}>
-                          {positions.defenders[i] ? (
-                            <PlayerCard player={positions.defenders[i]} color={teamColor} />
-                          ) : (
-                            <EmptySlot label="DÉF" />
-                          )}
+                    {/* Défenseurs - Position dynamique selon la formation */}
+                    {(() => {
+                      const [defCount, midCount, fwdCount] = formation.split('-').map(Number)
+                      const defendersCount = isNaN(defCount) ? 3 : defCount
+                      return defendersCount > 0 && (
+                        <div 
+                          className="absolute left-0 right-0 flex justify-center"
+                          style={{ 
+                            top: defendersCount <= 2 ? '62%' : defendersCount === 3 ? '60%' : defendersCount === 4 ? '58%' : '60%',
+                            gap: 'clamp(0.5rem, 1.5vw, 1.5rem)'
+                          }}
+                        >
+                          {Array.from({ length: defendersCount }).map((_, i) => (
+                            <div key={i}>
+                              {positions.defenders[i] ? (
+                                <PlayerCard player={positions.defenders[i]} color={teamColor} />
+                              ) : (
+                                <EmptySlot label="DÉF" />
+                              )}
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      )
+                    })()}
 
                     {/* Gardien */}
                     <div className="absolute bottom-[5%] left-1/2 transform -translate-x-1/2">
