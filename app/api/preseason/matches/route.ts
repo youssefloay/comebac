@@ -21,10 +21,13 @@ export async function GET() {
             adminDb!.collection('teams').doc(match.teamBId).get(),
           ])
           
+          const teamAData = teamADoc.exists ? teamADoc.data() : null
+          const teamBData = teamBDoc.exists ? teamBDoc.data() : null
+          
           return {
             ...match,
-            teamALogo: teamADoc.exists ? teamADoc.data()!.logo : null,
-            teamBLogo: teamBDoc.exists ? teamBDoc.data()!.logo : null,
+            teamALogo: teamAData?.logo && teamAData.logo.trim() !== '' ? teamAData.logo : null,
+            teamBLogo: teamBData?.logo && teamBData.logo.trim() !== '' ? teamBData.logo : null,
           }
         } catch (error) {
           console.error(`Error fetching team logos for match ${match.id}:`, error)

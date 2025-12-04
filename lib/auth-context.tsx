@@ -11,11 +11,9 @@ import {
   signOut, 
   onAuthStateChanged,
   createUserWithEmailAndPassword,
-  sendEmailVerification,
-  sendPasswordResetEmail
+  sendEmailVerification
 } from 'firebase/auth'
 import { auth, db } from './firebase'
-import { getPasswordResetActionCodeSettings } from '@/lib/password-reset'
 import { useRouter } from 'next/navigation'
 import { getUserProfile } from './db'
 import type { UserProfile } from './types'
@@ -524,10 +522,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resetPassword = async (email: string) => {
     try {
-      // Utiliser Firebase directement pour le reset password
-      // Firebase envoie depuis noreply@comebac.com
-      await sendPasswordResetEmail(auth, email, getPasswordResetActionCodeSettings(email))
-      console.log('✅ Email de réinitialisation envoyé via Firebase à:', email)
+      // Utiliser notre API personnalisée pour envoyer un email avec notre template
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur lors de l\'envoi de l\'email de réinitialisation')
+      }
+
+      console.log('✅ Email de réinitialisation envoyé via notre service personnalisé à:', email)
     } catch (error: any) {
       console.error('❌ Erreur lors de l\'envoi de l\'email de réinitialisation:', error)
       throw error

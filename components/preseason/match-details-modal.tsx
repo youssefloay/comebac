@@ -36,6 +36,20 @@ export function MatchDetailsModal({ match, isOpen, onClose }: MatchDetailsModalP
   const [lineups, setLineups] = useState<Lineup[]>([])
   const [loadingLineups, setLoadingLineups] = useState(false)
 
+  // Debug: Log match data when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      console.log('🔍 MatchDetailsModal - Match data:', {
+        teamALogo: match.teamALogo,
+        teamBLogo: match.teamBLogo,
+        teamAName: match.teamAName,
+        teamBName: match.teamBName,
+        teamAId: match.teamAId,
+        teamBId: match.teamBId
+      })
+    }
+  }, [isOpen, match])
+
   useEffect(() => {
     if (isOpen && match.id) {
       loadLineups()
@@ -131,28 +145,33 @@ export function MatchDetailsModal({ match, isOpen, onClose }: MatchDetailsModalP
                     href={`/public/team/${match.teamAId}`}
                     className="block hover:opacity-80 transition-opacity"
                   >
-                    {match.teamALogo ? (
-                      <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-3 bg-white dark:bg-gray-100 rounded-2xl p-0.5 shadow-xl border-2 border-gray-200 dark:border-gray-300 overflow-hidden">
-                        <img
-                          src={match.teamALogo}
-                          alt={match.teamAName}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none'
-                            if (e.currentTarget.parentElement) {
-                              const initials = match.teamAName.substring(0, 2).toUpperCase()
-                              e.currentTarget.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-gray-600 dark:text-gray-700 font-bold text-lg sm:text-xl">${initials}</div>`
-                            }
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-3 bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 rounded-2xl flex items-center justify-center border-2 border-orange-200 dark:border-orange-800 shadow-xl">
-                        <span className="text-orange-700 dark:text-orange-300 font-bold text-lg sm:text-xl">
-                          {match.teamAName.substring(0, 2).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
+                    <div className="relative inline-block mb-3">
+                      <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-full blur-xl"></div>
+                      {match.teamALogo && match.teamALogo.trim() !== '' ? (
+                        <div className="relative w-24 h-24 sm:w-28 sm:h-28 mx-auto bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center overflow-hidden border-2 border-white/50 shadow-xl">
+                          <img
+                            src={match.teamALogo}
+                            alt={match.teamAName}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              console.error('❌ Error loading team A logo:', match.teamALogo)
+                              e.currentTarget.style.display = 'none'
+                              if (e.currentTarget.parentElement) {
+                                const initials = match.teamAName.substring(0, 2).toUpperCase()
+                                e.currentTarget.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-white font-bold text-lg sm:text-xl">${initials}</div>`
+                              }
+                            }}
+                            onLoad={() => console.log('✅ Team A logo loaded:', match.teamALogo)}
+                          />
+                        </div>
+                      ) : (
+                        <div className="relative w-24 h-24 sm:w-28 sm:h-28 mx-auto bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/50 shadow-xl">
+                          <span className="text-white font-bold text-lg sm:text-xl">
+                            {match.teamAName.substring(0, 2).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                     <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors">
                       {match.teamAName}
                     </h3>
@@ -183,28 +202,33 @@ export function MatchDetailsModal({ match, isOpen, onClose }: MatchDetailsModalP
                     href={`/public/team/${match.teamBId}`}
                     className="block hover:opacity-80 transition-opacity"
                   >
-                    {match.teamBLogo ? (
-                      <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-3 bg-white dark:bg-gray-100 rounded-2xl p-0.5 shadow-xl border-2 border-gray-200 dark:border-gray-300 overflow-hidden">
-                        <img
-                          src={match.teamBLogo}
-                          alt={match.teamBName}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none'
-                            if (e.currentTarget.parentElement) {
-                              const initials = match.teamBName.substring(0, 2).toUpperCase()
-                              e.currentTarget.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-gray-600 dark:text-gray-700 font-bold text-lg sm:text-xl">${initials}</div>`
-                            }
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-3 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 shadow-xl">
-                        <span className="text-blue-700 dark:text-blue-300 font-bold text-lg sm:text-xl">
-                          {match.teamBName.substring(0, 2).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
+                    <div className="relative inline-block mb-3">
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-full blur-xl"></div>
+                      {match.teamBLogo && match.teamBLogo.trim() !== '' ? (
+                        <div className="relative w-24 h-24 sm:w-28 sm:h-28 mx-auto bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center overflow-hidden border-2 border-white/50 shadow-xl">
+                          <img
+                            src={match.teamBLogo}
+                            alt={match.teamBName}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              console.error('❌ Error loading team B logo:', match.teamBLogo)
+                              e.currentTarget.style.display = 'none'
+                              if (e.currentTarget.parentElement) {
+                                const initials = match.teamBName.substring(0, 2).toUpperCase()
+                                e.currentTarget.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-white font-bold text-lg sm:text-xl">${initials}</div>`
+                              }
+                            }}
+                            onLoad={() => console.log('✅ Team B logo loaded:', match.teamBLogo)}
+                          />
+                        </div>
+                      ) : (
+                        <div className="relative w-24 h-24 sm:w-28 sm:h-28 mx-auto bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/50 shadow-xl">
+                          <span className="text-white font-bold text-lg sm:text-xl">
+                            {match.teamBName.substring(0, 2).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                     <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors">
                       {match.teamBName}
                     </h3>
