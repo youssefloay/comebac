@@ -52,7 +52,7 @@ export default function PreseasonRulesPage() {
         <ul className="space-y-2 text-gray-700 dark:text-gray-300">
           <li className="flex items-start gap-2">
             <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
-            <span>Minimum of <span className="font-bold">7 players</span> must be present to start a match.</span>
+            <span>A minimum of <span className="font-bold">7 players</span> must be present to start a match.</span>
           </li>
           <li className="flex items-start gap-2">
             <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
@@ -85,10 +85,10 @@ export default function PreseasonRulesPage() {
       content: (
         <div className="space-y-3">
           <p className="text-gray-700 dark:text-gray-300">
-            <span className="font-bold">First match dates:</span> 11th of December
+            <span className="font-bold">First match dates:</span> December 11th
           </p>
           <p className="text-gray-700 dark:text-gray-300">
-            Every <span className="font-bold">Thursday</span> and few <span className="font-bold">Friday</span>
+            Every <span className="font-bold">Thursday</span> and a few <span className="font-bold">Fridays</span>
           </p>
           <p className="text-gray-700 dark:text-gray-300">
             A team <span className="font-bold text-red-600 dark:text-red-400">cannot play two matches on the same day</span>.
@@ -120,7 +120,7 @@ export default function PreseasonRulesPage() {
             </h4>
             <ul className="space-y-1 text-gray-700 dark:text-gray-300 ml-7">
               <li>🟨 <span className="font-bold">Yellow card</span></li>
-              <li>🟥 <span className="font-bold text-red-600 dark:text-red-400">Red card</span> → player suspended.</li>
+              <li>🟥 <span className="font-bold text-red-600 dark:text-red-400">Red card</span> → player is suspended.</li>
             </ul>
           </div>
           <div>
@@ -168,7 +168,7 @@ export default function PreseasonRulesPage() {
                 </tr>
                 <tr className="bg-red-50 dark:bg-red-900/20">
                   <td className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-gray-700 dark:text-gray-300">Loss in regular time</td>
-                  <td className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-center font-bold text-red-600 dark:text-red-400">0 pt</td>
+                  <td className="border border-gray-300 dark:border-gray-700 px-4 py-2 text-center font-bold text-red-600 dark:text-red-400">0 pts</td>
                 </tr>
               </tbody>
             </table>
@@ -283,7 +283,7 @@ export default function PreseasonRulesPage() {
         <ul className="space-y-2 text-gray-700 dark:text-gray-300">
           <li className="flex items-start gap-2">
             <Ban className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-            <span><span className="font-bold">Smoking and vaping is strictly prohibited</span>.</span>
+            <span><span className="font-bold">Smoking and vaping are strictly prohibited</span>.</span>
           </li>
           <li className="flex items-start gap-2">
             <Ban className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
@@ -301,11 +301,11 @@ export default function PreseasonRulesPage() {
         <ul className="space-y-3 text-gray-700 dark:text-gray-300">
           <li className="flex items-start gap-2">
             <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-            <span><span className="font-bold text-red-600 dark:text-red-400">Violence, insults, or referee abuse</span> → strict elimination for a player / team from the league.</span>
+            <span><span className="font-bold text-red-600 dark:text-red-400">Violence, insults, or referee abuse</span> → strict elimination of a player or team from the league.</span>
           </li>
           <li className="flex items-start gap-2">
             <Ban className="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
-            <span>Organizer may remove players, teams or spectators due to an <span className="font-bold">unacceptable behavior</span>.</span>
+            <span>The organizer may remove players, teams, or spectators due to <span className="font-bold">unacceptable behavior</span>.</span>
           </li>
         </ul>
       )
@@ -317,7 +317,7 @@ export default function PreseasonRulesPage() {
       color: "from-slate-500 to-gray-600",
       content: (
         <div className="space-y-2 text-gray-700 dark:text-gray-300">
-          <p>Organizer is <span className="font-bold">not responsible for injuries</span>.</p>
+          <p>The organizer is <span className="font-bold">not responsible for injuries</span>.</p>
           <p>Participation is at <span className="font-bold">players' own risk</span>.</p>
         </div>
       )
