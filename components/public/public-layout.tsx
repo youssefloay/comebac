@@ -37,19 +37,19 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   return (
     <div className="sofa-theme">
       {/* Desktop Navigation */}
-      <div className="hidden md:block">
+      <div className="hidden lg:block">
         <SofaNavigation />
       </div>
       
-      {/* Mobile Header - Modern 2025 */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-white/95 via-white/95 to-white/95 dark:from-gray-900/95 dark:via-gray-900/95 dark:to-gray-900/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg">
-        <div className="px-3 py-2.5">
+      {/* Mobile/Tablet Header - Modern 2025 */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-white/95 via-white/95 to-white/95 dark:from-gray-900/95 dark:via-gray-900/95 dark:to-gray-900/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+        <div className="px-4 sm:px-6 md:px-8 py-2.5 md:py-3">
           <div className="flex items-center justify-between">
-            <Link href="/public" className="flex items-center gap-2 group">
+            <Link href="/public" className="flex items-center gap-2 group flex-shrink-0">
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative w-12 h-12 rounded-full bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-700/50 shadow-md flex items-center justify-center overflow-hidden"
+                className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-700/50 shadow-md flex items-center justify-center overflow-hidden flex-shrink-0"
               >
                 <div className="w-[90%] h-[90%] flex items-center justify-center">
                   <img 
@@ -59,14 +59,14 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                   />
                 </div>
               </motion.div>
-              <div>
-                <h1 className="text-sm font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">
+              <div className="hidden sm:block">
+                <h1 className="text-xs sm:text-sm font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">
                   ComeBac League
                 </h1>
               </div>
             </Link>
             
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               {/* Language Selector - Only for non-admin pages */}
               {!isAdminPage && <LanguageSelector />}
               
@@ -116,9 +116,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       </div>
 
       {/* Spacer for fixed headers */}
-      <div className="h-14 md:h-16"></div>
+      <div className="h-14 md:h-16 lg:h-20"></div>
       
-      <main className="min-h-screen pb-20 md:pb-0 w-full overflow-x-hidden">
+      <main className="min-h-screen pb-20 lg:pb-0 w-full overflow-x-hidden">
         {children}
       </main>
       
@@ -160,8 +160,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         </div>
       </footer>
       
-      {/* Mobile Bottom Navigation */}
-      <div className="md:hidden">
+      {/* Mobile/Tablet Bottom Navigation */}
+      <div className="lg:hidden">
         <BottomNavigation />
       </div>
       

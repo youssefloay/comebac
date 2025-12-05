@@ -23,7 +23,7 @@ const SofaMatchCard = dynamic(() => import('@/components/sofa/match-card').then(
   loading: () => <div className="h-32 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-xl" />
 })
 
-const SofaTeamCard = dynamic(() => import('@/components/sofa/team-card').then(mod => ({ default: mod.SofaTeamCard })), {
+const SofaTeamCard = dynamic(() => import('@/components/sofa/team-card'), {
   loading: () => <div className="h-48 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-xl" />,
   ssr: true
 })
@@ -172,7 +172,7 @@ export default function PublicHome() {
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-emerald-600/10"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1),transparent_50%)]"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -200,7 +200,7 @@ export default function PublicHome() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: 0.2 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+              className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-6"
             >
               <Link href="/register-team">
                 <motion.button
@@ -220,7 +220,7 @@ export default function PublicHome() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 space-y-6 md:space-y-8">
         {/* Priority 1: Featured Match (Live or Next) - Modern 2025 */}
         {featuredMatch && (
           <motion.section
@@ -260,7 +260,7 @@ export default function PublicHome() {
               </Link>
             </div>
             
-            <div className="max-w-2xl">
+            <div className="max-w-2xl md:max-w-3xl mx-auto">
               <SofaMatchCard 
                 match={convertMatchFormat(featuredMatch)} 
                 index={0} 
@@ -295,7 +295,7 @@ export default function PublicHome() {
             </div>
             
             {/* Podium Layout - Modern 2025 */}
-            <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto overflow-visible">
+            <div className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-6 max-w-4xl mx-auto overflow-visible">
               {/* 2nd Place */}
               <motion.div 
                 className="order-1 pt-8" 
@@ -305,7 +305,7 @@ export default function PublicHome() {
                 transition={{ delay: 0.2 + 0.1 }}
                 whileHover={{ y: -4 }}
               >
-                <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 via-gray-100/50 to-white dark:from-gray-800/50 dark:via-gray-700/30 dark:to-gray-900 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300 text-center" style={{ overflow: 'visible' }}>
+                <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 via-gray-100/50 to-white dark:from-gray-800/50 dark:via-gray-700/30 dark:to-gray-900 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 text-center" style={{ overflow: 'visible' }}>
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-500 text-white rounded-full flex items-center justify-center font-bold text-sm z-50 shadow-xl border-2 border-white">
                     2
                   </div>
@@ -405,7 +405,7 @@ export default function PublicHome() {
                 transition={{ delay: 0.2 + 0.2 }}
                 whileHover={{ y: -4 }}
               >
-                <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-50 via-amber-50/50 to-white dark:from-orange-900/20 dark:via-amber-900/10 dark:to-gray-900 border border-orange-200/50 dark:border-orange-700/30 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300 text-center" style={{ overflow: 'visible' }}>
+                <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-50 via-amber-50/50 to-white dark:from-orange-900/20 dark:via-amber-900/10 dark:to-gray-900 border border-orange-200/50 dark:border-orange-700/30 backdrop-blur-sm p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 text-center" style={{ overflow: 'visible' }}>
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-full flex items-center justify-center font-bold text-sm z-50 shadow-xl border-2 border-white">
                     3
                   </div>
@@ -469,7 +469,7 @@ export default function PublicHome() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.15 }}
               whileHover={{ scale: 1.02, y: -4 }}
-              className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-50 via-blue-100/50 to-white dark:from-blue-950/20 dark:via-blue-900/10 dark:to-gray-900 border border-blue-200/50 dark:border-blue-800/30 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+              className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-50 via-blue-100/50 to-white dark:from-blue-950/20 dark:via-blue-900/10 dark:to-gray-900 border border-blue-200/50 dark:border-blue-800/30 backdrop-blur-sm p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-blue-500/0 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative z-10">
@@ -493,7 +493,7 @@ export default function PublicHome() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.15, delay: 0.05 }}
               whileHover={{ scale: 1.02, y: -4 }}
-              className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-white dark:from-emerald-950/20 dark:via-emerald-900/10 dark:to-gray-900 border border-emerald-200/50 dark:border-emerald-800/30 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+              className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-white dark:from-emerald-950/20 dark:via-emerald-900/10 dark:to-gray-900 border border-emerald-200/50 dark:border-emerald-800/30 backdrop-blur-sm p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 via-emerald-500/0 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative z-10">
@@ -517,7 +517,7 @@ export default function PublicHome() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.15, delay: 0.1 }}
               whileHover={{ scale: 1.02, y: -4 }}
-              className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-50 via-purple-100/50 to-white dark:from-purple-950/20 dark:via-purple-900/10 dark:to-gray-900 border border-purple-200/50 dark:border-purple-800/30 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+              className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-50 via-purple-100/50 to-white dark:from-purple-950/20 dark:via-purple-900/10 dark:to-gray-900 border border-purple-200/50 dark:border-purple-800/30 backdrop-blur-sm p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 via-purple-500/0 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative z-10">
@@ -541,7 +541,7 @@ export default function PublicHome() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.15, delay: 0.15 }}
               whileHover={{ scale: 1.02, y: -4 }}
-              className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 via-amber-100/50 to-white dark:from-amber-950/20 dark:via-amber-900/10 dark:to-gray-900 border border-amber-200/50 dark:border-amber-800/30 backdrop-blur-sm p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+              className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 via-amber-100/50 to-white dark:from-amber-950/20 dark:via-amber-900/10 dark:to-gray-900 border border-amber-200/50 dark:border-amber-800/30 backdrop-blur-sm p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 via-amber-500/0 to-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative z-10">

@@ -54,7 +54,7 @@ export function SofaNavigation() {
           </Link>
 
           {/* Desktop Navigation - Accessible without auth */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2">
             {navigationItems.map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;

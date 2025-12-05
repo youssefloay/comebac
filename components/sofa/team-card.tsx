@@ -125,3 +125,6 @@ export function SofaTeamCard({ team, index }: SofaTeamCardProps) {
     </motion.div>
   )
 }
+
+// Export par défaut pour compatibilité avec dynamic import
+export default SofaTeamCard
