@@ -46,7 +46,7 @@ interface SpectatorLimit {
 
 const translations = {
   fr: {
-    title: "Inscription Spectateur",
+    title: "Réserver ma place au match",
     subtitle: "Réservez votre place pour assister aux matchs",
     step1: "Choisir votre équipe",
     step2: "Sélectionner un match",
@@ -83,7 +83,7 @@ const translations = {
     vs: "vs"
   },
   en: {
-    title: "Spectator Registration",
+    title: "Reserve Your Match Spot",
     subtitle: "Reserve your spot to attend matches",
     step1: "Choose your team",
     step2: "Select a match",

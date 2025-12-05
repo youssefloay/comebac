@@ -42,7 +42,7 @@ export const translations = {
   'home.podium': { fr: 'Podium', en: 'Podium' },
   'home.leagueStats': { fr: 'Statistiques de la Ligue', en: 'League Statistics' },
   'home.teamsCount': { fr: 'Équipes', en: 'Teams' },
-  'home.spectators': { fr: 'Inscription Spectateur', en: 'Spectator Registration' },
+  'home.spectators': { fr: 'Réserver ma place au match', en: 'Reserve Your Match Spot' },
   
   // Common
   'common.loading': { fr: 'Chargement...', en: 'Loading...' },
