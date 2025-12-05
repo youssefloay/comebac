@@ -63,12 +63,16 @@ export default function PreseasonRulesPage() {
             <span><span className="font-bold">Team jerseys are mandatory</span>.</span>
           </li>
           <li className="flex items-start gap-2">
-            <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
-            <span>Teams from the <span className="font-bold">same school cannot play each other</span> for their first match.</span>
+            <UserCheck className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+            <span>All players and coaches must have a <span className="font-bold">valid ID</span> with them at all times during matches.</span>
           </li>
           <li className="flex items-start gap-2">
             <UserCheck className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
             <span>All players must be <span className="font-bold">registered and validated</span> before playing.</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
+            <span>Teams from the <span className="font-bold">same school cannot play each other</span> for their first match.</span>
           </li>
         </ul>
       )
