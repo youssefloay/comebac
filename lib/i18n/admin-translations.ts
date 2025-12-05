@@ -44,6 +44,23 @@ export interface AdminTranslations {
     deleteAccount: string
     saveChanges: string
     cancelEdit: string
+    loadError: string
+    noChanges: string
+    updateSuccess: string
+    updateError: string
+    updateErrorDetails: string
+    deleteConfirm: string
+    deleteConfirmMessage: string
+    deleteSuccess: string
+    deleteError: string
+    deleteErrorDetails: string
+    resetConfirm: string
+    resetSuccess: string
+    resetError: string
+    resetErrorDetails: string
+    selectTeam: string
+    translationError: string
+    translationErrorDetails: string
   }
   
   // Team Accounts page
@@ -194,6 +211,94 @@ export interface AdminTranslations {
     readRate: string
   }
   
+  // Dashboard
+  dashboard: {
+    tabs: {
+      teams: string
+      players: string
+      lineups: string
+      matches: string
+      results: string
+      statistics: string
+      miniLeague: string
+      preseason: string
+      shop: string
+      activity: string
+      accounts: string
+      registrations: string
+      waitingList: string
+      spectators: string
+      archives: string
+      maintenance: string
+      testMatches: string
+    }
+    generateMatches: {
+      title: string
+      mode: string
+      classic: string
+      miniLeague: string
+      startDate: string
+      startDateHint: string
+        time: string
+        timeLabel: string
+        firstMatchTime: string
+        match1Time: string
+        match2Time: string
+        match3Time: string
+        finalTime: string
+        matchesPerDay: string
+      matchesPerDayHint: string
+      participatingTeams: string
+      testMatches: string
+      generate: string
+      generating: string
+      success: string
+      error: string
+      fillAllFields: string
+      matchesPerDayRange: string
+      mustBeThursday: string
+      days: {
+        sunday: string
+        monday: string
+        tuesday: string
+        wednesday: string
+        thursday: string
+        friday: string
+        saturday: string
+      }
+    }
+    generateFinals: {
+      title: string
+      finalDate: string
+      finalDateHint: string
+      time: string
+      generate: string
+      generating: string
+      success: string
+      error: string
+      fillAllFields: string
+      mustBeThursday: string
+    }
+    endSeason: {
+      title: string
+      prompt: string
+      confirm: string
+      confirmMessage: string
+      success: string
+      error: string
+      connectionError: string
+    }
+    testMatches: {
+      title: string
+    }
+    teamRegistrations: {
+      title: string
+    }
+    archives: {
+      title: string
+    }
+  }
+  
   // Team Registrations page
   teamRegistrations: {
     title: string
@@ -292,6 +397,23 @@ export const translations: Record<Language, AdminTranslations> = {
       deleteAccount: 'Supprimer le compte',
       saveChanges: 'Sauvegarder',
       cancelEdit: 'Annuler',
+      loadError: 'Erreur lors du chargement des comptes',
+      noChanges: 'Aucune modification à enregistrer.',
+      updateSuccess: 'Compte mis à jour avec succès!',
+      updateError: 'Erreur lors de la mise à jour',
+      updateErrorDetails: 'Erreur lors de la mise à jour du compte',
+      deleteConfirm: 'Êtes-vous sûr de vouloir supprimer le compte de',
+      deleteConfirmMessage: 'Cette action est irréversible!',
+      deleteSuccess: 'Compte supprimé avec succès!',
+      deleteError: 'Erreur lors de la suppression',
+      deleteErrorDetails: 'Erreur lors de la suppression du compte',
+      resetConfirm: 'Envoyer un email de réinitialisation de mot de passe à',
+      resetSuccess: 'Email de réinitialisation envoyé à',
+      resetError: 'Erreur lors de l\'envoi',
+      resetErrorDetails: 'Erreur lors de l\'envoi de l\'email',
+      selectTeam: 'Sélectionner une équipe',
+      translationError: 'Erreur de traduction',
+      translationErrorDetails: 'Les traductions ne sont pas disponibles. Vérifiez que le provider i18n est bien configuré.',
     },
     teamAccounts: {
       title: 'Comptes par équipe',
@@ -342,9 +464,90 @@ export const translations: Record<Language, AdminTranslations> = {
       matches: 'Matchs',
       played: 'Joués',
       upcoming: 'À venir',
-      registrations: 'Inscriptions',
-      approved: 'Approuvées',
-      pending: 'En attente',
+    registrations: 'Inscriptions',
+    approved: 'Approuvées',
+    pending: 'En attente',
+    },
+    dashboard: {
+      tabs: {
+        teams: 'Équipes',
+        players: 'Joueurs',
+        lineups: 'Compositions',
+        matches: 'Matchs',
+        results: 'Résultats',
+        statistics: 'Statistiques',
+        miniLeague: 'Mini-League',
+        preseason: 'Preseason',
+        shop: 'Boutique',
+        activity: 'Activité',
+        accounts: 'Comptes',
+        registrations: 'Inscriptions',
+        waitingList: 'Waiting List',
+        spectators: 'Spectateurs',
+        archives: 'Archives',
+        maintenance: 'Réparations',
+        testMatches: 'Matchs Test',
+      },
+      generateMatches: {
+        title: 'Générer les Matchs',
+        mode: 'Mode',
+        classic: 'Classique',
+        miniLeague: 'Mini-League',
+        startDate: 'Date du premier match (jeudi)',
+        startDateHint: 'Les matchs doivent être programmés un jeudi',
+        time: 'Heure',
+        matchesPerDay: 'Nombre de matchs par jeudi',
+        matchesPerDayHint: 'Nombre de matchs à programmer chaque jeudi (entre 1 et 10)',
+        participatingTeams: 'Équipes participantes',
+        testMatches: 'Matchs de test',
+        generate: 'Générer',
+        generating: 'Génération en cours...',
+        success: 'Matchs générés avec succès',
+        error: 'Erreur lors de la génération des matchs',
+        fillAllFields: 'Veuillez remplir tous les champs requis',
+        matchesPerDayRange: 'Le nombre de matchs par jeudi doit être entre 1 et 10',
+        mustBeThursday: 'Les matchs doivent être le jeudi',
+        days: {
+          sunday: 'dimanche',
+          monday: 'lundi',
+          tuesday: 'mardi',
+          wednesday: 'mercredi',
+          thursday: 'jeudi',
+          friday: 'vendredi',
+          saturday: 'samedi',
+        },
+      },
+      generateFinals: {
+        title: 'Générer les Finales',
+        finalDate: 'Date des finales (Jour 6, jeudi)',
+        finalDateHint: 'Les finales doivent être programmées un jeudi',
+        time: 'Heure',
+        finalTime: 'Heure de la Grande Finale',
+        generate: 'Générer',
+        generating: 'Génération en cours...',
+        success: 'Finales générées avec succès',
+        error: 'Erreur lors de la génération des finales',
+        fillAllFields: 'Veuillez remplir tous les champs requis',
+        mustBeThursday: 'Les finales doivent être le jeudi',
+      },
+      endSeason: {
+        title: 'Fin de Saison',
+        prompt: '🏁 FIN DE SAISON\n\nDonnez un nom à cette saison pour l\'archiver:\n(ex: "Saison 2024-2025", "Championnat Automne 2024")',
+        confirm: '⚠️ ATTENTION: Fin de saison',
+        confirmMessage: 'Cette action va:\n✅ Archiver toutes les données actuelles\n✅ Garder les équipes et joueurs\n🗑️ Supprimer tous les matchs et résultats\n🔄 Réinitialiser toutes les statistiques à 0\n\nLes archives seront accessibles pour consultation.\n\nContinuer?',
+        success: 'Saison archivée avec succès',
+        error: 'Erreur lors de la fin de saison',
+        connectionError: 'Erreur de connexion',
+      },
+      testMatches: {
+        title: 'Matchs de Test',
+      },
+      teamRegistrations: {
+        title: 'Inscriptions d\'Équipes',
+      },
+      archives: {
+        title: 'Archives des Saisons',
+      },
     },
     media: {
       title: 'Gestion des Médias',
@@ -518,6 +721,23 @@ export const translations: Record<Language, AdminTranslations> = {
       deleteAccount: 'Delete Account',
       saveChanges: 'Save',
       cancelEdit: 'Cancel',
+      loadError: 'Error loading accounts',
+      noChanges: 'No changes to save.',
+      updateSuccess: 'Account updated successfully!',
+      updateError: 'Error updating',
+      updateErrorDetails: 'Error updating account',
+      deleteConfirm: 'Are you sure you want to delete the account of',
+      deleteConfirmMessage: 'This action is irreversible!',
+      deleteSuccess: 'Account deleted successfully!',
+      deleteError: 'Error deleting',
+      deleteErrorDetails: 'Error deleting account',
+      resetConfirm: 'Send a password reset email to',
+      resetSuccess: 'Password reset email sent to',
+      resetError: 'Error sending',
+      resetErrorDetails: 'Error sending email',
+      selectTeam: 'Select a team',
+      translationError: 'Translation Error',
+      translationErrorDetails: 'Translations are not available. Please check that the i18n provider is properly configured.',
     },
     teamAccounts: {
       title: 'Team Accounts',
@@ -571,6 +791,93 @@ export const translations: Record<Language, AdminTranslations> = {
       registrations: 'Registrations',
       approved: 'Approved',
       pending: 'Pending',
+    },
+    dashboard: {
+      tabs: {
+        teams: 'Teams',
+        players: 'Players',
+        lineups: 'Lineups',
+        matches: 'Matches',
+        results: 'Results',
+        statistics: 'Statistics',
+        miniLeague: 'Mini-League',
+        preseason: 'Preseason',
+        shop: 'Shop',
+        activity: 'Activity',
+        accounts: 'Accounts',
+        registrations: 'Registrations',
+        waitingList: 'Waiting List',
+        spectators: 'Spectators',
+        archives: 'Archives',
+        maintenance: 'Maintenance',
+        testMatches: 'Test Matches',
+      },
+      generateMatches: {
+        title: 'Generate Matches',
+        mode: 'Mode',
+        classic: 'Classic',
+        miniLeague: 'Mini-League',
+        startDate: 'First match date (Thursday)',
+        startDateHint: 'Matches must be scheduled on Thursday',
+        time: 'Time',
+        timeLabel: 'Time',
+        firstMatchTime: 'First match time',
+        match1Time: 'Match 1 time',
+        match2Time: 'Match 2 time',
+        match3Time: 'Match 3 time',
+        finalTime: 'Grand Final time',
+        matchesPerDay: 'Matches per Thursday',
+        matchesPerDayHint: 'Number of matches to schedule each Thursday (between 1 and 10)',
+        participatingTeams: 'Participating teams',
+        testMatches: 'Test matches',
+        generate: 'Generate',
+        generating: 'Generating...',
+        success: 'Matches generated successfully',
+        error: 'Error generating matches',
+        fillAllFields: 'Please fill in all required fields',
+        matchesPerDayRange: 'Number of matches per Thursday must be between 1 and 10',
+        mustBeThursday: 'Matches must be on Thursday',
+        days: {
+          sunday: 'Sunday',
+          monday: 'Monday',
+          tuesday: 'Tuesday',
+          wednesday: 'Wednesday',
+          thursday: 'Thursday',
+          friday: 'Friday',
+          saturday: 'Saturday',
+        },
+      },
+      generateFinals: {
+        title: 'Generate Finals',
+        finalDate: 'Finals date (Day 6, Thursday)',
+        finalDateHint: 'Finals must be scheduled on Thursday',
+        time: 'Time',
+        finalTime: 'Grand Final time',
+        generate: 'Generate',
+        generating: 'Generating...',
+        success: 'Finals generated successfully',
+        error: 'Error generating finals',
+        fillAllFields: 'Please fill in all required fields',
+        mustBeThursday: 'Finals must be on Thursday',
+      },
+      endSeason: {
+        title: 'End Season',
+        prompt: '🏁 END OF SEASON\n\nGive a name to this season to archive it:\n(ex: "Season 2024-2025", "Fall Championship 2024")',
+        confirm: '⚠️ WARNING: End of season',
+        confirmMessage: 'This action will:\n✅ Archive all current data\n✅ Keep teams and players\n🗑️ Delete all matches and results\n🔄 Reset all statistics to 0\n\nThe archives will be accessible for consultation.\n\nContinue?',
+        success: 'Season archived successfully',
+        error: 'Error ending season',
+        connectionError: 'Connection error',
+      },
+      testMatches: {
+        title: 'Test Matches',
+      },
+      teamRegistrations: {
+        title: 'Team Registrations',
+      },
+      archives: {
+        title: 'Season Archives',
+      },
     },
     media: {
       title: 'Media Management',

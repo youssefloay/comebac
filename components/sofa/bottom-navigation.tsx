@@ -31,7 +31,7 @@ import {
 const mainTabs = [
   { href: "/public", labelKey: "nav.home", icon: Home },
   { href: "/public/matches", labelKey: "nav.matches", icon: Calendar },
-  { href: "/preseason", labelKey: "Preseason", icon: Flame },
+  { href: "/preseason", labelKey: "nav.preseason", icon: Flame },
   { href: "/public/teams", labelKey: "nav.teams", icon: Users },
 ]
 

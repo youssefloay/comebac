@@ -379,7 +379,7 @@ export default function MatchesPage() {
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
-                Tous
+                {t('matches.all')}
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -443,7 +443,7 @@ export default function MatchesPage() {
                 }}
                 className="w-full px-3 py-2 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-900 dark:text-white rounded-lg sm:rounded-xl hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 transition-all text-sm font-semibold shadow-md"
               >
-                Réinitialiser
+                {t('matches.reset')}
               </motion.button>
             </div>
           </div>
@@ -696,7 +696,7 @@ export default function MatchesPage() {
                     {filterStatus !== 'all' && ` - ${
                       filterStatus === 'scheduled' ? 'À venir' :
                       filterStatus === 'completed' ? t('matches.completedPlural') :
-                      filterStatus === 'in_progress' ? 'En direct' : ''
+                      filterStatus === 'in_progress' ? t('matches.liveLabel') : ''
                     }`}
                     {selectedRound !== 'all' && ` - ${t('matches.round')} ${selectedRound}`}
                   </h2>

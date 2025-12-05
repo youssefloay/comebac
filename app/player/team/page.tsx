@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Users, Shield, Clock, AlertCircle, Crown } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { t } from '@/lib/i18n'
 
 interface Player {
   id: string
@@ -210,7 +211,7 @@ export default function PlayerTeamPage() {
             transition={{ delay: 0.2 }}
             className="mb-8"
           >
-            <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">Prochain Match</h2>
+            <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">{t('player.team.nextMatch')}</h2>
             <div className="bg-gradient-to-br from-white via-white to-blue-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-6 md:p-8 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl">
               <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
                 <div>
@@ -235,7 +236,7 @@ export default function PlayerTeamPage() {
 
               {/* Composition */}
               <div className="mt-6 pt-6 border-t border-gray-200">
-                <h4 className="text-lg font-bold text-gray-900 mb-4">Composition Officielle</h4>
+                <h4 className="text-lg font-bold text-gray-900 mb-4">{t('player.team.lineup')}</h4>
                 
                 {lineup && lineup.validated ? (
                   <>
@@ -291,7 +292,7 @@ export default function PlayerTeamPage() {
                     {/* Remplaçants */}
                     <div>
                       <h5 className="text-sm font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-3">
-                        Remplaçants ({lineup.substitutes.length})
+                        {t('player.team.substitutes')} ({lineup.substitutes.length})
                       </h5>
                       <div className="grid grid-cols-3 gap-3">
                         {lineup.substitutes.map((id, index) => {
@@ -332,7 +333,7 @@ export default function PlayerTeamPage() {
                   <div className="p-6 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl text-center">
                     <AlertCircle className="w-12 h-12 text-yellow-600 dark:text-yellow-400 mx-auto mb-3" />
                     <p className="text-yellow-800 dark:text-yellow-300 font-medium">
-                      Composition en attente de validation par l'entraîneur
+                      {t('player.team.pendingValidation')}
                     </p>
                     <p className="text-yellow-600 dark:text-yellow-400 text-sm mt-2">
                       La composition sera visible dès qu'elle sera validée
@@ -351,7 +352,7 @@ export default function PlayerTeamPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">Tous les Joueurs</h2>
+          <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">{t('player.team.allPlayers')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {players.map((player, index) => (
               <motion.div

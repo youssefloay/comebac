@@ -8,6 +8,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Calendar, Trophy, Clock, Flame } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { t } from '@/lib/i18n'
 import type { PreseasonMatch } from '@/lib/types'
 
 interface Match {
@@ -253,8 +254,8 @@ export default function PlayerMatchesPage() {
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">Mes Matchs</h1>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">Calendrier et résultats de mon équipe</p>
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">{t('player.matches.title')}</h1>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">{t('player.matches.subtitle')}</p>
         </motion.div>
 
         {/* Prochains matchs */}
@@ -268,16 +269,16 @@ export default function PlayerMatchesPage() {
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
               <Calendar className="w-5 h-5 text-white" />
             </div>
-            Prochains Matchs ({upcomingMatches.length})
+            {t('player.matches.upcoming')} ({upcomingMatches.length})
           </h2>
           
           {upcomingMatches.length === 0 ? (
             <div className="bg-gradient-to-br from-white via-white to-gray-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-8 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl backdrop-blur-xl text-center">
               <Calendar className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-600 dark:text-gray-400 mb-2">Aucun match à venir</p>
+              <p className="text-gray-600 dark:text-gray-400 mb-2">{t('player.matches.noUpcoming')}</p>
               {matches.length === 0 && teamId && (
                 <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-                  Vérifiez la console pour plus de détails (F12)
+                  {t('player.matches.checkConsole')}
                 </p>
               )}
             </div>
@@ -300,7 +301,7 @@ export default function PlayerMatchesPage() {
                       {match.status === 'in_progress' && (
                         <span className="px-3 py-1 bg-gradient-to-r from-red-100 to-red-200 dark:from-red-900/30 dark:to-red-800/30 text-red-700 dark:text-red-400 rounded-full text-sm font-semibold border border-red-200 dark:border-red-800 flex items-center gap-1">
                           <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                          En direct
+                          {t('player.matches.live')}
                         </span>
                       )}
                       {match.isPreseason && (
@@ -359,16 +360,16 @@ export default function PlayerMatchesPage() {
             <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
               <Trophy className="w-5 h-5 text-white" />
             </div>
-            Matchs Terminés ({completedMatches.length})
+            {t('player.matches.completed')} ({completedMatches.length})
           </h2>
           
           {completedMatches.length === 0 ? (
             <div className="bg-gradient-to-br from-white via-white to-gray-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 p-8 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl backdrop-blur-xl text-center">
               <Trophy className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-600 dark:text-gray-400 mb-2">Aucun match terminé</p>
+              <p className="text-gray-600 dark:text-gray-400 mb-2">{t('player.matches.noCompleted')}</p>
               {matches.length === 0 && teamId && (
                 <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-                  Vérifiez la console pour plus de détails (F12)
+                  {t('player.matches.checkConsole')}
                 </p>
               )}
             </div>
@@ -391,12 +392,12 @@ export default function PlayerMatchesPage() {
                       {match.isPreseason && (
                         <span className="px-3 py-1 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 text-orange-700 dark:text-orange-400 rounded-full text-sm font-semibold border border-orange-200 dark:border-orange-800 flex items-center gap-1">
                           <Flame className="w-3 h-3" />
-                          Preseason
+                          {t('player.matches.preseason')}
                         </span>
                       )}
                       {!match.isPreseason && match.round > 0 && (
                         <span className="px-3 py-1 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-semibold border border-green-200 dark:border-green-800">
-                          Journée {match.round}
+                          {t('player.matches.round')} {match.round}
                         </span>
                       )}
                     </div>

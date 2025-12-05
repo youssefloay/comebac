@@ -140,11 +140,11 @@ export default function TeamDetailPage() {
 
   const groupPlayersByPosition = (players: Player[]) => {
     const positions = {
-      'Gardien': players.filter(p => p.position?.toLowerCase().includes('gardien') || p.position?.toLowerCase().includes('goalkeeper')),
-      'Défenseur': players.filter(p => p.position?.toLowerCase().includes('défenseur') || p.position?.toLowerCase().includes('defender')),
-      'Milieu': players.filter(p => p.position?.toLowerCase().includes('milieu') || p.position?.toLowerCase().includes('midfielder')),
-      'Attaquant': players.filter(p => p.position?.toLowerCase().includes('attaquant') || p.position?.toLowerCase().includes('forward')),
-      'Autres': players.filter(p => !p.position || (!p.position.toLowerCase().includes('gardien') && 
+      [t('team.position.goalkeeper')]: players.filter(p => p.position?.toLowerCase().includes('gardien') || p.position?.toLowerCase().includes('goalkeeper')),
+      [t('team.position.defender')]: players.filter(p => p.position?.toLowerCase().includes('défenseur') || p.position?.toLowerCase().includes('defender')),
+      [t('team.position.midfielder')]: players.filter(p => p.position?.toLowerCase().includes('milieu') || p.position?.toLowerCase().includes('midfielder')),
+      [t('team.position.forward')]: players.filter(p => p.position?.toLowerCase().includes('attaquant') || p.position?.toLowerCase().includes('forward')),
+      [t('team.position.other')]: players.filter(p => !p.position || (!p.position.toLowerCase().includes('gardien') && 
                                                    !p.position.toLowerCase().includes('goalkeeper') &&
                                                    !p.position.toLowerCase().includes('défenseur') && 
                                                    !p.position.toLowerCase().includes('defender') &&
@@ -488,7 +488,7 @@ export default function TeamDetailPage() {
                         <span className="text-xl sm:text-2xl md:text-3xl">{getPositionIcon(position)}</span>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{position}s</h2>
+                        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{position}</h2>
                         <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{positionPlayers.length} {positionPlayers.length > 1 ? t('team.playersCount') : t('team.playerSingular')}</p>
                       </div>
                     </div>
@@ -513,7 +513,7 @@ export default function TeamDetailPage() {
                               <h3 className="font-bold text-gray-900 dark:text-white truncate flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm md:text-base">
                                 <span className="truncate">{player.name}</span>
                                 {(player as any).isCaptain && (
-                                  <span className="inline-flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-yellow-400 to-yellow-600 text-white text-[10px] sm:text-xs font-bold rounded-full flex-shrink-0 shadow-md" title="Capitaine">
+                                  <span className="inline-flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-yellow-400 to-yellow-600 text-white text-[10px] sm:text-xs font-bold rounded-full flex-shrink-0 shadow-md" title={t('team.captain')}>
                                     C
                                   </span>
                                 )}

@@ -6,6 +6,7 @@ import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firesto
 import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ArrowLeft, Clock, MapPin, Users, AlertCircle, Lock } from 'lucide-react'
+import { t } from '@/lib/i18n'
 import Link from 'next/link'
 
 interface Match {
@@ -194,9 +195,9 @@ export default function MatchDetailsPage() {
               match.status === 'live' ? 'bg-red-100 text-red-700' :
               'bg-green-100 text-green-700'
             }`}>
-              {match.status === 'upcoming' ? 'À venir' :
-               match.status === 'live' ? 'En cours' :
-               'Terminé'}
+              {match.status === 'upcoming' ? t('player.matches.status.upcoming') :
+               match.status === 'live' ? t('player.matches.status.live') :
+               t('player.matches.status.completed')}
             </span>
             <div className="flex items-center gap-2 text-gray-600">
               <Clock className="w-4 h-4" />

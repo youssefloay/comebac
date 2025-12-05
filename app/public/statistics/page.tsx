@@ -245,7 +245,7 @@ export default function PublicStatisticsPage() {
         {/* Top Scorers */}
         <div className="sofa-card p-6">
           <h2 className="text-lg font-bold text-sofa-text-primary mb-4 flex items-center gap-2">
-            ⚽ Meilleurs Buteurs
+            ⚽ {t('stats.topScorers')}
           </h2>
           <div className="space-y-3">
             {topScorersData.map((scorer, index) => (
@@ -257,11 +257,11 @@ export default function PublicStatisticsPage() {
                 </div>
                 <div className="flex-1">
                   <div className="font-semibold text-sofa-text-primary">{scorer.name}</div>
-                  <div className="text-sm text-sofa-text-muted">{scorer.matches} matchs</div>
+                  <div className="text-sm text-sofa-text-muted">{scorer.matches} {t('stats.matches')}</div>
                 </div>
                 <div className="text-right">
                   <div className="text-lg font-bold text-sofa-text-accent">{scorer.goals}</div>
-                  <div className="text-xs text-sofa-text-muted">buts</div>
+                  <div className="text-xs text-sofa-text-muted">{t('stats.goals')}</div>
                 </div>
               </div>
             ))}
@@ -307,7 +307,7 @@ export default function PublicStatisticsPage() {
               { id: 'scorers', label: t('stats.topScorers'), icon: Target, priority: 2 },
               { id: 'matches', label: t('nav.matches'), icon: Calendar, priority: 3 },
               { id: 'team-details', label: t('nav.teams'), icon: Users, priority: 4 },
-              { id: 'analytics', label: 'Analytics', icon: BarChart3, priority: 5 },
+              { id: 'analytics', label: t('stats.analytics'), icon: BarChart3, priority: 5 },
               { id: 'comparison', label: t('stats.comparison'), icon: GitCompare, priority: 6 }
             ].map(({ id, label, icon: Icon, priority }) => (
               <button
@@ -436,7 +436,7 @@ export default function PublicStatisticsPage() {
                         </div>
                         <div>
                           <h3 className="font-bold text-gray-900">{getTeamName(team.teamId)}</h3>
-                          <p className="text-sm text-gray-600">{team.matchesPlayed} matchs joués</p>
+                          <p className="text-sm text-gray-600">{team.matchesPlayed} {t('stats.matchesPlayed')}</p>
                         </div>
                       </div>
                       <div className="text-right">
@@ -479,7 +479,7 @@ export default function PublicStatisticsPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
                 <Target className="w-5 h-5 text-sofa-text-accent" />
-                <h2 className="text-xl font-semibold text-sofa-text-primary">Meilleurs Buteurs et Passeurs</h2>
+                <h2 className="text-xl font-semibold text-sofa-text-primary">{t('stats.topScorersAndAssists')}</h2>
               </div>
               
               {/* Desktop Table */}
@@ -563,7 +563,7 @@ export default function PublicStatisticsPage() {
                         </div>
                         <div>
                           <h3 className="font-bold text-sofa-text-primary">{scorer.name}</h3>
-                          <p className="text-sm text-sofa-text-secondary">{scorer.matches} matchs joués</p>
+                          <p className="text-sm text-sofa-text-secondary">{scorer.matches} {t('stats.matchesPlayed')}</p>
                         </div>
                       </div>
                       <div className="text-right">
@@ -684,7 +684,7 @@ export default function PublicStatisticsPage() {
                         <span className="font-medium text-sofa-text-primary">Clean Sheets</span>
                       </div>
                       <p className="sofa-stat-number">{teamStats.cleanSheets}</p>
-                      <p className="sofa-stat-label">matchs sans encaisser</p>
+                      <p className="sofa-stat-label">{t('stats.cleanSheets')}</p>
                     </div>
 
                     <div className="sofa-stat-card">
@@ -717,7 +717,7 @@ export default function PublicStatisticsPage() {
             <div className="space-y-6">
               <div className="flex items-center gap-2 mb-6">
                 <BarChart3 className="w-5 h-5 text-sofa-text-accent" />
-                <h2 className="text-xl font-semibold text-sofa-text-primary">Analytics Avancées</h2>
+                <h2 className="text-xl font-semibold text-sofa-text-primary">{t('stats.advancedAnalytics')}</h2>
               </div>
 
               {analyticsData ? (
@@ -1040,7 +1040,7 @@ export default function PublicStatisticsPage() {
                   <div className="text-center py-12 text-sofa-text-secondary">
                     {!comparisonTeamA || !comparisonTeamB ? 
                       "Sélectionnez deux équipes pour voir leur comparaison" :
-                      "Veuillez sélectionner deux équipes différentes"
+                      t('stats.selectTwoDifferentTeams')
                     }
                   </div>
                 </div>

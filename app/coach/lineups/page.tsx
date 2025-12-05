@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Clipboard, Check, AlertCircle, Lock, Flame } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { t } from '@/lib/i18n'
 import type { PreseasonMatch } from '@/lib/types'
 
 interface Player {
@@ -366,10 +367,10 @@ export default function CoachLineupsPage() {
         >
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent mb-1 sm:mb-2 flex items-center gap-2 sm:gap-3">
             <Clipboard className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-orange-600" />
-            <span className="leading-tight">Compositions d'Équipe</span>
+            <span className="leading-tight">{t('coach.lineups.title')}</span>
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base md:text-lg">
-            Créez et validez vos compositions officielles
+            {t('coach.lineups.subtitle')}
           </p>
         </motion.div>
 
@@ -401,7 +402,7 @@ export default function CoachLineupsPage() {
         {matches.length > 0 ? (
           <div className="mb-4 sm:mb-6">
             <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Sélectionnez un match
+              {t('coach.lineups.selectMatch')}
             </label>
             <select
               value={selectedMatch?.id || ''}
@@ -427,7 +428,7 @@ export default function CoachLineupsPage() {
         ) : (
           <div className="mb-4 sm:mb-6 p-6 sm:p-8 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 text-center">
             <Clipboard className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">Aucun match à venir</p>
+            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">{t('coach.lineups.noMatches')}</p>
           </div>
         )}
 
@@ -445,9 +446,9 @@ export default function CoachLineupsPage() {
                     <Lock className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-sm sm:text-base font-bold text-yellow-900 dark:text-yellow-400">Composition verrouillée</h3>
+                    <h3 className="text-sm sm:text-base font-bold text-yellow-900 dark:text-yellow-400">{t('coach.lineups.locked')}</h3>
                     <p className="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300">
-                      Cette composition est verrouillée car le match est dans moins de 24h
+                      {t('coach.lineups.lockedMessage')}
                     </p>
                   </div>
                 </div>
@@ -465,7 +466,7 @@ export default function CoachLineupsPage() {
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
                     <h3 className="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                      Formation {formation} (7 titulaires)
+                      {t('coach.lineups.formation')} {formation} (7 {t('coach.lineups.starters')})
                     </h3>
                     {selectedMatch?.isPreseason && (
                       <span className="px-2.5 sm:px-3 py-1 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 text-orange-700 dark:text-orange-400 rounded-full text-xs sm:text-sm font-semibold border border-orange-200 dark:border-orange-800 flex items-center gap-1 w-fit">
@@ -479,22 +480,22 @@ export default function CoachLineupsPage() {
                   {!locked && (
                     <div className="mb-4">
                       <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        Choisir la formation
+                        {t('coach.lineups.chooseFormation')}
                       </label>
                       <select
                         value={formation}
                         onChange={(e) => setFormation(e.target.value)}
                         className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm font-semibold"
                       >
-                        <option value="3-2-1">3-2-1 (3 défenseurs, 2 milieux, 1 attaquant)</option>
-                        <option value="2-3-1">2-3-1 (2 défenseurs, 3 milieux, 1 attaquant)</option>
-                        <option value="3-1-2">3-1-2 (3 défenseurs, 1 milieu, 2 attaquants)</option>
-                        <option value="2-2-2">2-2-2 (2 défenseurs, 2 milieux, 2 attaquants)</option>
-                        <option value="4-1-1">4-1-1 (4 défenseurs, 1 milieu, 1 attaquant)</option>
-                        <option value="2-4-0">2-4-0 (2 défenseurs, 4 milieux, 0 attaquant)</option>
+                        <option value="3-2-1">{t('coach.lineups.formation.3-2-1')}</option>
+                        <option value="2-3-1">{t('coach.lineups.formation.2-3-1')}</option>
+                        <option value="3-1-2">{t('coach.lineups.formation.3-1-2')}</option>
+                        <option value="2-2-2">{t('coach.lineups.formation.2-2-2')}</option>
+                        <option value="4-1-1">{t('coach.lineups.formation.4-1-1')}</option>
+                        <option value="2-4-0">{t('coach.lineups.formation.2-4-0')}</option>
                       </select>
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        Formation actuelle: <span className="font-bold text-orange-600 dark:text-orange-400">{formation}</span>
+                        {t('coach.lineups.currentFormation')} <span className="font-bold text-orange-600 dark:text-orange-400">{formation}</span>
                       </p>
                     </div>
                   )}
@@ -667,12 +668,12 @@ export default function CoachLineupsPage() {
                       {saving ? (
                         <>
                           <LoadingSpinner size="sm" />
-                          Validation en cours...
+                          {t('coach.lineups.validating')}
                         </>
                       ) : locked ? (
                         <>
                           <Lock className="w-5 h-5" />
-                          Composition verrouillée
+                          {t('coach.lineups.locked')}
                         </>
                       ) : (
                         <>

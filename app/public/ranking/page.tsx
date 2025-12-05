@@ -191,12 +191,12 @@ export default function RankingPage() {
                   teamName={topThree[1].teamName}
                   className="font-semibold text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition-colors text-sm block mb-3"
                 />
-                <div className="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">{topThree[1].points} pts</div>
+                <div className="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">{topThree[1].points} {t('ranking.pointsShort')}</div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                  {topThree[1].wins}V - {topThree[1].draws}N - {topThree[1].losses}D
+                  {topThree[1].wins}{t('ranking.winsShort')} - {topThree[1].draws}{t('ranking.drawsShort')} - {topThree[1].losses}{t('ranking.lossesShort')}
                 </div>
                 <div className="text-xs font-semibold text-gray-500 dark:text-gray-500">
-                  Diff: {topThree[1].goalDifference > 0 ? '+' : ''}{topThree[1].goalDifference}
+                  {t('ranking.diffLabel')} {topThree[1].goalDifference > 0 ? '+' : ''}{topThree[1].goalDifference}
                 </div>
               </div>
             </motion.div>
@@ -238,12 +238,12 @@ export default function RankingPage() {
                   teamName={topThree[0].teamName}
                   className="font-bold text-gray-900 dark:text-white hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors block mb-3 text-base"
                 />
-                <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-2">{topThree[0].points} pts</div>
+                <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-2">{topThree[0].points} {t('ranking.pointsShort')}</div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                  {topThree[0].wins}V - {topThree[0].draws}N - {topThree[0].losses}D
+                  {topThree[0].wins}{t('ranking.winsShort')} - {topThree[0].draws}{t('ranking.drawsShort')} - {topThree[0].losses}{t('ranking.lossesShort')}
                 </div>
                 <div className="text-xs font-semibold text-gray-500 dark:text-gray-500">
-                  Diff: {topThree[0].goalDifference > 0 ? '+' : ''}{topThree[0].goalDifference}
+                  {t('ranking.diffLabel')} {topThree[0].goalDifference > 0 ? '+' : ''}{topThree[0].goalDifference}
                 </div>
               </div>
             </motion.div>
@@ -285,12 +285,12 @@ export default function RankingPage() {
                   teamName={topThree[2].teamName}
                   className="font-semibold text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors text-sm block mb-3"
                 />
-                <div className="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">{topThree[2].points} pts</div>
+                <div className="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">{topThree[2].points} {t('ranking.pointsShort')}</div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                  {topThree[2].wins}V - {topThree[2].draws}N - {topThree[2].losses}D
+                  {topThree[2].wins}{t('ranking.winsShort')} - {topThree[2].draws}{t('ranking.drawsShort')} - {topThree[2].losses}{t('ranking.lossesShort')}
                 </div>
                 <div className="text-xs font-semibold text-gray-500 dark:text-gray-500">
-                  Diff: {topThree[2].goalDifference > 0 ? '+' : ''}{topThree[2].goalDifference}
+                  {t('ranking.diffLabel')} {topThree[2].goalDifference > 0 ? '+' : ''}{topThree[2].goalDifference}
                 </div>
               </div>
             </motion.div>
@@ -335,16 +335,16 @@ export default function RankingPage() {
               <table className="w-full min-w-[600px]">
                 <thead className="bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-700">
                   <tr>
-                    <th className="text-left whitespace-nowrap py-4 px-4 font-bold text-gray-900 dark:text-white">Pos</th>
+                    <th className="text-left whitespace-nowrap py-4 px-4 font-bold text-gray-900 dark:text-white">{t('ranking.positionShort')}</th>
                     <th className="text-left whitespace-nowrap py-4 px-4 font-bold text-gray-900 dark:text-white">{t('ranking.team')}</th>
                     <th className="text-center whitespace-nowrap py-4 px-4 font-bold text-gray-900 dark:text-white">{t('ranking.matches')}</th>
-                    <th className="text-center whitespace-nowrap py-4 px-4 font-bold text-gray-900 dark:text-white">V</th>
-                    <th className="text-center whitespace-nowrap py-4 px-4 font-bold text-gray-900 dark:text-white">N</th>
-                    <th className="text-center whitespace-nowrap py-4 px-4 font-bold text-gray-900 dark:text-white">D</th>
-                    <th className="text-center whitespace-nowrap py-4 px-4 font-bold text-gray-900 dark:text-white">BP</th>
-                    <th className="text-center whitespace-nowrap py-4 px-4 font-bold text-gray-900 dark:text-white">BC</th>
-                    <th className="text-center whitespace-nowrap py-4 px-4 font-bold text-gray-900 dark:text-white">Diff</th>
-                    <th className="text-center whitespace-nowrap py-4 px-4 font-bold text-gray-900 dark:text-white">Pts</th>
+                    <th className="text-center whitespace-nowrap py-4 px-4 font-bold text-gray-900 dark:text-white">{t('ranking.winsShort')}</th>
+                    <th className="text-center whitespace-nowrap py-4 px-4 font-bold text-gray-900 dark:text-white">{t('ranking.drawsShort')}</th>
+                    <th className="text-center whitespace-nowrap py-4 px-4 font-bold text-gray-900 dark:text-white">{t('ranking.lossesShort')}</th>
+                    <th className="text-center whitespace-nowrap py-4 px-4 font-bold text-gray-900 dark:text-white">{t('ranking.goalsForShort')}</th>
+                    <th className="text-center whitespace-nowrap py-4 px-4 font-bold text-gray-900 dark:text-white">{t('ranking.goalsAgainstShort')}</th>
+                    <th className="text-center whitespace-nowrap py-4 px-4 font-bold text-gray-900 dark:text-white">{t('ranking.diffShort')}</th>
+                    <th className="text-center whitespace-nowrap py-4 px-4 font-bold text-gray-900 dark:text-white">{t('ranking.pointsShortHeader')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -433,13 +433,13 @@ export default function RankingPage() {
               <thead className="bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-700 sticky top-0 z-10">
                 <tr>
                   <th className="text-left py-3 px-2 font-bold text-gray-900 dark:text-white w-10">#</th>
-                  <th className="text-left py-3 px-2 font-bold text-gray-900 dark:text-white">ÉQUIPE</th>
-                  <th className="text-center py-3 px-1 font-bold text-gray-900 dark:text-white w-8">MJ</th>
-                  <th className="text-center py-3 px-1 font-bold text-gray-900 dark:text-white w-8">V</th>
-                  <th className="text-center py-3 px-1 font-bold text-gray-900 dark:text-white w-8">N</th>
-                  <th className="text-center py-3 px-1 font-bold text-gray-900 dark:text-white w-8">D</th>
-                  <th className="text-center py-3 px-1 font-bold text-gray-900 dark:text-white w-16">Buts</th>
-                  <th className="text-center py-3 px-2 font-bold text-gray-900 dark:text-white w-12">Pts</th>
+                  <th className="text-left py-3 px-2 font-bold text-gray-900 dark:text-white">{t('ranking.teamHeader')}</th>
+                  <th className="text-center py-3 px-1 font-bold text-gray-900 dark:text-white w-8">{t('ranking.matchesPlayedShort')}</th>
+                  <th className="text-center py-3 px-1 font-bold text-gray-900 dark:text-white w-8">{t('ranking.winsShort')}</th>
+                  <th className="text-center py-3 px-1 font-bold text-gray-900 dark:text-white w-8">{t('ranking.drawsShort')}</th>
+                  <th className="text-center py-3 px-1 font-bold text-gray-900 dark:text-white w-8">{t('ranking.lossesShort')}</th>
+                  <th className="text-center py-3 px-1 font-bold text-gray-900 dark:text-white w-16">{t('ranking.goals')}</th>
+                  <th className="text-center py-3 px-2 font-bold text-gray-900 dark:text-white w-12">{t('ranking.pointsShortHeader')}</th>
                 </tr>
               </thead>
               <tbody>

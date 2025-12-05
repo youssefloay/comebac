@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Calendar, Trophy, Clock, MapPin, Flame } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { t } from '@/lib/i18n'
 import type { PreseasonMatch } from '@/lib/types'
 
 interface Match {
@@ -195,10 +196,10 @@ export default function CoachMatchesPage() {
         >
           <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent mb-2 flex items-center gap-3">
             <Calendar className="w-8 h-8 md:w-10 md:h-10 text-orange-600" />
-            Calendrier des Matchs
+            {t('coach.matches.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg">
-            Gérez vos matchs et consultez les résultats
+            {t('coach.matches.subtitle')}
           </p>
         </motion.div>
 
@@ -209,7 +210,7 @@ export default function CoachMatchesPage() {
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
                 <Clock className="w-5 h-5 text-white" />
               </div>
-              Matchs à Venir
+              {t('coach.matches.upcoming')}
               <span className="text-base font-normal text-gray-500 dark:text-gray-400">({upcomingMatches.length})</span>
             </h2>
           </div>
@@ -320,8 +321,8 @@ export default function CoachMatchesPage() {
               <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Calendar className="w-10 h-10 text-blue-500 dark:text-blue-400" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Aucun match à venir</h3>
-              <p className="text-gray-500 dark:text-gray-400">Vos prochains matchs apparaîtront ici</p>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{t('coach.matches.noUpcoming')}</h3>
+              <p className="text-gray-500 dark:text-gray-400">{t('coach.matches.upcomingDescription')}</p>
             </motion.div>
           )}
         </div>
@@ -333,7 +334,7 @@ export default function CoachMatchesPage() {
               <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
                 <Trophy className="w-5 h-5 text-white" />
               </div>
-              Matchs Passés
+              {t('coach.matches.past')}
               <span className="text-base font-normal text-gray-500 dark:text-gray-400">({pastMatches.length})</span>
             </h2>
           </div>

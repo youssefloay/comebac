@@ -13,6 +13,7 @@ import ActivityTab from "./tabs/activity-tab"
 import MiniLeagueTab from "./tabs/mini-league-tab"
 import WaitingListTab from "./tabs/waiting-list-tab"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { useAdminI18n } from "@/lib/i18n/admin-i18n-context"
 
 // Lazy load des composants lourds pour améliorer les performances
 const StatisticsTab = lazy(() => import("./tabs/statistics-tab"))
@@ -24,6 +25,7 @@ const SpectatorsTab = lazy(() => import("./tabs/spectators-tab"))
 type TabType = "teams" | "players" | "matches" | "results" | "statistics" | "lineups" | "registrations" | "archives" | "activity" | "accounts" | "maintenance" | "test-matches" | "mini-league" | "waiting-list" | "shop" | "preseason" | "spectators"
 
 export default function Dashboard({ user }: { user: any }) {
+  const { t, language } = useAdminI18n()
   const [activeTab, setActiveTab] = useState<TabType>("teams")
   const [sidebarOpen, setSidebarOpen] = useState(false) // Fermé par défaut sur mobile
   const [isSeeding, setIsSeeding] = useState(false)
@@ -166,7 +168,7 @@ export default function Dashboard({ user }: { user: any }) {
     if (e) e.preventDefault()
 
     if (!generateFormData.startDate || !generateFormData.time) {
-      setSeedMessage({ type: "error", text: "Veuillez remplir tous les champs requis" })
+      setSeedMessage({ type: "error", text: t.dashboard.generateMatches.fillAllFields })
       return
     }
 
@@ -174,7 +176,7 @@ export default function Dashboard({ user }: { user: any }) {
     const matchesPerDay = mode === 'MINI_LEAGUE' ? 3 : parseInt(generateFormData.matchesPerDay) || 1
 
     if (mode === 'CLASSIC' && (isNaN(matchesPerDay) || matchesPerDay < 1 || matchesPerDay > 10)) {
-      setSeedMessage({ type: "error", text: "Le nombre de matchs par jeudi doit être entre 1 et 10" })
+      setSeedMessage({ type: "error", text: t.dashboard.generateMatches.matchesPerDayRange })
       return
     }
 
@@ -185,8 +187,16 @@ export default function Dashboard({ user }: { user: any }) {
 
     // Vérifier que c'est un jeudi
     if (startDate.getDay() !== 4) {
-      const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
-      setSeedMessage({ type: "error", text: `Cette date est un ${dayNames[startDate.getDay()]}. Les matchs doivent être le jeudi.` })
+      const dayNames = [
+        t.dashboard.generateMatches.days.sunday,
+        t.dashboard.generateMatches.days.monday,
+        t.dashboard.generateMatches.days.tuesday,
+        t.dashboard.generateMatches.days.wednesday,
+        t.dashboard.generateMatches.days.thursday,
+        t.dashboard.generateMatches.days.friday,
+        t.dashboard.generateMatches.days.saturday,
+      ]
+      setSeedMessage({ type: "error", text: `${t.dashboard.generateMatches.mustBeThursday.replace('jeudi', dayNames[startDate.getDay()])}. ${t.dashboard.generateMatches.mustBeThursday}` })
       return
     }
 
@@ -224,7 +234,7 @@ export default function Dashboard({ user }: { user: any }) {
       }
       
       if (response.ok) {
-        setSeedMessage({ type: "success", text: data.message || "Matchs générés avec succès" })
+        setSeedMessage({ type: "success", text: data.message || t.dashboard.generateMatches.success })
         setActiveTab("matches")
         if (isMobile) setSidebarOpen(false)
         // Reset form
@@ -242,8 +252,8 @@ export default function Dashboard({ user }: { user: any }) {
           match3Time: '19:00'
         })
       } else {
-        const errorMessage = data.error || `Erreur ${response.status}: ${response.statusText}` || "Erreur lors de la génération des matchs"
-        const errorDetails = data.details ? `\n\nDétails: ${data.details}` : ''
+        const errorMessage = data.error || `Erreur ${response.status}: ${response.statusText}` || t.dashboard.generateMatches.error
+        const errorDetails = data.details ? `\n\n${t.common.details}: ${data.details}` : ''
         setSeedMessage({ type: "error", text: `${errorMessage}${errorDetails}` })
         console.error('Error generating matches:', {
           status: response.status,
@@ -252,7 +262,7 @@ export default function Dashboard({ user }: { user: any }) {
         })
       }
     } catch (error: any) {
-      const errorMessage = error?.message || "Erreur de connexion"
+      const errorMessage = error?.message || t.dashboard.endSeason.connectionError
       setSeedMessage({ type: "error", text: errorMessage })
       console.error("Error generating matches:", error)
     } finally {
@@ -261,23 +271,23 @@ export default function Dashboard({ user }: { user: any }) {
   }
 
   const tabs = [
-    { id: "teams", label: "Équipes", icon: "⚽" },
-    { id: "players", label: "Joueurs", icon: "👥" },
-    { id: "lineups", label: "Compositions", icon: "🎯" },
-    { id: "matches", label: "Matchs", icon: "📅" },
-    { id: "results", label: "Résultats", icon: "📊" },
-    { id: "statistics", label: "Statistiques", icon: "📈" },
-    { id: "mini-league", label: "Mini-League", icon: "🏆" },
-    { id: "preseason", label: "Preseason", icon: "🔥" },
-    { id: "shop", label: "Boutique", icon: "🛍️" },
-    { id: "activity", label: "Activité", icon: "🔔" },
-    { id: "accounts", label: "Comptes", icon: "👤" },
-    { id: "registrations", label: "Inscriptions", icon: "📝" },
-    { id: "waiting-list", label: "Waiting List", icon: "⏳" },
-    { id: "spectators", label: "Spectateurs", icon: "👀" },
-    { id: "archives", label: "Archives", icon: "📦" },
-    { id: "maintenance", label: "Réparations", icon: "🔧" },
-    { id: "test-matches", label: "Matchs Test", icon: "🧪" },
+    { id: "teams", label: t.dashboard.tabs.teams, icon: "⚽" },
+    { id: "players", label: t.dashboard.tabs.players, icon: "👥" },
+    { id: "lineups", label: t.dashboard.tabs.lineups, icon: "🎯" },
+    { id: "matches", label: t.dashboard.tabs.matches, icon: "📅" },
+    { id: "results", label: t.dashboard.tabs.results, icon: "📊" },
+    { id: "statistics", label: t.dashboard.tabs.statistics, icon: "📈" },
+    { id: "mini-league", label: t.dashboard.tabs.miniLeague, icon: "🏆" },
+    { id: "preseason", label: t.dashboard.tabs.preseason, icon: "🔥" },
+    { id: "shop", label: t.dashboard.tabs.shop, icon: "🛍️" },
+    { id: "activity", label: t.dashboard.tabs.activity, icon: "🔔" },
+    { id: "accounts", label: t.dashboard.tabs.accounts, icon: "👤" },
+    { id: "registrations", label: t.dashboard.tabs.registrations, icon: "📝" },
+    { id: "waiting-list", label: t.dashboard.tabs.waitingList, icon: "⏳" },
+    { id: "spectators", label: t.dashboard.tabs.spectators, icon: "👀" },
+    { id: "archives", label: t.dashboard.tabs.archives, icon: "📦" },
+    { id: "maintenance", label: t.dashboard.tabs.maintenance, icon: "🔧" },
+    { id: "test-matches", label: t.dashboard.tabs.testMatches, icon: "🧪" },
   ]
 
   const handleGoToRegistrations = () => {
@@ -285,21 +295,12 @@ export default function Dashboard({ user }: { user: any }) {
   }
 
   const handleEndSeason = async () => {
-    const seasonName = prompt(
-      '🏁 FIN DE SAISON\n\nDonnez un nom à cette saison pour l\'archiver:\n(ex: "Saison 2024-2025", "Championnat Automne 2024")'
-    )
+    const seasonName = prompt(t.dashboard.endSeason.prompt)
     
     if (!seasonName) return
 
     if (!confirm(
-      `⚠️ ATTENTION: Fin de saison "${seasonName}"\n\n` +
-      `Cette action va:\n` +
-      `✅ Archiver toutes les données actuelles\n` +
-      `✅ Garder les équipes et joueurs\n` +
-      `🗑️ Supprimer tous les matchs et résultats\n` +
-      `🔄 Réinitialiser toutes les statistiques à 0\n\n` +
-      `Les archives seront accessibles pour consultation.\n\n` +
-      `Continuer?`
+      `${t.dashboard.endSeason.confirm} "${seasonName}"\n\n${t.dashboard.endSeason.confirmMessage}`
     )) {
       return
     }
@@ -319,18 +320,18 @@ export default function Dashboard({ user }: { user: any }) {
       if (response.ok) {
         setSeedMessage({ 
           type: 'success', 
-          text: `${data.message}\n${data.summary.totalMatches} matchs, ${data.summary.totalResults} résultats archivés.`
+          text: `${data.message || t.dashboard.endSeason.success}\n${data.summary.totalMatches} ${t.dashboard.tabs.matches}, ${data.summary.totalResults} ${t.dashboard.tabs.results} ${language === 'fr' ? 'archivés' : 'archived'}.`
         })
         setActiveTab('teams')
         if (isMobile) setSidebarOpen(false)
       } else {
         setSeedMessage({ 
           type: 'error', 
-          text: data.error || 'Erreur lors de la fin de saison' 
+          text: data.error || t.dashboard.endSeason.error
         })
       }
     } catch (error) {
-      setSeedMessage({ type: 'error', text: 'Erreur de connexion' })
+      setSeedMessage({ type: 'error', text: t.dashboard.endSeason.connectionError })
     } finally {
       setIsSeeding(false)
     }
@@ -428,7 +429,7 @@ export default function Dashboard({ user }: { user: any }) {
             className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 text-white hover:bg-orange-700 rounded-lg transition text-sm font-medium"
           >
             <span>🏆</span>
-            {(sidebarOpen || isMobile) && <span>Générer Finales</span>}
+            {(sidebarOpen || isMobile) && <span>{t.dashboard.generateFinals.title}</span>}
           </button>
           <button
             onClick={() => {
@@ -466,7 +467,7 @@ export default function Dashboard({ user }: { user: any }) {
             className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 rounded-lg transition text-sm font-medium"
           >
             <span>⚽</span>
-            {(sidebarOpen || isMobile) && <span>Générer matchs</span>}
+            {(sidebarOpen || isMobile) && <span>{t.dashboard.generateMatches.title}</span>}
           </button>
 
           <button
@@ -541,7 +542,7 @@ export default function Dashboard({ user }: { user: any }) {
           )}
           {activeTab === "test-matches" && (
             <div className="text-center py-8 md:py-12">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Matchs de Test</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">{t.dashboard.testMatches.title}</h2>
               <p className="text-gray-600 mb-6">Consultez les matchs générés en mode test</p>
               <button
                 onClick={() => window.location.href = '/admin/test-matches'}
@@ -581,7 +582,7 @@ export default function Dashboard({ user }: { user: any }) {
           )}
           {activeTab === "registrations" && (
             <div className="text-center py-8 md:py-12">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Inscriptions d'Équipes</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">{t.dashboard.teamRegistrations.title}</h2>
               <p className="text-gray-600 mb-6">Gérez les demandes d'inscription des équipes</p>
               <button
                 onClick={handleGoToRegistrations}
@@ -593,7 +594,7 @@ export default function Dashboard({ user }: { user: any }) {
           )}
           {activeTab === "archives" && (
             <div className="text-center py-8 md:py-12">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Archives des Saisons</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">{t.dashboard.archives.title}</h2>
               <p className="text-gray-600 mb-6">Consultez les statistiques des saisons passées</p>
               <button
                 onClick={() => window.location.href = '/admin/archives'}
@@ -612,7 +613,7 @@ export default function Dashboard({ user }: { user: any }) {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Générer les Matchs</h2>
+              <h2 className="text-2xl font-bold">{t.dashboard.generateMatches.title}</h2>
               <button
                 onClick={() => setShowGenerateModal(false)}
                 className="p-2 hover:bg-white/20 rounded-lg transition-colors"
@@ -625,7 +626,7 @@ export default function Dashboard({ user }: { user: any }) {
             <form onSubmit={handleGenerateMatches} className="p-6 space-y-6">
               {/* Mode de tournoi */}
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-3">Mode de tournoi</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-3">{t.dashboard.generateMatches.mode}</label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <button
                     type="button"
@@ -645,7 +646,7 @@ export default function Dashboard({ user }: { user: any }) {
                         )}
                       </div>
                       <div className="flex-1 text-left">
-                        <h3 className="font-semibold text-gray-900 mb-1">Ligue Classique</h3>
+                        <h3 className="font-semibold text-gray-900 mb-1">{t.dashboard.generateMatches.classic}</h3>
                         <p className="text-sm text-gray-600">Matchs aller-retour entre toutes les équipes</p>
                       </div>
                     </div>
@@ -669,7 +670,7 @@ export default function Dashboard({ user }: { user: any }) {
                         )}
                       </div>
                       <div className="flex-1 text-left">
-                        <h3 className="font-semibold text-gray-900 mb-1">Mini-League</h3>
+                        <h3 className="font-semibold text-gray-900 mb-1">{t.dashboard.generateMatches.miniLeague}</h3>
                         <p className="text-sm text-gray-600">10 équipes, 6 journées avec finales</p>
                         <p className="text-xs text-gray-500 mt-1">Phase qualif: Jours 1-5 (3 matchs max/jour)</p>
                       </div>
@@ -681,7 +682,7 @@ export default function Dashboard({ user }: { user: any }) {
               {/* Date de début */}
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
-                  Date du premier match (jeudi) <span className="text-red-500">*</span>
+                  {t.dashboard.generateMatches.startDate} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -690,7 +691,7 @@ export default function Dashboard({ user }: { user: any }) {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">Les matchs doivent être programmés un jeudi</p>
+                <p className="text-xs text-gray-500 mt-1">{t.dashboard.generateMatches.startDateHint}</p>
               </div>
 
               {/* Mode de gestion des heures */}
@@ -775,7 +776,7 @@ export default function Dashboard({ user }: { user: any }) {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Heure du 1er match <span className="text-red-500">*</span>
+                        {t.dashboard.generateMatches.match1Time} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="time"
@@ -787,7 +788,7 @@ export default function Dashboard({ user }: { user: any }) {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Heure du 2e match <span className="text-red-500">*</span>
+                        {t.dashboard.generateMatches.match2Time} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="time"
@@ -799,7 +800,7 @@ export default function Dashboard({ user }: { user: any }) {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Heure du 3e match <span className="text-red-500">*</span>
+                        {t.dashboard.generateMatches.match3Time} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="time"
@@ -834,7 +835,7 @@ export default function Dashboard({ user }: { user: any }) {
               {/* Sélection des équipes */}
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
-                  Équipes participantes <span className="text-red-500">*</span>
+                  {t.dashboard.generateMatches.participatingTeams} <span className="text-red-500">*</span>
                   {generateFormData.mode === 'MINI_LEAGUE' && (
                     <span className="text-xs text-gray-500 ml-2">(Exactement 10 équipes requises)</span>
                   )}
@@ -942,12 +943,12 @@ export default function Dashboard({ user }: { user: any }) {
                   {isSeeding ? (
                     <>
                       <Loader className="w-5 h-5 animate-spin" />
-                      Génération en cours...
+                      {t.dashboard.generateMatches.generating}
                     </>
                   ) : (
                     <>
                       <span>⚽</span>
-                      Générer les matchs
+                      {t.dashboard.generateMatches.generate}
                     </>
                   )}
                 </button>
@@ -963,7 +964,7 @@ export default function Dashboard({ user }: { user: any }) {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="sticky top-0 bg-gradient-to-r from-orange-600 to-orange-700 text-white p-6 flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Générer les Finales</h2>
+              <h2 className="text-2xl font-bold">{t.dashboard.generateFinals.title}</h2>
               <button
                 onClick={() => setShowFinalsModal(false)}
                 className="p-2 hover:bg-white/20 rounded-lg transition-colors"
@@ -987,7 +988,7 @@ export default function Dashboard({ user }: { user: any }) {
               {/* Date des finales */}
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
-                  Date des finales (Jour 6, jeudi) <span className="text-red-500">*</span>
+                  {t.dashboard.generateFinals.finalDate} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -996,13 +997,13 @@ export default function Dashboard({ user }: { user: any }) {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">Les finales doivent être programmées un jeudi</p>
+                <p className="text-xs text-gray-500 mt-1">{t.dashboard.generateFinals.finalDateHint}</p>
               </div>
 
               {/* Heure */}
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
-                  Heure de la Grande Finale <span className="text-red-500">*</span>
+                  {t.dashboard.generateFinals.finalTime} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="time"
@@ -1036,7 +1037,7 @@ export default function Dashboard({ user }: { user: any }) {
                   ) : (
                     <>
                       <span>🏆</span>
-                      Générer les finales
+                      {t.dashboard.generateFinals.generate}
                     </>
                   )}
                 </button>

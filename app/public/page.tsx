@@ -116,7 +116,7 @@ export default function PublicHome() {
         
       } catch (error) {
         console.error('❌ Erreur lors du chargement des données:', error)
-        console.error('Détails de l\'erreur:', error instanceof Error ? error.message : 'Erreur inconnue')
+        console.error(t('home.errorDetails') + ':', error instanceof Error ? error.message : t('home.unknownError'))
       } finally {
         setLoading(false)
       }
@@ -211,7 +211,7 @@ export default function PublicHome() {
                     className="flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 hover:from-green-700 hover:via-emerald-700 hover:to-green-700 text-white rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all"
                   >
                     <UserPlus className="w-5 h-5 sm:w-6 sm:h-6" />
-                    <span>Inscrire une Équipe</span>
+                    <span>{t('home.registerTeam')}</span>
                   </motion.button>
                 </Link>
                 <Link href="/public/spectators/register">
@@ -226,7 +226,7 @@ export default function PublicHome() {
                 </Link>
               </div>
               <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                Aucun compte requis
+                {t('home.noAccountRequired')}
               </p>
             </motion.div>
           </motion.div>

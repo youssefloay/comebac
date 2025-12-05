@@ -258,7 +258,7 @@ export default function AccountsManagementPage() {
       setAccounts(deduplicatedAccounts)
     } catch (error) {
       console.error('Erreur lors du chargement des comptes:', error)
-      setMessage({ type: 'error', text: 'Erreur lors du chargement des comptes' })
+      setMessage({ type: 'error', text: t.accounts.loadError })
     } finally {
       setLoading(false)
     }
@@ -307,7 +307,7 @@ export default function AccountsManagementPage() {
       }
 
       if (Object.keys(updates).length === 0) {
-        setMessage({ type: 'error', text: 'Aucune modification à enregistrer.' })
+        setMessage({ type: 'error', text: t.accounts.noChanges })
         return
       }
 
@@ -335,11 +335,11 @@ export default function AccountsManagementPage() {
         setEditForm({})
         loadData()
       } else {
-        setMessage({ type: 'error', text: data.error || 'Erreur lors de la mise à jour' })
+        setMessage({ type: 'error', text: data.error || t.accounts.updateError })
       }
     } catch (error) {
       console.error('Erreur lors de la mise à jour:', error)
-      setMessage({ type: 'error', text: 'Erreur lors de la mise à jour du compte' })
+      setMessage({ type: 'error', text: t.accounts.updateErrorDetails })
     } finally {
       setSaving(false)
     }
@@ -370,14 +370,14 @@ export default function AccountsManagementPage() {
       const data = await response.json()
 
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Compte supprimé avec succès!' })
+        setMessage({ type: 'success', text: t.accounts.deleteSuccess })
         loadData()
       } else {
-        setMessage({ type: 'error', text: data.error || 'Erreur lors de la suppression' })
+        setMessage({ type: 'error', text: data.error || t.accounts.deleteError })
       }
     } catch (error) {
       console.error('Erreur lors de la suppression:', error)
-      setMessage({ type: 'error', text: 'Erreur lors de la suppression du compte' })
+      setMessage({ type: 'error', text: t.accounts.deleteErrorDetails })
     } finally {
       setSaving(false)
       setShowActionsMenu(null)
@@ -385,7 +385,7 @@ export default function AccountsManagementPage() {
   }
 
   const sendPasswordReset = async (account: Account) => {
-    if (!confirm(`Envoyer un email de réinitialisation de mot de passe à ${account.email}?`)) {
+    if (!confirm(`${t.accounts.resetConfirm} ${account.email}?`)) {
       return
     }
 
@@ -405,14 +405,14 @@ export default function AccountsManagementPage() {
       const data = await response.json()
 
       if (response.ok) {
-        setMessage({ type: 'success', text: `Email de réinitialisation envoyé à ${account.email}!` })
+        setMessage({ type: 'success', text: `${t.accounts.resetSuccess} ${account.email}!` })
         console.log('Lien de réinitialisation:', data.resetLink)
       } else {
-        setMessage({ type: 'error', text: data.error || 'Erreur lors de l\'envoi' })
+        setMessage({ type: 'error', text: data.error || t.accounts.resetError })
       }
     } catch (error) {
       console.error('Erreur lors de l\'envoi:', error)
-      setMessage({ type: 'error', text: 'Erreur lors de l\'envoi de l\'email' })
+      setMessage({ type: 'error', text: t.accounts.resetErrorDetails })
     } finally {
       setSaving(false)
       setShowActionsMenu(null)
@@ -449,8 +449,8 @@ export default function AccountsManagementPage() {
     return (
       <div className="p-8">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          <p className="font-bold">Erreur de traduction</p>
-          <p>Les traductions ne sont pas disponibles. Vérifiez que le provider i18n est bien configuré.</p>
+          <p className="font-bold">{t.accounts.translationError}</p>
+          <p>{t.accounts.translationErrorDetails}</p>
         </div>
       </div>
     )
@@ -687,7 +687,7 @@ export default function AccountsManagementPage() {
                           onChange={(e) => setEditForm({ ...editForm, teamId: e.target.value })}
                           className="px-3 py-1 border border-gray-300 rounded text-sm"
                         >
-                          <option value="">Sélectionner une équipe</option>
+                          <option value="">{t.accounts.selectTeam}</option>
                           {teams.map(team => (
                             <option key={team.id} value={team.id}>{team.name}</option>
                           ))}

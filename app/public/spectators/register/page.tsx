@@ -80,7 +80,13 @@ const translations = {
     date: "Date",
     time: "Heure",
     venue: "Lieu",
-    vs: "vs"
+    vs: "vs",
+    invalidDate: "Date invalide",
+    newRequest: "Nouvelle demande",
+    homeTeam: "Équipe à domicile",
+    awayTeam: "Équipe à l'extérieur",
+    preseason: "Preseason",
+    invalidResponse: "Réponse invalide"
   },
   en: {
     title: "Reserve Your Match Spot",
@@ -117,7 +123,13 @@ const translations = {
     date: "Date",
     time: "Time",
     venue: "Venue",
-    vs: "vs"
+    vs: "vs",
+    invalidDate: "Invalid date",
+    newRequest: "New request",
+    homeTeam: "Home team",
+    awayTeam: "Away team",
+    preseason: "Preseason",
+    invalidResponse: "Invalid response"
   }
 }
 
@@ -365,7 +377,7 @@ export default function SpectatorRegistrationPage() {
       if (!contentType?.includes('application/json')) {
         const text = await response.text()
         console.error('Response is not JSON:', text.substring(0, 200))
-        setError(t.error + ': ' + (response.statusText || 'Invalid response'))
+        setError(t.error + ': ' + (response.statusText || t.invalidResponse))
         setSubmitting(false)
         return
       }
@@ -398,7 +410,7 @@ export default function SpectatorRegistrationPage() {
   const formatDate = (date: Date | string) => {
     const dateObj = date instanceof Date ? date : new Date(date)
     if (isNaN(dateObj.getTime())) {
-      return language === 'fr' ? 'Date invalide' : 'Invalid date'
+      return t.invalidDate
     }
     return new Intl.DateTimeFormat(language === 'fr' ? 'fr-FR' : 'en-US', {
       weekday: 'long',
@@ -756,7 +768,7 @@ export default function SpectatorRegistrationPage() {
               }}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
             >
-              {language === 'fr' ? 'Nouvelle demande' : 'New request'}
+              {t.newRequest}
             </button>
           </motion.div>
         )}
@@ -800,11 +812,11 @@ function MatchCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2 flex-wrap">
             <h3 className="font-bold text-lg text-gray-900 dark:text-white break-words">
-              {match.homeTeam || 'Équipe à domicile'} {t.vs} {match.awayTeam || 'Équipe à l\'extérieur'}
+              {match.homeTeam || t.homeTeam} {t.vs} {match.awayTeam || t.awayTeam}
             </h3>
             {match.type === 'preseason' && (
               <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-full text-xs font-semibold whitespace-nowrap">
-                Preseason
+                {t.preseason}
               </span>
             )}
           </div>

@@ -6,6 +6,7 @@ import { collection, getDocs, query, where } from "firebase/firestore"
 import type { TeamStatistics } from "@/lib/types"
 import { Trophy, TrendingUp, TrendingDown, Minus } from "lucide-react"
 import { motion } from "framer-motion"
+import { t } from "@/lib/i18n"
 
 interface RankingTeam extends TeamStatistics {
   teamName: string
@@ -117,17 +118,17 @@ export default function PlayerRankingPage() {
         >
           <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-yellow-600 via-orange-600 to-red-600 bg-clip-text text-transparent mb-2 flex items-center gap-3">
             <Trophy className="w-8 h-8 md:w-10 md:h-10 text-yellow-600" />
-            Classement
+            {t('player.ranking.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg">
-            Découvrez le classement général du championnat
+            {t('player.ranking.subtitle')}
           </p>
         </motion.div>
 
       {loading ? (
         <div className="text-center py-20">
           <div className="w-12 h-12 border-4 border-gray-200 dark:border-gray-700 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Chargement du classement...</p>
+          <p className="text-gray-600 dark:text-gray-400">{t('player.ranking.loading')}</p>
         </div>
       ) : ranking.length === 0 ? (
         <motion.div
@@ -136,7 +137,7 @@ export default function PlayerRankingPage() {
           className="bg-gradient-to-br from-white via-white to-gray-50/50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-2xl p-12 text-center border border-gray-200/50 dark:border-gray-700/50 shadow-xl backdrop-blur-xl"
         >
           <Trophy className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Aucune donnée de classement disponible</p>
+          <p className="text-gray-600 dark:text-gray-400">{t('player.ranking.noData')}</p>
         </motion.div>
       ) : (
         <div className="space-y-4 md:space-y-6">

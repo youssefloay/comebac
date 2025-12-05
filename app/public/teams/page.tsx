@@ -217,7 +217,7 @@ export default function TeamsPage() {
                             <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-medium">Joueurs</p>
+                            <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-medium">{t('teams.players')}</p>
                             <p className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">
                               {team.playerCount} {team.playerCount > 1 ? t('team.playersCount') : t('team.playerSingular')}
                             </p>
@@ -229,7 +229,7 @@ export default function TeamsPage() {
                             <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600 dark:text-gray-400" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-medium">Stade</p>
+                            <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-medium">{t('teams.stadium')}</p>
                             <p className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">
                               {t('team.stadiumOf')} {team.name}
                             </p>
