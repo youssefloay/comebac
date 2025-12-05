@@ -6,6 +6,7 @@ export const translations = {
   'nav.teams': { fr: 'Équipes', en: 'Teams' },
   'nav.stats': { fr: 'Stats', en: 'Stats' },
   'nav.fantasy': { fr: 'Fantasy', en: 'Fantasy' },
+  'nav.spectators': { fr: 'Spectateurs', en: 'Spectators' },
   'nav.more': { fr: 'Plus', en: 'More' },
   'nav.menu': { fr: 'Menu', en: 'Menu' },
   'nav.navigation': { fr: 'Navigation', en: 'Navigation' },
@@ -41,6 +42,7 @@ export const translations = {
   'home.podium': { fr: 'Podium', en: 'Podium' },
   'home.leagueStats': { fr: 'Statistiques de la Ligue', en: 'League Statistics' },
   'home.teamsCount': { fr: 'Équipes', en: 'Teams' },
+  'home.spectators': { fr: 'Inscription Spectateur', en: 'Spectator Registration' },
   
   // Common
   'common.loading': { fr: 'Chargement...', en: 'Loading...' },

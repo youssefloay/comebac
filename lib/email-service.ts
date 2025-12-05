@@ -1,6 +1,6 @@
 // Service d'envoi d'emails pour les comptes joueurs
 import { Resend } from 'resend'
-import { getPlayerWelcomeEmailHtml, getCoachWelcomeEmailHtml } from './email-templates'
+import { getPlayerWelcomeEmailHtml, getCoachWelcomeEmailHtml, getSpectatorApprovalEmailHtml, getSpectatorRejectionEmailHtml } from './email-templates'
 
 interface EmailData {
   to: string

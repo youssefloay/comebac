@@ -19,8 +19,9 @@ const StatisticsTab = lazy(() => import("./tabs/statistics-tab"))
 const MaintenanceTab = lazy(() => import("./tabs/maintenance-tab"))
 const AccountsTab = lazy(() => import("./tabs/accounts-tab"))
 const ShopTab = lazy(() => import("./tabs/shop-tab"))
+const SpectatorsTab = lazy(() => import("./tabs/spectators-tab"))
 
-type TabType = "teams" | "players" | "matches" | "results" | "statistics" | "lineups" | "registrations" | "archives" | "activity" | "accounts" | "maintenance" | "test-matches" | "mini-league" | "waiting-list" | "shop" | "preseason"
+type TabType = "teams" | "players" | "matches" | "results" | "statistics" | "lineups" | "registrations" | "archives" | "activity" | "accounts" | "maintenance" | "test-matches" | "mini-league" | "waiting-list" | "shop" | "preseason" | "spectators"
 
 export default function Dashboard({ user }: { user: any }) {
   const [activeTab, setActiveTab] = useState<TabType>("teams")
@@ -273,6 +274,7 @@ export default function Dashboard({ user }: { user: any }) {
     { id: "accounts", label: "Comptes", icon: "👤" },
     { id: "registrations", label: "Inscriptions", icon: "📝" },
     { id: "waiting-list", label: "Waiting List", icon: "⏳" },
+    { id: "spectators", label: "Spectateurs", icon: "👀" },
     { id: "archives", label: "Archives", icon: "📦" },
     { id: "maintenance", label: "Réparations", icon: "🔧" },
     { id: "test-matches", label: "Matchs Test", icon: "🧪" },
@@ -572,6 +574,11 @@ export default function Dashboard({ user }: { user: any }) {
             </Suspense>
           )}
           {activeTab === "waiting-list" && <WaitingListTab />}
+          {activeTab === "spectators" && (
+            <Suspense fallback={<div className="flex items-center justify-center py-12"><LoadingSpinner size="lg" /></div>}>
+              <SpectatorsTab />
+            </Suspense>
+          )}
           {activeTab === "registrations" && (
             <div className="text-center py-8 md:py-12">
               <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Inscriptions d'Équipes</h2>

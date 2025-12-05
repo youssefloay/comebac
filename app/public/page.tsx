@@ -15,7 +15,8 @@ import {
   Trophy, 
   Users, 
   Target,
-  UserPlus
+  UserPlus,
+  Eye
 } from 'lucide-react'
 
 // Lazy load des composants pour réduire le bundle initial
@@ -200,18 +201,30 @@ export default function PublicHome() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: 0.2 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-6"
+              className="flex flex-col items-center justify-center gap-4 md:gap-6"
             >
-              <Link href="/register-team">
-                <motion.button
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 hover:from-green-700 hover:via-emerald-700 hover:to-green-700 text-white rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all"
-                >
-                  <UserPlus className="w-5 h-5 sm:w-6 sm:h-6" />
-                  <span>Inscrire une Équipe</span>
-                </motion.button>
-              </Link>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+                <Link href="/register-team">
+                  <motion.button
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 hover:from-green-700 hover:via-emerald-700 hover:to-green-700 text-white rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all"
+                  >
+                    <UserPlus className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <span>Inscrire une Équipe</span>
+                  </motion.button>
+                </Link>
+                <Link href="/public/spectators/register">
+                  <motion.button
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 hover:from-blue-700 hover:via-purple-700 hover:to-blue-700 text-white rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all"
+                  >
+                    <Eye className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <span>{t('home.spectators')}</span>
+                  </motion.button>
+                </Link>
+              </div>
               <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 Aucun compte requis
               </p>

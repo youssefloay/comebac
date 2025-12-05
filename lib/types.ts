@@ -204,6 +204,31 @@ export interface PreseasonMatch {
   updatedAt: Date
 }
 
+export interface SpectatorRequest {
+  id: string
+  matchId: string
+  matchType: 'regular' | 'preseason'
+  teamId: string
+  teamName: string
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  status: 'pending' | 'approved' | 'rejected'
+  checkedIn?: boolean // Pour la liste de présence
+  checkedInAt?: Date
+  userId?: string // Si l'utilisateur est connecté
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface MatchSpectatorLimit {
+  matchId: string
+  matchType: 'regular' | 'preseason'
+  limit: number
+  updatedAt: Date
+}
+
 export interface PreseasonStats {
   id: string
   teamId: string

@@ -703,3 +703,387 @@ export function getPasswordResetEmailHtml(email: string, resetLink: string) {
     </html>
   `
 }
+
+export function getSpectatorApprovalEmailHtml(
+  firstName: string,
+  lastName: string,
+  teamName: string,
+  matchDate: string,
+  matchTime: string,
+  venue: string,
+  matchType: 'regular' | 'preseason'
+) {
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.comebac.com').replace(/\/$/, '')
+  const assetBaseUrl = (process.env.NEXT_PUBLIC_EMAIL_ASSET_URL || 'https://www.comebac.com').replace(/\/$/, '')
+  const logoUrl = `${assetBaseUrl}/comebac.png?v=2`
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          line-height: 1.6;
+          color: #1f2937;
+          background-color: #f9fafb;
+          padding: 20px;
+        }
+        .container {
+          max-width: 560px;
+          margin: 0 auto;
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        .header {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          padding: 32px 24px;
+          text-align: center;
+        }
+        .logo {
+          width: 80px;
+          height: 80px;
+          margin: 0 auto 16px;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid rgba(255, 255, 255, 0.5);
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+        }
+        .logo img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+        .logo-fallback {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          font-size: 24px;
+        }
+        .header h1 {
+          color: white;
+          font-size: 24px;
+          font-weight: 600;
+          margin: 0;
+        }
+        .content {
+          padding: 32px 24px;
+        }
+        .content p {
+          color: #4b5563;
+          margin-bottom: 16px;
+          font-size: 15px;
+        }
+        .success-box {
+          background: #d1fae5;
+          border-left: 4px solid #10b981;
+          padding: 16px;
+          border-radius: 6px;
+          margin: 20px 0;
+        }
+        .success-box p {
+          color: #065f46;
+          margin: 0;
+          font-weight: 500;
+        }
+        .match-info {
+          background: #eff6ff;
+          border-left: 3px solid #3b82f6;
+          padding: 16px;
+          border-radius: 6px;
+          margin: 20px 0;
+        }
+        .match-info p {
+          color: #1e40af;
+          margin: 8px 0;
+          font-size: 14px;
+        }
+        .match-info strong {
+          color: #1e3a8a;
+        }
+        .footer {
+          background: #f9fafb;
+          padding: 24px;
+          text-align: center;
+          border-top: 1px solid #e5e7eb;
+        }
+        .footer p {
+          color: #6b7280;
+          font-size: 13px;
+          margin: 6px 0;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="logo">
+            <img src="${logoUrl}" alt="ComeBac League" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <div class="logo-fallback" style="display: none;">CB</div>
+          </div>
+          <h1>✅ Request Approved / Demande approuvée</h1>
+        </div>
+        
+        <div class="content">
+          <!-- French Section -->
+          <div style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 2px solid #e5e7eb;">
+            <p style="margin-bottom: 16px;"><strong>🇫🇷 Français</strong></p>
+            <p>Bonjour <strong>${firstName} ${lastName}</strong>,</p>
+            
+            <div class="success-box">
+              <p>🎉 Votre demande de spectateur a été <strong>approuvée</strong> !</p>
+            </div>
+            
+            <p>Vous êtes maintenant inscrit(e) pour assister au match suivant :</p>
+            
+            <div class="match-info">
+              <p><strong>Équipe :</strong> ${teamName}</p>
+              <p><strong>Date :</strong> ${matchDate}</p>
+              <p><strong>Heure :</strong> ${matchTime}</p>
+              ${venue ? `<p><strong>Lieu :</strong> ${venue}</p>` : ''}
+              ${matchType === 'preseason' ? '<p><strong>Type :</strong> Match Preseason</p>' : ''}
+            </div>
+            
+            <p><strong>Important :</strong></p>
+            <ul style="color: #4b5563; margin-left: 20px; margin-bottom: 16px;">
+              <li>Présentez-vous au moins 10 minutes avant le début du match</li>
+              <li>Apportez une pièce d'identité valide</li>
+              <li>Respectez les règles du stade et les consignes de sécurité</li>
+            </ul>
+            
+            <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+              Nous avons hâte de vous voir au match ! ⚽
+            </p>
+          </div>
+
+          <!-- English Section -->
+          <div>
+            <p style="margin-bottom: 16px;"><strong>🇬🇧 English</strong></p>
+            <p>Hello <strong>${firstName} ${lastName}</strong>,</p>
+            
+            <div class="success-box">
+              <p>🎉 Your spectator request has been <strong>approved</strong>!</p>
+            </div>
+            
+            <p>You are now registered to attend the following match:</p>
+            
+            <div class="match-info">
+              <p><strong>Team:</strong> ${teamName}</p>
+              <p><strong>Date:</strong> ${matchDate}</p>
+              <p><strong>Time:</strong> ${matchTime}</p>
+              ${venue ? `<p><strong>Venue:</strong> ${venue}</p>` : ''}
+              ${matchType === 'preseason' ? '<p><strong>Type:</strong> Preseason Match</p>' : ''}
+            </div>
+            
+            <p><strong>Important:</strong></p>
+            <ul style="color: #4b5563; margin-left: 20px; margin-bottom: 16px;">
+              <li>Arrive at least 10 minutes before the match starts</li>
+              <li>Bring a valid ID</li>
+              <li>Respect stadium rules and safety guidelines</li>
+            </ul>
+            
+            <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+              We look forward to seeing you at the match! ⚽
+            </p>
+          </div>
+        </div>
+        
+        <div class="footer">
+          <p><strong>ComeBac League</strong></p>
+          <p>Championnat de Football Scolaire / School Football Championship</p>
+          <p style="font-size: 12px; color: #9ca3af; margin-top: 8px;">
+            Pour toute question / For any questions, contactez-nous à / contact us at contact@comebac.com
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+export function getSpectatorRejectionEmailHtml(
+  firstName: string,
+  lastName: string,
+  teamName: string,
+  matchDate: string
+) {
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.comebac.com').replace(/\/$/, '')
+  const assetBaseUrl = (process.env.NEXT_PUBLIC_EMAIL_ASSET_URL || 'https://www.comebac.com').replace(/\/$/, '')
+  const logoUrl = `${assetBaseUrl}/comebac.png?v=2`
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          line-height: 1.6;
+          color: #1f2937;
+          background-color: #f9fafb;
+          padding: 20px;
+        }
+        .container {
+          max-width: 560px;
+          margin: 0 auto;
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        .header {
+          background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+          padding: 32px 24px;
+          text-align: center;
+        }
+        .logo {
+          width: 80px;
+          height: 80px;
+          margin: 0 auto 16px;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid rgba(255, 255, 255, 0.5);
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+        }
+        .logo img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+        .logo-fallback {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          font-size: 24px;
+        }
+        .header h1 {
+          color: white;
+          font-size: 24px;
+          font-weight: 600;
+          margin: 0;
+        }
+        .content {
+          padding: 32px 24px;
+        }
+        .content p {
+          color: #4b5563;
+          margin-bottom: 16px;
+          font-size: 15px;
+        }
+        .info-box {
+          background: #fef3c7;
+          border-left: 4px solid #f59e0b;
+          padding: 16px;
+          border-radius: 6px;
+          margin: 20px 0;
+        }
+        .info-box p {
+          color: #92400e;
+          margin: 0;
+        }
+        .footer {
+          background: #f9fafb;
+          padding: 24px;
+          text-align: center;
+          border-top: 1px solid #e5e7eb;
+        }
+        .footer p {
+          color: #6b7280;
+          font-size: 13px;
+          margin: 6px 0;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="logo">
+            <img src="${logoUrl}" alt="ComeBac League" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <div class="logo-fallback" style="display: none;">CB</div>
+          </div>
+          <h1>Request Rejected / Demande refusée</h1>
+        </div>
+        
+        <div class="content">
+          <!-- French Section -->
+          <div style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 2px solid #e5e7eb;">
+            <p style="margin-bottom: 16px;"><strong>🇫🇷 Français</strong></p>
+            <p>Bonjour <strong>${firstName} ${lastName}</strong>,</p>
+            
+            <div class="info-box">
+              <p>Nous regrettons de vous informer que votre demande de spectateur pour le match de <strong>${teamName}</strong> le <strong>${matchDate}</strong> a été refusée.</p>
+            </div>
+            
+            <p>Cela peut être dû à :</p>
+            <ul style="color: #4b5563; margin-left: 20px; margin-bottom: 16px;">
+              <li>Le nombre maximum de spectateurs a été atteint</li>
+              <li>Des restrictions spécifiques pour ce match</li>
+              <li>Des informations manquantes ou incorrectes</li>
+            </ul>
+            
+            <p>Nous vous encourageons à faire une nouvelle demande pour un autre match si vous le souhaitez.</p>
+            
+            <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+              Pour toute question, n'hésitez pas à nous contacter à contact@comebac.com
+            </p>
+          </div>
+
+          <!-- English Section -->
+          <div>
+            <p style="margin-bottom: 16px;"><strong>🇬🇧 English</strong></p>
+            <p>Hello <strong>${firstName} ${lastName}</strong>,</p>
+            
+            <div class="info-box">
+              <p>We regret to inform you that your spectator request for the <strong>${teamName}</strong> match on <strong>${matchDate}</strong> has been rejected.</p>
+            </div>
+            
+            <p>This may be due to:</p>
+            <ul style="color: #4b5563; margin-left: 20px; margin-bottom: 16px;">
+              <li>The maximum number of spectators has been reached</li>
+              <li>Specific restrictions for this match</li>
+              <li>Missing or incorrect information</li>
+            </ul>
+            
+            <p>We encourage you to submit a new request for another match if you wish.</p>
+            
+            <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+              For any questions, please contact us at contact@comebac.com
+            </p>
+          </div>
+        </div>
+        
+        <div class="footer">
+          <p><strong>ComeBac League</strong></p>
+          <p>Championnat de Football Scolaire / School Football Championship</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
