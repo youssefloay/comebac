@@ -1,8 +1,13 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { Bell, Send, Users, Mail } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+
+// Lazy load the modal component
+const CustomNotificationModal = lazy(() => 
+  import('@/components/admin/CustomNotificationModal').then(mod => ({ default: mod.default }))
+)
 
 export default function NotificationsSection() {
   const [showModal, setShowModal] = useState(false)
@@ -27,14 +32,6 @@ export default function NotificationsSection() {
     }
   }
 
-  const handleOpenModal = () => {
-    // Dynamically import the modal component
-    import('@/components/admin/CustomNotificationModal').then((mod) => {
-      const CustomNotificationModal = mod.default
-      setShowModal(true)
-    })
-  }
-
   if (loading) {
     return (
       <div className="p-6 flex items-center justify-center min-h-[400px]">
@@ -51,7 +48,7 @@ export default function NotificationsSection() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Notifications</h2>
         </div>
         <button
-          onClick={() => window.location.href = '/admin'}
+          onClick={() => setShowModal(true)}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
         >
           <Send className="w-4 h-4" />
@@ -69,7 +66,7 @@ export default function NotificationsSection() {
             Send custom notifications to specific users or groups.
           </p>
           <button
-            onClick={() => window.location.href = '/admin'}
+            onClick={() => setShowModal(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             Open Notification Modal
@@ -105,6 +102,20 @@ export default function NotificationsSection() {
           View Notification Tracking
         </button>
       </div>
+
+      {showModal && (
+        <Suspense fallback={
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <LoadingSpinner size="lg" />
+          </div>
+        }>
+          <CustomNotificationModal
+            isOpen={showModal}
+            onClose={() => setShowModal(false)}
+            teams={teams}
+          />
+        </Suspense>
+      )}
     </div>
   )
 }
