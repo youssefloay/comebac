@@ -183,18 +183,24 @@ export default function TeamShopPage() {
               <div className="w-full h-64 mb-4">
                 {product.type === 'jersey' && product.images && product.images.length > 0 && product.teamId ? (
                   // Afficher l'image réelle du maillot si c'est un produit spécifique à l'équipe
-                  <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-                    <Image
+                  <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <img
                       src={product.images[0]}
                       alt={product.name}
-                      fill
-                      className="object-contain"
-                      unoptimized
+                      className="w-full h-full object-contain"
                       onError={(e) => {
-                        // Fallback: utiliser img HTML si Next.js Image échoue
+                        // Si l'image ne charge pas, afficher un placeholder
                         const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
                         if (target.parentElement) {
-                          target.parentElement.innerHTML = `<img src="${product.images[0]}" alt="${product.name}" class="w-full h-full object-contain" />`
+                          target.parentElement.innerHTML = `
+                            <div class="w-full h-full flex items-center justify-center text-gray-400">
+                              <div class="text-center">
+                                <p class="text-sm">Image non disponible</p>
+                                <p class="text-xs mt-1">${product.name}</p>
+                              </div>
+                            </div>
+                          `
                         }
                       }}
                     />
