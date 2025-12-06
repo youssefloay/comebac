@@ -38,12 +38,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Marquer la notification individuelle comme lue
-    // Chercher par userId (UID ou email) OU par email dans les recipients
-    const notifSnap = await adminDb.collection('notifications')
+    // Chercher par userId (peut être UID ou email)
+    let notifSnap = await adminDb.collection('notifications')
       .where('customNotificationId', '==', notificationId)
-      .where('userId', 'in', [userId, userEmail])
+      .where('userId', '==', userId)
       .limit(1)
       .get()
+
+    // Si pas trouvé avec userId, essayer avec userEmail
+    if (notifSnap.empty && userEmail !== userId) {
+      notifSnap = await adminDb.collection('notifications')
+        .where('customNotificationId', '==', notificationId)
+        .where('userId', '==', userEmail)
+        .limit(1)
+        .get()
+    }
 
     if (!notifSnap.empty) {
       await notifSnap.docs[0].ref.update({
