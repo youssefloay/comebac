@@ -53,13 +53,21 @@ export async function GET(request: Request) {
           // Remplacer le produit générique par le produit spécifique
           products[index] = teamProduct
         } else {
-          // Ajouter le produit spécifique
-          products.push(teamProduct)
+          // Ajouter le produit spécifique seulement s'il n'existe pas déjà
+          const exists = products.some(p => p.id === teamProduct.id)
+          if (!exists) {
+            products.push(teamProduct)
+          }
         }
       })
     }
     
-    return NextResponse.json(products)
+    // Filtrer les doublons par ID pour éviter les clés dupliquées
+    const uniqueProducts = products.filter((product, index, self) => 
+      index === self.findIndex(p => p.id === product.id)
+    )
+    
+    return NextResponse.json(uniqueProducts)
   } catch (error) {
     console.error('Error fetching products:', error)
     return NextResponse.json(

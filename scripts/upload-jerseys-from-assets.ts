@@ -1,25 +1,34 @@
 // Script pour uploader les maillots depuis le dossier assets vers le store
 // Usage: npx tsx scripts/upload-jerseys-from-assets.ts
 
+import { config } from 'dotenv'
+import { resolve } from 'path'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { getStorage } from 'firebase-admin/storage'
 import * as fs from 'fs'
 import * as path from 'path'
 
+// Charger les variables d'environnement
+config({ path: resolve(process.cwd(), '.env.local') })
+
 // Initialize Firebase Admin
 if (!getApps().length) {
+  const serviceAccount = {
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+  }
+
   initializeApp({
-    credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID!,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY!.replace(/\\n/g, '\n'),
-    }),
+    credential: cert(serviceAccount),
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'scolar-league.firebasestorage.app'
   })
 }
 
 const db = getFirestore()
 const storage = getStorage()
+const bucketName = process.env.FIREBASE_STORAGE_BUCKET || 'scolar-league.firebasestorage.app'
 
 // Mapping des noms d'équipes basé sur les descriptions des images
 const teamNameMapping: Record<string, string[]> = {
@@ -62,7 +71,7 @@ const imageToTeamMapping: Record<string, string> = {
 }
 
 async function uploadJerseyImage(teamId: string, imagePath: string): Promise<string> {
-  const bucket = storage.bucket()
+  const bucket = storage.bucket(bucketName)
   const fileName = `team-jerseys/${teamId}-${Date.now()}.png`
   const file = bucket.file(fileName)
 
@@ -156,7 +165,7 @@ async function updateExistingJerseyProduct(productId: string, jerseyImageUrl: st
 async function processJerseys() {
   console.log('🛍️ Traitement des maillots depuis assets...\n')
 
-  const assetsDir = path.join(process.cwd(), 'assets')
+  const assetsDir = resolve(process.cwd(), 'assets')
   
   if (!fs.existsSync(assetsDir)) {
     console.error(`❌ Le dossier assets n'existe pas`)
