@@ -66,8 +66,8 @@ const imageToTeamMapping: Record<string, string> = {
   'T-shirts_88_page-0005': 'El Matador',
   'T-shirts_88_page-0002': 'Selecao FC',
   'T-shirts_88_page-0016': 'Tiki Taka',
-  'T-shirts_88_page-0013': 'Santos FC',
-  'T-shirts_88_page-0004': 'Mangoz FC'
+  'T-shirts_88_page-0013': 'Mangoz FC',
+  'T-shirts_88_page-0004': 'Santos FC'
 }
 
 async function uploadJerseyImage(teamId: string, teamName: string, imagePath: string): Promise<string> {
