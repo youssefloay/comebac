@@ -213,6 +213,9 @@ export default function SpectatorsTab() {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [enlargedPhoto, setEnlargedPhoto] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
+  const [showRejectModal, setShowRejectModal] = useState(false)
+  const [rejectComment, setRejectComment] = useState('')
+  const [requestToReject, setRequestToReject] = useState<string | null>(null)
 
   // Charger les demandes
   useEffect(() => {
