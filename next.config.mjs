@@ -58,6 +58,19 @@ const nextConfig = {
         // Omettre 'search' permet n'importe quelle query string
       },
     ],
+    // Configuration pour les images externes (Firebase Storage)
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+        pathname: '/**',
+      },
+    ],
     // Garder unoptimized pour les images externes si nécessaire
     // unoptimized: true,
   },
