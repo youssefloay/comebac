@@ -59,14 +59,18 @@ export async function GET(
           firstName: requestData.firstName,
           lastName: requestData.lastName,
           email: requestData.email,
+          phone: requestData.phone,
           teamName: requestData.teamName,
+          matchId: requestData.matchId,
+          matchType: requestData.matchType,
+          photoUrl: requestData.photoUrl,
           checkedInAt: requestData.checkedInAt?.toDate?.() || requestData.checkedInAt
         }
       })
     }
 
     // Retourner les informations de la demande (sans faire le check-in automatiquement)
-    // Le check-in sera fait via l'API PUT
+    // Le check-in sera fait via l'API POST
     return NextResponse.json({
       valid: true,
       request: {

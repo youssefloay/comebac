@@ -90,7 +90,14 @@ const translations = {
     cameraNotAvailable: "Caméra non disponible. Veuillez vérifier que votre appareil a une caméra et qu'elle n'est pas utilisée par une autre application.",
     qrCodeValid: "QR Code valide",
     qrCodeInvalid: "QR Code invalide",
-    processing: "Traitement..."
+    processing: "Traitement...",
+    qrCodeDetails: "Détails du QR Code",
+    firstTimeUse: "Première utilisation",
+    alreadyValidated: "QR Code déjà validé",
+    confirmCheckIn: "Confirmer le check-in",
+    close: "Fermer",
+    checkInTime: "Heure de check-in",
+    photo: "Photo"
   },
   en: {
     title: "On-site Check-in",
@@ -136,7 +143,14 @@ const translations = {
     cameraNotAvailable: "Camera not available. Please check that your device has a camera and it's not being used by another application.",
     qrCodeValid: "Valid QR Code",
     qrCodeInvalid: "Invalid QR Code",
-    processing: "Processing..."
+    processing: "Processing...",
+    qrCodeDetails: "QR Code Details",
+    firstTimeUse: "First time use",
+    alreadyValidated: "QR Code already validated",
+    confirmCheckIn: "Confirm check-in",
+    close: "Close",
+    checkInTime: "Check-in time",
+    photo: "Photo"
   }
 }
 
@@ -157,6 +171,12 @@ export default function OnSiteCheckInPage() {
   const [scanning, setScanning] = useState(false)
   const [qrScanner, setQrScanner] = useState<any>(null)
   const [scannerElementId] = useState(`qr-scanner-${Date.now()}`)
+  const [qrPopupData, setQrPopupData] = useState<{
+    show: boolean
+    data: any
+    isAlreadyCheckedIn: boolean
+    token: string
+  } | null>(null)
 
   useEffect(() => {
     loadTodayMatches()
@@ -445,11 +465,45 @@ export default function OnSiteCheckInPage() {
 
     const token = tokenMatch[1]
     setError(null)
+    setSuccess(null)
+
+    try {
+      // D'abord, récupérer les détails via GET
+      const getResponse = await fetch(`/api/spectators/qr/${token}`)
+      const getData = await getResponse.json()
+
+      if (!getResponse.ok || !getData.valid) {
+        setError(getData.error || t.qrCodeInvalid)
+        await stopQRScan()
+        return
+      }
+
+      // Arrêter le scan pour afficher le popup
+      await stopQRScan()
+
+      // Afficher le popup avec les détails
+      setQrPopupData({
+        show: true,
+        data: getData.request,
+        isAlreadyCheckedIn: getData.alreadyCheckedIn || false,
+        token: token
+      })
+    } catch (error: any) {
+      console.error('Error fetching QR code details:', error)
+      setError(error.message || t.error)
+      await stopQRScan()
+    }
+  }
+
+  const handleConfirmCheckIn = async () => {
+    if (!qrPopupData) return
+
+    setError(null)
     setSuccess(t.processing)
 
     try {
-      // Valider et faire le check-in
-      const response = await fetch(`/api/spectators/qr/${token}`, {
+      // Faire le check-in via POST
+      const response = await fetch(`/api/spectators/qr/${qrPopupData.token}`, {
         method: 'POST'
       })
 
@@ -460,51 +514,43 @@ export default function OnSiteCheckInPage() {
         setSuccess(t.success)
         setResult({
           id: data.request.id,
-          matchId: data.request.matchId || '',
-          matchType: data.request.matchType || 'regular',
+          matchId: qrPopupData.data.matchId || '',
+          matchType: qrPopupData.data.matchType || 'regular',
           teamId: '',
-          teamName: data.request.teamName || '',
+          teamName: data.request.teamName || qrPopupData.data.teamName || '',
           firstName: data.request.firstName,
           lastName: data.request.lastName,
           email: data.request.email,
-          phone: data.request.phone || '',
+          phone: qrPopupData.data.phone || '',
           status: 'approved',
           checkedIn: true,
           checkedInAt: new Date(data.request.checkedInAt)
         } as SpectatorRequest)
         
-        // Arrêter le scan
-        await stopQRScan()
+        // Fermer le popup
+        setQrPopupData(null)
         
         // Recharger les matchs si nécessaire
         if (match) {
           loadTodayMatches()
         }
       } else if (data.alreadyCheckedIn) {
+        // Mettre à jour le popup pour indiquer qu'il est déjà check-in
+        setQrPopupData({
+          ...qrPopupData,
+          isAlreadyCheckedIn: true,
+          data: {
+            ...qrPopupData.data,
+            checkedInAt: data.request.checkedInAt
+          }
+        })
         setError(t.alreadyCheckedIn)
-        setResult({
-          id: data.request.id,
-          matchId: '',
-          matchType: 'regular',
-          teamId: '',
-          teamName: data.request.teamName || '',
-          firstName: data.request.firstName,
-          lastName: data.request.lastName,
-          email: data.request.email,
-          phone: '',
-          status: 'approved',
-          checkedIn: true,
-          checkedInAt: data.request.checkedInAt ? new Date(data.request.checkedInAt) : new Date()
-        } as SpectatorRequest)
-        await stopQRScan()
       } else {
         setError(data.error || t.qrCodeInvalid)
-        await stopQRScan()
       }
     } catch (error: any) {
-      console.error('Error processing QR code:', error)
+      console.error('Error processing QR code check-in:', error)
       setError(error.message || t.error)
-      await stopQRScan()
     }
   }
 
@@ -893,6 +939,161 @@ export default function OnSiteCheckInPage() {
                   </div>
                 )}
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* QR Code Popup Modal */}
+        <AnimatePresence>
+          {qrPopupData?.show && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+              onClick={() => setQrPopupData(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className={`bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 ${
+                  qrPopupData.isAlreadyCheckedIn 
+                    ? 'border-4 border-red-500' 
+                    : 'border-4 border-green-500'
+                }`}
+              >
+                {/* Header avec indicateur de couleur */}
+                <div className={`flex items-center justify-between mb-4 pb-4 border-b ${
+                  qrPopupData.isAlreadyCheckedIn 
+                    ? 'border-red-200 dark:border-red-800' 
+                    : 'border-green-200 dark:border-green-800'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    {qrPopupData.isAlreadyCheckedIn ? (
+                      <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                        <XCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                        <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                        {t.qrCodeDetails}
+                      </h3>
+                      <p className={`text-sm font-semibold ${
+                        qrPopupData.isAlreadyCheckedIn 
+                          ? 'text-red-600 dark:text-red-400' 
+                          : 'text-green-600 dark:text-green-400'
+                      }`}>
+                        {qrPopupData.isAlreadyCheckedIn ? t.alreadyValidated : t.firstTimeUse}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setQrPopupData(null)}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
+                  >
+                    <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                  </button>
+                </div>
+
+                {/* Photo si disponible */}
+                {qrPopupData.data.photoUrl && (
+                  <div className="mb-4 flex justify-center">
+                    <img
+                      src={qrPopupData.data.photoUrl}
+                      alt={`${qrPopupData.data.firstName} ${qrPopupData.data.lastName}`}
+                      className="w-24 h-24 rounded-full object-cover border-4 border-gray-200 dark:border-gray-700"
+                    />
+                  </div>
+                )}
+
+                {/* Détails de la personne */}
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center gap-3">
+                    <User className="w-5 h-5 text-gray-400" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t.name}</p>
+                      <p className="font-semibold text-lg text-gray-900 dark:text-white">
+                        {qrPopupData.data.firstName} {qrPopupData.data.lastName}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <Mail className="w-5 h-5 text-gray-400" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t.email}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {qrPopupData.data.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  {qrPopupData.data.phone && (
+                    <div className="flex items-center gap-3">
+                      <Phone className="w-5 h-5 text-gray-400" />
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{t.phone}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {qrPopupData.data.phone}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {qrPopupData.data.teamName && (
+                    <div className="flex items-center gap-3">
+                      <Users className="w-5 h-5 text-gray-400" />
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{t.team}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {qrPopupData.data.teamName}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {qrPopupData.isAlreadyCheckedIn && qrPopupData.data.checkedInAt && (
+                    <div className="flex items-center gap-3">
+                      <Clock className="w-5 h-5 text-gray-400" />
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{t.checkInTime}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {formatTime(new Date(qrPopupData.data.checkedInAt))}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Boutons d'action */}
+                <div className="flex gap-3">
+                  {!qrPopupData.isAlreadyCheckedIn && (
+                    <button
+                      onClick={handleConfirmCheckIn}
+                      className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all font-semibold flex items-center justify-center gap-2"
+                    >
+                      <Check className="w-5 h-5" />
+                      {t.confirmCheckIn}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setQrPopupData(null)}
+                    className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                      qrPopupData.isAlreadyCheckedIn
+                        ? 'flex-1 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {t.close}
+                  </button>
+                </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
