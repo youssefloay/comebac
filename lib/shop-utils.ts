@@ -14,7 +14,7 @@ export const DEFAULT_PRODUCTS: Omit<ShopProduct, 'id'>[] = [
     price: 950,
     customizable: true,
     sizes: PRODUCT_SIZES,
-    images: ['/shop/jersey-mockup.png'],
+    images: ['/jersey-generic.png'],
     active: true,
     mockupTemplate: 'jersey'
   },
@@ -27,7 +27,7 @@ export const DEFAULT_PRODUCTS: Omit<ShopProduct, 'id'>[] = [
     price: 750,
     customizable: false,
     sizes: PRODUCT_SIZES,
-    images: ['/shop/tshirt-mockup.png'],
+    images: ['/tshirt.png'],
     active: true,
     mockupTemplate: 'tshirt'
   },
@@ -40,7 +40,7 @@ export const DEFAULT_PRODUCTS: Omit<ShopProduct, 'id'>[] = [
     price: 1100,
     customizable: false,
     sizes: PRODUCT_SIZES,
-    images: ['/shop/sweatshirt-mockup.png'],
+    images: ['/sweatshirt.png'],
     active: true,
     mockupTemplate: 'sweatshirt'
   }

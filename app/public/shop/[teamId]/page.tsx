@@ -42,14 +42,32 @@ export default function TeamShopPage() {
       setTeam(teamData)
       setSettings(settingsData)
 
-      // Récupérer UNIQUEMENT le maillot de l'équipe (pas les autres produits)
-      const productsRes = await fetch(`/api/shop/products?teamId=${teamId}&onlyJersey=true`)
-      const productsData = await productsRes.json()
-      // Filtrer côté client aussi pour être sûr (seulement les maillots de cette équipe)
-      const filteredProducts = productsData.filter((p: ShopProduct) => 
+      // Récupérer le maillot de l'équipe et les produits génériques (sweatshirt, tshirt)
+      const [jerseyRes, genericRes] = await Promise.all([
+        fetch(`/api/shop/products?teamId=${teamId}&onlyJersey=true`),
+        fetch('/api/shop/products')
+      ])
+      
+      const jerseyData = await jerseyRes.json()
+      const genericData = await genericRes.json()
+      
+      // Filtrer les maillots de l'équipe
+      const teamJerseys = jerseyData.filter((p: ShopProduct) => 
         p.teamId === teamId && p.type === 'jersey'
       )
-      setProducts(filteredProducts)
+      
+      // Filtrer les produits génériques (sweatshirt, tshirt) et ajouter le teamId pour l'affichage
+      const genericProducts = genericData
+        .filter((p: ShopProduct) => !p.teamId && (p.type === 'sweatshirt' || p.type === 'tshirt'))
+        .map((p: ShopProduct) => ({
+          ...p,
+          teamId, // Ajouter le teamId pour l'affichage avec le logo
+          teamName: teamData.name,
+          teamLogo: teamData.logo
+        }))
+      
+      // Combiner tous les produits
+      setProducts([...teamJerseys, ...genericProducts])
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -205,6 +223,82 @@ export default function TeamShopPage() {
                       }}
                     />
                   </div>
+                ) : product.type === 'tshirt' ? (
+                  // Afficher l'image réelle du t-shirt
+                  <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <img
+                      src="/tshirt.png"
+                      alt={product.name}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        if (target.parentElement) {
+                          target.parentElement.innerHTML = `
+                            <div class="w-full h-full flex items-center justify-center text-gray-400">
+                              <div class="text-center">
+                                <p class="text-sm">Image non disponible</p>
+                              </div>
+                            </div>
+                          `
+                        }
+                      }}
+                    />
+                  </div>
+                ) : product.type === 'sweatshirt' ? (
+                  // Afficher l'image réelle du sweatshirt avec le logo de l'équipe
+                  <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <img
+                      src="/sweatshirt.png"
+                      alt={product.name}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        if (target.parentElement) {
+                          target.parentElement.innerHTML = `
+                            <div class="w-full h-full flex items-center justify-center text-gray-400">
+                              <div class="text-center">
+                                <p class="text-sm">Image non disponible</p>
+                              </div>
+                            </div>
+                          `
+                        }
+                      }}
+                    />
+                    {/* Logo de l'équipe superposé à gauche du logo CB */}
+                    {team?.logo && (
+                      <div className="absolute top-[10%] left-[18%] w-16 h-16 z-10 flex items-center justify-center">
+                        <div className="relative w-full h-full bg-white/90 rounded-full p-1 shadow-lg">
+                          <Image
+                            src={team.logo}
+                            alt={team.name}
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : product.type === 'jersey' ? (
+                  // Afficher l'image générique du maillot
+                  <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <img
+                      src="/jersey-generic.png"
+                      alt={product.name}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        if (target.parentElement) {
+                          // Fallback vers le mockup si l'image ne charge pas
+                          const mockupContainer = document.createElement('div')
+                          mockupContainer.className = 'w-full h-full'
+                          target.parentElement.appendChild(mockupContainer)
+                        }
+                      }}
+                    />
+                  </div>
                 ) : (
                   // Sinon, utiliser le mockup générique
                   <ProductMockupReal
@@ -215,9 +309,15 @@ export default function TeamShopPage() {
                 )}
               </div>
 
-              <h3 className="text-xl font-bold mb-2">{product.name}</h3>
+              <h3 className="text-xl font-bold mb-2">
+                {product.type === 'sweatshirt' && product.teamName 
+                  ? `Sweatshirt ${product.teamName}`
+                  : product.name}
+              </h3>
               <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
-                {product.description}
+                {product.type === 'sweatshirt' && product.teamName
+                  ? `Sweatshirt avec logo ComeBac et logo ${product.teamName}`
+                  : product.description}
               </p>
               <p className="text-2xl font-bold text-blue-600 mb-4">
                 {formatEGP(product.price)}
@@ -245,17 +345,116 @@ export default function TeamShopPage() {
 
               {/* Preview */}
               <div className="w-full h-64 mb-6">
-                <ProductMockupReal
-                  productType={selectedProduct.type}
-                  teamName={team.name}
-                  teamLogo={team.logo}
-                  customization={
-                    selectedProduct.customizable
-                      ? { name: customName, number: parseInt(customNumber) || 0 }
-                      : undefined
-                  }
-                  size={selectedSize}
-                />
+                {selectedProduct.type === 'jersey' && selectedProduct.images && selectedProduct.images.length > 0 && selectedProduct.teamId ? (
+                  // Afficher l'image réelle du maillot
+                  <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <img
+                      src={selectedProduct.images[0]}
+                      alt={selectedProduct.name}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        // Si l'image ne charge pas, afficher le mockup
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        if (target.parentElement) {
+                          const mockupContainer = document.createElement('div')
+                          mockupContainer.className = 'w-full h-full'
+                          target.parentElement.appendChild(mockupContainer)
+                          // Note: ProductMockupReal serait rendu ici si nécessaire
+                        }
+                      }}
+                    />
+                  </div>
+                ) : selectedProduct.type === 'tshirt' ? (
+                  // Afficher l'image réelle du t-shirt
+                  <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <img
+                      src="/tshirt.png"
+                      alt={selectedProduct.name}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        if (target.parentElement) {
+                          target.parentElement.innerHTML = `
+                            <div class="w-full h-full flex items-center justify-center text-gray-400">
+                              <div class="text-center">
+                                <p class="text-sm">Image non disponible</p>
+                              </div>
+                            </div>
+                          `
+                        }
+                      }}
+                    />
+                  </div>
+                ) : selectedProduct.type === 'sweatshirt' ? (
+                  // Afficher l'image réelle du sweatshirt avec le logo de l'équipe
+                  <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <img
+                      src="/sweatshirt.png"
+                      alt={selectedProduct.name}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        if (target.parentElement) {
+                          target.parentElement.innerHTML = `
+                            <div class="w-full h-full flex items-center justify-center text-gray-400">
+                              <div class="text-center">
+                                <p class="text-sm">Image non disponible</p>
+                              </div>
+                            </div>
+                          `
+                        }
+                      }}
+                    />
+                    {/* Logo de l'équipe superposé à gauche du logo CB */}
+                    {team?.logo && (
+                      <div className="absolute top-[10%] left-[18%] w-16 h-16 z-10 flex items-center justify-center">
+                        <div className="relative w-full h-full bg-white/90 rounded-full p-1 shadow-lg">
+                          <Image
+                            src={team.logo}
+                            alt={team.name}
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : selectedProduct.type === 'jersey' ? (
+                  // Afficher l'image générique du maillot
+                  <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <img
+                      src="/jersey-generic.png"
+                      alt={selectedProduct.name}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        if (target.parentElement) {
+                          // Fallback vers le mockup si l'image ne charge pas
+                          const mockupContainer = document.createElement('div')
+                          mockupContainer.className = 'w-full h-full'
+                          target.parentElement.appendChild(mockupContainer)
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  // Sinon, utiliser le mockup générique
+                  <ProductMockupReal
+                    productType={selectedProduct.type}
+                    teamName={team.name}
+                    teamLogo={team.logo}
+                    customization={
+                      selectedProduct.customizable
+                        ? { name: customName, number: parseInt(customNumber) || 0 }
+                        : undefined
+                    }
+                    size={selectedSize}
+                  />
+                )}
               </div>
 
               {/* Taille */}

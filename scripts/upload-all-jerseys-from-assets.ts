@@ -1,5 +1,6 @@
-// Script pour uploader les maillots depuis le dossier assets vers le store
-// Usage: npx tsx scripts/upload-jerseys-from-assets.ts
+// Script pour uploader toutes les photos de maillots depuis assets vers Storage
+// et créer/mettre à jour les produits dans Firestore
+// Usage: npx tsx scripts/upload-all-jerseys-from-assets.ts
 
 import { config } from 'dotenv'
 import { resolve } from 'path'
@@ -30,140 +31,9 @@ const db = getFirestore()
 const storage = getStorage()
 const bucketName = process.env.FIREBASE_STORAGE_BUCKET || 'scolar-league.firebasestorage.app'
 
-// Mapping des noms d'équipes basé sur les descriptions des images
-const teamNameMapping: Record<string, string[]> = {
-  'Blues': ['blues', 'blue'],
-  'VII Rising': ['vii rising', 'vii', 'rising'],
-  'Prime Team': ['prime team', 'prime'],
-  'The Saints': ['saints', 'the saints'],
-  'Devils': ['devils'],
-  'Road to Glory': ['road to glory', 'rtg', 'road'],
-  'Icons': ['icons'],
-  'Goats': ['goats'],
-  'Les Lions Sacrés': ['lions sacres', 'lions', 'sacres'],
-  'EGO FC': ['ego', 'ego fc'],
-  'Underdogs': ['underdogs'],
-  'El Matador': ['matador', 'el matador'],
-  'Selecao FC': ['selecao', 'selecao fc'],
-  'Tiki Taka': ['tiki taka', 'tiki'],
-  'Santos FC': ['santos', 'santos fc'],
-  'Mangoz FC': ['mangoz', 'mangoz fc']
-}
-
-// Mapping des fichiers images aux équipes (basé sur l'ordre des descriptions)
-const imageToTeamMapping: Record<string, string> = {
-  'T-shirts_88_page-0010': 'Blues',
-  'T-shirts_88_page-0007': 'VII Rising',
-  'T-shirts_88_page-0012': 'Prime Team',
-  'T-shirts_88_page-0003': 'The Saints',
-  'T-shirts_88_page-0009': 'Devils',
-  'T-shirts_88_page-0008': 'Road to Glory',
-  'T-shirts_88_page-0011': 'Icons',
-  'T-shirts_88_page-0014': 'Goats',
-  'T-shirts_88_page-0015': 'Les Lions Sacrés',
-  'T-shirts_88_page-0006': 'EGO FC',
-  'T-shirts_88_page-0001': 'Underdogs',
-  'T-shirts_88_page-0005': 'El Matador',
-  'T-shirts_88_page-0002': 'Selecao FC',
-  'T-shirts_88_page-0016': 'Tiki Taka',
-  'T-shirts_88_page-0013': 'Mangoz FC',
-  'T-shirts_88_page-0004': 'Santos FC'
-}
-
-async function uploadJerseyImage(teamId: string, teamName: string, imagePath: string): Promise<string> {
-  // Vérifier que le fichier existe et a une taille > 0
-  if (!fs.existsSync(imagePath)) {
-    throw new Error(`File not found: ${imagePath}`)
-  }
-  
-  const stats = fs.statSync(imagePath)
-  if (stats.size === 0) {
-    throw new Error(`File is empty: ${imagePath}`)
-  }
-  
-  console.log(`📁 File size: ${stats.size} bytes`)
-  
-  // Normaliser le nom de l'équipe pour le nom de fichier (enlever les espaces, caractères spéciaux)
-  const normalizedTeamName = teamName
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-  
-  const bucket = storage.bucket(bucketName)
-  // Déterminer l'extension du fichier source
-  const fileExt = imagePath.toLowerCase().endsWith('.jpg') || imagePath.toLowerCase().endsWith('.jpeg') ? 'jpg' : 'png'
-  const fileName = `team-jerseys/${normalizedTeamName}-${teamId}.${fileExt}`
-  const file = bucket.file(fileName)
-
-  // Lire le fichier local
-  const fileBuffer = fs.readFileSync(imagePath)
-  
-  if (fileBuffer.length === 0) {
-    throw new Error(`Buffer is empty for: ${imagePath}`)
-  }
-  
-  console.log(`📤 Uploading ${fileName} (${fileBuffer.length} bytes)...`)
-  
-  // Déterminer le contentType selon l'extension
-  const contentType = imagePath.toLowerCase().endsWith('.jpg') || imagePath.toLowerCase().endsWith('.jpeg') 
-    ? 'image/jpeg' 
-    : 'image/png'
-  
-  // Upload vers Firebase Storage avec une méthode plus fiable
-  const stream = file.createWriteStream({
-    metadata: {
-      contentType: contentType,
-      cacheControl: 'public, max-age=31536000',
-    },
-    resumable: false, // Pour les petits fichiers, pas besoin de résumable
-  })
-  
-  return new Promise((resolve, reject) => {
-    stream.on('error', (error) => {
-      console.error(`❌ Upload error:`, error)
-      reject(error)
-    })
-    
-    stream.on('finish', async () => {
-      console.log(`✅ File uploaded to bucket`)
-      
-      // Rendre le fichier public
-      console.log(`🔓 Making file public...`)
-      try {
-        await file.makePublic()
-        console.log(`✅ File is now public`)
-        
-        // Vérifier la taille du fichier uploadé
-        const [metadata] = await file.getMetadata()
-        console.log(`📊 Uploaded file size: ${metadata.size} bytes`)
-        
-        if (metadata.size === '0' || parseInt(metadata.size) === 0) {
-          throw new Error('Uploaded file is 0 bytes!')
-        }
-        
-        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`
-        console.log(`✅ Public URL: ${publicUrl}`)
-        
-        // Attendre un peu pour que les permissions se propagent
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        resolve(publicUrl)
-      } catch (error) {
-        console.error(`❌ Error making file public:`, error)
-        reject(error)
-      }
-    })
-    
-    // Écrire le buffer dans le stream
-    stream.end(fileBuffer)
-  })
-}
-
 async function findTeamByName(teamName: string): Promise<{ id: string; name: string } | null> {
-  // Normaliser le nom de l'équipe pour la recherche
   const normalizedName = teamName.trim().toLowerCase()
-  
+
   const teamsSnapshot = await db.collection('teams')
     .where('isActive', '==', true)
     .get()
@@ -172,19 +42,47 @@ async function findTeamByName(teamName: string): Promise<{ id: string; name: str
   for (const doc of teamsSnapshot.docs) {
     const data = doc.data()
     const teamNameLower = (data.name || '').trim().toLowerCase()
-    
+
     if (teamNameLower === normalizedName) {
       return { id: doc.id, name: data.name }
     }
   }
 
-  // Ensuite, essayer une correspondance partielle
+  // Ensuite, essayer une correspondance partielle (contient le nom)
   for (const doc of teamsSnapshot.docs) {
     const data = doc.data()
     const teamNameLower = (data.name || '').trim().toLowerCase()
-    
-    // Vérifier si le nom de l'équipe contient des mots-clés du mapping
-    const keywords = teamNameMapping[teamName] || [normalizedName]
+
+    // Vérifier si le nom de l'équipe contient le nom recherché ou vice versa
+    if (teamNameLower.includes(normalizedName) || normalizedName.includes(teamNameLower)) {
+      return { id: doc.id, name: data.name }
+    }
+  }
+
+  // Essayer avec des variations communes
+  const variations: Record<string, string[]> = {
+    'santos': ['santos fc', 'santos'],
+    'mangoz': ['mangoz fc', 'mangoz'],
+    'ego': ['ego fc', 'ego'],
+    'ego fc': ['ego fc', 'ego'],
+    'selecao': ['selecao fc', 'selecao'],
+    'selecao fc': ['selecao fc', 'selecao'],
+    'tiki taka': ['tiki taka', 'tiki'],
+    'el matador': ['el matador', 'matador'],
+    'icons': ['icons'],
+    'the saints': ['saints', 'the saints'],
+    'vii rising': ['rising vii', 'vii rising', 'rising'],
+    'prime team': ['prime', 'prime team'],
+    'road to glory': ['road to glory', 'rtg'],
+    'les lions sacrs': ['lions sacres', 'lions sacrés', 'les lions sacrés', 'lions'],
+    'les lions sacrés': ['lions sacres', 'lions sacrés', 'les lions sacrés', 'lions']
+  }
+
+  const keywords = variations[normalizedName] || [normalizedName]
+  for (const doc of teamsSnapshot.docs) {
+    const data = doc.data()
+    const teamNameLower = (data.name || '').trim().toLowerCase()
+
     for (const keyword of keywords) {
       if (teamNameLower.includes(keyword) || keyword.includes(teamNameLower)) {
         return { id: doc.id, name: data.name }
@@ -195,9 +93,65 @@ async function findTeamByName(teamName: string): Promise<{ id: string; name: str
   return null
 }
 
+async function uploadJerseyImage(teamId: string, teamName: string, imagePath: string): Promise<string> {
+  if (!fs.existsSync(imagePath)) {
+    throw new Error(`File not found: ${imagePath}`)
+  }
+
+  const stats = fs.statSync(imagePath)
+  if (stats.size === 0) {
+    throw new Error(`File is empty: ${imagePath}`)
+  }
+
+  console.log(`📁 File size: ${stats.size} bytes`)
+
+  const normalizedTeamName = teamName
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+
+  const bucket = storage.bucket(bucketName)
+  const fileExt = imagePath.toLowerCase().endsWith('.jpg') || imagePath.toLowerCase().endsWith('.jpeg') ? 'jpg' : 'png'
+  const fileName = `team-jerseys/${normalizedTeamName}-${teamId}.${fileExt}`
+  const file = bucket.file(fileName)
+
+  const fileBuffer = fs.readFileSync(imagePath)
+
+  const stream = file.createWriteStream({
+    metadata: {
+      contentType: imagePath.toLowerCase().endsWith('.jpg') || imagePath.toLowerCase().endsWith('.jpeg') ? 'image/jpeg' : 'image/png',
+      cacheControl: 'public, max-age=31536000',
+    },
+    resumable: false,
+  })
+
+  return new Promise((resolve, reject) => {
+    stream.on('error', (error) => {
+      console.error(`❌ Upload error:`, error)
+      reject(error)
+    })
+
+    stream.on('finish', async () => {
+      try {
+        await file.makePublic()
+        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`
+        console.log(`✅ Public URL: ${publicUrl}`)
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        resolve(publicUrl)
+      } catch (error) {
+        console.error(`❌ Error making file public:`, error)
+        reject(error)
+      }
+    })
+
+    stream.end(fileBuffer)
+  })
+}
+
 async function createJerseyProduct(teamId: string, teamName: string, jerseyImageUrl: string) {
   const productRef = db.collection('shopProducts').doc()
-  
+
   const product = {
     id: productRef.id,
     type: 'jersey',
@@ -205,7 +159,7 @@ async function createJerseyProduct(teamId: string, teamName: string, jerseyImage
     nameAr: `قميص ${teamName}`,
     description: `Maillot officiel de ${teamName} avec personnalisation nom et numéro`,
     descriptionAr: `قميص رسمي لـ ${teamName} مع التخصيص الاسم والرقم`,
-    price: 950, // Prix par défaut, peut être modifié
+    price: 950,
     customizable: true,
     sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
     images: [jerseyImageUrl],
@@ -230,8 +184,8 @@ async function updateExistingJerseyProduct(productId: string, jerseyImageUrl: st
   console.log(`✅ Produit mis à jour: ${productId}`)
 }
 
-async function processJerseys() {
-  console.log('🛍️ Traitement des maillots depuis assets...\n')
+async function processAllJerseys() {
+  console.log('🛍️  Upload de tous les maillots depuis assets...\n')
 
   const assetsDir = resolve(process.cwd(), 'assets')
 
@@ -240,25 +194,18 @@ async function processJerseys() {
     process.exit(1)
   }
 
-  // Lire tous les fichiers du dossier assets
+  // Lire tous les fichiers .jpg et .png (exclure les fichiers génériques)
   const files = fs.readdirSync(assetsDir)
-  
-  // Chercher les fichiers par nom d'équipe (nouveaux noms) ou anciens noms (fallback)
   const jerseyFiles = files.filter(f => {
-    const isJerseyFile = (
-      // Nouveaux noms (par nom d'équipe)
-      Object.values(imageToTeamMapping).some(teamName => {
-        const normalized = teamName.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, ' ').trim()
-        return f.startsWith(normalized) && (f.endsWith('.png') || f.endsWith('.jpg') || f.endsWith('.jpeg'))
-      }) ||
-      // Anciens noms (fallback)
-      ((f.startsWith('T-shirts_88_page-') || f.startsWith('T-shirts 88_page-')) &&
-      (f.endsWith('.png') || f.endsWith('.jpg') || f.endsWith('.jpeg')))
-    )
+    const isJerseyFile = (f.endsWith('.jpg') || f.endsWith('.jpeg') || f.endsWith('.png')) &&
+      !f.includes('generic') &&
+      !f.includes('tshirt') &&
+      !f.includes('sweatshirt') &&
+      !f.startsWith('image-') // Exclure les fichiers image-xxx.png
     return isJerseyFile
   })
 
-  console.log(`📁 ${jerseyFiles.length} images de maillots trouvées\n`)
+  console.log(`📁 ${jerseyFiles.length} fichiers de maillots trouvés\n`)
 
   const results = {
     success: [] as string[],
@@ -267,41 +214,17 @@ async function processJerseys() {
   }
 
   for (const imageFile of jerseyFiles) {
-    let teamName: string | undefined
-
-    // Essayer d'abord avec le nouveau format (nom d'équipe)
-    for (const [filePrefix, mappedTeamName] of Object.entries(imageToTeamMapping)) {
-      const normalizedTeamName = mappedTeamName.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, ' ').trim()
-      if (imageFile.startsWith(normalizedTeamName) && (imageFile.endsWith('.png') || imageFile.endsWith('.jpg') || imageFile.endsWith('.jpeg'))) {
-        teamName = mappedTeamName
-        break
-      }
-    }
-
-    // Si pas trouvé, essayer avec l'ancien format
-    if (!teamName) {
-      let filePrefix = imageFile
-        .replace(/-\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\.(png|jpg|jpeg)$/, '') // Format avec UUID
-        .replace(/\.(png|jpg|jpeg)$/, '') // Format simple sans UUID
-        .replace(/^T-shirts /, 'T-shirts_') // Normaliser l'espace en underscore
-
-      teamName = imageToTeamMapping[filePrefix]
-    }
-
-    if (!teamName) {
-      console.log(`⚠️  Pas de mapping pour: ${imageFile}`)
-      results.notFound.push(imageFile)
-      continue
-    }
+    // Extraire le nom de l'équipe du nom du fichier (sans extension)
+    const fileNameWithoutExt = path.basename(imageFile, path.extname(imageFile))
+    const teamName = fileNameWithoutExt.trim()
 
     const imagePath = path.join(assetsDir, imageFile)
-    
     console.log(`\n🔍 Traitement: ${imageFile} -> ${teamName}`)
-    
+
     try {
       // Chercher l'équipe
       const team = await findTeamByName(teamName)
-      
+
       if (!team) {
         console.log(`❌ Équipe non trouvée: ${teamName}`)
         results.notFound.push(`${teamName} (${imageFile})`)
@@ -310,7 +233,7 @@ async function processJerseys() {
 
       console.log(`✅ Équipe trouvée: ${team.name} (${team.id})`)
 
-      // Upload de l'image avec le nom de l'équipe
+      // Upload de l'image
       console.log(`📤 Upload de l'image...`)
       const jerseyImageUrl = await uploadJerseyImage(team.id, team.name, imagePath)
       console.log(`✅ Image uploadée: ${jerseyImageUrl}`)
@@ -362,7 +285,7 @@ async function processJerseys() {
 }
 
 // Point d'entrée
-processJerseys()
+processAllJerseys()
   .then(() => {
     console.log('\n✅ Terminé!')
     process.exit(0)

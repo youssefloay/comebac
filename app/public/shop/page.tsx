@@ -173,14 +173,48 @@ export default function ShopPage() {
 }
 
 function ProductCard({ title, price, description, image, type }: any) {
+  // Déterminer l'image à utiliser selon le type
+  const getProductImage = () => {
+    if (type === 'jersey') {
+      return '/jersey-generic.png'
+    }
+    if (type === 'tshirt') {
+      return '/tshirt.png'
+    }
+    if (type === 'sweatshirt') {
+      return '/sweatshirt.png'
+    }
+    return null
+  }
+
+  const productImage = getProductImage()
+
   return (
     <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center">
-      <div className="w-full h-40 rounded-lg mb-3 overflow-hidden">
-        <ProductMockupReal
-          productType={type}
-          teamName="COMEBAC"
-          customization={type === 'jersey' ? { name: 'LEAGUE', number: 23 } : undefined}
-        />
+      <div className="w-full h-40 rounded-lg mb-3 overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+        {productImage ? (
+          <img
+            src={productImage}
+            alt={title}
+            className="w-full h-full object-contain"
+            onError={(e) => {
+              // Si l'image ne charge pas, afficher le mockup
+              const target = e.target as HTMLImageElement
+              target.style.display = 'none'
+              if (target.parentElement) {
+                const mockupContainer = document.createElement('div')
+                mockupContainer.className = 'w-full h-full'
+                target.parentElement.appendChild(mockupContainer)
+              }
+            }}
+          />
+        ) : (
+          <ProductMockupReal
+            productType={type}
+            teamName="COMEBAC"
+            customization={type === 'jersey' ? { name: 'LEAGUE', number: 23 } : undefined}
+          />
+        )}
       </div>
       <h3 className="font-bold text-lg mb-1">{title}</h3>
       <p className="text-2xl font-bold text-blue-600 mb-2">{price} EGP</p>
