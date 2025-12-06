@@ -28,7 +28,8 @@ import {
   X,
   Image as ImageIcon,
   Camera,
-  QrCode
+  QrCode,
+  RefreshCw
 } from 'lucide-react'
 
 interface SpectatorRequest {
@@ -193,6 +194,8 @@ export default function SpectatorsTab() {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
   const [matchFilter, setMatchFilter] = useState<string>('all')
+  const [matchTypeFilter, setMatchTypeFilter] = useState<'all' | 'preseason' | 'regular'>('all')
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [showLimitModal, setShowLimitModal] = useState(false)
@@ -209,11 +212,12 @@ export default function SpectatorsTab() {
   const [selectedRequest, setSelectedRequest] = useState<SpectatorRequest | null>(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [enlargedPhoto, setEnlargedPhoto] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
 
   // Charger les demandes
   useEffect(() => {
     loadRequests()
-  }, [statusFilter, matchFilter])
+  }, [statusFilter, matchFilter, matchTypeFilter, dateFilter])
 
   // Charger les limites et les matchs pour tous les matchs
   useEffect(() => {
@@ -300,28 +304,34 @@ export default function SpectatorsTab() {
     }
   }, [upcomingMatchesForLimits, limitsMode])
 
-  const loadRequests = async () => {
-    setLoading(true)
+  const loadRequests = async (showRefreshing = false) => {
+    if (showRefreshing) {
+      setRefreshing(true)
+    } else {
+      setLoading(true)
+    }
     try {
-      let url = '/api/spectators/requests?'
-      if (statusFilter !== 'all') {
-        url += `status=${statusFilter}&`
-      }
-      if (matchFilter !== 'all') {
-        const [matchType, matchId] = matchFilter.split('_')
-        url += `matchType=${matchType}&matchId=${matchId}`
-      }
-
-      const response = await fetch(url)
+      // Charger toutes les demandes sans filtres pour avoir les vraies statistiques
+      const response = await fetch('/api/spectators/requests')
       if (response.ok) {
         const data = await response.json()
         setRequests(data)
+        // Recharger aussi les matchs et limites si on a des données
+        if (data.length > 0) {
+          await loadAllMatches()
+          await loadAllMatchLimits()
+        }
       }
     } catch (error) {
       console.error('Error loading requests:', error)
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
+  }
+
+  const handleRefresh = async () => {
+    await loadRequests(true)
   }
 
   const loadUpcomingMatches = async () => {
@@ -867,11 +877,32 @@ export default function SpectatorsTab() {
   }
 
   const filteredRequests = requests.filter(req => {
+    // Filtre par statut
     if (statusFilter !== 'all' && req.status !== statusFilter) return false
+    
+    // Filtre par match spécifique
     if (matchFilter !== 'all') {
       const [matchType, matchId] = matchFilter.split('_')
       if (req.matchType !== matchType || req.matchId !== matchId) return false
     }
+    
+    // Filtre par type de match
+    if (matchTypeFilter !== 'all' && req.matchType !== matchTypeFilter) return false
+    
+    // Filtre par date de demande
+    if (dateFilter !== 'all') {
+      const requestDate = new Date(req.createdAt)
+      const now = new Date()
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
+      const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
+      
+      if (dateFilter === 'today' && requestDate < today) return false
+      if (dateFilter === 'week' && requestDate < weekAgo) return false
+      if (dateFilter === 'month' && requestDate < monthAgo) return false
+    }
+    
+    // Recherche textuelle
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
       const fullName = `${req.firstName} ${req.lastName}`.toLowerCase()
@@ -964,27 +995,37 @@ export default function SpectatorsTab() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Users className="w-6 h-6" />
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <Users className="w-5 h-5 md:w-6 md:h-6" />
             {t.title}
           </h2>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing || loading}
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white transition-all font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm"
+            title={language === 'fr' ? 'Actualiser les données' : 'Refresh data'}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 md:w-4 md:h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <span className="font-medium">{language === 'fr' ? 'Actualiser' : 'Refresh'}</span>
+          </button>
           <a
             href="/admin/spectators/check-in"
-            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all font-semibold shadow-lg hover:shadow-xl"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all font-semibold shadow-lg hover:shadow-xl text-xs md:text-sm"
           >
-            <Camera className="w-5 h-5" />
-            {t.goToCheckIn}
+            <Camera className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden sm:inline">{t.goToCheckIn}</span>
+            <span className="sm:hidden">{language === 'fr' ? 'Check-in' : 'Check-in'}</span>
           </a>
           <button
             onClick={() => setLanguage(language === 'fr' ? 'en' : 'fr')}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-xs md:text-sm"
           >
-            <Globe className="w-4 h-4" />
-            <span className="text-sm font-medium">{language === 'fr' ? 'EN' : 'FR'}</span>
+            <Globe className="w-3.5 h-3.5 md:w-4 md:h-4" />
+            <span className="font-medium">{language === 'fr' ? 'EN' : 'FR'}</span>
           </button>
         </div>
       </div>
@@ -1318,53 +1359,155 @@ export default function SpectatorsTab() {
       {!attendanceMode && !limitsMode && (
         <>
           {/* Search Bar */}
-          <div className="relative">
+          <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
               placeholder={language === 'fr' ? 'Rechercher par nom, email, téléphone ou équipe...' : 'Search by name, email, phone or team...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
-          {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+          {/* Filtres améliorés avec badges */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 md:p-4 mb-6">
+            <div className="flex items-center gap-2 mb-3 md:mb-4">
+              <Settings className="w-4 h-4 md:w-5 md:h-5 text-gray-500" />
+              <h3 className="font-semibold text-gray-900 dark:text-white text-sm md:text-base">
+                {language === 'fr' ? 'Filtres' : 'Filters'}
+              </h3>
+            </div>
+            
+            {/* Filtres par statut (badges cliquables) */}
+            <div className="mb-4">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 {t.filterByStatus}
               </label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
-              >
-                <option value="all">{t.all}</option>
-                <option value="pending">{t.pending}</option>
-                <option value="approved">{t.approved}</option>
-                <option value="rejected">{t.rejected}</option>
-              </select>
+              <div className="flex flex-wrap gap-2">
+                {(['all', 'pending', 'approved', 'rejected'] as const).map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => setStatusFilter(status)}
+                    className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-semibold transition-all ${
+                      statusFilter === status
+                        ? status === 'all'
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : status === 'pending'
+                          ? 'bg-yellow-500 text-white shadow-md'
+                          : status === 'approved'
+                          ? 'bg-green-500 text-white shadow-md'
+                          : 'bg-red-500 text-white shadow-md'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {status === 'all' ? t.all : status === 'pending' ? t.pending : status === 'approved' ? t.approved : t.rejected}
+                    {status !== 'all' && (
+                      <span className="ml-2 px-2 py-0.5 bg-white/20 rounded-full text-xs">
+                        {requests.filter(r => r.status === status).length}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* Filtres par type de match */}
+            <div className="mb-3 md:mb-4">
+              <label className="block text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                {language === 'fr' ? 'Type de match' : 'Match Type'}
+              </label>
+              <div className="flex flex-wrap gap-1.5 md:gap-2">
+                {(['all', 'preseason', 'regular'] as const).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setMatchTypeFilter(type)}
+                    className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-semibold transition-all ${
+                      matchTypeFilter === type
+                        ? 'bg-indigo-600 text-white shadow-md'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {type === 'all' ? t.all : type === 'preseason' ? 'Preseason' : 'Regular'}
+                    {type !== 'all' && (
+                      <span className="ml-2 px-2 py-0.5 bg-white/20 rounded-full text-xs">
+                        {requests.filter(r => r.matchType === type).length}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Filtre par date de demande */}
+            <div className="mb-3 md:mb-4">
+              <label className="block text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                {language === 'fr' ? 'Date de demande' : 'Request Date'}
+              </label>
+              <div className="flex flex-wrap gap-1.5 md:gap-2">
+                {(['all', 'today', 'week', 'month'] as const).map((date) => (
+                  <button
+                    key={date}
+                    onClick={() => setDateFilter(date)}
+                    className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-semibold transition-all ${
+                      dateFilter === date
+                        ? 'bg-purple-600 text-white shadow-md'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {date === 'all' ? t.all : date === 'today' ? (language === 'fr' ? "Aujourd'hui" : 'Today') : date === 'week' ? (language === 'fr' ? 'Cette semaine' : 'This Week') : (language === 'fr' ? 'Ce mois' : 'This Month')}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Filtre par match spécifique */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 {t.filterByMatch}
               </label>
               <select
                 value={matchFilter}
                 onChange={(e) => setMatchFilter(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+                className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
               >
                 <option value="all">{t.all}</option>
                 {Array.from(new Set(requests.map(r => `${r.matchType}_${r.matchId}`))).map(matchKey => {
                   const req = requests.find(r => `${r.matchType}_${r.matchId}` === matchKey)
+                  const matchInfo = allMatches.get(matchKey)
                   return (
                     <option key={matchKey} value={matchKey}>
-                      {req?.teamName} - {req?.matchType === 'preseason' ? 'Preseason' : 'Regular'}
+                      {matchInfo 
+                        ? `${matchInfo.homeTeam} vs ${matchInfo.awayTeam} - ${formatDate(matchInfo.date)}`
+                        : `${req?.teamName} - ${req?.matchType === 'preseason' ? 'Preseason' : 'Regular'}`}
                     </option>
                   )
                 })}
               </select>
+            </div>
+
+            {/* Compteur de résultats et réinitialisation */}
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {language === 'fr' 
+                  ? `${filteredRequests.length} demande(s) trouvée(s) sur ${requests.length}`
+                  : `${filteredRequests.length} request(s) found out of ${requests.length}`}
+              </p>
+              {(statusFilter !== 'all' || matchFilter !== 'all' || matchTypeFilter !== 'all' || dateFilter !== 'all' || searchQuery.trim()) && (
+                <button
+                  onClick={() => {
+                    setStatusFilter('all')
+                    setMatchFilter('all')
+                    setMatchTypeFilter('all')
+                    setDateFilter('all')
+                    setSearchQuery('')
+                  }}
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold flex items-center gap-1"
+                >
+                  <X className="w-4 h-4" />
+                  {language === 'fr' ? 'Réinitialiser les filtres' : 'Reset Filters'}
+                </button>
+              )}
             </div>
           </div>
 
@@ -1379,55 +1522,148 @@ export default function SpectatorsTab() {
               <p className="text-gray-500 dark:text-gray-400">{t.noRequests}</p>
             </div>
           ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 dark:bg-gray-900">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">{t.name}</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">{t.email}</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">{t.phone}</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">{t.match}</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">{language === 'fr' ? 'Date/Heure' : 'Date/Time'}</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">{language === 'fr' ? 'Places' : 'Spots'}</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">{t.status}</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">{t.actions}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {filteredRequests.map((request) => {
-                      const matchKey = `${request.matchType}_${request.matchId}`
-                      const matchStats = getMatchStats(request.matchId, request.matchType)
-                      const matchInfo = allMatches.get(matchKey) || matches.find(m => m.id === request.matchId && m.type === request.matchType)
-                      
-                      return (
-                      <tr key={request.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-white font-medium">
-                          {request.firstName} {request.lastName}
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 dark:bg-gray-900">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">{language === 'fr' ? 'Photo' : 'Photo'}</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">{t.name}</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">{t.email}</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">{t.phone}</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">{t.match}</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">{language === 'fr' ? 'Date Match' : 'Match Date'}</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">{language === 'fr' ? 'Date Demande' : 'Request Date'}</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">{language === 'fr' ? 'Places' : 'Spots'}</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">{t.status}</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">{t.actions}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                      {filteredRequests.map((request) => {
+                        const matchKey = `${request.matchType}_${request.matchId}`
+                        const matchStats = getMatchStats(request.matchId, request.matchType)
+                        const matchInfo = allMatches.get(matchKey) || matches.find(m => m.id === request.matchId && m.type === request.matchType)
+                        
+                        return (
+                        <tr 
+                          key={request.id} 
+                          onClick={() => {
+                            setSelectedRequest(request)
+                            setShowDetailsModal(true)
+                          }}
+                          className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
+                            request.status === 'pending' ? 'bg-yellow-50/30 dark:bg-yellow-900/10' :
+                            request.status === 'approved' ? 'bg-green-50/30 dark:bg-green-900/10' :
+                            request.status === 'rejected' ? 'bg-red-50/30 dark:bg-red-900/10' : ''
+                          }`}
+                        >
+                        {/* Photo */}
+                        <td className="px-4 py-3">
+                          {request.photoUrl ? (
+                            <div 
+                              className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 cursor-pointer hover:ring-2 hover:ring-blue-500 transition"
+                              onClick={() => setEnlargedPhoto(request.photoUrl || null)}
+                            >
+                              <img 
+                                src={request.photoUrl} 
+                                alt={`${request.firstName} ${request.lastName}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                              <User className="w-6 h-6 text-gray-400" />
+                            </div>
+                          )}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                          {request.email}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                          {request.phone}
-                        </td>
-                        <td className="px-4 py-3 text-sm">
-                          <div className="flex flex-col gap-1">
-                            <span className="text-gray-900 dark:text-white font-medium">{request.teamName}</span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {request.matchType === 'preseason' ? 'Preseason' : 'Regular'}
+                        {/* Nom */}
+                        <td className="px-4 py-3">
+                          <div className="flex flex-col">
+                            <span className="text-sm text-gray-900 dark:text-white font-medium">
+                              {request.firstName} {request.lastName}
                             </span>
+                            {request.checkedIn && (
+                              <span className="text-xs text-green-600 dark:text-green-400 font-semibold mt-1 flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" />
+                                {language === 'fr' ? 'Présent' : 'Checked In'}
+                              </span>
+                            )}
                           </div>
                         </td>
+                        {/* Email */}
+                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-4 h-4 text-gray-400" />
+                            <span className="truncate max-w-[200px]" title={request.email}>{request.email}</span>
+                          </div>
+                        </td>
+                        {/* Téléphone */}
+                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                          <div className="flex items-center gap-2">
+                            <Phone className="w-4 h-4 text-gray-400" />
+                            <span>{request.phone}</span>
+                          </div>
+                        </td>
+                        {/* Match */}
+                        <td className="px-4 py-3 text-sm">
+                          {matchInfo ? (
+                            <div className="flex flex-col gap-1">
+                              <span className="text-gray-900 dark:text-white font-medium">
+                                {matchInfo.homeTeam} vs {matchInfo.awayTeam}
+                              </span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {request.teamName}
+                              </span>
+                              <span className={`text-xs px-2 py-0.5 rounded-full inline-block w-fit ${
+                                request.matchType === 'preseason' 
+                                  ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
+                                  : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                              }`}>
+                                {request.matchType === 'preseason' ? 'Preseason' : 'Regular'}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col gap-1">
+                              <span className="text-gray-900 dark:text-white font-medium">{request.teamName}</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {request.matchType === 'preseason' ? 'Preseason' : 'Regular'}
+                              </span>
+                            </div>
+                          )}
+                        </td>
+                        {/* Date du match */}
                         <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
                           {matchInfo ? (
                             <div className="flex flex-col gap-1">
-                              <span>{formatDate(matchInfo.date)}</span>
-                              <span className="text-xs text-gray-500">{new Intl.DateTimeFormat(language === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' }).format(matchInfo.date)}</span>
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                <span>{formatDate(matchInfo.date)}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-xs">
+                                <Clock className="w-3 h-3" />
+                                <span>{new Intl.DateTimeFormat(language === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' }).format(matchInfo.date)}</span>
+                              </div>
+                              {matchInfo.venue && (
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  📍 {matchInfo.venue}
+                                </span>
+                              )}
                             </div>
                           ) : (
                             <span className="text-gray-400">-</span>
                           )}
+                        </td>
+                        {/* Date de demande */}
+                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                          <div className="flex flex-col gap-1">
+                            <span>{formatDate(request.createdAt)}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {new Intl.DateTimeFormat(language === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' }).format(new Date(request.createdAt))}
+                            </span>
+                          </div>
                         </td>
                         <td className="px-4 py-3 text-sm">
                           <div className="flex items-center gap-2">
@@ -1457,18 +1693,8 @@ export default function SpectatorsTab() {
                             {request.status === 'approved' ? t.approved : request.status === 'rejected' ? t.rejected : t.pending}
                           </span>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => {
-                                setSelectedRequest(request)
-                                setShowDetailsModal(true)
-                              }}
-                              className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
-                              title={t.viewDetails}
-                            >
-                              <Eye className="w-5 h-5" />
-                            </button>
                             {request.status === 'pending' && (
                               <>
                                 <button
@@ -1488,7 +1714,8 @@ export default function SpectatorsTab() {
                               </>
                             )}
                             <button
-                              onClick={async () => {
+                              onClick={async (e) => {
+                                e.stopPropagation()
                                 // Trouver le match correspondant
                                 const matchKey = `${request.matchType}_${request.matchId}`
                                 const matchRequests = requests.filter(r => 
@@ -1516,7 +1743,10 @@ export default function SpectatorsTab() {
                               <Settings className="w-5 h-5" />
                             </button>
                             <button
-                              onClick={() => handleDeleteRequest(request.id)}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDeleteRequest(request.id)
+                              }}
                               className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
                               title={t.delete}
                             >
@@ -1531,6 +1761,167 @@ export default function SpectatorsTab() {
                 </table>
               </div>
             </div>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-3">
+                {filteredRequests.map((request) => {
+                  const matchKey = `${request.matchType}_${request.matchId}`
+                  const matchStats = getMatchStats(request.matchId, request.matchType)
+                  const matchInfo = allMatches.get(matchKey) || matches.find(m => m.id === request.matchId && m.type === request.matchType)
+                  
+                  return (
+                    <div
+                      key={request.id}
+                      onClick={() => {
+                        setSelectedRequest(request)
+                        setShowDetailsModal(true)
+                      }}
+                      className={`bg-white dark:bg-gray-800 rounded-lg shadow p-4 cursor-pointer active:scale-[0.98] transition-all ${
+                        request.status === 'pending' ? 'border-l-4 border-yellow-500' :
+                        request.status === 'approved' ? 'border-l-4 border-green-500' :
+                        request.status === 'rejected' ? 'border-l-4 border-red-500' : 'border-l-4 border-gray-300'
+                      }`}
+                    >
+                      {/* Header with photo and name */}
+                      <div className="flex items-start gap-3 mb-3">
+                        {request.photoUrl ? (
+                          <div 
+                            className="w-14 h-14 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setEnlargedPhoto(request.photoUrl || null)
+                            }}
+                          >
+                            <img 
+                              src={request.photoUrl} 
+                              alt={`${request.firstName} ${request.lastName}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                            <User className="w-7 h-7 text-gray-400" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <h3 className="font-semibold text-gray-900 dark:text-white text-base">
+                              {request.firstName} {request.lastName}
+                            </h3>
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${
+                              request.status === 'approved'
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                : request.status === 'rejected'
+                                ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                            }`}>
+                              {request.status === 'approved' ? t.approved : request.status === 'rejected' ? t.rejected : t.pending}
+                            </span>
+                          </div>
+                          {request.checkedIn && (
+                            <span className="text-xs text-green-600 dark:text-green-400 font-semibold flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3" />
+                              {language === 'fr' ? 'Présent' : 'Checked In'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Contact Info */}
+                      <div className="space-y-2 mb-3">
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                          <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <span className="truncate">{request.email}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                          <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <span>{request.phone}</span>
+                        </div>
+                      </div>
+
+                      {/* Match Info */}
+                      <div className="mb-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        {matchInfo ? (
+                          <>
+                            <div className="font-medium text-gray-900 dark:text-white text-sm mb-1">
+                              {matchInfo.homeTeam} vs {matchInfo.awayTeam}
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                              {request.teamName}
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 mb-1">
+                              <Calendar className="w-3 h-3" />
+                              <span>{formatDate(matchInfo.date)}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                              <Clock className="w-3 h-3" />
+                              <span>{new Intl.DateTimeFormat(language === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' }).format(matchInfo.date)}</span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-sm text-gray-900 dark:text-white font-medium">
+                            {request.teamName}
+                          </div>
+                        )}
+                        <span className={`text-xs px-2 py-0.5 rounded-full inline-block mt-2 ${
+                          request.matchType === 'preseason' 
+                            ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
+                            : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                        }`}>
+                          {request.matchType === 'preseason' ? 'Preseason' : 'Regular'}
+                        </span>
+                      </div>
+
+                      {/* Stats and Actions */}
+                      <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center gap-2">
+                          {matchStats.isFull ? (
+                            <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-semibold flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" />
+                              {t.full}
+                            </span>
+                          ) : (
+                            <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-xs font-semibold">
+                              {matchStats.available} {t.available} / {matchStats.limit}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          {request.status === 'pending' && (
+                            <>
+                              <button
+                                onClick={() => handleStatusUpdate(request.id, 'approved')}
+                                className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition"
+                                title={t.approve}
+                              >
+                                <CheckCircle2 className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={() => handleStatusUpdate(request.id, 'rejected')}
+                                className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                                title={t.reject}
+                              >
+                                <XCircle className="w-5 h-5" />
+                              </button>
+                            </>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeleteRequest(request.id)
+                            }}
+                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                            title={t.delete}
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
           )}
         </>
       )}

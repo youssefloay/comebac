@@ -48,15 +48,26 @@ export async function GET() {
     for (const teamDoc of teamsSnap.docs) {
       const teamData = teamDoc.data()
       
-      // Récupérer les joueurs de cette équipe
+      // Récupérer les joueurs de cette équipe depuis playerAccounts (source principale)
       const playersSnap = await adminDb
         .collection('playerAccounts')
         .where('teamId', '==', teamDoc.id)
         .get()
 
+      // Récupérer aussi depuis players (fallback pour les joueurs qui n'ont pas encore de compte)
+      const playersFallbackSnap = await adminDb
+        .collection('players')
+        .where('teamId', '==', teamDoc.id)
+        .get()
+
+      // Créer un Set des emails déjà traités depuis playerAccounts
+      const processedEmails = new Set<string>()
+      
       const players = playersSnap.docs.map(doc => {
         const data = doc.data()
         const normalizedEmail = data.email?.trim().toLowerCase()
+        if (normalizedEmail) processedEmails.add(normalizedEmail)
+        
         const authData = (data.uid ? authByUid.get(data.uid) : undefined) 
           || (normalizedEmail ? authByEmail.get(normalizedEmail) : undefined)
 
@@ -72,6 +83,33 @@ export async function GET() {
           isActingCoach: data.isActingCoach || false
         }
       })
+
+      // Ajouter les joueurs de la collection players qui ne sont pas dans playerAccounts
+      const playersFromFallback = playersFallbackSnap.docs
+        .filter(doc => {
+          const data = doc.data()
+          const email = data.email?.trim().toLowerCase()
+          return email && !processedEmails.has(email)
+        })
+        .map(doc => {
+          const data = doc.data()
+          const normalizedEmail = data.email?.trim().toLowerCase()
+          const authData = normalizedEmail ? authByEmail.get(normalizedEmail) : undefined
+          
+          return {
+            id: doc.id,
+            email: data.email,
+            name: data.name || `${data.firstName || ''} ${data.lastName || ''}`.trim() || data.email,
+            hasAccount: !!authData,
+            lastSignIn: authData?.lastSignIn || null,
+            emailVerified: authData?.emailVerified || false,
+            createdAt: authData?.createdAt || null,
+            lastResendDate: null,
+            isActingCoach: false
+          }
+        })
+
+      players.push(...playersFromFallback)
 
       const coachesSnap = await adminDb
         .collection('coachAccounts')

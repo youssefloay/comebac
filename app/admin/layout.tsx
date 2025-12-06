@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { AdminI18nProvider } from '@/lib/i18n/admin-i18n-context'
 import { useAdminI18n } from '@/lib/i18n/admin-i18n-context'
-import { Globe } from 'lucide-react'
+import { Globe, Sun, Moon } from 'lucide-react'
 
 function LanguageButton() {
   const { language, setLanguage } = useAdminI18n()
@@ -62,11 +62,60 @@ function LanguageButton() {
   )
 }
 
+function ThemeButton() {
+  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    // Check for saved theme preference or default to light
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark'
+    if (savedTheme) {
+      setTheme(savedTheme)
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setTheme('dark')
+    }
+  }, [])
+
+  useEffect(() => {
+    if (mounted) {
+      // Apply theme to document
+      document.documentElement.classList.remove('light', 'dark')
+      document.documentElement.classList.add(theme)
+      localStorage.setItem('theme', theme)
+    }
+  }, [theme, mounted])
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light')
+  }
+
+  if (!mounted) {
+    return null
+  }
+
+  return (
+    <button
+      onClick={toggleTheme}
+      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white transition-colors touch-manipulation shadow-lg border border-gray-700 dark:border-gray-600"
+      style={{ minHeight: '44px' }}
+      title={theme === 'light' ? 'Activer le mode sombre' : 'Activer le mode clair'}
+    >
+      {theme === 'light' ? (
+        <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
+      ) : (
+        <Sun className="w-4 h-4 sm:w-5 sm:h-5" />
+      )}
+    </button>
+  )
+}
+
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   return (
     <>
-      {/* Language Button - Fixed top right - Always visible */}
-      <div className="fixed top-4 right-4 z-[9999]" style={{ position: 'fixed', top: '16px', right: '16px' }}>
+      {/* Language and Theme Buttons - Fixed top right - Always visible */}
+      <div className="fixed top-4 right-4 z-[9999] flex items-center gap-2" style={{ position: 'fixed', top: '16px', right: '16px' }}>
+        <ThemeButton />
         <LanguageButton />
       </div>
       
