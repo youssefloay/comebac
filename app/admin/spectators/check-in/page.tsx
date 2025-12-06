@@ -177,6 +177,8 @@ export default function OnSiteCheckInPage() {
     isAlreadyCheckedIn: boolean
     token: string
   } | null>(null)
+  const [isProcessingQR, setIsProcessingQR] = useState(false)
+  const [enlargedPhoto, setEnlargedPhoto] = useState<string | null>(null)
 
   useEffect(() => {
     loadTodayMatches()
@@ -414,10 +416,21 @@ export default function OnSiteCheckInPage() {
         { facingMode: 'environment' }, // Utiliser la caméra arrière
         {
           fps: 10,
-          qrbox: { width: 250, height: 250 }
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0,
+          disableFlip: false
         },
-        (decodedText: string) => {
-          // QR code détecté
+        async (decodedText: string) => {
+          // QR code détecté - arrêter immédiatement pour éviter les scans multiples
+          try {
+            await scanner.stop()
+            await scanner.clear()
+            setQrScanner(null)
+            setScanning(false)
+          } catch (e) {
+            // Ignorer les erreurs d'arrêt
+          }
+          // Traiter le QR code
           handleQRCodeScanned(decodedText)
         },
         (errorMessage: string) => {
@@ -456,42 +469,64 @@ export default function OnSiteCheckInPage() {
   }
 
   const handleQRCodeScanned = async (qrData: string) => {
-    // Extraire le token du QR code (format: /api/spectators/qr/{token})
-    const tokenMatch = qrData.match(/\/api\/spectators\/qr\/([a-f0-9]+)/)
-    if (!tokenMatch || !tokenMatch[1]) {
-      setError(t.qrCodeInvalid)
+    // Éviter les traitements multiples simultanés
+    if (isProcessingQR) {
       return
     }
 
-    const token = tokenMatch[1]
-    setError(null)
-    setSuccess(null)
+    setIsProcessingQR(true)
 
     try {
-      // D'abord, récupérer les détails via GET
-      const getResponse = await fetch(`/api/spectators/qr/${token}`)
-      const getData = await getResponse.json()
-
-      if (!getResponse.ok || !getData.valid) {
-        setError(getData.error || t.qrCodeInvalid)
-        await stopQRScan()
+      // Extraire le token du QR code (format: /api/spectators/qr/{token})
+      const tokenMatch = qrData.match(/\/api\/spectators\/qr\/([a-f0-9]+)/)
+      if (!tokenMatch || !tokenMatch[1]) {
+        setError(t.qrCodeInvalid)
+        setIsProcessingQR(false)
         return
       }
 
-      // Arrêter le scan pour afficher le popup
-      await stopQRScan()
+      const token = tokenMatch[1]
+      setError(null)
+      setSuccess(null)
 
-      // Afficher le popup avec les détails
-      setQrPopupData({
-        show: true,
-        data: getData.request,
-        isAlreadyCheckedIn: getData.alreadyCheckedIn || false,
-        token: token
-      })
+      // D'abord, récupérer les détails via GET avec timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 secondes max
+
+      try {
+        const getResponse = await fetch(`/api/spectators/qr/${token}`, {
+          signal: controller.signal
+        })
+        clearTimeout(timeoutId)
+
+        const getData = await getResponse.json()
+
+        if (!getResponse.ok || !getData.valid) {
+          setError(getData.error || t.qrCodeInvalid)
+          setIsProcessingQR(false)
+          return
+        }
+
+        // Afficher le popup avec les détails
+        setQrPopupData({
+          show: true,
+          data: getData.request,
+          isAlreadyCheckedIn: getData.alreadyCheckedIn || false,
+          token: token
+        })
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId)
+        if (fetchError.name === 'AbortError') {
+          setError('La requête a pris trop de temps. Veuillez réessayer.')
+        } else {
+          throw fetchError
+        }
+      }
     } catch (error: any) {
       console.error('Error fetching QR code details:', error)
       setError(error.message || t.error)
-      await stopQRScan()
+    } finally {
+      setIsProcessingQR(false)
     }
   }
 
@@ -1004,11 +1039,32 @@ export default function OnSiteCheckInPage() {
                 {/* Photo si disponible */}
                 {qrPopupData.data.photoUrl && (
                   <div className="mb-4 flex justify-center">
-                    <img
-                      src={qrPopupData.data.photoUrl}
-                      alt={`${qrPopupData.data.firstName} ${qrPopupData.data.lastName}`}
-                      className="w-24 h-24 rounded-full object-cover border-4 border-gray-200 dark:border-gray-700"
-                    />
+                    <button
+                      onClick={() => setEnlargedPhoto(qrPopupData.data.photoUrl)}
+                      className="relative group cursor-pointer transition-transform hover:scale-105"
+                      title={language === 'fr' ? 'Cliquer pour agrandir' : 'Click to enlarge'}
+                    >
+                      <img
+                        src={qrPopupData.data.photoUrl}
+                        alt={`${qrPopupData.data.firstName} ${qrPopupData.data.lastName}`}
+                        className="w-24 h-24 rounded-full object-cover border-4 border-gray-200 dark:border-gray-700 group-hover:border-blue-400 dark:group-hover:border-blue-500 transition-colors"
+                      />
+                      <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                        <svg
+                          className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                          />
+                        </svg>
+                      </div>
+                    </button>
                   </div>
                 )}
 
@@ -1093,6 +1149,40 @@ export default function OnSiteCheckInPage() {
                     {t.close}
                   </button>
                 </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Photo Enlarged Modal */}
+        <AnimatePresence>
+          {enlargedPhoto && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+              onClick={() => setEnlargedPhoto(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="relative max-w-4xl max-h-[90vh] w-full"
+              >
+                <button
+                  onClick={() => setEnlargedPhoto(null)}
+                  className="absolute -top-12 right-0 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+                  title={language === 'fr' ? 'Fermer' : 'Close'}
+                >
+                  <X className="w-6 h-6 text-white" />
+                </button>
+                <img
+                  src={enlargedPhoto}
+                  alt="Photo agrandie"
+                  className="w-full h-auto rounded-lg shadow-2xl max-h-[90vh] object-contain"
+                />
               </motion.div>
             </motion.div>
           )}
