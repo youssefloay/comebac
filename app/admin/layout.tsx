@@ -90,21 +90,23 @@ function ThemeButton() {
     setTheme(prev => prev === 'light' ? 'dark' : 'light')
   }
 
-  if (!mounted) {
-    return null
-  }
-
+  // Toujours rendre le bouton pour éviter les problèmes d'hydratation
+  // Utiliser un état par défaut qui correspond au rendu serveur
   return (
     <button
       onClick={toggleTheme}
       className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white transition-colors touch-manipulation shadow-lg border border-gray-700 dark:border-gray-600"
       style={{ minHeight: '44px' }}
-      title={theme === 'light' ? 'Activer le mode sombre' : 'Activer le mode clair'}
+      title={mounted ? (theme === 'light' ? 'Activer le mode sombre' : 'Activer le mode clair') : 'Toggle theme'}
     >
-      {theme === 'light' ? (
-        <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
+      {mounted ? (
+        theme === 'light' ? (
+          <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
+        ) : (
+          <Sun className="w-4 h-4 sm:w-5 sm:h-5" />
+        )
       ) : (
-        <Sun className="w-4 h-4 sm:w-5 sm:h-5" />
+        <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
       )}
     </button>
   )
@@ -114,7 +116,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   return (
     <>
       {/* Language and Theme Buttons - Fixed top right - Always visible */}
-      <div className="fixed top-4 right-4 z-[9999] flex items-center gap-2" style={{ position: 'fixed', top: '16px', right: '16px' }}>
+      <div className="fixed top-4 right-4 z-[9999] flex items-center gap-2">
         <ThemeButton />
         <LanguageButton />
       </div>
