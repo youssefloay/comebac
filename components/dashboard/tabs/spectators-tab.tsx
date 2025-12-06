@@ -208,6 +208,7 @@ export default function SpectatorsTab() {
   const [bulkLimitValue, setBulkLimitValue] = useState(100)
   const [selectedRequest, setSelectedRequest] = useState<SpectatorRequest | null>(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [enlargedPhoto, setEnlargedPhoto] = useState<string | null>(null)
 
   // Charger les demandes
   useEffect(() => {
@@ -1718,11 +1719,32 @@ export default function SpectatorsTab() {
                 </label>
                 {selectedRequest.photoUrl ? (
                   <div className="flex justify-center">
-                    <img 
-                      src={selectedRequest.photoUrl} 
-                      alt={`${selectedRequest.firstName} ${selectedRequest.lastName}`}
-                      className="w-48 h-48 object-cover rounded-lg border-2 border-gray-300 dark:border-gray-600"
-                    />
+                    <button
+                      onClick={() => setEnlargedPhoto(selectedRequest.photoUrl!)}
+                      className="relative group cursor-pointer"
+                      title={language === 'fr' ? 'Cliquer pour agrandir' : 'Click to enlarge'}
+                    >
+                      <img 
+                        src={selectedRequest.photoUrl} 
+                        alt={`${selectedRequest.firstName} ${selectedRequest.lastName}`}
+                        className="w-48 h-48 object-cover rounded-lg border-2 border-gray-300 dark:border-gray-600 group-hover:border-blue-400 dark:group-hover:border-blue-500 transition-colors"
+                      />
+                      <div className="absolute inset-0 rounded-lg bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                        <svg
+                          className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                          />
+                        </svg>
+                      </div>
+                    </button>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center w-48 h-48 bg-gray-100 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
@@ -1904,6 +1926,32 @@ export default function SpectatorsTab() {
               )}
             </div>
           </motion.div>
+        </div>
+      )}
+
+      {/* Photo Enlarged Modal */}
+      {enlargedPhoto && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+          onClick={() => setEnlargedPhoto(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-w-4xl max-h-[90vh] w-full"
+          >
+            <button
+              onClick={() => setEnlargedPhoto(null)}
+              className="absolute -top-12 right-0 p-2 bg-white/10 hover:bg-white/20 rounded-full"
+              title={language === 'fr' ? 'Fermer' : 'Close'}
+            >
+              <X className="w-6 h-6 text-white" />
+            </button>
+            <img
+              src={enlargedPhoto}
+              alt="Photo agrandie"
+              className="w-full h-auto rounded-lg shadow-2xl max-h-[90vh] object-contain"
+            />
+          </div>
         </div>
       )}
     </div>
