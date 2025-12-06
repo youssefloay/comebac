@@ -189,6 +189,14 @@ export default function TeamShopPage() {
                       alt={product.name}
                       fill
                       className="object-contain"
+                      unoptimized
+                      onError={(e) => {
+                        // Fallback: utiliser img HTML si Next.js Image échoue
+                        const target = e.target as HTMLImageElement
+                        if (target.parentElement) {
+                          target.parentElement.innerHTML = `<img src="${product.images[0]}" alt="${product.name}" class="w-full h-full object-contain" />`
+                        }
+                      }}
                     />
                   </div>
                 ) : (

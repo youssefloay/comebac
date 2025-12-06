@@ -78,18 +78,30 @@ async function uploadJerseyImage(teamId: string, imagePath: string): Promise<str
   // Lire le fichier local
   const fileBuffer = fs.readFileSync(imagePath)
   
+  console.log(`📤 Uploading ${fileName}...`)
+  
   // Upload vers Firebase Storage
   await file.save(fileBuffer, {
     metadata: {
       contentType: 'image/png',
+      cacheControl: 'public, max-age=31536000',
     },
   })
+  console.log(`✅ File saved to bucket`)
 
   // Rendre le fichier public
+  console.log(`🔓 Making file public...`)
   await file.makePublic()
+  console.log(`✅ File is now public`)
 
+  // Vérifier que le fichier est accessible
+  const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`
+  
+  // Attendre un peu pour que les permissions se propagent
+  await new Promise(resolve => setTimeout(resolve, 1000))
+  
   // Retourner l'URL publique
-  return `https://storage.googleapis.com/${bucket.name}/${fileName}`
+  return publicUrl
 }
 
 async function findTeamByName(teamName: string): Promise<{ id: string; name: string } | null> {
