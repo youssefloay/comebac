@@ -19,7 +19,7 @@ export async function PUT(
 
     const { id } = await Promise.resolve(params)
     const body = await request.json()
-    const { status, checkedIn } = body
+    const { status, checkedIn, rejectionComment } = body
 
     if (!id) {
       return NextResponse.json({ error: 'Request ID is required' }, { status: 400 })
@@ -51,6 +51,14 @@ export async function PUT(
 
     if (status && ['pending', 'approved', 'rejected'].includes(status)) {
       updateData.status = status
+    }
+
+    // Stocker le commentaire de refus si fourni
+    if (status === 'rejected' && rejectionComment) {
+      updateData.rejectionComment = rejectionComment
+    } else if (status !== 'rejected') {
+      // Supprimer le commentaire si la demande n'est plus rejetée
+      updateData.rejectionComment = null
     }
 
     if (checkedIn !== undefined) {
@@ -210,8 +218,9 @@ export async function PUT(
           emailHtml = getSpectatorRejectionEmailHtml(
             requestData.firstName,
             requestData.lastName,
-            requestData.teamName,
-            matchDate
+            requestData.teamName || 'l\'équipe',
+            matchDate,
+            rejectionComment || requestData.rejectionComment || undefined
           )
           console.log(`📧 Generated rejection email HTML (${emailHtml.length} chars)`)
         }

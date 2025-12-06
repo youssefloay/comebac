@@ -936,7 +936,8 @@ export function getSpectatorRejectionEmailHtml(
   firstName: string,
   lastName: string,
   teamName: string,
-  matchDate: string
+  matchDate: string,
+  rejectionComment?: string
 ) {
   const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.comebac.com').replace(/\/$/, '')
   const assetBaseUrl = (process.env.NEXT_PUBLIC_EMAIL_ASSET_URL || 'https://www.comebac.com').replace(/\/$/, '')
@@ -1057,12 +1058,19 @@ export function getSpectatorRejectionEmailHtml(
               <p>Nous regrettons de vous informer que votre demande de spectateur pour le match de <strong>${teamName}</strong> le <strong>${matchDate}</strong> a été refusée.</p>
             </div>
             
+            ${rejectionComment ? `
+            <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 16px; border-radius: 6px; margin: 20px 0;">
+              <p style="color: #991b1b; margin: 0; font-weight: 600; margin-bottom: 8px;">Raison du refus :</p>
+              <p style="color: #991b1b; margin: 0;">${rejectionComment.replace(/\n/g, '<br>')}</p>
+            </div>
+            ` : `
             <p>Cela peut être dû à :</p>
             <ul style="color: #4b5563; margin-left: 20px; margin-bottom: 16px;">
               <li>Le nombre maximum de spectateurs a été atteint</li>
               <li>Des restrictions spécifiques pour ce match</li>
               <li>Des informations manquantes ou incorrectes</li>
             </ul>
+            `}
             
             <p>Nous vous encourageons à faire une nouvelle demande pour un autre match si vous le souhaitez.</p>
             
@@ -1080,12 +1088,19 @@ export function getSpectatorRejectionEmailHtml(
               <p>We regret to inform you that your spectator request for the <strong>${teamName}</strong> match on <strong>${matchDate}</strong> has been rejected.</p>
             </div>
             
+            ${rejectionComment ? `
+            <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 16px; border-radius: 6px; margin: 20px 0;">
+              <p style="color: #991b1b; margin: 0; font-weight: 600; margin-bottom: 8px;">Rejection reason:</p>
+              <p style="color: #991b1b; margin: 0;">${rejectionComment.replace(/\n/g, '<br>')}</p>
+            </div>
+            ` : `
             <p>This may be due to:</p>
             <ul style="color: #4b5563; margin-left: 20px; margin-bottom: 16px;">
               <li>The maximum number of spectators has been reached</li>
               <li>Specific restrictions for this match</li>
               <li>Missing or incorrect information</li>
             </ul>
+            `}
             
             <p>We encourage you to submit a new request for another match if you wish.</p>
             

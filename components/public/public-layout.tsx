@@ -10,6 +10,7 @@ import { SimpleLogo } from '@/components/ui/logo'
 import { NotificationDropdown } from '@/components/notifications/notification-dropdown'
 import { NotificationPromptPopup } from '@/components/notifications/notification-prompt-popup'
 import { FantasyButton } from '@/components/fantasy/fantasy-button'
+import { ShoppingBag } from 'lucide-react'
 import { PageTracker } from '@/components/analytics/page-tracker'
 import { useAuth } from '@/lib/auth-context'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -69,6 +70,20 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             <div className="flex items-center gap-1.5 flex-shrink-0">
               {/* Language Selector - Only for non-admin pages */}
               {!isAdminPage && <LanguageSelector />}
+              
+              {/* Shop/Merch Button */}
+              {!isAdminPage && (
+                <Link href="/public/shop">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="p-2 rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 hover:from-purple-200 hover:to-pink-200 dark:hover:from-purple-800 dark:hover:to-pink-800 border border-purple-200/50 dark:border-purple-700/50 shadow-sm hover:shadow-md transition-all"
+                    title="Boutique"
+                  >
+                    <ShoppingBag className="w-4 h-4 text-purple-700 dark:text-purple-300" />
+                  </motion.button>
+                </Link>
+              )}
               
               {/* Fantasy Button */}
               <FantasyButton href="/public/fantasy" page="header" />

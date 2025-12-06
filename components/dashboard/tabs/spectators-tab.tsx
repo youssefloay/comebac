@@ -231,6 +231,24 @@ export default function SpectatorsTab() {
     const matchesMap = new Map<string, Match>()
     const uniqueMatches = Array.from(new Set(requests.map(r => `${r.matchType}_${r.matchId}`)))
     
+    // Charger les équipes une seule fois pour enrichir les matchs réguliers
+    let teamsMap = new Map<string, string>()
+    try {
+      const teamsResponse = await fetch('/api/admin/teams')
+      if (teamsResponse.ok) {
+        const teamsData = await teamsResponse.json()
+        if (Array.isArray(teamsData)) {
+          teamsData.forEach((team: any) => {
+            if (team.id && team.name) {
+              teamsMap.set(team.id, team.name)
+            }
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error loading teams:', error)
+    }
+    
     await Promise.all(
       uniqueMatches.map(async (matchKey) => {
         try {
@@ -252,8 +270,8 @@ export default function SpectatorsTab() {
                 matchesMap.set(matchKey, {
                   id: match.id,
                   type: 'preseason' as const,
-                  homeTeam: match.teamA || '',
-                  awayTeam: match.teamB || '',
+                  homeTeam: match.teamAName || '',
+                  awayTeam: match.teamBName || '',
                   date: matchDate,
                   venue: match.venue || match.location || ''
                 })
@@ -265,13 +283,17 @@ export default function SpectatorsTab() {
               const data = await response.json()
               const match = data.find((m: any) => m.id === matchId)
               if (match) {
+                // Récupérer les noms des équipes depuis teamsMap si homeTeam/awayTeam ne sont pas définis
+                const homeTeam = match.homeTeam || (match.homeTeamId ? teamsMap.get(match.homeTeamId) : '') || ''
+                const awayTeam = match.awayTeam || (match.awayTeamId ? teamsMap.get(match.awayTeamId) : '') || ''
+                
                 matchesMap.set(matchKey, {
                   id: match.id,
                   type: 'regular' as const,
-                  homeTeam: match.homeTeam || '',
-                  awayTeam: match.awayTeam || '',
+                  homeTeam: homeTeam,
+                  awayTeam: awayTeam,
                   date: new Date(match.date),
-                  venue: match.venue || ''
+                  venue: match.venue || match.location || ''
                 })
               }
             }
@@ -512,12 +534,15 @@ export default function SpectatorsTab() {
     }
   }
 
-  const handleStatusUpdate = async (requestId: string, newStatus: 'approved' | 'rejected') => {
+  const handleStatusUpdate = async (requestId: string, newStatus: 'approved' | 'rejected', rejectionComment?: string) => {
     try {
       const response = await fetch(`/api/spectators/requests/${requestId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify({ 
+          status: newStatus,
+          rejectionComment: rejectionComment || undefined
+        })
       })
 
       if (response.ok) {
@@ -528,10 +553,27 @@ export default function SpectatorsTab() {
         } else {
           loadAllMatchLimits()
         }
+        // Fermer le modal de refus si ouvert
+        if (newStatus === 'rejected') {
+          setShowRejectModal(false)
+          setRejectComment('')
+          setRequestToReject(null)
+        }
       }
     } catch (error) {
       console.error('Error updating request:', error)
       alert(t.error)
+    }
+  }
+
+  const handleRejectClick = (requestId: string) => {
+    setRequestToReject(requestId)
+    setShowRejectModal(true)
+  }
+
+  const handleConfirmReject = () => {
+    if (requestToReject) {
+      handleStatusUpdate(requestToReject, 'rejected', rejectComment)
     }
   }
 
@@ -1705,7 +1747,10 @@ export default function SpectatorsTab() {
                                   <CheckCircle2 className="w-5 h-5" />
                                 </button>
                                 <button
-                                  onClick={() => handleStatusUpdate(request.id, 'rejected')}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleRejectClick(request.id)
+                                  }}
                                   className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
                                   title={t.reject}
                                 >
@@ -2196,36 +2241,63 @@ export default function SpectatorsTab() {
               {(() => {
                 const matchKey = `${selectedRequest.matchType}_${selectedRequest.matchId}`
                 const matchInfo = allMatches.get(matchKey) || matches.find(m => m.id === selectedRequest.matchId && m.type === selectedRequest.matchType)
-                return matchInfo ? (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                      {t.match}
-                    </label>
-                    <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Calendar className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-900 dark:text-white font-medium">
-                          {matchInfo.homeTeam} vs {matchInfo.awayTeam}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <Clock className="w-4 h-4" />
-                        <span>{formatDate(matchInfo.date)}</span>
-                        <span className="ml-2">
-                          {new Intl.DateTimeFormat(language === 'fr' ? 'fr-FR' : 'en-US', { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          }).format(matchInfo.date)}
-                        </span>
-                      </div>
-                      {matchInfo.venue && (
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          📍 {matchInfo.venue}
+                
+                if (matchInfo) {
+                  // Vérifier si les équipes sont définies et non vides
+                  const homeTeam = (matchInfo.homeTeam && matchInfo.homeTeam.trim()) || (language === 'fr' ? 'Équipe à domicile' : 'Home Team')
+                  const awayTeam = (matchInfo.awayTeam && matchInfo.awayTeam.trim()) || (language === 'fr' ? 'Équipe visiteuse' : 'Away Team')
+                  
+                  return (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                        {t.match}
+                      </label>
+                      <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Calendar className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-900 dark:text-white font-medium">
+                            {homeTeam} vs {awayTeam}
+                          </span>
                         </div>
-                      )}
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                          <Clock className="w-4 h-4" />
+                          <span>{formatDate(matchInfo.date)}</span>
+                          <span className="ml-2">
+                            {new Intl.DateTimeFormat(language === 'fr' ? 'fr-FR' : 'en-US', { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            }).format(matchInfo.date)}
+                          </span>
+                        </div>
+                        {matchInfo.venue && (
+                          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            📍 {matchInfo.venue}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ) : null
+                  )
+                } else {
+                  // Fallback si matchInfo n'existe pas
+                  return (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                        {t.match}
+                      </label>
+                      <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Calendar className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-900 dark:text-white font-medium">
+                            {selectedRequest.teamName || (language === 'fr' ? 'Équipe' : 'Team')}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {selectedRequest.matchType === 'preseason' ? 'Preseason' : 'Regular'}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                }
               })()}
 
               {/* Statut et dates */}
@@ -2315,6 +2387,75 @@ export default function SpectatorsTab() {
                   </button>
                 </div>
               )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Reject Modal with Comment */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 max-w-md w-full"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                {language === 'fr' ? 'Raison du refus' : 'Rejection Reason'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowRejectModal(false)
+                  setRejectComment('')
+                  setRequestToReject(null)
+                }}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                {language === 'fr' 
+                  ? 'Commentaire (sera envoyé par email à la personne)' 
+                  : 'Comment (will be sent by email to the person)'}
+              </label>
+              <textarea
+                value={rejectComment}
+                onChange={(e) => setRejectComment(e.target.value)}
+                placeholder={language === 'fr' 
+                  ? 'Expliquez la raison du refus...' 
+                  : 'Explain the reason for rejection...'}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                rows={4}
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {language === 'fr' 
+                  ? 'Ce commentaire sera inclus dans l\'email de refus envoyé au spectateur.'
+                  : 'This comment will be included in the rejection email sent to the spectator.'}
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowRejectModal(false)
+                  setRejectComment('')
+                  setRequestToReject(null)
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-semibold"
+              >
+                {t.cancel}
+              </button>
+              <button
+                onClick={handleConfirmReject}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold flex items-center justify-center gap-2"
+              >
+                <XCircle className="w-5 h-5" />
+                {t.reject}
+              </button>
             </div>
           </motion.div>
         </div>

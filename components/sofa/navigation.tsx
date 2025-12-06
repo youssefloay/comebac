@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 import { useTheme } from "@/lib/theme-context";
-import { Home, Trophy, Calendar, BarChart3, Users, Sun, Moon, UserPlus, Flame } from "lucide-react";
+import { Home, Trophy, Calendar, BarChart3, Users, Sun, Moon, UserPlus, Flame, ShoppingBag } from "lucide-react";
 import { NotificationDropdown } from "@/components/notifications/notification-dropdown";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { FantasyButton } from "@/components/fantasy/fantasy-button";
@@ -17,6 +17,7 @@ const navigationItems = [
   { href: "/public/statistics", label: "Statistiques", icon: BarChart3 },
   { href: "/public/teams", label: "Équipes", icon: Users },
   { href: "/preseason", label: "Preseason", icon: Flame },
+  { href: "/public/shop", label: "Boutique", icon: ShoppingBag },
 ];
 
 export function SofaNavigation() {
@@ -83,6 +84,20 @@ export function SofaNavigation() {
           <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Language Selector - Only for non-admin pages */}
             {!isAdminPage && <LanguageSelector />}
+
+            {/* Shop/Merch Button - Only for non-admin pages */}
+            {!isAdminPage && (
+              <Link href="/public/shop">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 hover:from-purple-200 hover:to-pink-200 dark:hover:from-purple-800 dark:hover:to-pink-800 border border-purple-200/50 dark:border-purple-700/50 shadow-sm hover:shadow-md transition-all"
+                  title="Boutique"
+                >
+                  <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-purple-700 dark:text-purple-300" />
+                </motion.button>
+              </Link>
+            )}
 
             {/* Fantasy Button - Only for non-admin pages */}
             {!isAdminPage && <FantasyButton href="/public/fantasy" page="header" />}

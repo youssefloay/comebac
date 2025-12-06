@@ -6,6 +6,7 @@ export const translations = {
   'nav.teams': { fr: 'Équipes', en: 'Teams' },
   'nav.stats': { fr: 'Stats', en: 'Stats' },
   'nav.fantasy': { fr: 'Fantasy', en: 'Fantasy' },
+  'nav.shop': { fr: 'Boutique', en: 'Shop' },
   'nav.spectators': { fr: 'Spectateurs', en: 'Spectators' },
   'nav.preseason': { fr: 'Preseason', en: 'Preseason' },
   'nav.more': { fr: 'Plus', en: 'More' },
