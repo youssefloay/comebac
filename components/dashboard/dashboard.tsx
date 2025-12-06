@@ -505,7 +505,6 @@ export default function Dashboard({ user }: { user: any }) {
             <span>✨</span>
             <span>Switch to New Dashboard (Beta)</span>
           </button>
-          </div>
           <div className="flex items-center gap-2 md:gap-4 flex-wrap">
             {seedMessage && (
               <div
