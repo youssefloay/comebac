@@ -645,6 +645,79 @@ function HomeView() {
           </button>
         </div>
       </div>
+
+      {/* Recent Activity */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h2>
+        <RecentActivityView />
+      </div>
+    </div>
+  )
+}
+
+function RecentActivityView() {
+  const [activities, setActivities] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadRecentActivity()
+  }, [])
+
+  const loadRecentActivity = async () => {
+    try {
+      // Load recent spectator requests
+      const requestsRes = await fetch('/api/spectators/requests')
+      if (requestsRes.ok) {
+        const requests = await requestsRes.json()
+        const recentRequests = Array.isArray(requests)
+          ? requests
+              .filter((r: any) => r.status === 'pending')
+              .slice(0, 5)
+              .map((r: any) => ({
+                type: 'spectator_request',
+                message: `New spectator request from ${r.firstName} ${r.lastName}`,
+                time: r.createdAt,
+                link: '/admin/dashboard-v2'
+              }))
+          : []
+
+        setActivities(recentRequests)
+      }
+    } catch (error) {
+      console.error('Error loading activity:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return <LoadingSpinner size="sm" />
+  }
+
+  if (activities.length === 0) {
+    return (
+      <p className="text-gray-600 dark:text-gray-400">
+        No recent activity to display.
+      </p>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {activities.map((activity, index) => (
+        <div
+          key={index}
+          className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+        >
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <div className="flex-1">
+            <p className="text-sm text-gray-900 dark:text-white">{activity.message}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {activity.time ? new Date(activity.time).toLocaleString() : 'Recently'}
+            </p>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }

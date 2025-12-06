@@ -1,11 +1,47 @@
 "use client"
 
-import { useState } from 'react'
-import CustomNotificationModal from '@/components/admin/CustomNotificationModal'
+import { useState, useEffect } from 'react'
 import { Bell, Send, Users, Mail } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 export default function NotificationsSection() {
   const [showModal, setShowModal] = useState(false)
+  const [teams, setTeams] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadTeams()
+  }, [])
+
+  const loadTeams = async () => {
+    try {
+      const res = await fetch('/api/admin/teams')
+      if (res.ok) {
+        const data = await res.json()
+        setTeams(Array.isArray(data) ? data : [])
+      }
+    } catch (error) {
+      console.error('Error loading teams:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleOpenModal = () => {
+    // Dynamically import the modal component
+    import('@/components/admin/CustomNotificationModal').then((mod) => {
+      const CustomNotificationModal = mod.default
+      setShowModal(true)
+    })
+  }
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[400px]">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
 
   return (
     <div className="p-6">
@@ -15,7 +51,7 @@ export default function NotificationsSection() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Notifications</h2>
         </div>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => window.location.href = '/admin'}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
         >
           <Send className="w-4 h-4" />
@@ -33,7 +69,7 @@ export default function NotificationsSection() {
             Send custom notifications to specific users or groups.
           </p>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => window.location.href = '/admin'}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             Open Notification Modal
@@ -59,23 +95,16 @@ export default function NotificationsSection() {
 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Notification History</h3>
-        <p className="text-gray-600 dark:text-gray-400">
-          Notification history and tracking will be displayed here.
+        <p className="text-gray-600 dark:text-gray-400 mb-4">
+          View notification history and tracking.
         </p>
         <button
           onClick={() => window.location.href = '/admin/notification-tracking'}
-          className="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+          className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
         >
           View Notification Tracking
         </button>
       </div>
-
-      {showModal && (
-        <CustomNotificationModal
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
-        />
-      )}
     </div>
   )
 }
