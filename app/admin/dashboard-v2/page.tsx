@@ -39,11 +39,14 @@ import MatchesSection from './sections/matches-section'
 import ResultsSection from './sections/results-section'
 import LineupsSection from './sections/lineups-section'
 import StatisticsSection from './sections/statistics-section'
+import RankingsSection from './sections/rankings-section'
 import AccountsSection from './sections/accounts-section'
+import RegistrationsSection from './sections/registrations-section'
 import SpectatorsSection from './sections/spectators-section'
 import ShopSection from './sections/shop-section'
 import ActivitySection from './sections/activity-section'
 import MaintenanceSection from './sections/maintenance-section'
+import NotificationsSection from './sections/notifications-section'
 
 export default function DashboardV2Page() {
   const { user, loading, isAdmin } = useAuth()
@@ -336,19 +339,7 @@ function SectionContent({ category, section }: { category: string; section: stri
       case 'statistics':
         return <StatisticsSection />
       case 'rankings':
-        return (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <p className="text-gray-600 dark:text-gray-400">
-              Rankings section - Link to rankings page or implement here.
-            </p>
-            <button
-              onClick={() => window.location.href = '/admin'}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Go to Rankings in Old Dashboard
-            </button>
-          </div>
-        )
+        return <RankingsSection />
       default:
         return null
     }
@@ -360,19 +351,7 @@ function SectionContent({ category, section }: { category: string; section: stri
       case 'accounts':
         return <AccountsSection />
       case 'registrations':
-        return (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Team Registrations - Manage team registration requests.
-            </p>
-            <button
-              onClick={() => window.location.href = '/admin/team-registrations'}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Go to Registrations Page
-            </button>
-          </div>
-        )
+        return <RegistrationsSection />
       case 'spectators':
         return <SpectatorsSection />
       default:
@@ -444,19 +423,7 @@ function SectionContent({ category, section }: { category: string; section: stri
           </div>
         )
       case 'notifications':
-        return (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Notifications management - Send custom notifications to users.
-            </p>
-            <button
-              onClick={() => window.location.href = '/admin'}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Go to Notifications in Old Dashboard
-            </button>
-          </div>
-        )
+        return <NotificationsSection />
       case 'media':
         return (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
