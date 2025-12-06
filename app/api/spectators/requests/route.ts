@@ -39,13 +39,16 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    const requests = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate(),
-      updatedAt: doc.data().updatedAt?.toDate(),
-      checkedInAt: doc.data().checkedInAt?.toDate()
-    }))
+    const requests = snapshot.docs.map(doc => {
+      const data = doc.data()
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : (data.createdAt ? new Date(data.createdAt) : new Date()),
+        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : (data.updatedAt ? new Date(data.updatedAt) : new Date()),
+        checkedInAt: data.checkedInAt?.toDate ? data.checkedInAt.toDate() : (data.checkedInAt ? new Date(data.checkedInAt) : undefined)
+      }
+    })
 
     // Trier par date de création (desc) si on n'a pas pu utiliser orderBy
     requests.sort((a, b) => {

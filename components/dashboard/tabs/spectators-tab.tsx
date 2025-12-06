@@ -21,7 +21,14 @@ import {
   BarChart3,
   Trash2,
   Archive,
-  Shield
+  Shield,
+  User,
+  Mail,
+  Phone,
+  X,
+  Image as ImageIcon,
+  Camera,
+  QrCode
 } from 'lucide-react'
 
 interface SpectatorRequest {
@@ -34,6 +41,7 @@ interface SpectatorRequest {
   lastName: string
   email: string
   phone: string
+  photoUrl?: string | null
   status: 'pending' | 'approved' | 'rejected'
   checkedIn?: boolean
   checkedInAt?: Date
@@ -92,6 +100,7 @@ const translations = {
     delete: "Supprimer",
     deleteConfirm: "Êtes-vous sûr de vouloir supprimer cette demande ?",
     deleted: "Demande supprimée",
+    loading: "Chargement...",
     limits: "Limites",
     setLimits: "Définir les limites",
     upcomingMatches: "Matchs à venir",
@@ -102,7 +111,15 @@ const translations = {
     deselectAll: "Tout désélectionner",
     bulkSetLimit: "Définir la limite pour les matchs sélectionnés",
     selectedMatches: "matchs sélectionnés",
-    bulkLimitUpdated: "Limites mises à jour avec succès"
+    bulkLimitUpdated: "Limites mises à jour avec succès",
+    viewDetails: "Voir les détails",
+    requestDetails: "Détails de la demande",
+    close: "Fermer",
+    noPhoto: "Aucune photo fournie",
+    team: "Équipe",
+    submittedAt: "Soumis le",
+    goToCheckIn: "Check-in sur place",
+    scanQRCode: "Scanner QR Code"
   },
   en: {
     title: "Spectator Management",
@@ -144,6 +161,7 @@ const translations = {
     delete: "Delete",
     deleteConfirm: "Are you sure you want to delete this request?",
     deleted: "Request deleted",
+    loading: "Loading...",
     limits: "Limits",
     setLimits: "Set limits",
     upcomingMatches: "Upcoming matches",
@@ -154,7 +172,15 @@ const translations = {
     deselectAll: "Deselect all",
     bulkSetLimit: "Set limit for selected matches",
     selectedMatches: "selected matches",
-    bulkLimitUpdated: "Limits updated successfully"
+    bulkLimitUpdated: "Limits updated successfully",
+    viewDetails: "View details",
+    requestDetails: "Request details",
+    close: "Close",
+    noPhoto: "No photo provided",
+    team: "Team",
+    submittedAt: "Submitted on",
+    goToCheckIn: "On-site Check-in",
+    scanQRCode: "Scan QR Code"
   }
 }
 
@@ -180,6 +206,8 @@ export default function SpectatorsTab() {
   const [selectedMatchesForBulk, setSelectedMatchesForBulk] = useState<Set<string>>(new Set())
   const [showBulkLimitModal, setShowBulkLimitModal] = useState(false)
   const [bulkLimitValue, setBulkLimitValue] = useState(100)
+  const [selectedRequest, setSelectedRequest] = useState<SpectatorRequest | null>(null)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
 
   // Charger les demandes
   useEffect(() => {
@@ -894,14 +922,40 @@ export default function SpectatorsTab() {
       )
     : []
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date | string | any) => {
+    // Vérifier si la date existe
+    if (!date) {
+      return language === 'fr' ? 'Date non disponible' : 'Date not available'
+    }
+    
+    // Convertir en Date si nécessaire
+    let dateObj: Date
+    if (date instanceof Date) {
+      dateObj = date
+    } else if (typeof date === 'string') {
+      dateObj = new Date(date)
+    } else if (date?.toDate && typeof date.toDate === 'function') {
+      // Timestamp Firestore
+      dateObj = date.toDate()
+    } else if (date?.seconds) {
+      // Timestamp Firestore avec seconds
+      dateObj = new Date(date.seconds * 1000)
+    } else {
+      dateObj = new Date(date)
+    }
+    
+    // Vérifier que la date est valide
+    if (isNaN(dateObj.getTime())) {
+      return language === 'fr' ? 'Date invalide' : 'Invalid date'
+    }
+    
     return new Intl.DateTimeFormat(language === 'fr' ? 'fr-FR' : 'en-US', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    }).format(date)
+    }).format(dateObj)
   }
 
   const stats = getOverallStats()
@@ -916,13 +970,22 @@ export default function SpectatorsTab() {
             {t.title}
           </h2>
         </div>
-        <button
-          onClick={() => setLanguage(language === 'fr' ? 'en' : 'fr')}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-        >
-          <Globe className="w-4 h-4" />
-          <span className="text-sm font-medium">{language === 'fr' ? 'EN' : 'FR'}</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <a
+            href="/admin/spectators/check-in"
+            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all font-semibold shadow-lg hover:shadow-xl"
+          >
+            <Camera className="w-5 h-5" />
+            {t.goToCheckIn}
+          </a>
+          <button
+            onClick={() => setLanguage(language === 'fr' ? 'en' : 'fr')}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          >
+            <Globe className="w-4 h-4" />
+            <span className="text-sm font-medium">{language === 'fr' ? 'EN' : 'FR'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Statistics Cards */}
@@ -1395,6 +1458,16 @@ export default function SpectatorsTab() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                setSelectedRequest(request)
+                                setShowDetailsModal(true)
+                              }}
+                              className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                              title={t.viewDetails}
+                            >
+                              <Eye className="w-5 h-5" />
+                            </button>
                             {request.status === 'pending' && (
                               <>
                                 <button
@@ -1613,6 +1686,222 @@ export default function SpectatorsTab() {
               >
                 {updatingLimit ? t.loading : t.save}
               </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Details Modal */}
+      {showDetailsModal && selectedRequest && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowDetailsModal(false)}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold">{t.requestDetails}</h3>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Photo */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  {language === 'fr' ? 'Photo de profil' : 'Profile Photo'}
+                </label>
+                {selectedRequest.photoUrl ? (
+                  <div className="flex justify-center">
+                    <img 
+                      src={selectedRequest.photoUrl} 
+                      alt={`${selectedRequest.firstName} ${selectedRequest.lastName}`}
+                      className="w-48 h-48 object-cover rounded-lg border-2 border-gray-300 dark:border-gray-600"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center w-48 h-48 bg-gray-100 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
+                    <div className="text-center">
+                      <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t.noPhoto}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Informations personnelles */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    {t.name}
+                  </label>
+                  <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <User className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-900 dark:text-white">
+                      {selectedRequest.firstName} {selectedRequest.lastName}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    {t.email}
+                  </label>
+                  <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <Mail className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-900 dark:text-white">{selectedRequest.email}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    {t.phone}
+                  </label>
+                  <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <Phone className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-900 dark:text-white">{selectedRequest.phone}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    {t.team}
+                  </label>
+                  <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <Users className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-900 dark:text-white">{selectedRequest.teamName}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Informations du match */}
+              {(() => {
+                const matchKey = `${selectedRequest.matchType}_${selectedRequest.matchId}`
+                const matchInfo = allMatches.get(matchKey) || matches.find(m => m.id === selectedRequest.matchId && m.type === selectedRequest.matchType)
+                return matchInfo ? (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      {t.match}
+                    </label>
+                    <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Calendar className="w-4 h-4 text-gray-400" />
+                        <span className="text-gray-900 dark:text-white font-medium">
+                          {matchInfo.homeTeam} vs {matchInfo.awayTeam}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <Clock className="w-4 h-4" />
+                        <span>{formatDate(matchInfo.date)}</span>
+                        <span className="ml-2">
+                          {new Intl.DateTimeFormat(language === 'fr' ? 'fr-FR' : 'en-US', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          }).format(matchInfo.date)}
+                        </span>
+                      </div>
+                      {matchInfo.venue && (
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          📍 {matchInfo.venue}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : null
+              })()}
+
+              {/* Statut et dates */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    {t.status}
+                  </label>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                      selectedRequest.status === 'approved'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                        : selectedRequest.status === 'rejected'
+                        ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                    }`}>
+                      {selectedRequest.status === 'approved' ? t.approved : selectedRequest.status === 'rejected' ? t.rejected : t.pending}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    {t.submittedAt}
+                  </label>
+                  <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <Clock className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-900 dark:text-white">
+                      {(() => {
+                        if (!selectedRequest.createdAt) {
+                          return language === 'fr' ? 'Date non disponible' : 'Date not available'
+                        }
+                        
+                        // Convertir createdAt en Date si nécessaire
+                        let dateObj: Date
+                        if (selectedRequest.createdAt instanceof Date) {
+                          dateObj = selectedRequest.createdAt
+                        } else if (typeof selectedRequest.createdAt === 'string') {
+                          dateObj = new Date(selectedRequest.createdAt)
+                        } else if (selectedRequest.createdAt?.toDate && typeof selectedRequest.createdAt.toDate === 'function') {
+                          dateObj = selectedRequest.createdAt.toDate()
+                        } else if (selectedRequest.createdAt?.seconds) {
+                          dateObj = new Date(selectedRequest.createdAt.seconds * 1000)
+                        } else {
+                          dateObj = new Date(selectedRequest.createdAt)
+                        }
+                        
+                        if (isNaN(dateObj.getTime())) {
+                          return language === 'fr' ? 'Date invalide' : 'Invalid date'
+                        }
+                        
+                        const dateStr = formatDate(dateObj)
+                        const timeStr = new Intl.DateTimeFormat(language === 'fr' ? 'fr-FR' : 'en-US', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        }).format(dateObj)
+                        
+                        return `${dateStr} à ${timeStr}`
+                      })()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              {selectedRequest.status === 'pending' && (
+                <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <button
+                    onClick={() => {
+                      handleStatusUpdate(selectedRequest.id, 'approved')
+                      setShowDetailsModal(false)
+                    }}
+                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle2 className="w-5 h-5" />
+                    {t.approve}
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleStatusUpdate(selectedRequest.id, 'rejected')
+                      setShowDetailsModal(false)
+                    }}
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold flex items-center justify-center gap-2"
+                  >
+                    <XCircle className="w-5 h-5" />
+                    {t.reject}
+                  </button>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>

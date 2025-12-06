@@ -16,7 +16,9 @@ import {
   Eye,
   EyeOff,
   Globe,
-  Info
+  Info,
+  Camera,
+  X
 } from 'lucide-react'
 import { db } from '@/lib/firebase'
 import { collection, getDocs, query, where } from 'firebase/firestore'
@@ -44,6 +46,73 @@ interface SpectatorLimit {
   available: number
 }
 
+/**
+ * Valide un numéro de téléphone égyptien
+ * Formats acceptés:
+ * - 01XXXXXXXXX (11 chiffres)
+ * - +20 1XXXXXXXXX
+ * - 0020 1XXXXXXXXX
+ * - 1XXXXXXXXX (10 chiffres, sans le 0 initial)
+ */
+function validateEgyptianPhone(phone: string): boolean {
+  // Nettoyer le numéro (supprimer espaces, tirets, etc.)
+  const cleaned = phone.trim().replace(/[\s\-\(\)]/g, '')
+  
+  // Vérifier les formats égyptiens
+  // Format: 01XXXXXXXXX (11 chiffres)
+  if (/^01\d{9}$/.test(cleaned)) {
+    return true
+  }
+  
+  // Format: +20 1XXXXXXXXX
+  if (/^\+201\d{9}$/.test(cleaned)) {
+    return true
+  }
+  
+  // Format: 0020 1XXXXXXXXX
+  if (/^00201\d{9}$/.test(cleaned)) {
+    return true
+  }
+  
+  // Format: 1XXXXXXXXX (10 chiffres, sans le 0 initial)
+  if (/^1\d{9}$/.test(cleaned)) {
+    return true
+  }
+  
+  return false
+}
+
+/**
+ * Normalise un numéro de téléphone égyptien au format standard: 01XXXXXXXXX
+ */
+function normalizeEgyptianPhone(phone: string): string {
+  // Nettoyer le numéro (supprimer espaces, tirets, etc.)
+  const cleaned = phone.trim().replace(/[\s\-\(\)]/g, '')
+  
+  // Si commence par +20, enlever +20 et ajouter 0
+  if (cleaned.startsWith('+201')) {
+    return '0' + cleaned.substring(3)
+  }
+  
+  // Si commence par 0020, enlever 0020 et ajouter 0
+  if (cleaned.startsWith('00201')) {
+    return '0' + cleaned.substring(4)
+  }
+  
+  // Si commence par 1 (sans le 0), ajouter le 0
+  if (cleaned.startsWith('1') && cleaned.length === 10) {
+    return '0' + cleaned
+  }
+  
+  // Si déjà au format 01XXXXXXXXX, retourner tel quel
+  if (cleaned.startsWith('01') && cleaned.length === 11) {
+    return cleaned
+  }
+  
+  // Par défaut, retourner le numéro nettoyé
+  return cleaned
+}
+
 const translations = {
   fr: {
     title: "Réserver ma place au match",
@@ -63,6 +132,15 @@ const translations = {
     lastName: "Nom",
     email: "Adresse email",
     phone: "Numéro de téléphone",
+    photo: "Photo de profil",
+    photoRequired: "Photo requise",
+    photoRequiredWarning: "⚠️ Une photo de profil est obligatoire. Les demandes sans photo seront automatiquement rejetées.",
+    uploadPhoto: "Télécharger une photo",
+    changePhoto: "Changer la photo",
+    removePhoto: "Supprimer",
+    photoSizeError: "L'image ne doit pas dépasser 5MB",
+    photoTypeError: "Le fichier doit être une image",
+    photoFormat: "PNG, JPG jusqu'à 5MB",
     submit: "Envoyer la demande",
     back: "Retour",
     next: "Suivant",
@@ -72,6 +150,8 @@ const translations = {
     required: "Ce champ est requis",
     invalidEmail: "Email invalide",
     invalidPhone: "Numéro de téléphone invalide",
+    invalidEgyptianPhone: "Veuillez entrer un numéro de téléphone égyptien valide (ex: 01XXXXXXXXX)",
+    phoneFormat: "Format: 01XXXXXXXXX (11 chiffres)",
     alreadyRequested: "Vous avez déjà soumis une demande pour ce match",
     emailAlreadyUsed: "Cet email a déjà été utilisé pour une demande pour ce match",
     phoneAlreadyUsed: "Ce numéro de téléphone a déjà été utilisé pour une demande pour ce match",
@@ -106,6 +186,15 @@ const translations = {
     lastName: "Last name",
     email: "Email address",
     phone: "Phone number",
+    photo: "Profile photo",
+    photoRequired: "Photo required",
+    photoRequiredWarning: "⚠️ A profile photo is required. Requests without a photo will be automatically rejected.",
+    uploadPhoto: "Upload a photo",
+    changePhoto: "Change photo",
+    removePhoto: "Remove",
+    photoSizeError: "Image must not exceed 5MB",
+    photoTypeError: "File must be an image",
+    photoFormat: "PNG, JPG up to 5MB",
     submit: "Submit request",
     back: "Back",
     next: "Next",
@@ -115,6 +204,8 @@ const translations = {
     required: "This field is required",
     invalidEmail: "Invalid email",
     invalidPhone: "Invalid phone number",
+    invalidEgyptianPhone: "Please enter a valid Egyptian phone number (e.g., 01XXXXXXXXX)",
+    phoneFormat: "Format: 01XXXXXXXXX (11 digits)",
     alreadyRequested: "You have already submitted a request for this match",
     emailAlreadyUsed: "This email has already been used for a request for this match",
     phoneAlreadyUsed: "This phone number has already been used for a request for this match",
@@ -153,8 +244,10 @@ export default function SpectatorRegistrationPage() {
     firstName: '',
     lastName: '',
     email: '',
-    phone: ''
+    phone: '',
+    photo: null as File | null
   })
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
 
   // Charger les équipes
   useEffect(() => {
@@ -178,12 +271,14 @@ export default function SpectatorRegistrationPage() {
   // Pré-remplir les infos si l'utilisateur est connecté
   useEffect(() => {
     if (user && userProfile && step === 3) {
-      setFormData({
-        firstName: userProfile.firstName || user.displayName?.split(' ')[0] || '',
-        lastName: userProfile.lastName || user.displayName?.split(' ').slice(1).join(' ') || '',
-        email: user.email || '',
+      const nameParts = userProfile.fullName?.split(' ') || user.displayName?.split(' ') || []
+      setFormData(prev => ({
+        ...prev,
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || '',
+        email: user.email || userProfile.email || '',
         phone: userProfile.phone || ''
-      })
+      }))
     }
   }, [user, userProfile, step])
 
@@ -276,8 +371,7 @@ export default function SpectatorRegistrationPage() {
                 limitsMap.set(matchKey, {
                   limit,
                   approved,
-                  available,
-                  totalActive: totalActive
+                  available
                 })
               } catch (jsonError) {
                 console.error(`Error parsing JSON for match ${match.id}:`, jsonError)
@@ -336,6 +430,38 @@ export default function SpectatorRegistrationPage() {
     setStep(3)
   }
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Vérifier le type de fichier
+    if (!file.type.startsWith('image/')) {
+      setError(t.photoTypeError)
+      return
+    }
+
+    // Vérifier la taille (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError(t.photoSizeError)
+      return
+    }
+
+    setFormData({ ...formData, photo: file })
+    setError(null)
+
+    // Créer un aperçu
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setPhotoPreview(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleRemovePhoto = () => {
+    setFormData({ ...formData, photo: null })
+    setPhotoPreview(null)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -353,10 +479,50 @@ export default function SpectatorRegistrationPage() {
       return
     }
 
+    // Validation numéro de téléphone égyptien
+    if (!validateEgyptianPhone(formData.phone)) {
+      setError(t.invalidEgyptianPhone)
+      return
+    }
+
+    // Validation photo obligatoire
+    if (!formData.photo) {
+      setError(t.photoRequired)
+      return
+    }
+
     setSubmitting(true)
     setError(null)
 
     try {
+      // Uploader la photo (obligatoire)
+      const photoFormData = new FormData()
+      photoFormData.append('file', formData.photo)
+
+      const photoResponse = await fetch('/api/spectators/upload-photo', {
+        method: 'POST',
+        body: photoFormData
+      })
+
+      if (!photoResponse.ok) {
+        const photoError = await photoResponse.json()
+        setError(photoError.error || t.error)
+        setSubmitting(false)
+        return
+      }
+
+      const photoData = await photoResponse.json()
+      const photoUrl = photoData.photoUrl
+
+      if (!photoUrl) {
+        setError(t.photoRequired)
+        setSubmitting(false)
+        return
+      }
+
+      // Normaliser le numéro de téléphone (format standard: 01XXXXXXXXX)
+      const normalizedPhone = normalizeEgyptianPhone(formData.phone.trim())
+
       const response = await fetch('/api/spectators/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -368,7 +534,8 @@ export default function SpectatorRegistrationPage() {
           firstName: formData.firstName.trim(),
           lastName: formData.lastName.trim(),
           email: formData.email.trim(),
-          phone: formData.phone.trim(),
+          phone: normalizedPhone,
+          photoUrl: photoUrl,
           userId: user?.uid || null
         })
       })
@@ -706,10 +873,72 @@ export default function SpectatorRegistrationPage() {
                 <input
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, phone: e.target.value })
+                    setError(null) // Effacer l'erreur quand l'utilisateur tape
+                  }}
+                  placeholder="01XXXXXXXXX"
                   className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   required
                 />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {t.phoneFormat}
+                </p>
+              </div>
+
+              {/* Avertissement photo obligatoire */}
+              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-lg">
+                <p className="text-amber-800 dark:text-amber-200 text-sm">
+                  {t.photoRequiredWarning}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  {t.photo} <span className="text-red-500">*</span>
+                </label>
+                {photoPreview ? (
+                  <div className="relative">
+                    <div className="w-32 h-32 rounded-lg overflow-hidden border-2 border-green-500 dark:border-green-400">
+                      <img 
+                        src={photoPreview} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemovePhoto}
+                      className="absolute top-0 right-0 -mt-2 -mr-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
+                      title={t.removePhoto}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-2 font-medium">
+                      ✓ {formData.photo?.name}
+                    </p>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-red-300 dark:border-red-600 border-dashed rounded-lg cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20 transition">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Camera className="w-8 h-8 text-red-400 mb-2" />
+                      <p className="mb-2 text-sm text-red-600 dark:text-red-400">
+                        <span className="font-semibold">{t.uploadPhoto}</span>
+                        <span className="text-red-500 ml-1">*</span>
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {t.photoFormat}
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handlePhotoChange}
+                      required
+                    />
+                  </label>
+                )}
               </div>
 
               <div className="flex gap-4 pt-4">
@@ -764,7 +993,8 @@ export default function SpectatorRegistrationPage() {
                 setSelectedTeam(null)
                 setSelectedMatch(null)
                 setSuccess(false)
-                setFormData({ firstName: '', lastName: '', email: '', phone: '' })
+                setFormData({ firstName: '', lastName: '', email: '', phone: '', photo: null })
+                setPhotoPreview(null)
               }}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
             >
@@ -794,7 +1024,7 @@ function MatchCard({
   formatDate: (date: Date) => string
   formatTime: (date: Date) => string
 }) {
-  const isFull = limit && limit.available <= 0
+  const isFull = limit ? limit.available <= 0 : false
 
   return (
     <motion.button

@@ -4,6 +4,8 @@ import { Timestamp } from 'firebase-admin/firestore'
 import { sendEmail } from '@/lib/email-service'
 import { getSpectatorApprovalEmailHtml, getSpectatorRejectionEmailHtml } from '@/lib/email-templates'
 import { getPreseasonMatchById } from '@/lib/preseason/db'
+import QRCode from 'qrcode'
+import crypto from 'crypto'
 
 // PUT - Mettre à jour le statut d'une demande
 export async function PUT(
@@ -35,6 +37,17 @@ export async function PUT(
 
     const requestData = requestDoc.data()!
     const oldStatus = requestData.status
+
+    // Générer un token QR code unique lors de l'approbation (avant la mise à jour)
+    let qrCodeToken: string | null = null
+    if (status && status === 'approved' && oldStatus !== 'approved') {
+      // Générer un token unique sécurisé
+      qrCodeToken = crypto.randomBytes(32).toString('hex')
+      updateData.qrCodeToken = qrCodeToken
+    } else if (status && status === 'rejected') {
+      // Supprimer le token si la demande est rejetée
+      updateData.qrCodeToken = null
+    }
 
     if (status && ['pending', 'approved', 'rejected'].includes(status)) {
       updateData.status = status
@@ -105,6 +118,7 @@ export async function PUT(
       }
     }
 
+    // Sauvegarder d'abord pour avoir le token disponible
     await adminDb.collection('spectatorRequests').doc(id).update(updateData)
 
     // Envoyer un email si le statut a changé vers approved ou rejected
@@ -160,6 +174,26 @@ export async function PUT(
 
         if (status === 'approved') {
           emailSubject = 'Request Approved / Demande approuvée - ComeBac League'
+          
+          // Générer le QR code si un token existe
+          let qrCodeDataUrl = ''
+          if (qrCodeToken) {
+            try {
+              // Générer le QR code avec l'URL complète contenant le token
+              const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+              const qrCodeUrl = `${baseUrl}/api/spectators/qr/${qrCodeToken}`
+              qrCodeDataUrl = await QRCode.toDataURL(qrCodeUrl, {
+                errorCorrectionLevel: 'M',
+                type: 'image/png',
+                width: 300,
+                margin: 2
+              })
+              console.log('✅ QR code generated successfully for token:', qrCodeToken.substring(0, 8) + '...')
+            } catch (qrError: any) {
+              console.error('❌ Error generating QR code:', qrError)
+            }
+          }
+          
           emailHtml = getSpectatorApprovalEmailHtml(
             requestData.firstName,
             requestData.lastName,
@@ -167,7 +201,8 @@ export async function PUT(
             matchDate,
             matchTime,
             venue,
-            matchType
+            matchType,
+            qrCodeDataUrl
           )
           console.log(`📧 Generated approval email HTML (${emailHtml.length} chars)`)
         } else if (status === 'rejected') {

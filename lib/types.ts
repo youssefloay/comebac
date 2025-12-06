@@ -214,6 +214,8 @@ export interface SpectatorRequest {
   lastName: string
   email: string
   phone: string
+  photoUrl?: string | null // Photo du spectateur
+  qrCodeToken?: string | null // Token unique pour le QR code
   status: 'pending' | 'approved' | 'rejected'
   checkedIn?: boolean // Pour la liste de présence
   checkedInAt?: Date

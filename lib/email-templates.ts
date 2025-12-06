@@ -711,7 +711,8 @@ export function getSpectatorApprovalEmailHtml(
   matchDate: string,
   matchTime: string,
   venue: string,
-  matchType: 'regular' | 'preseason'
+  matchType: 'regular' | 'preseason',
+  qrCodeDataUrl?: string
 ) {
   const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.comebac.com').replace(/\/$/, '')
   const assetBaseUrl = (process.env.NEXT_PUBLIC_EMAIL_ASSET_URL || 'https://www.comebac.com').replace(/\/$/, '')
@@ -858,10 +859,18 @@ export function getSpectatorApprovalEmailHtml(
               ${matchType === 'preseason' ? '<p><strong>Type :</strong> Match Preseason</p>' : ''}
             </div>
             
+            ${qrCodeDataUrl ? `
+            <div style="text-align: center; margin: 24px 0; padding: 20px; background: #f9fafb; border-radius: 8px;">
+              <p style="color: #1f2937; font-weight: 600; margin-bottom: 12px; font-size: 16px;">📱 Votre QR Code d'entrée</p>
+              <img src="${qrCodeDataUrl}" alt="QR Code" style="width: 250px; height: 250px; margin: 0 auto; display: block; border: 3px solid #10b981; border-radius: 8px; padding: 10px; background: white;" />
+              <p style="color: #6b7280; font-size: 13px; margin-top: 12px;">Présentez ce QR code à l'entrée pour valider votre présence</p>
+            </div>
+            ` : ''}
+            
             <p><strong>Important :</strong></p>
             <ul style="color: #4b5563; margin-left: 20px; margin-bottom: 16px;">
               <li>Présentez-vous au moins 10 minutes avant le début du match</li>
-              <li>Apportez une pièce d'identité valide</li>
+              ${qrCodeDataUrl ? '<li>Apportez ce QR code (sur votre téléphone ou imprimé)</li>' : '<li>Apportez une pièce d\'identité valide</li>'}
               <li>Respectez les règles du stade et les consignes de sécurité</li>
             </ul>
             
@@ -889,10 +898,18 @@ export function getSpectatorApprovalEmailHtml(
               ${matchType === 'preseason' ? '<p><strong>Type:</strong> Preseason Match</p>' : ''}
             </div>
             
+            ${qrCodeDataUrl ? `
+            <div style="text-align: center; margin: 24px 0; padding: 20px; background: #f9fafb; border-radius: 8px;">
+              <p style="color: #1f2937; font-weight: 600; margin-bottom: 12px; font-size: 16px;">📱 Your Entry QR Code</p>
+              <img src="${qrCodeDataUrl}" alt="QR Code" style="width: 250px; height: 250px; margin: 0 auto; display: block; border: 3px solid #10b981; border-radius: 8px; padding: 10px; background: white;" />
+              <p style="color: #6b7280; font-size: 13px; margin-top: 12px;">Present this QR code at the entrance to validate your attendance</p>
+            </div>
+            ` : ''}
+            
             <p><strong>Important:</strong></p>
             <ul style="color: #4b5563; margin-left: 20px; margin-bottom: 16px;">
               <li>Arrive at least 10 minutes before the match starts</li>
-              <li>Bring a valid ID</li>
+              ${qrCodeDataUrl ? '<li>Bring this QR code (on your phone or printed)</li>' : '<li>Bring a valid ID</li>'}
               <li>Respect stadium rules and safety guidelines</li>
             </ul>
             

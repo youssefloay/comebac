@@ -14,7 +14,10 @@ import {
   Clock,
   Shield,
   Check,
-  Users
+  Users,
+  QrCode,
+  Camera,
+  X
 } from 'lucide-react'
 
 interface SpectatorRequest {
@@ -74,7 +77,20 @@ const translations = {
     date: "Date",
     status: "Statut",
     checkInTime: "Heure de check-in",
-    back: "Retour"
+    back: "Retour",
+    scanQRCode: "Scanner QR Code",
+    searchManually: "Recherche manuelle",
+    qrScanner: "Scanner QR Code",
+    scanning: "Scan en cours...",
+    scanInstructions: "Pointez la caméra vers le QR code",
+    stopScan: "Arrêter le scan",
+    startScan: "Démarrer le scan",
+    cameraError: "Erreur d'accès à la caméra",
+    cameraPermissionDenied: "Permission caméra refusée. Veuillez autoriser l'accès à la caméra dans les paramètres de votre navigateur.",
+    cameraNotAvailable: "Caméra non disponible. Veuillez vérifier que votre appareil a une caméra et qu'elle n'est pas utilisée par une autre application.",
+    qrCodeValid: "QR Code valide",
+    qrCodeInvalid: "QR Code invalide",
+    processing: "Traitement..."
   },
   en: {
     title: "On-site Check-in",
@@ -107,7 +123,20 @@ const translations = {
     date: "Date",
     status: "Status",
     checkInTime: "Check-in time",
-    back: "Back"
+    back: "Back",
+    scanQRCode: "Scan QR Code",
+    searchManually: "Manual search",
+    qrScanner: "QR Code Scanner",
+    scanning: "Scanning...",
+    scanInstructions: "Point camera at QR code",
+    stopScan: "Stop scan",
+    startScan: "Start scan",
+    cameraError: "Camera access error",
+    cameraPermissionDenied: "Camera permission denied. Please allow camera access in your browser settings.",
+    cameraNotAvailable: "Camera not available. Please check that your device has a camera and it's not being used by another application.",
+    qrCodeValid: "Valid QR Code",
+    qrCodeInvalid: "Invalid QR Code",
+    processing: "Processing..."
   }
 }
 
@@ -124,6 +153,10 @@ export default function OnSiteCheckInPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [scanMode, setScanMode] = useState<'search' | 'scan'>('search')
+  const [scanning, setScanning] = useState(false)
+  const [qrScanner, setQrScanner] = useState<any>(null)
+  const [scannerElementId] = useState(`qr-scanner-${Date.now()}`)
 
   useEffect(() => {
     loadTodayMatches()
@@ -144,7 +177,9 @@ export default function OnSiteCheckInPage() {
       const allMatches: Match[] = []
 
       if (regularRes.ok) {
-        const regularMatches = await regularRes.json()
+        const regularData = await regularRes.json()
+        // S'assurer que c'est un tableau
+        const regularMatches = Array.isArray(regularData) ? regularData : []
         regularMatches.forEach((m: any) => {
           const matchDate = m.date?.toDate ? m.date.toDate() : new Date(m.date)
           if (matchDate >= today) {
@@ -161,7 +196,11 @@ export default function OnSiteCheckInPage() {
       }
 
       if (preseasonRes.ok) {
-        const preseasonMatches = await preseasonRes.json()
+        const preseasonData = await preseasonRes.json()
+        // L'API retourne { matches: [...] }, donc on extrait le tableau
+        const preseasonMatches = Array.isArray(preseasonData) 
+          ? preseasonData 
+          : (preseasonData.matches || [])
         preseasonMatches.forEach((m: any) => {
           const matchDate = m.date ? new Date(m.date) : new Date()
           if (matchDate >= today) {
@@ -341,6 +380,150 @@ export default function OnSiteCheckInPage() {
     }).format(date)
   }
 
+  // Fonctions pour le scan QR code
+  const startQRScan = async () => {
+    try {
+      const { Html5Qrcode } = await import('html5-qrcode')
+      const scanner = new Html5Qrcode(scannerElementId)
+      
+      setQrScanner(scanner)
+      setScanning(true)
+      setError(null)
+      
+      await scanner.start(
+        { facingMode: 'environment' }, // Utiliser la caméra arrière
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 }
+        },
+        (decodedText: string) => {
+          // QR code détecté
+          handleQRCodeScanned(decodedText)
+        },
+        (errorMessage: string) => {
+          // Erreur de scan (ignorer les erreurs de décodage)
+        }
+      )
+    } catch (error: any) {
+      console.error('Error starting QR scan:', error)
+      
+      // Gérer les différents types d'erreurs
+      let errorMessage = t.cameraError
+      if (error.name === 'NotAllowedError' || error.message?.includes('Permission denied') || error.message?.includes('NotAllowedError')) {
+        errorMessage = t.cameraPermissionDenied
+      } else if (error.name === 'NotFoundError' || error.message?.includes('not found') || error.message?.includes('NotFoundError')) {
+        errorMessage = t.cameraNotAvailable
+      } else {
+        errorMessage = t.cameraError + ': ' + (error.message || 'Unknown error')
+      }
+      
+      setError(errorMessage)
+      setScanning(false)
+    }
+  }
+
+  const stopQRScan = async () => {
+    if (qrScanner) {
+      try {
+        await qrScanner.stop()
+        await qrScanner.clear()
+      } catch (error) {
+        console.error('Error stopping QR scan:', error)
+      }
+      setQrScanner(null)
+    }
+    setScanning(false)
+  }
+
+  const handleQRCodeScanned = async (qrData: string) => {
+    // Extraire le token du QR code (format: /api/spectators/qr/{token})
+    const tokenMatch = qrData.match(/\/api\/spectators\/qr\/([a-f0-9]+)/)
+    if (!tokenMatch || !tokenMatch[1]) {
+      setError(t.qrCodeInvalid)
+      return
+    }
+
+    const token = tokenMatch[1]
+    setError(null)
+    setSuccess(t.processing)
+
+    try {
+      // Valider et faire le check-in
+      const response = await fetch(`/api/spectators/qr/${token}`, {
+        method: 'POST'
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        // Check-in réussi
+        setSuccess(t.success)
+        setResult({
+          id: data.request.id,
+          matchId: data.request.matchId || '',
+          matchType: data.request.matchType || 'regular',
+          teamId: '',
+          teamName: data.request.teamName || '',
+          firstName: data.request.firstName,
+          lastName: data.request.lastName,
+          email: data.request.email,
+          phone: data.request.phone || '',
+          status: 'approved',
+          checkedIn: true,
+          checkedInAt: new Date(data.request.checkedInAt)
+        } as SpectatorRequest)
+        
+        // Arrêter le scan
+        await stopQRScan()
+        
+        // Recharger les matchs si nécessaire
+        if (match) {
+          loadTodayMatches()
+        }
+      } else if (data.alreadyCheckedIn) {
+        setError(t.alreadyCheckedIn)
+        setResult({
+          id: data.request.id,
+          matchId: '',
+          matchType: 'regular',
+          teamId: '',
+          teamName: data.request.teamName || '',
+          firstName: data.request.firstName,
+          lastName: data.request.lastName,
+          email: data.request.email,
+          phone: '',
+          status: 'approved',
+          checkedIn: true,
+          checkedInAt: data.request.checkedInAt ? new Date(data.request.checkedInAt) : new Date()
+        } as SpectatorRequest)
+        await stopQRScan()
+      } else {
+        setError(data.error || t.qrCodeInvalid)
+        await stopQRScan()
+      }
+    } catch (error: any) {
+      console.error('Error processing QR code:', error)
+      setError(error.message || t.error)
+      await stopQRScan()
+    }
+  }
+
+  // Nettoyer le scanner quand on quitte
+  useEffect(() => {
+    return () => {
+      if (qrScanner) {
+        stopQRScan()
+      }
+    }
+  }, [])
+
+  // Arrêter le scan quand on change de mode
+  useEffect(() => {
+    if (scanMode === 'search' && scanning) {
+      stopQRScan()
+    }
+  }, [scanMode])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 p-4 sm:p-6">
       <div className="max-w-2xl mx-auto">
@@ -359,6 +542,41 @@ export default function OnSiteCheckInPage() {
           <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400">
             {t.subtitle}
           </p>
+        </motion.div>
+
+        {/* Mode Toggle */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex gap-3 mb-6 justify-center"
+        >
+          <button
+            onClick={() => {
+              setScanMode('search')
+              stopQRScan()
+            }}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 ${
+              scanMode === 'search'
+                ? 'bg-blue-600 text-white shadow-lg scale-105'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+            }`}
+          >
+            <Search className="w-5 h-5" />
+            {t.searchManually}
+          </button>
+          <button
+            onClick={() => {
+              setScanMode('scan')
+            }}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 ${
+              scanMode === 'scan'
+                ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg scale-105'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+            }`}
+          >
+            <Camera className="w-5 h-5" />
+            {t.scanQRCode}
+          </button>
         </motion.div>
 
         {/* Match Selection */}
@@ -404,16 +622,17 @@ export default function OnSiteCheckInPage() {
           )}
         </motion.div>
 
-        {/* Search */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6"
-        >
-          <div className="flex gap-3">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
+        {/* Search or QR Scanner */}
+        {scanMode === 'search' ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6"
+          >
+            <div className="flex gap-3">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -436,6 +655,69 @@ export default function OnSiteCheckInPage() {
             </button>
           </div>
         </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6"
+          >
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                {t.qrScanner}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {t.scanInstructions}
+              </p>
+            </div>
+
+            {/* QR Scanner Container */}
+            <div className="relative">
+              <div 
+                id={scannerElementId}
+                className="w-full rounded-lg overflow-hidden bg-black"
+                style={{ minHeight: '300px' }}
+              />
+              
+              {!scanning && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/90 rounded-lg backdrop-blur-sm">
+                  <div className="mb-4">
+                    <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center shadow-xl">
+                      <Camera className="w-10 h-10 text-white" />
+                    </div>
+                  </div>
+                  <button
+                    onClick={startQRScan}
+                    className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all font-bold text-lg flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
+                    <Camera className="w-6 h-6" />
+                    {t.startScan}
+                  </button>
+                  <p className="text-white/80 text-sm mt-4 text-center px-4">
+                    {t.scanInstructions}
+                  </p>
+                </div>
+              )}
+
+              {scanning && (
+                <div className="absolute top-4 right-4">
+                  <button
+                    onClick={stopQRScan}
+                    className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+                    title={t.stopScan}
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {scanning && (
+              <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
+                {t.scanning}
+              </p>
+            )}
+          </motion.div>
+        )}
 
         {/* Error Message */}
         <AnimatePresence>
@@ -464,6 +746,18 @@ export default function OnSiteCheckInPage() {
                   }`}>
                     {error}
                   </p>
+                  {error.includes('Permission') && !duplicateWarning && (
+                    <div className="mt-3 p-3 bg-white dark:bg-gray-800 rounded border border-red-200 dark:border-red-800">
+                      <p className="text-sm font-semibold text-red-800 dark:text-red-200 mb-2">
+                        {language === 'fr' ? 'Comment autoriser la caméra :' : 'How to allow camera:'}
+                      </p>
+                      <ul className="text-sm text-red-700 dark:text-red-300 space-y-1 list-disc list-inside ml-2">
+                        <li>{language === 'fr' ? 'Cliquez sur l\'icône de cadenas 🔒 ou "i" dans la barre d\'adresse' : 'Click on the lock 🔒 or "i" icon in the address bar'}</li>
+                        <li>{language === 'fr' ? 'Sélectionnez "Autoriser" pour l\'accès à la caméra' : 'Select "Allow" for camera access'}</li>
+                        <li>{language === 'fr' ? 'Actualisez la page et réessayez' : 'Refresh the page and try again'}</li>
+                      </ul>
+                    </div>
+                  )}
                   {duplicateWarning && (
                     <div className="mt-2 p-3 bg-white dark:bg-gray-800 rounded border border-orange-200 dark:border-orange-800">
                       <p className="text-sm font-semibold text-orange-800 dark:text-orange-200 mb-1">
