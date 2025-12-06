@@ -498,6 +498,14 @@ export default function Dashboard({ user }: { user: any }) {
               </h2>
             )}
           </div>
+          <button
+            onClick={() => window.location.href = '/admin/dashboard-v2'}
+            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition font-semibold text-sm flex items-center gap-2 shadow-md"
+          >
+            <span>✨</span>
+            <span>Switch to New Dashboard (Beta)</span>
+          </button>
+          </div>
           <div className="flex items-center gap-2 md:gap-4 flex-wrap">
             {seedMessage && (
               <div
