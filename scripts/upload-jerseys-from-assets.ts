@@ -91,7 +91,9 @@ async function uploadJerseyImage(teamId: string, teamName: string, imagePath: st
     .replace(/^-|-$/g, '')
   
   const bucket = storage.bucket(bucketName)
-  const fileName = `team-jerseys/${normalizedTeamName}-${teamId}.png`
+  // Déterminer l'extension du fichier source
+  const fileExt = imagePath.toLowerCase().endsWith('.jpg') || imagePath.toLowerCase().endsWith('.jpeg') ? 'jpg' : 'png'
+  const fileName = `team-jerseys/${normalizedTeamName}-${teamId}.${fileExt}`
   const file = bucket.file(fileName)
 
   // Lire le fichier local
@@ -103,10 +105,15 @@ async function uploadJerseyImage(teamId: string, teamName: string, imagePath: st
   
   console.log(`📤 Uploading ${fileName} (${fileBuffer.length} bytes)...`)
   
+  // Déterminer le contentType selon l'extension
+  const contentType = imagePath.toLowerCase().endsWith('.jpg') || imagePath.toLowerCase().endsWith('.jpeg') 
+    ? 'image/jpeg' 
+    : 'image/png'
+  
   // Upload vers Firebase Storage avec une méthode plus fiable
   const stream = file.createWriteStream({
     metadata: {
-      contentType: 'image/png',
+      contentType: contentType,
       cacheControl: 'public, max-age=31536000',
     },
     resumable: false, // Pour les petits fichiers, pas besoin de résumable
@@ -235,9 +242,14 @@ async function processJerseys() {
 
   // Lire tous les fichiers du dossier assets
   const files = fs.readdirSync(assetsDir)
-  const jerseyFiles = files.filter(f => 
-    f.startsWith('T-shirts_88_page-') && f.endsWith('.png')
-  )
+  // Chercher les fichiers .jpg et .png avec les différents formats de noms
+  const jerseyFiles = files.filter(f => {
+    const isJerseyFile = (
+      (f.startsWith('T-shirts_88_page-') || f.startsWith('T-shirts 88_page-')) &&
+      (f.endsWith('.png') || f.endsWith('.jpg') || f.endsWith('.jpeg'))
+    )
+    return isJerseyFile
+  })
 
   console.log(`📁 ${jerseyFiles.length} images de maillots trouvées\n`)
 
@@ -248,8 +260,13 @@ async function processJerseys() {
   }
 
   for (const imageFile of jerseyFiles) {
-    // Extraire le préfixe du fichier (ex: "T-shirts_88_page-0010")
-    const filePrefix = imageFile.replace(/-\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\.png$/, '')
+    // Extraire le préfixe du fichier (ex: "T-shirts_88_page-0010" ou "T-shirts 88_page-0010")
+    // Gérer les deux formats : avec underscore et avec espace, et les extensions .png/.jpg
+    let filePrefix = imageFile
+      .replace(/-\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\.(png|jpg|jpeg)$/, '') // Format avec UUID
+      .replace(/\.(png|jpg|jpeg)$/, '') // Format simple sans UUID
+      .replace(/^T-shirts /, 'T-shirts_') // Normaliser l'espace en underscore
+    
     const teamName = imageToTeamMapping[filePrefix]
     
     if (!teamName) {
