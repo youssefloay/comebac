@@ -356,6 +356,14 @@ function SectionContent({ category, section }: { category: string; section: stri
         return <StatisticsSection />
       case 'rankings':
         return <RankingsSection />
+      case 'mini-league':
+        return <MiniLeagueSection />
+      case 'preseason':
+        return <PreseasonSection />
+      case 'test-matches':
+        return <TestMatchesSection />
+      case 'compare-teams':
+        return <CompareTeamsSection />
       default:
         return null
     }
