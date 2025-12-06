@@ -40,6 +40,10 @@ import ResultsSection from './sections/results-section'
 import LineupsSection from './sections/lineups-section'
 import StatisticsSection from './sections/statistics-section'
 import RankingsSection from './sections/rankings-section'
+import MiniLeagueSection from './sections/mini-league-section'
+import PreseasonSection from './sections/preseason-section'
+import TestMatchesSection from './sections/test-matches-section'
+import CompareTeamsSection from './sections/compare-teams-section'
 import AccountsSection from './sections/accounts-section'
 import RegistrationsSection from './sections/registrations-section'
 import SpectatorsSection from './sections/spectators-section'
@@ -47,6 +51,11 @@ import ShopSection from './sections/shop-section'
 import ActivitySection from './sections/activity-section'
 import MaintenanceSection from './sections/maintenance-section'
 import NotificationsSection from './sections/notifications-section'
+import MediaSection from './sections/media-section'
+import ArchivesSection from './sections/archives-section'
+import SearchSection from './sections/search-section'
+import ImpersonateSection from './sections/impersonate-section'
+import DuplicatePlayersSection from './sections/duplicate-players-section'
 
 export default function DashboardV2Page() {
   const { user, loading, isAdmin } = useAuth()
@@ -97,7 +106,11 @@ export default function DashboardV2Page() {
         { id: 'results', label: 'Results', icon: FileText },
         { id: 'lineups', label: 'Lineups', icon: Shield },
         { id: 'rankings', label: 'Rankings', icon: TrendingUp },
-        { id: 'statistics', label: 'Statistics', icon: BarChart3 }
+        { id: 'statistics', label: 'Statistics', icon: BarChart3 },
+        { id: 'mini-league', label: 'Mini-League', icon: Trophy },
+        { id: 'preseason', label: 'Preseason', icon: Calendar },
+        { id: 'test-matches', label: 'Test Matches', icon: Calendar },
+        { id: 'compare-teams', label: 'Compare Teams', icon: Users }
       ]
     },
     {
@@ -108,7 +121,10 @@ export default function DashboardV2Page() {
       sections: [
         { id: 'accounts', label: 'Accounts', icon: User },
         { id: 'registrations', label: 'Registrations', icon: FileText },
-        { id: 'spectators', label: 'Spectators', icon: Eye }
+        { id: 'spectators', label: 'Spectators', icon: Eye },
+        { id: 'search', label: 'Search', icon: Search },
+        { id: 'impersonate', label: 'Impersonate', icon: User },
+        { id: 'duplicate-players', label: 'Duplicate Players', icon: Users }
       ]
     },
     {
@@ -354,6 +370,12 @@ function SectionContent({ category, section }: { category: string; section: stri
         return <RegistrationsSection />
       case 'spectators':
         return <SpectatorsSection />
+      case 'search':
+        return <SearchSection />
+      case 'impersonate':
+        return <ImpersonateSection />
+      case 'duplicate-players':
+        return <DuplicatePlayersSection />
       default:
         return null
     }
