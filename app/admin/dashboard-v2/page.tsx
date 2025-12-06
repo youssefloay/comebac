@@ -455,33 +455,9 @@ function SectionContent({ category, section }: { category: string; section: stri
       case 'notifications':
         return <NotificationsSection />
       case 'media':
-        return (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Media management - Manage logos, photos, and other media files.
-            </p>
-            <button
-              onClick={() => window.location.href = '/admin/media'}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Go to Media Manager
-            </button>
-          </div>
-        )
+        return <MediaSection />
       case 'archives':
-        return (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Archives - View and manage archived seasons.
-            </p>
-            <button
-              onClick={() => window.location.href = '/admin/archives'}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Go to Archives Page
-            </button>
-          </div>
-        )
+        return <ArchivesSection />
       default:
         return null
     }
