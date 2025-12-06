@@ -122,7 +122,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Import dynamique
-    const { adminDb } = await import('@/lib/firebase-admin')
+    const { adminDb, adminAuth } = await import('@/lib/firebase-admin')
 
     if (!adminDb) {
       return NextResponse.json(
@@ -131,11 +131,39 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
+    // Récupérer l'email de l'utilisateur depuis son UID
+    let userEmail: string | null = null
+    try {
+      // userId peut être soit un UID, soit un email (fallback)
+      // Essayer d'abord comme UID
+      try {
+        const userRecord = await adminAuth.getUser(userId)
+        userEmail = userRecord.email || null
+      } catch {
+        // Si ça échoue, userId est probablement déjà un email
+        userEmail = userId
+      }
+    } catch (error) {
+      console.warn('⚠️ Impossible de récupérer l\'email pour userId:', userId)
+      // Fallback: utiliser userId comme email
+      userEmail = userId
+    }
+
+    if (!userEmail) {
+      return NextResponse.json(
+        { error: 'Impossible de déterminer l\'email de l\'utilisateur' },
+        { status: 400 }
+      )
+    }
+
     // Marquer comme lue
     const notificationRef = adminDb.collection('notifications').doc(notificationId)
     const notificationDoc = await notificationRef.get()
     
-    if (!notificationDoc.exists || notificationDoc.data()?.userId !== userId) {
+    const notificationData = notificationDoc.data()
+    // Vérifier que la notification appartient à l'utilisateur (par UID ou email)
+    if (!notificationDoc.exists || 
+        (notificationData?.userId !== userId && notificationData?.userId !== userEmail)) {
       return NextResponse.json(
         { error: 'Notification non trouvée' },
         { status: 404 }
@@ -145,7 +173,6 @@ export async function PATCH(request: NextRequest) {
     await notificationRef.update({ read: true, readAt: new Date() })
 
     // Si c'est une notification custom, mettre à jour aussi le statut dans customNotifications
-    const notificationData = notificationDoc.data()
     if (notificationData?.customNotificationId) {
       const customNotifRef = adminDb.collection('customNotifications').doc(notificationData.customNotificationId)
       const customNotifDoc = await customNotifRef.get()
@@ -154,9 +181,15 @@ export async function PATCH(request: NextRequest) {
         const customData = customNotifDoc.data()!
         const recipients = customData.recipients || []
         
-        // Trouver et mettre à jour le destinataire
+        // Trouver et mettre à jour le destinataire par email (insensible à la casse)
         const updatedRecipients = recipients.map((r: any) => {
-          if (r.email === userId || r.email === notificationData.userId) {
+          const recipientEmail = r.email?.toLowerCase()
+          const currentUserEmail = userEmail?.toLowerCase()
+          const notificationUserId = notificationData.userId?.toLowerCase()
+          
+          if (recipientEmail === currentUserEmail || 
+              recipientEmail === notificationUserId ||
+              (notificationUserId && recipientEmail === notificationUserId)) {
             return { ...r, read: true, readAt: new Date() }
           }
           return r

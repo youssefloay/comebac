@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminDb } from '@/lib/firebase-admin'
+import { adminDb, adminAuth } from '@/lib/firebase-admin'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,10 +12,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Récupérer l'email de l'utilisateur depuis son UID
+    let userEmail: string | null = null
+    try {
+      // userId peut être soit un UID, soit un email (fallback)
+      // Essayer d'abord comme UID
+      try {
+        const userRecord = await adminAuth.getUser(userId)
+        userEmail = userRecord.email || null
+      } catch {
+        // Si ça échoue, userId est probablement déjà un email
+        userEmail = userId
+      }
+    } catch (error) {
+      console.warn('⚠️ Impossible de récupérer l\'email pour userId:', userId)
+      // Fallback: utiliser userId comme email
+      userEmail = userId
+    }
+
+    if (!userEmail) {
+      return NextResponse.json(
+        { error: 'Impossible de déterminer l\'email de l\'utilisateur' },
+        { status: 400 }
+      )
+    }
+
     // Marquer la notification individuelle comme lue
+    // Chercher par userId (UID ou email) OU par email dans les recipients
     const notifSnap = await adminDb.collection('notifications')
       .where('customNotificationId', '==', notificationId)
-      .where('userId', '==', userId)
+      .where('userId', 'in', [userId, userEmail])
       .limit(1)
       .get()
 
@@ -34,9 +60,10 @@ export async function POST(request: NextRequest) {
       const data = customNotifDoc.data()
       const recipients = data?.recipients || []
       
-      // Trouver et mettre à jour le destinataire
+      // Trouver et mettre à jour le destinataire par email
       const updatedRecipients = recipients.map((r: any) => {
-        if (r.email === userId) {
+        // Comparer l'email (insensible à la casse)
+        if (r.email?.toLowerCase() === userEmail?.toLowerCase()) {
           return {
             ...r,
             read: true,
