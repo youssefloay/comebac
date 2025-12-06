@@ -979,26 +979,19 @@ export default function OnSiteCheckInPage() {
         </AnimatePresence>
 
         {/* QR Code Popup Modal */}
-        <AnimatePresence>
-          {qrPopupData?.show && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-              onClick={() => setQrPopupData(null)}
+        {qrPopupData?.show && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setQrPopupData(null)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className={`bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 ${
+                qrPopupData.isAlreadyCheckedIn 
+                  ? 'border-4 border-red-500' 
+                  : 'border-4 border-green-500'
+              }`}
             >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                onClick={(e) => e.stopPropagation()}
-                className={`bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 ${
-                  qrPopupData.isAlreadyCheckedIn 
-                    ? 'border-4 border-red-500' 
-                    : 'border-4 border-green-500'
-                }`}
-              >
                 {/* Header avec indicateur de couleur */}
                 <div className={`flex items-center justify-between mb-4 pb-4 border-b ${
                   qrPopupData.isAlreadyCheckedIn 
@@ -1041,29 +1034,14 @@ export default function OnSiteCheckInPage() {
                   <div className="mb-4 flex justify-center">
                     <button
                       onClick={() => setEnlargedPhoto(qrPopupData.data.photoUrl)}
-                      className="relative group cursor-pointer transition-transform hover:scale-105"
+                      className="relative group cursor-pointer"
                       title={language === 'fr' ? 'Cliquer pour agrandir' : 'Click to enlarge'}
                     >
                       <img
                         src={qrPopupData.data.photoUrl}
                         alt={`${qrPopupData.data.firstName} ${qrPopupData.data.lastName}`}
-                        className="w-24 h-24 rounded-full object-cover border-4 border-gray-200 dark:border-gray-700 group-hover:border-blue-400 dark:group-hover:border-blue-500 transition-colors"
+                        className="w-24 h-24 rounded-full object-cover border-4 border-gray-200 dark:border-gray-700"
                       />
-                      <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                        <svg
-                          className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
-                          />
-                        </svg>
-                      </div>
                     </button>
                   </div>
                 )}
@@ -1149,44 +1127,35 @@ export default function OnSiteCheckInPage() {
                     {t.close}
                   </button>
                 </div>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
           )}
-        </AnimatePresence>
 
         {/* Photo Enlarged Modal */}
-        <AnimatePresence>
-          {enlargedPhoto && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
-              onClick={() => setEnlargedPhoto(null)}
+        {enlargedPhoto && (
+          <div
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+            onClick={() => setEnlargedPhoto(null)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="relative max-w-4xl max-h-[90vh] w-full"
             >
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                onClick={(e) => e.stopPropagation()}
-                className="relative max-w-4xl max-h-[90vh] w-full"
+              <button
+                onClick={() => setEnlargedPhoto(null)}
+                className="absolute -top-12 right-0 p-2 bg-white/10 hover:bg-white/20 rounded-full"
+                title={language === 'fr' ? 'Fermer' : 'Close'}
               >
-                <button
-                  onClick={() => setEnlargedPhoto(null)}
-                  className="absolute -top-12 right-0 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
-                  title={language === 'fr' ? 'Fermer' : 'Close'}
-                >
-                  <X className="w-6 h-6 text-white" />
-                </button>
-                <img
-                  src={enlargedPhoto}
-                  alt="Photo agrandie"
-                  className="w-full h-auto rounded-lg shadow-2xl max-h-[90vh] object-contain"
-                />
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                <X className="w-6 h-6 text-white" />
+              </button>
+              <img
+                src={enlargedPhoto}
+                alt="Photo agrandie"
+                className="w-full h-auto rounded-lg shadow-2xl max-h-[90vh] object-contain"
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
