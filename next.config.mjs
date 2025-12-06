@@ -1,5 +1,6 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
+import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -15,7 +16,7 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, dev }) => {
     // Exclure @aws-sdk/client-s3 du bundling (package optionnel)
     if (isServer) {
       config.externals = config.externals || []
@@ -23,6 +24,25 @@ const nextConfig = {
         '@aws-sdk/client-s3': 'commonjs @aws-sdk/client-s3'
       })
     }
+    
+    // Ajouter mini-css-extract-plugin pour le build de production
+    if (!isServer && !dev) {
+      // Vérifier si le plugin n'est pas déjà présent
+      const hasMiniCssExtractPlugin = config.plugins?.some(
+        plugin => plugin?.constructor?.name === 'MiniCssExtractPlugin'
+      )
+      
+      if (!hasMiniCssExtractPlugin) {
+        config.plugins = config.plugins || []
+        config.plugins.push(
+          new MiniCssExtractPlugin({
+            filename: 'static/css/[name].[contenthash].css',
+            chunkFilename: 'static/css/[name].[contenthash].css',
+          })
+        )
+      }
+    }
+    
     return config
   },
   images: {
