@@ -30,8 +30,20 @@ import {
   TrendingUp,
   Menu,
   X,
-  LogOut
+  LogOut,
+  Search
 } from 'lucide-react'
+import TeamsSection from './sections/teams-section'
+import PlayersSection from './sections/players-section'
+import MatchesSection from './sections/matches-section'
+import ResultsSection from './sections/results-section'
+import LineupsSection from './sections/lineups-section'
+import StatisticsSection from './sections/statistics-section'
+import AccountsSection from './sections/accounts-section'
+import SpectatorsSection from './sections/spectators-section'
+import ShopSection from './sections/shop-section'
+import ActivitySection from './sections/activity-section'
+import MaintenanceSection from './sections/maintenance-section'
 
 export default function DashboardV2Page() {
   const { user, loading, isAdmin } = useAuth()
@@ -159,6 +171,7 @@ export default function DashboardV2Page() {
       )
     }
 
+    // Render section content
     return (
       <div className="p-6">
         <div className="mb-4">
@@ -167,7 +180,7 @@ export default function DashboardV2Page() {
               setActiveSection(null)
               if (category.sections.length === 0) setActiveCategory(null)
             }}
-            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-2"
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-2 flex items-center gap-2"
           >
             ← Back
           </button>
@@ -175,11 +188,7 @@ export default function DashboardV2Page() {
             {activeSection ? category.sections.find(s => s.id === activeSection)?.label : category.label}
           </h2>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <p className="text-gray-600 dark:text-gray-400">
-            {activeSection ? `${category.label} - ${category.sections.find(s => s.id === activeSection)?.label}` : category.label} content will be implemented here.
-          </p>
-        </div>
+        <SectionContent category={category.id} section={activeSection} />
       </div>
     )
   }
@@ -308,6 +317,182 @@ export default function DashboardV2Page() {
   )
 }
 
+function SectionContent({ category, section }: { category: string; section: string | null }) {
+  if (!section) return null
+
+  // Competition sections
+  if (category === 'competition') {
+    switch (section) {
+      case 'teams':
+        return <TeamsSection />
+      case 'players':
+        return <PlayersSection />
+      case 'matches':
+        return <MatchesSection />
+      case 'results':
+        return <ResultsSection />
+      case 'lineups':
+        return <LineupsSection />
+      case 'statistics':
+        return <StatisticsSection />
+      case 'rankings':
+        return (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <p className="text-gray-600 dark:text-gray-400">
+              Rankings section - Link to rankings page or implement here.
+            </p>
+            <button
+              onClick={() => window.location.href = '/admin'}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Go to Rankings in Old Dashboard
+            </button>
+          </div>
+        )
+      default:
+        return null
+    }
+  }
+
+  // Users & Accounts sections
+  if (category === 'users') {
+    switch (section) {
+      case 'accounts':
+        return <AccountsSection />
+      case 'registrations':
+        return (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Team Registrations - Manage team registration requests.
+            </p>
+            <button
+              onClick={() => window.location.href = '/admin/team-registrations'}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Go to Registrations Page
+            </button>
+          </div>
+        )
+      case 'spectators':
+        return <SpectatorsSection />
+      default:
+        return null
+    }
+  }
+
+  // Shop & Activity sections
+  if (category === 'shop') {
+    switch (section) {
+      case 'shop':
+        return <ShopSection />
+      case 'activity':
+        return <ActivitySection />
+      default:
+        return null
+    }
+  }
+
+  // Settings & Maintenance sections
+  if (category === 'settings') {
+    switch (section) {
+      case 'maintenance':
+        return <MaintenanceSection />
+      case 'export-import':
+        return (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Export/Import Data</h3>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium text-gray-900 dark:text-white mb-2">Export</h4>
+                <div className="flex gap-2">
+                  <a
+                    href="/api/admin/export/all"
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                    download
+                  >
+                    Export All Data
+                  </a>
+                  <a
+                    href="/api/admin/export/teams"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    download
+                  >
+                    Export Teams
+                  </a>
+                  <a
+                    href="/api/admin/export/players"
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                    download
+                  >
+                    Export Players
+                  </a>
+                </div>
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 dark:text-white mb-2">Import</h4>
+                <p className="text-gray-600 dark:text-gray-400 mb-2">
+                  Import players from Excel file.
+                </p>
+                <button
+                  onClick={() => window.location.href = '/admin'}
+                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+                >
+                  Go to Import in Old Dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      case 'notifications':
+        return (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Notifications management - Send custom notifications to users.
+            </p>
+            <button
+              onClick={() => window.location.href = '/admin'}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Go to Notifications in Old Dashboard
+            </button>
+          </div>
+        )
+      case 'media':
+        return (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Media management - Manage logos, photos, and other media files.
+            </p>
+            <button
+              onClick={() => window.location.href = '/admin/media'}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Go to Media Manager
+            </button>
+          </div>
+        )
+      case 'archives':
+        return (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Archives - View and manage archived seasons.
+            </p>
+            <button
+              onClick={() => window.location.href = '/admin/archives'}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Go to Archives Page
+            </button>
+          </div>
+        )
+      default:
+        return null
+    }
+  }
+
+  return null
+}
+
 function HomeView() {
   const [stats, setStats] = useState({
     teams: 0,
@@ -358,10 +543,30 @@ function HomeView() {
   }
 
   const quickActions = [
-    { label: 'Generate Matches', icon: Calendar, href: '/admin', color: 'blue' },
-    { label: 'Enter Result', icon: FileText, href: '/admin', color: 'green' },
-    { label: 'Approve Request', icon: CheckCircle2, href: '/admin', color: 'purple' },
-    { label: 'View Notifications', icon: Bell, href: '/admin', color: 'orange' }
+    { 
+      label: 'Generate Matches', 
+      icon: Calendar, 
+      action: () => window.location.href = '/admin',
+      color: 'blue' 
+    },
+    { 
+      label: 'Enter Result', 
+      icon: FileText, 
+      action: () => window.location.href = '/admin',
+      color: 'green' 
+    },
+    { 
+      label: 'Approve Request', 
+      icon: CheckCircle2, 
+      action: () => window.location.href = '/admin/spectators/check-in',
+      color: 'purple' 
+    },
+    { 
+      label: 'Team Registrations', 
+      icon: FileText, 
+      action: () => window.location.href = '/admin/team-registrations',
+      color: 'orange' 
+    }
   ]
 
   if (loading) {
@@ -433,7 +638,7 @@ function HomeView() {
           {quickActions.map((action, index) => (
             <button
               key={index}
-              onClick={() => window.location.href = action.href}
+              onClick={action.action}
               className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 hover:shadow-lg transition text-left"
             >
               <action.icon className={`w-6 h-6 mb-2 text-${action.color}-500`} />
@@ -443,12 +648,35 @@ function HomeView() {
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          Recent activity will be displayed here.
-        </p>
+      {/* Quick Links */}
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Quick Links</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <button
+            onClick={() => window.location.href = '/admin/search'}
+            className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 hover:shadow-lg transition text-left"
+          >
+            <Search className="w-6 h-6 mb-2 text-blue-500" />
+            <p className="font-medium text-gray-900 dark:text-white">Search</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Search for teams, players, matches</p>
+          </button>
+          <button
+            onClick={() => window.location.href = '/admin/spectators/check-in'}
+            className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 hover:shadow-lg transition text-left"
+          >
+            <Eye className="w-6 h-6 mb-2 text-green-500" />
+            <p className="font-medium text-gray-900 dark:text-white">Spectator Check-in</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">QR code scanning for check-in</p>
+          </button>
+          <button
+            onClick={() => window.location.href = '/admin/preseason/matches'}
+            className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 hover:shadow-lg transition text-left"
+          >
+            <Trophy className="w-6 h-6 mb-2 text-orange-500" />
+            <p className="font-medium text-gray-900 dark:text-white">Preseason</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Manage preseason matches</p>
+          </button>
+        </div>
       </div>
     </div>
   )
