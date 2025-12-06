@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 import { Timestamp } from 'firebase-admin/firestore'
+import { getPreseasonMatchById } from '@/lib/preseason/db'
 
 // GET - Valider un QR code et faire le check-in
 export async function GET(
@@ -49,6 +50,44 @@ export async function GET(
       )
     }
 
+    // Récupérer les informations du match
+    let matchInfo: any = null
+    try {
+      if (requestData.matchType === 'preseason') {
+        const preseasonMatch = await getPreseasonMatchById(requestData.matchId)
+        if (preseasonMatch) {
+          matchInfo = {
+            homeTeam: preseasonMatch.teamAName,
+            awayTeam: preseasonMatch.teamBName,
+            date: preseasonMatch.date,
+            time: preseasonMatch.time,
+            venue: preseasonMatch.location
+          }
+        }
+      } else {
+        const matchDoc = await adminDb.collection('matches').doc(requestData.matchId).get()
+        if (matchDoc.exists) {
+          const matchData = matchDoc.data()
+          // Récupérer les noms des équipes
+          const [homeTeamDoc, awayTeamDoc] = await Promise.all([
+            adminDb.collection('teams').doc(matchData?.homeTeamId).get(),
+            adminDb.collection('teams').doc(matchData?.awayTeamId).get()
+          ])
+          
+          const date = matchData?.date?.toDate ? matchData.date.toDate() : new Date(matchData?.date)
+          matchInfo = {
+            homeTeam: homeTeamDoc.data()?.name || 'Équipe',
+            awayTeam: awayTeamDoc.data()?.name || 'Équipe',
+            date: date,
+            time: date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+            venue: matchData?.venue || matchData?.location || ''
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching match info:', error)
+    }
+
     // Vérifier si déjà check-in
     if (requestData.checkedIn === true) {
       return NextResponse.json({
@@ -64,7 +103,8 @@ export async function GET(
           matchId: requestData.matchId,
           matchType: requestData.matchType,
           photoUrl: requestData.photoUrl,
-          checkedInAt: requestData.checkedInAt?.toDate?.() || requestData.checkedInAt
+          checkedInAt: requestData.checkedInAt?.toDate?.() || requestData.checkedInAt,
+          matchInfo
         }
       })
     }
@@ -82,7 +122,8 @@ export async function GET(
         teamName: requestData.teamName,
         matchId: requestData.matchId,
         matchType: requestData.matchType,
-        photoUrl: requestData.photoUrl
+        photoUrl: requestData.photoUrl,
+        matchInfo
       }
     })
   } catch (error: any) {

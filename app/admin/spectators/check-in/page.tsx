@@ -75,6 +75,8 @@ const translations = {
     team: "Équipe",
     match: "Match",
     date: "Date",
+    time: "Heure",
+    venue: "Lieu",
     status: "Statut",
     checkInTime: "Heure de check-in",
     back: "Retour",
@@ -128,6 +130,8 @@ const translations = {
     team: "Team",
     match: "Match",
     date: "Date",
+    time: "Time",
+    venue: "Venue",
     status: "Status",
     checkInTime: "Check-in time",
     back: "Back",
@@ -1088,6 +1092,57 @@ export default function OnSiteCheckInPage() {
                         <p className="font-medium text-gray-900 dark:text-white">
                           {qrPopupData.data.teamName}
                         </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Informations du match */}
+                  {qrPopupData.data.matchInfo && (
+                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                        {t.match}
+                      </p>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <Calendar className="w-5 h-5 text-gray-400" />
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{t.match}</p>
+                            <p className="font-semibold text-gray-900 dark:text-white">
+                              {qrPopupData.data.matchInfo.homeTeam} vs {qrPopupData.data.matchInfo.awayTeam}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Calendar className="w-5 h-5 text-gray-400" />
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{t.date}</p>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              {formatDate(new Date(qrPopupData.data.matchInfo.date))}
+                            </p>
+                          </div>
+                        </div>
+                        {qrPopupData.data.matchInfo.time && (
+                          <div className="flex items-center gap-3">
+                            <Clock className="w-5 h-5 text-gray-400" />
+                            <div className="flex-1">
+                              <p className="text-sm text-gray-500 dark:text-gray-400">{t.time}</p>
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                {qrPopupData.data.matchInfo.time}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        {qrPopupData.data.matchInfo.venue && (
+                          <div className="flex items-center gap-3">
+                            <Shield className="w-5 h-5 text-gray-400" />
+                            <div className="flex-1">
+                              <p className="text-sm text-gray-500 dark:text-gray-400">{t.venue}</p>
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                {qrPopupData.data.matchInfo.venue}
+                              </p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
