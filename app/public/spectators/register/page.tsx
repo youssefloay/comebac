@@ -300,6 +300,7 @@ export default function SpectatorRegistrationPage() {
     if (!selectedTeam) return
 
     setLoading(true)
+    setError(null)
     try {
       const response = await fetch(`/api/spectators/matches?teamId=${selectedTeam.id}`)
       if (response.ok) {
@@ -307,26 +308,64 @@ export default function SpectatorRegistrationPage() {
         if (contentType?.includes('application/json')) {
           try {
             const matchesData = await response.json()
-            // Convertir les dates string en objets Date
-            const matchesWithDates = matchesData.map((match: any) => ({
-              ...match,
-              date: match.date ? new Date(match.date) : new Date()
-            }))
+            // Convertir les dates string en objets Date et valider les données
+            const matchesWithDates = matchesData
+              .map((match: any) => {
+                try {
+                  let dateObj: Date
+                  if (match.date instanceof Date) {
+                    dateObj = match.date
+                  } else if (typeof match.date === 'string') {
+                    dateObj = new Date(match.date)
+                  } else if (match.date?.toDate && typeof match.date.toDate === 'function') {
+                    dateObj = match.date.toDate()
+                  } else {
+                    dateObj = new Date()
+                  }
+                  
+                  // Vérifier que la date est valide
+                  if (isNaN(dateObj.getTime())) {
+                    console.warn('Invalid date for match:', match.id)
+                    return null
+                  }
+                  
+                  return {
+                    ...match,
+                    id: match.id || '',
+                    type: match.type || 'regular',
+                    homeTeam: match.homeTeam || '',
+                    awayTeam: match.awayTeam || '',
+                    date: dateObj,
+                    venue: match.venue || '',
+                    round: match.round || 0
+                  }
+                } catch (err) {
+                  console.error('Error processing match:', match, err)
+                  return null
+                }
+              })
+              .filter((match: any) => match !== null && match.id)
+            
             setMatches(matchesWithDates)
           } catch (jsonError) {
             console.error('Error parsing matches JSON:', jsonError)
+            setError(t.invalidResponse)
             setMatches([])
           }
         } else {
           console.error('Response is not JSON:', contentType)
+          setError(t.invalidResponse)
           setMatches([])
         }
       } else {
-        console.error('Failed to load matches:', response.status, response.statusText)
+        const errorText = await response.text().catch(() => 'Unknown error')
+        console.error('Failed to load matches:', response.status, response.statusText, errorText)
+        setError(language === 'fr' ? 'Erreur lors du chargement des matchs' : 'Error loading matches')
         setMatches([])
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading matches:', error)
+      setError(language === 'fr' ? 'Erreur de connexion. Veuillez réessayer.' : 'Connection error. Please try again.')
       setMatches([])
     } finally {
       setLoading(false)
@@ -596,6 +635,38 @@ export default function SpectatorRegistrationPage() {
       hour: '2-digit',
       minute: '2-digit'
     }).format(dateObj)
+  }
+
+  // Gestion d'erreur globale pour éviter les crashes
+  if (error && error.includes('Failed to fetch') || error?.includes('NetworkError')) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 pb-20 lg:pb-0 flex items-center justify-center">
+        <div className="max-w-md mx-auto px-4 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+            <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              {language === 'fr' ? 'Erreur de connexion' : 'Connection Error'}
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              {language === 'fr' 
+                ? 'Impossible de charger les données. Vérifiez votre connexion internet et réessayez.'
+                : 'Unable to load data. Please check your internet connection and try again.'}
+            </p>
+            <button
+              onClick={() => {
+                setError(null)
+                if (selectedTeam) {
+                  loadMatches()
+                }
+              }}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+            >
+              {language === 'fr' ? 'Réessayer' : 'Retry'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -1042,7 +1113,7 @@ function MatchCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2 flex-wrap">
             <h3 className="font-bold text-lg text-gray-900 dark:text-white break-words">
-              {match.homeTeam || t.homeTeam} {t.vs} {match.awayTeam || t.awayTeam}
+              {(match.homeTeam && match.homeTeam.trim()) || t.homeTeam} {t.vs} {(match.awayTeam && match.awayTeam.trim()) || t.awayTeam}
             </h3>
             {match.type === 'preseason' && (
               <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-full text-xs font-semibold whitespace-nowrap">
@@ -1051,15 +1122,19 @@ function MatchCard({
             )}
           </div>
           <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-            <span className="flex items-center gap-1">
-              <Calendar className="w-4 h-4" />
-              {formatDate(match.date)}
-            </span>
-            <span className="flex items-center gap-1">
-              <span>🕐</span>
-              {formatTime(match.date)}
-            </span>
-            {match.venue && (
+            {match.date && (
+              <>
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  {formatDate(match.date)}
+                </span>
+                <span className="flex items-center gap-1">
+                  <span>🕐</span>
+                  {formatTime(match.date)}
+                </span>
+              </>
+            )}
+            {match.venue && match.venue.trim() && (
               <span className="flex items-center gap-1">
                 <span>📍</span>
                 {match.venue}
