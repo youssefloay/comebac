@@ -968,6 +968,44 @@ export default function SpectatorRegistrationPage() {
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   {t.photo} <span className="text-red-500">*</span>
                 </label>
+                
+                {/* Exemple de photo */}
+                <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                        {language === 'fr' ? 'Exemple de photo acceptée :' : 'Example of accepted photo:'}
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-4 items-start">
+                        <div className="flex flex-col items-center">
+                          <div className="w-24 h-24 rounded-lg overflow-hidden border-2 border-blue-300 dark:border-blue-600 bg-white dark:bg-gray-700 flex items-center justify-center mb-2">
+                            <User className="w-12 h-12 text-blue-400" />
+                          </div>
+                          <p className="text-xs text-blue-700 dark:text-blue-300 text-center font-medium">
+                            {language === 'fr' ? 'Photo de profil claire' : 'Clear profile photo'}
+                          </p>
+                        </div>
+                        <div className="flex-1 text-xs text-blue-800 dark:text-blue-200 space-y-1">
+                          <p className="font-semibold">{language === 'fr' ? '✓ Accepté :' : '✓ Accepted:'}</p>
+                          <ul className="list-disc list-inside space-y-0.5 ml-2">
+                            <li>{language === 'fr' ? 'Photo de visage claire et nette' : 'Clear and sharp face photo'}</li>
+                            <li>{language === 'fr' ? 'Bonne luminosité' : 'Good lighting'}</li>
+                            <li>{language === 'fr' ? 'Visage bien visible' : 'Face clearly visible'}</li>
+                            <li>{language === 'fr' ? 'Format portrait recommandé' : 'Portrait format recommended'}</li>
+                          </ul>
+                          <p className="font-semibold mt-2">{language === 'fr' ? '✗ Éviter :' : '✗ Avoid:'}</p>
+                          <ul className="list-disc list-inside space-y-0.5 ml-2">
+                            <li>{language === 'fr' ? 'Photos floues ou sombres' : 'Blurry or dark photos'}</li>
+                            <li>{language === 'fr' ? 'Photos de groupe' : 'Group photos'}</li>
+                            <li>{language === 'fr' ? 'Photos avec filtres ou effets' : 'Photos with filters or effects'}</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {photoPreview ? (
                   <div className="relative">
                     <div className="w-32 h-32 rounded-lg overflow-hidden border-2 border-green-500 dark:border-green-400">
