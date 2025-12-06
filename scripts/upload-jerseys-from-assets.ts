@@ -70,38 +70,87 @@ const imageToTeamMapping: Record<string, string> = {
   'T-shirts_88_page-0004': 'Mangoz FC'
 }
 
-async function uploadJerseyImage(teamId: string, imagePath: string): Promise<string> {
+async function uploadJerseyImage(teamId: string, teamName: string, imagePath: string): Promise<string> {
+  // Vérifier que le fichier existe et a une taille > 0
+  if (!fs.existsSync(imagePath)) {
+    throw new Error(`File not found: ${imagePath}`)
+  }
+  
+  const stats = fs.statSync(imagePath)
+  if (stats.size === 0) {
+    throw new Error(`File is empty: ${imagePath}`)
+  }
+  
+  console.log(`📁 File size: ${stats.size} bytes`)
+  
+  // Normaliser le nom de l'équipe pour le nom de fichier (enlever les espaces, caractères spéciaux)
+  const normalizedTeamName = teamName
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+  
   const bucket = storage.bucket(bucketName)
-  const fileName = `team-jerseys/${teamId}-${Date.now()}.png`
+  const fileName = `team-jerseys/${normalizedTeamName}-${teamId}.png`
   const file = bucket.file(fileName)
 
   // Lire le fichier local
   const fileBuffer = fs.readFileSync(imagePath)
   
-  console.log(`📤 Uploading ${fileName}...`)
+  if (fileBuffer.length === 0) {
+    throw new Error(`Buffer is empty for: ${imagePath}`)
+  }
   
-  // Upload vers Firebase Storage
-  await file.save(fileBuffer, {
+  console.log(`📤 Uploading ${fileName} (${fileBuffer.length} bytes)...`)
+  
+  // Upload vers Firebase Storage avec une méthode plus fiable
+  const stream = file.createWriteStream({
     metadata: {
       contentType: 'image/png',
       cacheControl: 'public, max-age=31536000',
     },
+    resumable: false, // Pour les petits fichiers, pas besoin de résumable
   })
-  console.log(`✅ File saved to bucket`)
-
-  // Rendre le fichier public
-  console.log(`🔓 Making file public...`)
-  await file.makePublic()
-  console.log(`✅ File is now public`)
-
-  // Vérifier que le fichier est accessible
-  const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`
   
-  // Attendre un peu pour que les permissions se propagent
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  
-  // Retourner l'URL publique
-  return publicUrl
+  return new Promise((resolve, reject) => {
+    stream.on('error', (error) => {
+      console.error(`❌ Upload error:`, error)
+      reject(error)
+    })
+    
+    stream.on('finish', async () => {
+      console.log(`✅ File uploaded to bucket`)
+      
+      // Rendre le fichier public
+      console.log(`🔓 Making file public...`)
+      try {
+        await file.makePublic()
+        console.log(`✅ File is now public`)
+        
+        // Vérifier la taille du fichier uploadé
+        const [metadata] = await file.getMetadata()
+        console.log(`📊 Uploaded file size: ${metadata.size} bytes`)
+        
+        if (metadata.size === '0' || parseInt(metadata.size) === 0) {
+          throw new Error('Uploaded file is 0 bytes!')
+        }
+        
+        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`
+        console.log(`✅ Public URL: ${publicUrl}`)
+        
+        // Attendre un peu pour que les permissions se propagent
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        resolve(publicUrl)
+      } catch (error) {
+        console.error(`❌ Error making file public:`, error)
+        reject(error)
+      }
+    })
+    
+    // Écrire le buffer dans le stream
+    stream.end(fileBuffer)
+  })
 }
 
 async function findTeamByName(teamName: string): Promise<{ id: string; name: string } | null> {
@@ -225,9 +274,9 @@ async function processJerseys() {
 
       console.log(`✅ Équipe trouvée: ${team.name} (${team.id})`)
 
-      // Upload de l'image
+      // Upload de l'image avec le nom de l'équipe
       console.log(`📤 Upload de l'image...`)
-      const jerseyImageUrl = await uploadJerseyImage(team.id, imagePath)
+      const jerseyImageUrl = await uploadJerseyImage(team.id, team.name, imagePath)
       console.log(`✅ Image uploadée: ${jerseyImageUrl}`)
 
       // Vérifier si un produit existe déjà pour cette équipe
