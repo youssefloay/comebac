@@ -1,9 +1,9 @@
 'use client'
 
+import React, { useState } from 'react'
 import { AdminI18nProvider } from '@/lib/i18n/admin-i18n-context'
 import { useAdminI18n } from '@/lib/i18n/admin-i18n-context'
 import { Globe } from 'lucide-react'
-import { useState } from 'react'
 
 function LanguageButton() {
   const { language, setLanguage } = useAdminI18n()

@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect } from 'react'

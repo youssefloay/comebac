@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter, usePathname } from 'next/navigation'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
