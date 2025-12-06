@@ -12,13 +12,32 @@ export async function GET(request: Request) {
     
     const { searchParams } = new URL(request.url)
     const teamId = searchParams.get('teamId')
+    const onlyJersey = searchParams.get('onlyJersey') === 'true'
     
-    // Récupérer les produits génériques (sans teamId)
+    let products: any[] = []
+    
+    // Si un teamId est fourni, récupérer UNIQUEMENT les produits spécifiques à cette équipe
+    if (teamId) {
+      const teamProductsSnapshot = await adminDb.collection('shopProducts')
+        .where('active', '==', true)
+        .where('teamId', '==', teamId)
+        .get()
+      
+      products = teamProductsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      
+      // Si onlyJersey est true, filtrer pour ne garder que les maillots
+      if (onlyJersey) {
+        products = products.filter(p => p.type === 'jersey')
+      }
+      
+      // Si aucun produit spécifique trouvé, ne rien retourner (pas de produits génériques)
+      return NextResponse.json(products)
+    }
+    
+    // Sinon, récupérer les produits génériques (sans teamId)
     const genericProductsSnapshot = await adminDb.collection('shopProducts')
       .where('active', '==', true)
       .get()
-    
-    let products: any[] = []
     
     if (genericProductsSnapshot.empty) {
       // Initialiser les produits par défaut
@@ -30,36 +49,15 @@ export async function GET(request: Request) {
       await batch.commit()
       
       // Récupérer à nouveau
-      const newSnapshot = await adminDb.collection('shopProducts').where('active', '==', true).get()
+      const newSnapshot = await adminDb.collection('shopProducts')
+        .where('active', '==', true)
+        .get()
       products = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
     } else {
-      products = genericProductsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-    }
-    
-    // Si un teamId est fourni, récupérer aussi les produits spécifiques à cette équipe
-    if (teamId) {
-      const teamProductsSnapshot = await adminDb.collection('shopProducts')
-        .where('active', '==', true)
-        .where('teamId', '==', teamId)
-        .get()
-      
-      const teamProducts = teamProductsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-      
-      // Remplacer les produits génériques par les produits spécifiques à l'équipe si ils existent
-      // Par exemple, remplacer le maillot générique par le maillot spécifique de l'équipe
-      teamProducts.forEach(teamProduct => {
-        const index = products.findIndex(p => p.type === teamProduct.type && !p.teamId)
-        if (index !== -1) {
-          // Remplacer le produit générique par le produit spécifique
-          products[index] = teamProduct
-        } else {
-          // Ajouter le produit spécifique seulement s'il n'existe pas déjà
-          const exists = products.some(p => p.id === teamProduct.id)
-          if (!exists) {
-            products.push(teamProduct)
-          }
-        }
-      })
+      // Filtrer pour ne garder que les produits sans teamId (génériques)
+      products = genericProductsSnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(p => !p.teamId)
     }
     
     // Filtrer les doublons par ID pour éviter les clés dupliquées

@@ -42,10 +42,14 @@ export default function TeamShopPage() {
       setTeam(teamData)
       setSettings(settingsData)
 
-      // Récupérer les produits avec le teamId pour avoir les maillots spécifiques à l'équipe
-      const productsRes = await fetch(`/api/shop/products?teamId=${teamId}`)
+      // Récupérer UNIQUEMENT le maillot de l'équipe (pas les autres produits)
+      const productsRes = await fetch(`/api/shop/products?teamId=${teamId}&onlyJersey=true`)
       const productsData = await productsRes.json()
-      setProducts(productsData)
+      // Filtrer côté client aussi pour être sûr (seulement les maillots de cette équipe)
+      const filteredProducts = productsData.filter((p: ShopProduct) => 
+        p.teamId === teamId && p.type === 'jersey'
+      )
+      setProducts(filteredProducts)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
